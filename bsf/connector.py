@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Connector module
+"""Connector module.
 
 A package of classes and methods modelling inter-process connectors.
 """
@@ -43,7 +43,7 @@ class ConnectorFile(Connector):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str
     @ivar file_mode: File mode
     @type file_mode: str
     """
@@ -52,7 +52,7 @@ class ConnectorFile(Connector):
         """Initialise a C{ConnectorFile} object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_mode: File mode
         @type file_mode: str
         @return:
@@ -152,7 +152,7 @@ class StandardStream(Connector):
         """Initialise a C{StandardStream} object.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param thread_callable: Callable for C{threading.Thread.target}
         @type thread_callable: object | None
         @param thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}

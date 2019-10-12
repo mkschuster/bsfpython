@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""BWA Analysis module
+"""BWA Analysis module.
 
 A package of classes and methods supporting Burrows-Wheeler Aligner (BWA) analyses.
 """
@@ -53,9 +53,9 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | unicode | None
+        @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | unicode | None
+        @type file_path_2: str | None
         @return:
         @rtype:
         """

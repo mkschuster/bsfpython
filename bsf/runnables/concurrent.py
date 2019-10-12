@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generic ConcurrentRunnable module
+"""Generic ConcurrentRunnable module.
 
 A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConcurrentRunnable}.
 Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for

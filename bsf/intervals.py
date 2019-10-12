@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Intervals module
+"""Intervals module.
 
 A package of classes and methods modelling (genome) intervals.
 """
@@ -40,7 +40,7 @@ class Interval(object):
 
     Attributes:
     @ivar name: Sequence region name
-    @type name: str | unicode
+    @type name: str
     @ivar start: Start coordinate
     @type start: int
     @ivar end: End coordinate
@@ -51,7 +51,7 @@ class Interval(object):
         """Initialise an C{bsf.intervals.Interval} object.
 
         @param name: Sequence region name
-        @type name: str | unicode
+        @type name: str
         @param start: Start coordinate
         @type start: int
         @param end: End coordinate
@@ -79,7 +79,7 @@ class Interval(object):
         """Convert into a GATK interval string (i.e. name:start-end).
 
         @return: GATK interval string
-        @rtype: str | unicode
+        @rtype: str
         """
         return self.name + ':' + str(self.start) + '-' + str(self.end)
 
@@ -128,7 +128,11 @@ class Container(object):
         return
 
     def __str__(self):
-        """ Printable representation """
+        """Get a printable representation.
+
+        @return: Printable representation
+        @rtype: str
+        """
         return 'Container(sum={:d}, interval_list={!r})'.format(self.sum, self.interval_list)
 
 
@@ -139,7 +143,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
     @see: https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
     @see: https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm
     @param interval_path: Picard ScatterIntervalsByNs interval list file path
-    @type interval_path: str | unicode | None
+    @type interval_path: str | None
     @param tile_number: Number of tiles
     @type tile_number: int | None
     @param tile_width: Width of tile
@@ -231,7 +235,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     requested. If neither tiles nor width are requested or both are 0, no tiling is attempted and a
     single C{bsf.intervals.Container} with an empty C{bsf.intervals.Interval} is put onto the Python C{list}.
     @param dictionary_path: Picard CreateSequenceDictionary sequence dictionary file path
-    @type dictionary_path: str | unicode
+    @type dictionary_path: str
     @param tile_number: Number of tiles
     @type tile_number: int | None
     @param tile_width: Width of tile

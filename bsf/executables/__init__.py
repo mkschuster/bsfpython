@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Executables module
+"""Executables module.
 
 A package of classes and methods supporting executable programs and scripts.
 """

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""HISAT Analysis module
+"""HISAT Analysis module.
 
 A package of classes and methods supporting the HISAT graph-based alignment of next generation sequencing reads
 to a population of genomes.
@@ -43,14 +43,14 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
 
     Attributes:
     @ivar summary_txt: Alignment summary file
-    @type summary_txt: str | unicode
+    @type summary_txt: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{FilePathAlign} object
+        """Initialise a C{FilePathAlign} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -135,13 +135,13 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample] | None
         @param genome_fasta: Genome FASTA file
-        @type genome_fasta: str | unicode | None
+        @type genome_fasta: str | None
         @param genome_index: Genome index
-        @type genome_index: str | unicode | None
+        @type genome_index: str | None
         @param skip_mark_duplicates: Mark duplicates
         @type skip_mark_duplicates: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: None | str | unicode
+        @type classpath_picard: str | None
         @param rna_strand: mRNA strand (i.e. F, R, FR or RF)
         @type rna_strand: str
         @return:
@@ -202,9 +202,9 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | unicode | None
+        @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | unicode | None
+        @type file_path_2: str | None
         @return:
         @rtype:
         """

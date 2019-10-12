@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""STAR Analysis module
+"""STAR Analysis module.
 
 A package of classes and methods supporting the spliced Transcripts Alignment
 to a Reference (STAR) aligner by Alexander Dobin.
@@ -45,18 +45,18 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
 
     Attributes:
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
-    @type aligned_sam: str | unicode
+    @type aligned_sam: str
     @ivar splice_junctions_tsv: Splice junctions tab-separated value (TSV) file path
-    @type splice_junctions_tsv: str | unicode
+    @type splice_junctions_tsv: str
     @ivar star_prefix: STAR Aligner outFileNamePrefix file path
-    @type star_prefix: str | unicode
+    @type star_prefix: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.star_aligner.FilePathAlign} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -82,7 +82,7 @@ class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
         """Initialise a C{bsf.analyses.star_aligner.FilePathSummary} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -123,15 +123,15 @@ class StarAligner(bsf.analyses.aligner.Aligner):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar index_directory: Genome directory with STAR indices
-    @type index_directory: str | unicode | None
+    @type index_directory: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     @ivar transcriptome_gtf: GTF file path of transcriptome annotation
-    @type transcriptome_gtf: str | unicode | None
+    @type transcriptome_gtf: str | None
     @ivar two_pass_mapping: Basic two-pass mapping
-    @type two_pass_mapping: str | unicode | None
+    @type two_pass_mapping: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     """
 
     name = 'STAR Aligner Analysis'
@@ -205,17 +205,17 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @param index_directory: Genome directory with STAR indices
-        @type index_directory: str | unicode
+        @type index_directory: str
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_gtf: GTF file path of transcriptome annotation
-        @type transcriptome_gtf: str | unicode | None
+        @type transcriptome_gtf: str | None
         @param two_pass_mapping: Basic two-pass mapping
-        @type two_pass_mapping: str | unicode | None
+        @type two_pass_mapping: str | None
         @param skip_mark_duplicates: Mark duplicates
         @type skip_mark_duplicates: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         """
         super(StarAligner, self).__init__(
             configuration=configuration,
@@ -286,9 +286,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | unicode | None
+        @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | unicode | None
+        @type file_path_2: str | None
         @return:
         @rtype:
         """
@@ -426,7 +426,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             # Write a HTML document.
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -640,7 +640,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             """
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             # Group via UCSC super tracks.
 

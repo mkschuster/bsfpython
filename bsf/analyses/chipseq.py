@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ChIP-seq Analysis module
+"""ChIP-seq Analysis module.
 
 A package of classes and methods supporting ChIP-Seq analyses.
 """
@@ -201,26 +201,26 @@ class FilePathAlignment(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar sample_bam: Sample-specific BAM file path
-    @type sample_bam: str | unicode
+    @type sample_bam: str
     @ivar sample_bai: Sample-specific BAI index file path
-    @type sample_bai: str | unicode
+    @type sample_bai: str
     @ivar sample_md5: Sample-specific MD5 checksum file path
-    @type sample_md5: str | unicode
+    @type sample_md5: str
     @ivar filter_metrics_tsv: deepTools alignmentSieve metrics
-    @type filter_metrics_tsv: str | unicode
+    @type filter_metrics_tsv: str
     @ivar coverage_bw: Coverage bigWig file path
-    @type coverage_bw: str | unicode
+    @type coverage_bw: str
     @ivar coverage_bwi_txt: Coverage bigWig information file path
-    @type coverage_bwi_txt: str | unicode
+    @type coverage_bwi_txt: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathAlignment} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -245,79 +245,79 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar name_prefix: MACS --name option
-    @type name_prefix: str | unicode
+    @type name_prefix: str
 
     @ivar control_bdg: Control (lambda) signal bedGraph
-    @type control_bdg: str | unicode
+    @type control_bdg: str
     @ivar control_bw: Control (lambda) signal bigWig
-    @type control_bw: str | unicode
+    @type control_bw: str
     @ivar control_bwi: Control (lambda) signal bigWigInfo
-    @type control_bwi: str | unicode
+    @type control_bwi: str
 
     @ivar treatment_bdg: Treatment signal bedGraph
-    @type treatment_bdg: str | unicode
+    @type treatment_bdg: str
     @ivar treatment_bw: Treatment signal bigWig
-    @type treatment_bw: str | unicode
+    @type treatment_bw: str
     @ivar treatment_bwi: Treatment signal bigWigInfo
-    @type treatment_bwi: str | unicode
+    @type treatment_bwi: str
 
     @ivar comparison_log_fe_bdg: Comparison signal as log10(fold-enrichment) bedGraph
-    @type comparison_log_fe_bdg: str | unicode
+    @type comparison_log_fe_bdg: str
     @ivar comparison_log_fe_bw: Comparison signal as log10(fold-enrichment) bigWig
-    @type comparison_log_fe_bw: str | unicode
+    @type comparison_log_fe_bw: str
     @ivar comparison_log_fe_bwi: Comparison signal as log10(fold-enrichment) bigWigInfo
-    @type comparison_log_fe_bwi: str | unicode
+    @type comparison_log_fe_bwi: str
 
     @ivar comparison_ppois_bdg: Comparison signal as Poisson p-value bedGraph
-    @type comparison_ppois_bdg: str | unicode
+    @type comparison_ppois_bdg: str
     @ivar comparison_ppois_bw: Comparison signal as Poisson p-value bigWig
-    @type comparison_ppois_bw: str | unicode
+    @type comparison_ppois_bw: str
     @ivar comparison_ppois_bwi: Comparison signal as Poisson p-value bigWigInfo
-    @type comparison_ppois_bwi: str | unicode
+    @type comparison_ppois_bwi: str
 
     @ivar comparison_subtract_bdg: Comparison signal as subtraction bedGraph
-    @type comparison_subtract_bdg: str | unicode
+    @type comparison_subtract_bdg: str
     @ivar comparison_subtract_bw: Comparison signal as subtraction bigWig
-    @type comparison_subtract_bw: str | unicode
+    @type comparison_subtract_bw: str
     @ivar comparison_subtract_bwi: Comparison signal as subtraction bigWigInfo
-    @type comparison_subtract_bwi: str | unicode
+    @type comparison_subtract_bwi: str
 
     @ivar summits_bed: Peak summits BED
-    @type summits_bed: str | unicode
+    @type summits_bed: str
     @ivar summits_bb: Peak summits bigBed
-    @type summits_bb: str | unicode
+    @type summits_bb: str
     @ivar summits_bbi: Peak summits bigBedInfo
-    @type summits_bbi: str | unicode
+    @type summits_bbi: str
 
     @ivar narrow_peaks_bed: Narrow peaks BED
-    @type narrow_peaks_bed: str | unicode
+    @type narrow_peaks_bed: str
     @ivar narrow_peaks_bb: Narrow peaks bigBed
-    @type narrow_peaks_bb: str | unicode
+    @type narrow_peaks_bb: str
     @ivar narrow_peaks_bbi: Narrow peaks bigBedInfo
-    @type narrow_peaks_bbi: str | unicode
+    @type narrow_peaks_bbi: str
 
     @ivar peaks_tsv: MACS2 peaks tab-separated value (TSV)
-    @type peaks_tsv: str | unicode
+    @type peaks_tsv: str
     @ivar peaks_xls: MACS2 peaks tab-separated value (TSV)
-    @type peaks_xls: str | unicode
+    @type peaks_xls: str
 
     @ivar model_r: MACS peak model as Rscript
-    @type model_r: str | unicode
+    @type model_r: str
     @ivar model_pdf: MACS "Peak Model" and "Cross-Correlation" plots PDF
-    @type model_pdf: str | unicode
+    @type model_pdf: str
     @ivar model_0_png: MACS "Peak Model" plot PNG
-    @type model_0_png: str | unicode
+    @type model_0_png: str
     @ivar model_1_png: MACS "Cross-Correlation" plot PNG
-    @type model_1_png: str | unicode
+    @type model_1_png: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathPeakCalling} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -372,7 +372,7 @@ class FilePathChIPQC(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.chipseq.FilePathChIPQC} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -390,7 +390,7 @@ class FilePathDiffBind(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -420,7 +420,7 @@ class FilePathDiffBindContrast(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param group_1: Group 1
         @type group_1: str
         @param group_2: Group 2
@@ -560,19 +560,19 @@ class ChIPSeq(bsf.analysis.Analysis):
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode | None
+    @type comparison_path: str | None
     @ivar genome_black_list: Genome black list file path
-    @type genome_black_list: str | unicode | None
+    @type genome_black_list: str | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode | None
+    @type genome_fasta_path: str | None
     @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
-    @type genome_sizes_path: str | unicode | None
+    @type genome_sizes_path: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     @ivar transcriptome_gtf_path: Transcriptome GTF file path
-    @type transcriptome_gtf_path: str | unicode | None
+    @type transcriptome_gtf_path: str | None
     @ivar transcriptome_txdb_path: Transcriptome TxDb file path
-    @type transcriptome_txdb_path: str | unicode | None
+    @type transcriptome_txdb_path: str | None
     @ivar colour_default: Default UCSC Genome Browser Track Hub RGB colour
     @type colour_default: str | None
     @ivar colour_dict: Python C{dict} of
@@ -791,21 +791,21 @@ class ChIPSeq(bsf.analysis.Analysis):
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode | None
+        @type comparison_path: str | None
         @param genome_black_list: Genome black list file path
-        @type genome_black_list: str | unicode | None
+        @type genome_black_list: str | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode | None
+        @type genome_fasta_path: str | None
         @param genome_sizes_path: Reference genome (chromosome) sizes file path
-        @type genome_sizes_path: str | unicode | None
+        @type genome_sizes_path: str | None
         @param genome_effective_size: Effective genome size
         @type genome_effective_size: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_gtf_path: Transcriptome GTF file path
-        @type transcriptome_gtf_path: str | unicode | None
+        @type transcriptome_gtf_path: str | None
         @param transcriptome_txdb_path: Transcriptome TxDb file path
-        @type transcriptome_txdb_path: str | unicode | None
+        @type transcriptome_txdb_path: str | None
         @param colour_default: Default UCSC Genome Browser Track Hub RGB colour
         @type colour_default: str | None
         @param colour_dict: Python C{dict} of
@@ -1822,7 +1822,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # Write a HTML document.
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             str_list.append('<h1 id="chipseq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -1935,7 +1935,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # Write a HTML document.
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             str_list.append('<h1 id="chipseq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -2358,7 +2358,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             """
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             chipseq_comparison_key_list = list()
             """ @type chipseq_comparison_key_list: list[str] """
@@ -2475,7 +2475,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             """Private function to read the bigWig signal range from a bigWig information file.
 
             @param file_path: bigWigInfo file path
-            @type file_path: str | unicode
+            @type file_path: str
             @return: UCSC Track Hub "type bigWig" line with optional signal range
             @rtype: str
             """
@@ -2525,7 +2525,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 1. Composite track "alignment" (BAM)
 
             str_list_1 = list()
-            """ @type str_list_1: list[str | unicode] """
+            """ @type str_list_1: list[str] """
 
             str_list_1.append('track alignment\n')
             str_list_1.append('type bam\n')
@@ -2547,7 +2547,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 2. Composite track "coverage" (bigWig)
 
             str_list_2 = list()
-            """ @type str_list_2: list[str | unicode] """
+            """ @type str_list_2: list[str] """
 
             str_list_2.append('track coverage\n')
             str_list_2.append('type bigWig\n')
@@ -2577,7 +2577,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 3. Composite track "background" (bigWig)
 
             str_list_3 = list()
-            """ @type str_list_3: list[str | unicode] """
+            """ @type str_list_3: list[str] """
 
             str_list_3.append('track background\n')
             str_list_3.append('type bigWig\n')
@@ -2612,7 +2612,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 4. Composite track "enrichment" (bigWig)
 
             str_list_4 = list()
-            """ @type str_list_4: list[str | unicode] """
+            """ @type str_list_4: list[str] """
 
             str_list_4.append('track enrichment\n')
             str_list_4.append('type bigWig\n')
@@ -2647,7 +2647,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 5. Composite track "intensity" (bigWig)
 
             str_list_5 = list()
-            """ @type str_list_5: list[str | unicode] """
+            """ @type str_list_5: list[str] """
 
             str_list_5.append('track intensity\n')
             str_list_5.append('type bigWig\n')
@@ -2685,7 +2685,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 6. Composite track "peaks" (bigBed)
 
             str_list_6 = list()
-            """ @type str_list_6: list[str | unicode] """
+            """ @type str_list_6: list[str] """
 
             str_list_6.append('track peaks\n')
             str_list_6.append('type bigBed 6+4\n')
@@ -2707,7 +2707,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # 7. Composite track "summits" (bigBed)
 
             str_list_7 = list()
-            """ @type str_list_7: list[str | unicode] """
+            """ @type str_list_7: list[str] """
 
             str_list_7.append('track summits\n')
             str_list_7.append('type bigBed 4+1\n')

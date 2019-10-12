@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
-"""Variant Calling Format (VCF) Executables module
+"""Variant Calling Format (VCF) Executables module.
 
 A package of classes and functions to split Ensembl VEP annotation in the CSQ field into VEP_* fields.
 http://www.ensembl.org/info/genome/variation/predicted_data.html#consequences
@@ -45,13 +45,13 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
     Attributes:
     @ivar soc_path: Sequence Ontology term priority configuration (TSV) file path
-    @type soc_path: str | unicode | None
+    @type soc_path: str | None
     @ivar ofc_path: Output field configuration (TSV) file path
-    @type ofc_path; str | unicode | None
+    @type ofc_path; str | None
     @ivar vcf_path_old: Old VCF file path
-    @type vcf_path_old: str | unicode | None
+    @type vcf_path_old: str | None
     @ivar vcf_path_new: New VCF file path
-    @type vcf_path_new: str | unicode | None
+    @type vcf_path_new: str | None
     """
 
     def __init__(
@@ -84,8 +84,8 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -109,15 +109,15 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param soc_path: Sequence Ontology term priority configuration (TSV) file path
-        @type soc_path: str | unicode | None
+        @type soc_path: str | None
         @param ofc_path: Output field configuration (TSV) file path
-        @type ofc_path; str | unicode | None
+        @type ofc_path; str | None
         @param vcf_path_old: Old VCF file path
-        @type vcf_path_old: str | unicode | None
+        @type vcf_path_old: str | None
         @param vcf_path_new: New VCF file path
-        @type vcf_path_new: str | unicode | None
+        @type vcf_path_new: str | None
         @return:
         @rtype:
         """
@@ -350,7 +350,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
             # Iterate over all comma-separated allele-transcript blocks.
             for csq_component in vri['CSQ']:
-                """ @type csq_component: str | unicode """
+                """ @type csq_component: str """
                 csq_value_list = csq_component.split('|')
 
                 allele_number = int(csq_value_list[csq_index_allele_num])

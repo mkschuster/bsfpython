@@ -46,9 +46,9 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     """Convert a BAM file into a pair of FASTQ files for each read group (@RG).
 
     @param input_path: File path to the BAM file
-    @type input_path: str | unicode
+    @type input_path: str
     @param temporary_path: File path to a temporary directory
-    @type temporary_path: str | unicode
+    @type temporary_path: str
     @return: Python list of tuple objects of file paths of read1 and read2
     @rtype: list
     """
@@ -78,9 +78,9 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     # SAM header lines that need propagating around FASTQ files. Sigh!
     sam_header_pg = list()
-    """ @type sam_header_pg: list[str | unicode] """
+    """ @type sam_header_pg: list[str] """
     sam_header_rg = list()
-    """ @type sam_header_rg: list[str | unicode] """
+    """ @type sam_header_rg: list[str] """
 
     with open(file=path_temporary_sam, mode='rt') as _input_file:
         for line_str in _input_file:

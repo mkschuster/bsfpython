@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Process module
+"""Process module.
 
 A package of classes and methods modelling processes.
 """
@@ -65,8 +65,8 @@ class Command(object):
     @ivar options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
         Python C{list} value objects of C{bsf.argument.Argument} objects
     @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
-    @ivar arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-    @type arguments: list[str | unicode]
+    @ivar arguments: Python C{list} of Python C{str} (program argument) objects
+    @type arguments: list[str]
     @ivar sub_command: Subordinate C{bsf.process.Command}
     @type sub_command: bsf.process.Command | None
     """
@@ -87,8 +87,8 @@ class Command(object):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @return:
@@ -127,12 +127,12 @@ class Command(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:               {!r}\n'.format(indent, self.name))
@@ -218,7 +218,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -232,7 +232,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -246,7 +246,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -260,7 +260,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -274,7 +274,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -288,7 +288,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -302,7 +302,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -316,7 +316,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -330,7 +330,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -344,7 +344,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -358,7 +358,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -419,7 +419,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -433,7 +433,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -447,7 +447,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -461,7 +461,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -475,7 +475,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -489,7 +489,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -503,7 +503,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -517,7 +517,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -531,7 +531,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -545,7 +545,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -559,7 +559,7 @@ class Command(object):
         @param key: Key
         @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
@@ -606,7 +606,7 @@ class Command(object):
         """Assemble the command line from program, options and arguments.
 
         @return: Python C{list} of program, options, switches and arguments
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         command_line = list()
         """ @type command_line: list[str] """
@@ -636,7 +636,7 @@ class Command(object):
         """Assemble the command line from program, options, switches and arguments.
 
         @return: A Python C{str} of program, options, switches and arguments
-        @rtype: str | unicode
+        @rtype: str
         """
         command_line = str()
 
@@ -707,7 +707,7 @@ class Executable(Command):
         @param file_type: File handle type I{STDOUT} or I{STDERR}
         @type file_type: str
         @param file_path: I{STDOUT} file path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @return:
         @rtype:
         @raise Exception: If file_type is neither I{STDOUT} nor I{STDERR}
@@ -761,7 +761,7 @@ class Executable(Command):
         @param debug: Debug level
         @type debug: int
         @param stdout_path: I{STDOUT} file path
-        @type stdout_path: str | unicode | None
+        @type stdout_path: str | None
         @return:
         @rtype:
         """
@@ -783,7 +783,7 @@ class Executable(Command):
         @param debug: Debug level
         @type debug: int
         @param stderr_path: I{STDERR} file path
-        @type stderr_path: str | unicode | None
+        @type stderr_path: str | None
         @return:
         @rtype:
         """
@@ -820,8 +820,8 @@ class Executable(Command):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -897,12 +897,12 @@ class Executable(Command):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  stdin:              {!r}\n'.format(indent, self.stdin))
@@ -1132,7 +1132,7 @@ class RunnableStep(Executable):
     Attributes:
     @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
         after successfully completing this C{bsf.process.RunnableStep}
-    @type obsolete_file_path_list: list[str | unicode]
+    @type obsolete_file_path_list: list[str]
     """
 
     def __init__(
@@ -1161,8 +1161,8 @@ class RunnableStep(Executable):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1186,7 +1186,7 @@ class RunnableStep(Executable):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @return:
         @rtype:
         """
@@ -1219,12 +1219,12 @@ class RunnableStep(Executable):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  obsolete_file_path_list: {!r}\n'.format(indent, self.obsolete_file_path_list))
@@ -1255,7 +1255,7 @@ class RunnableStepChangeMode(RunnableStep):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode | None
+    @type file_path: str | None
     @ivar mode_directory: Directory access mode according to C{stat}
     @type mode_directory: str | None
     @ivar mode_file: File access mode for files according to C{stat}
@@ -1291,8 +1291,8 @@ class RunnableStepChangeMode(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1316,9 +1316,9 @@ class RunnableStepChangeMode(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param mode_directory: Directory access mode according to C{stat}
         @type mode_directory: str | None
         @param mode_file: File access mode for files according to C{stat}
@@ -1453,9 +1453,9 @@ class RunnableStepCopy(RunnableStep):
 
     Attributes:
     @ivar source_path: Source path
-    @type source_path: str | unicode | None
+    @type source_path: str | None
     @ivar target_path: Target path
-    @type target_path: str | unicode | None
+    @type target_path: str | None
     """
 
     def __init__(
@@ -1486,8 +1486,8 @@ class RunnableStepCopy(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1511,11 +1511,11 @@ class RunnableStepCopy(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param source_path: Source path
-        @type source_path: str | unicode | None
+        @type source_path: str | None
         @param target_path: Target path
-        @type target_path: str | unicode | None
+        @type target_path: str | None
         @return:
         @rtype:
         """
@@ -1599,8 +1599,8 @@ class RunnableStepJava(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1624,13 +1624,13 @@ class RunnableStepJava(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
-        @type java_temporary_path: str | unicode | None
+        @type java_temporary_path: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
         @param java_jar_path: Java archive file path
-        @type java_jar_path: str | unicode | None
+        @type java_jar_path: str | None
         @return:
         @rtype:
         """
@@ -1723,8 +1723,8 @@ class RunnableStepPicard(RunnableStepJava):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1748,15 +1748,15 @@ class RunnableStepPicard(RunnableStepJava):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
-        @type java_temporary_path: str | unicode | None
+        @type java_temporary_path: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
         @param java_jar_path: Java archive file path
-        @type java_jar_path: str | unicode | None
+        @type java_jar_path: str | None
         @param picard_classpath: Picard class path
-        @type picard_classpath: str | unicode | None
+        @type picard_classpath: str | None
         @param picard_command: Picard command
         @type picard_command: str | None
         @return:
@@ -1812,9 +1812,9 @@ class RunnableStepLink(RunnableStep):
 
     Attributes:
     @ivar source_path: Source path
-    @type source_path: str | unicode | None
+    @type source_path: str | None
     @ivar target_path: Target path
-    @type target_path: str | unicode | None
+    @type target_path: str | None
     """
 
     def __init__(
@@ -1845,8 +1845,8 @@ class RunnableStepLink(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1870,11 +1870,11 @@ class RunnableStepLink(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param source_path: Source path
-        @type source_path: str | unicode | None
+        @type source_path: str | None
         @param target_path: Target path
-        @type target_path: str | unicode | None
+        @type target_path: str | None
         @return:
         @rtype:
         """
@@ -1928,7 +1928,7 @@ class RunnableStepMakeDirectory(RunnableStep):
 
     Attributes:
     @ivar directory_path: Directory path
-    @type directory_path: str | unicode | None
+    @type directory_path: str | None
     """
 
     def __init__(
@@ -1958,8 +1958,8 @@ class RunnableStepMakeDirectory(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -1983,9 +1983,9 @@ class RunnableStepMakeDirectory(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param directory_path: Directory path
-        @type directory_path: str | unicode | None
+        @type directory_path: str | None
         @return:
         @rtype:
         """
@@ -2038,7 +2038,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
 
     Attributes:
     @ivar file_path: Named pipe file path
-    @type file_path: str | unicode | None
+    @type file_path: str | None
     """
 
     def __init__(
@@ -2068,8 +2068,8 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -2093,9 +2093,9 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param file_path: Named pipe file path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @return:
         @rtype:
         """
@@ -2148,9 +2148,9 @@ class RunnableStepMove(RunnableStep):
 
     Attributes:
     @ivar source_path: Source path
-    @type source_path: str | unicode | None
+    @type source_path: str | None
     @ivar target_path: Target path
-    @type target_path: str | unicode | None
+    @type target_path: str | None
     """
 
     def __init__(
@@ -2181,8 +2181,8 @@ class RunnableStepMove(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -2206,11 +2206,11 @@ class RunnableStepMove(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param source_path: Source path
-        @type source_path: str | unicode | None
+        @type source_path: str | None
         @param target_path: Target path
-        @type target_path: str | unicode | None
+        @type target_path: str | None
         @return:
         @rtype:
         """
@@ -2290,8 +2290,8 @@ class RunnableStepSleep(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode]
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str]
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -2315,7 +2315,7 @@ class RunnableStepSleep(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param sleep_time: Sleep time in seconds
         @type sleep_time: float | None
         @return:
@@ -2399,8 +2399,8 @@ class RunnableStepSetEnvironment(RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode]
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str]
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -2424,7 +2424,7 @@ class RunnableStepSetEnvironment(RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param key: Environment key
         @type key: str
         @return:

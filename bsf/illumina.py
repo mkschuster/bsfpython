@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Illumina module
+"""Illumina module.
 
 A package of classes and methods modelling data directories and files
 specific for Illumina sequencing systems.
@@ -77,7 +77,7 @@ class Adaptors(object):
         """Instantiate a C{bsf.illumina.Adaptors} object from a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return: C{bsf.illumina.Adaptors}
         @rtype: Adaptors
         """
@@ -265,7 +265,7 @@ class RunInformation(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode | None
+    @type file_path: str | None
     @ivar file_type: File type
         CASAVA: FASTQ file after post-processing with CASAVA.
         External: other data files.
@@ -319,7 +319,7 @@ class RunInformation(object):
         """Create a C{bsf.illumina.RunInformation} object from a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return: C{bsf.illumina.RunInformation}
         @rtype: RunInformation
         """
@@ -489,7 +489,7 @@ class RunInformation(object):
         """Initialise a C{bsf.illumina.RunInformation} object.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
         @type file_type: str | None
         @param name: Name
@@ -673,9 +673,9 @@ class RunParameters(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: None | xml.etree.ElementTree.ElementTree
+    @type element_tree: xml.etree.ElementTree.ElementTree | None
     """
 
     @classmethod
@@ -683,7 +683,7 @@ class RunParameters(object):
         """Create a C{bsf.illumina.RunParameters} object from a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @return: C{bsf.illumina.RunParameters} object
         @rtype: RunParameters
         """
@@ -698,9 +698,9 @@ class RunParameters(object):
         """Initialise a C{bsf.illumina.RunParameters} object.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: None | xml.etree.ElementTree.ElementTree
+        @type element_tree: xml.etree.ElementTree.ElementTree | None
         @return:
         @rtype:
         """
@@ -715,9 +715,9 @@ class RunParameters(object):
         """Get the text representation of the first element of a tuple of XML paths.
 
         @param xml_paths: Python C{tuple} of Python C{str} XML path elements
-        @type xml_paths: tuple[str | unicode]
+        @type xml_paths: tuple[str]
         @return: Text representation
-        @rtype: str | unicode
+        @rtype: str
         """
         for xml_path in xml_paths:
             element = self.element_tree.find(path=xml_path)
@@ -906,7 +906,7 @@ class XMLConfiguration(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode | None
+    @type file_path: str | None
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
     @type element_tree: xml.etree.ElementTree.ElementTree | None
     """
@@ -918,7 +918,7 @@ class XMLConfiguration(object):
         In case the file path does not exist a C{bsf.illumina.XMLConfiguration} object
         with an empty C{xml.etree.ElementTree.ElementTree} will be returned.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return: C{bsf.illumina.XMLConfiguration} object
         @rtype: XMLConfiguration
         """
@@ -933,7 +933,7 @@ class XMLConfiguration(object):
         """Initialise a C{bsf.illumina.XMLConfiguration} object.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
         @type element_tree: xml.etree.ElementTree.ElementTree | None
         @return:
@@ -953,7 +953,7 @@ class AnalysisConfiguration(XMLConfiguration):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
     @type element_tree: xml.etree.ElementTree.ElementTree
     """
@@ -964,7 +964,7 @@ class AnalysisConfiguration(XMLConfiguration):
         to initialise an internal Python C{dict} of valid tiles.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
         @type element_tree: xml.etree.ElementTree.ElementTree
         @return:
@@ -1049,19 +1049,19 @@ class RunFolder(object):
         Python C{str} (RTA description) value objects
     @type rta_dict: dict[str, str]
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str
     @ivar file_type: File type
         I{CASAVA}: FASTQ file after post-processing with CASAVA
         I{External}: other data files
     @type file_type: str
     @ivar date: Date in YYMMDD format
-    @type date: str | unicode | None
+    @type date: str | None
     @ivar instrument: Illumina instrument serial number
-    @type instrument: str | unicode | None
+    @type instrument: str | None
     @ivar run: Run serial number
-    @type run: str | unicode | None
+    @type run: str | None
     @ivar flow_cell: Flow cell identifier
-    @type flow_cell: str | unicode | None
+    @type flow_cell: str | None
     @ivar run_information: C{bsf.illumina.RunInformation} object
     @type run_information: bsf.illumina.RunInformation
     """
@@ -1090,9 +1090,9 @@ class RunFolder(object):
         This method first checks for existence in C{bsf.standards.FilePath.get_illumina_run()}, before
         checking in C{bsf.standards.FilePath.get_illumina_sav()}.
         @param name: Illumina Run Folder (IRF) name
-        @type name: str | unicode
+        @type name: str
         @return: Absolute file path
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         # Check the Illumina Run Folder directory.
         file_path = bsf.standards.Configuration.get_absolute_path(
@@ -1120,7 +1120,7 @@ class RunFolder(object):
         """Construct a C{bsf.illumina.RunFolder} object from a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return: C{bsf.illumina.RunFolder}
         @rtype: RunFolder
         """
@@ -1173,17 +1173,17 @@ class RunFolder(object):
         """Initialise a C{bsf.illumina.RunFolder} object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
         @type file_type: str
         @param date: Date in I{YYMMDD} format
-        @type date: str | unicode | None
+        @type date: str | None
         @param instrument: Illumina instrument serial number (e.g. I{SN181}, I{SN815}, ...)
-        @type instrument: str | unicode | None
+        @type instrument: str | None
         @param run: Run serial number
-        @type run: str | unicode | None
+        @type run: str | None
         @param flow_cell: The position and flow cell identifier
-        @type flow_cell: str | unicode | None
+        @type flow_cell: str | None
         @param run_information: C{bsf.illumina.RunInformation}
         @type run_information: bsf.illumina.RunInformation
         @param image_analysis: C{bsf.illumina.ImageAnalysis}
@@ -1239,7 +1239,7 @@ class RunFolder(object):
         """Get the base-calls directory in the I{IRF/Data/Intensities/BaseCalls} hierarchy.
 
         @return: Illumina base-calls directory
-        @rtype: str | unicode
+        @rtype: str
         """
         return os.path.join(self.file_path, 'Data', 'Intensities', 'BaseCalls')
 
@@ -1248,7 +1248,7 @@ class RunFolder(object):
         """Get the C{bsf.illumina.RunFolder} name.
 
         @return: Name
-        @rtype: str | unicode
+        @rtype: str
         """
         return '_'.join((self.date, self.instrument, self.run, self.flow_cell))
 
@@ -1388,10 +1388,10 @@ class RunFolder(object):
         return
 
     def _check_tiles_image_analysis(self):
-        """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/config.xml}
-        configuration file. This method also builds up a Python C{dict} required for method
-        C{_is_missing_image_analysis_tile}.
+        """Check for missing I{<Tile>} elements in the XML configuration file.
 
+        Check the I{IRF/Data/Intensities/config.xml} configuration file for missing I{<Tile>} XML elements.
+        This method also builds up a Python C{dict} required for method C{_is_missing_image_analysis_tile}.
         @return:
         @rtype:
         """
@@ -1414,9 +1414,9 @@ class RunFolder(object):
         return
 
     def _is_missing_base_call_tile(self, lane, tile):
-        """Confirm that a particular I{<Tile>} element is missing from the
-        I{IRF/Data/Intensities/config.xml} configuration file.
+        """Confirm that a particular I{<Tile>} element is missing from the XML configuration file.
 
+        Check the I{IRF/Data/Intensities/config.xml} configuration file for missing I{<Tile>} XML elements.
         @param lane: Lane index
         @type lane: int
         @param tile: Tile name
@@ -1434,9 +1434,9 @@ class RunFolder(object):
             return False
 
     def _is_missing_image_analysis_tile(self, lane, tile):
-        """Confirm that a particular I{<Tile>} element is missing from the
-        I{IRF/Data/Intensities/BaseCalls/config.xml} configuration file.
+        """Confirm that a particular I{<Tile>} element is missing from the XML configuration file.
 
+        Check the I{IRF/Data/Intensities/BaseCalls/config.xml} configuration file for missing I{<Tile>} XML elements.
         @param lane: Lane index
         @type lane: int
         @param tile: Tile name
@@ -1458,11 +1458,11 @@ class RunFolder(object):
         """Check a Python C{list} of file names against a Python C{dict} of directory entries.
 
         @param directory_dict: Python C{dict} of directory entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Directory path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param file_name_list: Python C{list} of file names
-        @type file_name_list: list[str | unicode]
+        @type file_name_list: list[str]
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -1486,11 +1486,11 @@ class RunFolder(object):
         """Check a Python C{list} of file suffixes against a Python C{dict} of directory entries.
 
         @param directory_dict: Python C{dict} of directory entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Directory path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param file_suffix_list: Python C{list} of file names
-        @type file_suffix_list: list[str | unicode]
+        @type file_suffix_list: list[str]
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -1515,9 +1515,9 @@ class RunFolder(object):
         """Check the I{IRF/Config/} directory.
 
         @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -1534,15 +1534,15 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
 
         _file_name_list = list()
-        """ @type _file_name_list: list[str | unicode] """
+        """ @type _file_name_list: list[str] """
         _file_suffix_list = list()
-        """ @type _file_suffix_list: list[str | unicode] """
+        """ @type _file_suffix_list: list[str] """
 
         if rta in ('1.18.54',):
             # MiSeq
@@ -1602,9 +1602,9 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/BaseCalls/Matrix/} directory.
 
         @param directory_dict: Python C{dict} of I{IRF/Data/Intensities/BaseCalls/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: I{IRF/Data/Intensities/BaseCalls/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -1626,7 +1626,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -1642,7 +1642,7 @@ class RunFolder(object):
                     print('Missing directory', lane_path)
                     continue
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-                """ @type lane_dict: dict[str | unicode, int] """
+                """ @type lane_dict: dict[str, int] """
 
                 if debug > 1:
                     print('Processing directory', lane_path)
@@ -1658,7 +1658,7 @@ class RunFolder(object):
                         print('Missing directory', cycle_path)
                         continue
                     cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                    """ @type cycle_dict: dict[str | unicode, int] """
+                    """ @type cycle_dict: dict[str, int] """
 
                     if debug > 2:
                         print('Processing directory', cycle_path)
@@ -1732,9 +1732,9 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/BaseCalls/Phasing/} directory.
 
         @param directory_dict: Python C{dict} of I{IRF/Data/intensities/BaseCalls/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: I{IRF/Data/intensities/BaseCalls/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -1756,7 +1756,7 @@ class RunFolder(object):
             print('Missing directory', os.path.join(directory_path, _directory_name))
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -1841,9 +1841,9 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/BaseCalls/} directory.
 
         @param directory_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: I{IRF/Data/Intensities/} file path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -1860,7 +1860,7 @@ class RunFolder(object):
             print('Missing directory', os.path.join(directory_path, _directory_name))
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -1889,7 +1889,7 @@ class RunFolder(object):
                 print('Missing directory', lane_path)
                 continue
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-            """ @type lane_dict: dict[str | unicode, int] """
+            """ @type lane_dict: dict[str, int] """
 
             if debug > 1:
                 print('Processing directory', lane_path)
@@ -1932,7 +1932,7 @@ class RunFolder(object):
                         print('Missing directory', cycle_path)
                         continue
                     cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                    """ @type cycle_dict: dict[str | unicode, int] """
+                    """ @type cycle_dict: dict[str, int] """
 
                     if debug > 2:
                         print('Processing directory', cycle_path)
@@ -2061,9 +2061,9 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/Offsets/} directory.
 
         @param directory_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: I{IRF/Data/Intensities/} file path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2082,7 +2082,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2113,9 +2113,9 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/} directory.
 
         @param directory_dict: Python C{dict} of I{IRF/Data/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: I{IRF/Data/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2132,7 +2132,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2202,7 +2202,7 @@ class RunFolder(object):
                     print('Missing directory', lane_path)
                     continue
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-                """ @type lane_dict: dict[str | unicode, int] """
+                """ @type lane_dict: dict[str, int] """
 
                 if debug > 1:
                     print('Processing directory', lane_path)
@@ -2256,7 +2256,7 @@ class RunFolder(object):
                             print('Missing directory', cycle_path)
                             continue
                         cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                        """ @type cycle_dict: dict[str | unicode, int] """
+                        """ @type cycle_dict: dict[str, int] """
 
                         if debug > 2:
                             print('Processing directory', cycle_path)
@@ -2350,9 +2350,9 @@ class RunFolder(object):
         """Check the I{IRF/Data/TileStatus/} directory.
 
         @param directory_dict: Python C{dict} of I{IRF/Data/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: I{IRF/Data/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2373,7 +2373,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2405,9 +2405,9 @@ class RunFolder(object):
         """Check the IRF/Data/ directory.
 
         @param directory_dict: Ptyhon C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2423,7 +2423,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2492,9 +2492,9 @@ class RunFolder(object):
         """Check the I{IRF/InterOp/} directory.
 
         @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2510,7 +2510,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2588,7 +2588,7 @@ class RunFolder(object):
                     print('Missing directory', cycle_path)
                     continue
                 cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                """ @type cycle_dict: dict[str | unicode, int] """
+                """ @type cycle_dict: dict[str, int] """
                 _cycle_file_name_list = [
                     'BasecallingMetricsOut.bin',
                     'EventMetricsOut.bin',
@@ -2661,9 +2661,9 @@ class RunFolder(object):
         """Check the I{IRF/PeriodicSaveRates/} directory.
 
         @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2682,7 +2682,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2707,9 +2707,9 @@ class RunFolder(object):
         """Check the I{IRF/Recipe/} directory.
 
         @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2726,13 +2726,13 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
 
         _file_name_list = list()
-        """ @type _file_name_list: list[str | unicode] """
+        """ @type _file_name_list: list[str] """
 
         if rta in ('1.18.54',):
             # The MiSeq instrument uses the reagent kit barcode.
@@ -2766,9 +2766,9 @@ class RunFolder(object):
         """Check the I{IRF/Thumbnail_Images/} directory.
 
         @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str | unicode, int]
+        @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str | unicode
+        @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2803,7 +2803,7 @@ class RunFolder(object):
             print('Missing directory', _directory_path)
             return
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2819,7 +2819,7 @@ class RunFolder(object):
                 continue
             lane_path = os.path.join(_directory_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-            """ @type lane_dict: dict[str | unicode, int] """
+            """ @type lane_dict: dict[str, int] """
 
             if debug > 1:
                 print('Processing directory', lane_path)
@@ -2839,7 +2839,7 @@ class RunFolder(object):
                     print('Missing directory', cycle_path)
                     continue
                 cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                """ @type cycle_dict: dict[str | unicode, int] """
+                """ @type cycle_dict: dict[str, int] """
 
                 if debug > 2:
                     print('Processing directory', cycle_path)
@@ -2926,9 +2926,9 @@ class RunFolder(object):
         return
 
     def check(self, debug=0):
-        """Check an Illumina Run Folder regarding its internal directory and file structure and report both,
-        missing and additional files.
+        """Check an Illumina Run Folder with regards to its internal directory and file structure.
 
+        Both, missing and additional files are printed to STDOUT.
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -2942,7 +2942,7 @@ class RunFolder(object):
         # _directory_name = os.path.basename(self.file_path)
         _directory_path = self.file_path
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str | unicode, int] """
+        """ @type _directory_dict: dict[str, int] """
 
         if debug > 0:
             print('Processing directory', _directory_path)

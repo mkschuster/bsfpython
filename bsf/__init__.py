@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""BSF module
+"""BSF module.
 
 A package of classes and methods specific to the Biomedical Sequencing Facility (BSF).
 Reference: http://www.biomedical-sequencing.at/

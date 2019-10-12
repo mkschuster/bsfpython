@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Analyses module
+"""Analyses module.
 
 A package of classes and methods supporting analyses.
 """

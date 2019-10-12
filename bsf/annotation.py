@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Annotation module
+"""Annotation module.
 
 A package of classes and methods modelling Comma-Separated Value (CSV) and Tab-Separated Value (TSV) annotation files.
 """
@@ -42,7 +42,7 @@ class AnnotationSheet(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode | None
+    @type file_path: str | None
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
     @type file_type: str
     @ivar name: Name
@@ -53,7 +53,7 @@ class AnnotationSheet(object):
         Python C{list} of Python C{classmethod} value data
     @type test_methods: dict[str, list[classmethod]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
-    @type row_dicts: list[dict[str, str | unicode]]
+    @type row_dicts: list[dict[str, str]]
     """
 
     # Regular expression for non-alphanumeric characters
@@ -93,7 +93,7 @@ class AnnotationSheet(object):
     _test_methods = dict()
     """ @type _test_methods: dict[str, list[classmethod]] """
 
-    # dict[str, list[classmethod[int, dict[str, str | unicode], str]]]
+    # dict[str, list[classmethod[int, dict[str, str], str]]]
 
     # Python dict of (boolean state) Python str objects and Python bool value objects.
     _boolean_states = {
@@ -108,7 +108,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
@@ -142,7 +142,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
@@ -176,7 +176,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -196,7 +196,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -218,7 +218,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -241,7 +241,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
@@ -275,7 +275,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -297,7 +297,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -319,7 +319,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -342,7 +342,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
@@ -377,7 +377,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -399,7 +399,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -421,7 +421,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -444,7 +444,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
@@ -479,7 +479,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -501,7 +501,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -523,7 +523,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -546,7 +546,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -574,7 +574,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -602,7 +602,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -630,7 +630,7 @@ class AnnotationSheet(object):
         C{bsf.annotation.AnnotationSheet.csv_reader_next} and
         C{bsf.annotation.AnnotationSheet.csv_reader_close} methods should be called explicitly.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
         @type file_type: str
         @param name: Name
@@ -661,7 +661,7 @@ class AnnotationSheet(object):
         """Initialise a C{bsf.annotation.AnnotationSheet} object.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
         @type file_type: str | None
         @param name: Name | None
@@ -674,7 +674,7 @@ class AnnotationSheet(object):
             Python C{list} of Python C{classmethod} value data
         @type test_methods: dict[str, list[classmethod]] | None
         @param row_dicts: Python C{list} of Python C{dict} objects
-        @type row_dicts: list[dict[str, str | unicode]] | None
+        @type row_dicts: list[dict[str, str]] | None
         @return:
         @rtype:
         """
@@ -733,12 +733,12 @@ class AnnotationSheet(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  file_path:    {!r}\n'.format(indent, self.file_path))
@@ -799,7 +799,7 @@ class AnnotationSheet(object):
         """Read the next line of a CSV file linked to a C{bsf.annotation.AnnotationSheet} object.
 
         @return: Python C{dict} of column key and row value data
-        @rtype: dict[str, str | unicode]
+        @rtype: dict[str, str]
         """
         return self._csv_reader_object.next()
 
@@ -850,7 +850,7 @@ class AnnotationSheet(object):
         """Write the next line of a CSV file linked to a C{bsf.annotation.AnnotationSheet} object.
 
         @param row_dict: Row Python C{dict}
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @return:
         @rtype:
         """
@@ -871,10 +871,10 @@ class AnnotationSheet(object):
         return
 
     def get_boolean(self, row_dict, key):
-        """Get the Boolean state of a cell of an Annotation Sheet
+        """Get the Boolean state of a cell of an C{AnnotationSheet}.
 
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param key: Key
         @param key: str
         @return: Boolean

@@ -43,7 +43,7 @@ def split_md5sum_line(md5sum_str):
     """Split a line of a md5sum file into check_sum, check_mode (i.e. ' ' for text or '*' for binary) and file name.
 
     @param md5sum_str: md5sum string
-    @type md5sum_str: str | unicode
+    @type md5sum_str: str
     @return: Tuple of check_sum, check_mode and file_name
     @rtype: (str, str, str)
     """
@@ -76,7 +76,7 @@ def add_md5_entry(entry_file_name, entry_check_sum, entry_check_mode):
     """Add an dm5sum entry to the global md5sum Python C{dict} object.
 
     @param entry_file_name: File name
-    @type entry_file_name: str | unicode
+    @type entry_file_name: str
     @param entry_check_sum: Check sum
     @type entry_check_sum: str
     @param entry_check_mode: Check mode

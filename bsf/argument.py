@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Argument module
+"""Argument module.
 
 A package of classes and methods to model C{bsf.process.Command} arguments, i.e.
 C{bsf.argument.SwitchLong} (--key),
@@ -39,9 +39,9 @@ class Argument(object):
 
     Attributes:
     @ivar key: Key
-    @type key: str | unicode
+    @type key: str
     @ivar value: Value
-    @type value: str | unicode | None
+    @type value: str | None
     """
 
     @classmethod
@@ -53,9 +53,9 @@ class Argument(object):
         If the key is additionally associated with a value, create a C{bsf.argument.OptionShort} or
         a C{bsf.argument.OptionLong}, respectively.
         @param key: Key
-        @type key: str | unicode
+        @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @return: C{bsf.argument.Argument}
         @rtype: Argument
         """
@@ -87,7 +87,7 @@ class Argument(object):
         """Initialise a C{bsf.argument.Argument}.
 
         @param key: Key
-        @type key: str | unicode
+        @type key: str
         @return:
         @rtype:
         """
@@ -107,12 +107,12 @@ class Argument(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  key: {!r}\n'.format(indent, self.key))
@@ -120,10 +120,10 @@ class Argument(object):
         return str_list
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}
+        """Get the string representation as Python C{str}.
 
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return self.key
 
@@ -131,7 +131,7 @@ class Argument(object):
         """Get the list representation as Python C{list}.
 
         @return: List representation
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         return [self.get_str()]
 
@@ -151,11 +151,11 @@ class SwitchLong(Switch):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}
+        """Get the string representation as Python C{str}.
 
         Overrides method Switch.get_str() to prepend two dashes ('--key').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '--' + super(SwitchLong, self).get_str()
 
@@ -167,11 +167,11 @@ class SwitchShort(Switch):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}
+        """Get the string representation as Python C{str}.
 
         Overrides method Switch.get_str() to prepend one dash ('-key').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '-' + super(SwitchShort, self).get_str()
 
@@ -181,16 +181,16 @@ class Option(Switch):
 
     Attributes:
     @ivar value: Value
-    @type value: str | unicode
+    @type value: str
     """
 
     def __init__(self, key, value):
         """Initialise a C{bsf.argument.Option}.
 
         @param key: Key
-        @type key: str | unicode
+        @type key: str
         @param value: Value
-        @type value: str | unicode
+        @type value: str
         @return:
         @rtype:
         """
@@ -209,12 +209,12 @@ class Option(Switch):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  key: {!r}\n'.format(indent, self.key))
@@ -226,11 +226,11 @@ class Option(Switch):
         return str_list
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}
+        """Get the string representation as Python C{str}.
 
         Overrides method Switch.get_str() to join key and value with space ('key value1 value2 ...').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return ' '.join((self.key, self.value))
 
@@ -240,7 +240,7 @@ class Option(Switch):
         Overrides method Switch.get_list() to split the Python str representation on
         white space only once (['key', 'value1 value2 ...']).
         @return: List representation
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         return self.get_str().split(None, 1)
 
@@ -252,11 +252,11 @@ class OptionLong(Option):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}
+        """Get the string representation as Python C{str}.
 
         Overrides method Option.get_str() to prepend two dashes ('--key value1 value2 ...').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '--' + super(OptionLong, self).get_str()
 
@@ -268,11 +268,11 @@ class OptionShort(Option):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}
+        """Get the string representation as Python C{str}.
 
         Overrides method Option.get_str() to prepend one dash ('-key value1 value2 ...').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '-' + super(OptionShort, self).get_str()
 
@@ -284,10 +284,10 @@ class OptionPair(Option):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}.
+        """Get the string representation as Python C{str}.
 
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '='.join((self.key, self.value))
 
@@ -296,7 +296,7 @@ class OptionPair(Option):
 
         Overrides method Option.get_list() to avoid splitting by white space (['key=value1 value2 ...']).
         @return: List representation
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         return [self.get_str()]
 
@@ -308,11 +308,11 @@ class OptionPairLong(OptionPair):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}.
+        """Get the string representation as Python C{str}.
 
         Overrides method OptionPair.get_str() to prepend two dashes ('--key=value1 value2 ...').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '--' + super(OptionPairLong, self).get_str()
 
@@ -324,11 +324,11 @@ class OptionPairShort(OptionPair):
     """
 
     def get_str(self):
-        """Get the string representation as Python C{str} or C{unicode}.
+        """Get the string representation as Python C{str}.
 
         Overrides method OptionPair.get_str() to prepend one dash ('-key=value1 value2 ...').
         @return: String representation
-        @rtype: str | unicode
+        @rtype: str
         """
         return '-' + super(OptionPairShort, self).get_str()
 
@@ -346,7 +346,7 @@ class OptionMulti(Option):
         Override method Option.get_list() to split on white space (['key', 'value1', 'value2', '...']).
         This method supports programs like the STAR aligner.
         @return: List representation
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         return self.get_str().split()
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
-"""Microsoft Azure cloud module
+"""Microsoft Azure cloud module.
 
 A package of classes and functions to transfer files to and from the
 Microsoft Azure cloud service.
@@ -80,8 +80,8 @@ class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
@@ -105,7 +105,7 @@ class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
         @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param account_name: Microsoft Azure storage account name
         @type account_name: str
         @param container_name: Microsoft Azure storage container name

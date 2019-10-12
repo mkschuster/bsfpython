@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Distributed Resource Management System (DRMS) module
+"""Distributed Resource Management System (DRMS) module.
 
 A package of classes and methods supporting a Distributed Resource Management System (DRMS).
 """

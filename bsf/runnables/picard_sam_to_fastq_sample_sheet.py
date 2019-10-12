@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
-"""Sample Annotation Sheet Runnables module
+"""Sample Annotation Sheet Runnables module.
 
 A package of classes and methods to prune a sample annotation sheet.
 
@@ -135,9 +135,9 @@ def run(runnable):
         in the first C{bsf.process.RunnableStep} object of this C{bsf.procedure.ConsecutiveRunnable} object.
 
         @param key: C{bsf.argument.OptionLong} key
-        @type key: str | unicode
+        @type key: str
         @return: C{bsf.argument.OptionLong} value
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if key in runnable_step.options and runnable_step.options[key]:
             return runnable_step.options[key][0].value

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""FastQC Analysis module
+"""FastQC Analysis module.
 
 A package of classes and methods supporting the FastQC tool.
 """
@@ -42,18 +42,18 @@ class FilePathFastQCReadGroup(bsf.procedure.FilePath):
 
     Attributes:
     @ivar archive: GNU Zip compressed archive
-    @type archive: str | unicode
+    @type archive: str
     @ivar report: FastQC HTML report
-    @type report: str | unicode
+    @type report: str
     """
 
     def __init__(self, prefix, file_prefix):
         """Initialise a C{bsf.analyses.fastqc.FilePathFastQCReadGroup} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param file_prefix: File prefix
-        @type file_prefix: str | unicode
+        @type file_prefix: str
         @return:
         @rtype:
         """
@@ -118,7 +118,7 @@ class FastQC(bsf.analysis.Analysis):
             @param _file_path: File path
             @type _file_path: str
             @return: File prefix
-            @rtype: str | unicode
+            @rtype: str
             """
             root_path, extension = os.path.splitext(os.path.basename(_file_path))
 
@@ -322,7 +322,7 @@ class FastQC(bsf.analysis.Analysis):
         # Write a HTML document.
 
         report_list = list()
-        """ @type report_list: list[str | unicode] """
+        """ @type report_list: list[str] """
 
         report_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         report_list.append('\n')

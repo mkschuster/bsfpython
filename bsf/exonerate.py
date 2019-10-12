@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Exonerate module
+"""Exonerate module.
 
 A package of classes and methods supporting Guy Slater's Exonerate alignment tool.
 """
@@ -163,7 +163,7 @@ def parse_alignment_file(file_path):
     """Parse an Exonerate alignment file.
 
     @param file_path: Alignment file path
-    @type file_path: str | unicode
+    @type file_path: str
     @return: Python C{list} of C{bsf.exonerate.VULGAR} objects
     @rtype: list[bsf.exonerate.VULGAR]
     """

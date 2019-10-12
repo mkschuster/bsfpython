@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Runnables module
+"""Runnables module.
 
 A package of classes and methods supporting the BSF C{bsf.procedure.Runnable} class.
 """

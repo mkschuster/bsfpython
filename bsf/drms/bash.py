@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""GNU Bourne-Again Shell (Bash) DRMS module
+"""GNU Bourne-Again Shell (Bash) DRMS module.
 
 A package of methods supporting the GNU Bourne-Again Shell (Bash) as
 Distributed Resource Management System (DRMS) module.
@@ -47,7 +47,7 @@ def submit(stage, debug=0):
     """
 
     output_list = list()
-    """ @type output_list: list[str | unicode] """
+    """ @type output_list: list[str] """
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""NGS module
+"""NGS module.
 
 A package of classes and methods modelling next-generation sequencing (NGS) data directories and files.
 """
@@ -43,9 +43,9 @@ class NextGenerationBase(object):
 
     Attributes:
     @ivar name: Name
-    @type name: str | unicode | None
+    @type name: str | None
     @ivar file_path: File path
-    @type file_path: str | unicode | None
+    @type file_path: str | None
     @ivar file_type: File type
         I{CASAVA}: FASTQ file after post-processing with CASAVA
         I{External}: other data files
@@ -64,9 +64,9 @@ class NextGenerationBase(object):
         """Initialise a C{bsf.ngs.Reads} object.
 
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
@@ -153,7 +153,7 @@ class NextGenerationBase(object):
         """Process annotation from a Python C{dict} of row entries of a Python C{csv} object.
 
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
@@ -189,13 +189,13 @@ class Reads(NextGenerationBase):
 
     Attributes:
     @ivar barcode: Barcode used for sample multiplexing
-    @type barcode: str | unicode | None
+    @type barcode: str | None
     @ivar lane: Lane number
-    @type lane: str | unicode | None
+    @type lane: str | None
     @ivar read: Read number (e.g. I{R1}, I{R2}, ...)
-    @type read: str | unicode | None
+    @type read: str | None
     @ivar chunk: Chunk number (e.g. I{001}, I{002}, ...)
-    @type chunk: str | unicode | None
+    @type chunk: str | None
     @ivar weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
     @type weak_reference_paired_reads: weakref.ReferenceType | None
     """
@@ -209,7 +209,7 @@ class Reads(NextGenerationBase):
         C{bsf.ngs.Reads.chunk} can be populated automatically.
         For I{file_type} I{External}, the attributes need populating manually.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type
         @type file_type: str
         @return: C{bsf.ngs.Reads} object
@@ -260,22 +260,22 @@ class Reads(NextGenerationBase):
         """Initialise a C{bsf.ngs.Reads} object.
 
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]] | None
         @param barcode: Barcode used for sample multiplexing
-        @type barcode: str | unicode | None
+        @type barcode: str | None
         @param lane: Lane number
-        @type lane: str | unicode | None
+        @type lane: str | None
         @param read: Read number (e.g. I{R1}, I{R2}, ...)
-        @type read: str | unicode | None
+        @type read: str | None
         @param chunk: Chunk number (e.g. I{001}, I{002}, ...)
-        @type chunk: str | unicode | None
+        @type chunk: str | None
         @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
         @type weak_reference_paired_reads: weakref.ReferenceType | None
         @return:
@@ -353,12 +353,12 @@ class Reads(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_paired_reads: {!r}\n'.format(indent, self.weak_reference_paired_reads))
@@ -503,9 +503,9 @@ class PairedReads(NextGenerationBase):
         Upon initialisation of this C{bsf.ngs.PairedReads} object, weak references (C{weakref.ReferenceType})
         are set in the C{bsf.ngs.Reads} objects.
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
@@ -632,12 +632,12 @@ class PairedReads(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample))
@@ -806,7 +806,7 @@ class Sample(NextGenerationBase):
         For a I{file_type} I{CASAVA} the name is automatically populated,
         while C{bsf.ngs.PairedReads} objects are automatically discovered.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type
         @type file_type: str
         @return: C{bsf.ngs.Sample}
@@ -891,9 +891,9 @@ class Sample(NextGenerationBase):
         """Initialise a C{bsf.ngs.Sample} object.
 
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
@@ -931,12 +931,12 @@ class Sample(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_project: {!r}\n'.format(indent, self.weak_reference_project))
@@ -1123,7 +1123,7 @@ class Project(NextGenerationBase):
         """Construct a C{bsf.ngs.Project} object from a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type
         @type file_type: str
         @return: C{bsf.ngs.Project}
@@ -1172,9 +1172,9 @@ class Project(NextGenerationBase):
         For a I{file_type} I{CASAVA} the name is automatically populated,
         while C{bsf.ngs.Sample} objects are automatically discovered.
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
@@ -1213,12 +1213,12 @@ class Project(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_prf: {!r}\n'.format(indent, self.weak_reference_prf))
@@ -1256,7 +1256,7 @@ class Project(NextGenerationBase):
         clear the weak reference, if it points back at the C{bsf.ngs.Project} object.
 
         @param name: C{bsf.ngs.Sample.name}
-        @type name: str | unicode
+        @type name: str
         @return: C{bsf.ngs.Sample}
         @rtype: bsf.ngs.Sample
         """
@@ -1295,11 +1295,11 @@ class ProcessedRunFolder(NextGenerationBase):
     @cvar default_name: Default key
     @type default_name: str
     @ivar prefix: Prefix
-    @type prefix: str | unicode | None
+    @type prefix: str | None
     @ivar flow_cell: Flow cell identifier
-    @type flow_cell: str | unicode | None
+    @type flow_cell: str | None
     @ivar version: Version number
-    @type version: str | unicode | None
+    @type version: str | None
     @ivar project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
     @type project_dict: dict[str, bsf.ngs.Project]
     @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
@@ -1319,7 +1319,7 @@ class ProcessedRunFolder(NextGenerationBase):
             - MUW_ Medical University Vienna
             - SET_ Robert Kralovics group
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return: File type (i.e. I{CASAVA} or I{External})
         @rtype: str
         """
@@ -1345,7 +1345,7 @@ class ProcessedRunFolder(NextGenerationBase):
         attributes can be automatically parsed from the I{file_path}, while
         C{bsf.ngs.Project} objects can be automatically discovered.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type
         @type file_type: str | None
         @return: C{bsf.ngs.ProcessedRunFolder}
@@ -1414,20 +1414,20 @@ class ProcessedRunFolder(NextGenerationBase):
         """Initialise a C{bsf.ngs.ProcessedRunFolder} object.
 
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]] | None
         @param prefix: Prefix
-        @type prefix: str | unicode | None
+        @type prefix: str | None
         @param flow_cell: Flow cell identifier
-        @type flow_cell: str | unicode | None
+        @type flow_cell: str | None
         @param version: Version
-        @type version: str | unicode | None
+        @type version: str | None
         @param project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
         @type project_dict: dict[str, bsf.ngs.Project] | None
         @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
@@ -1465,12 +1465,12 @@ class ProcessedRunFolder(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_collection: {!r}\n'.format(indent, self.weak_reference_collection))
@@ -1511,7 +1511,7 @@ class ProcessedRunFolder(NextGenerationBase):
         clear the weak reference, if it points back at the C{bsf.ngs.ProcessedRunFolder} object.
 
         @param name: C{bsf.ngs.Project.name}
-        @type name: str | unicode
+        @type name: str
         @return: C{bsf.ngs.Project}
         @rtype: bsf.ngs.Project
         """
@@ -1564,13 +1564,13 @@ class Collection(NextGenerationBase):
         """Construct a C{bsf.ngs.Collection} from a C{bsf.ngs.SampleAnnotationSheet} file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str
         @param name: Name
-        @type name: str | unicode
+        @type name: str
         @param sas_path: C{bsf.ngs.SampleAnnotationSheet} file path
-        @type sas_path: str | unicode
+        @type sas_path: str
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
         @type sas_prefix: str | None
@@ -1614,11 +1614,11 @@ class Collection(NextGenerationBase):
             - Group: C{bsf.ngs.Sample} objects can be grouped for further analysis in
                 e.g. RNA-Seq or ChIP-Seq experiments.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str
         @param name: Name
-        @type name: str | unicode
+        @type name: str
         @param sas: C{bsf.ngs.SampleAnnotationSheet}
         @type sas: bsf.ngs.SampleAnnotationSheet
         @param sas_prefix: Optional column header prefix
@@ -1646,7 +1646,7 @@ class Collection(NextGenerationBase):
 
             A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
             @return: File type
-            @rtype: str | unicode
+            @rtype: str
             """
             _key = 'File Type'
             if sas_prefix:
@@ -1798,7 +1798,7 @@ class Collection(NextGenerationBase):
             @param suffix: The read suffix (i.e. I{1} or I{2})
             @type suffix: str
             @param default_path: Default file path
-            @type default_path: str | unicode
+            @type default_path: str
             @return: C{bsf.ngs.Reads}
             @rtype: bsf.ngs.Reads | None
             """
@@ -1836,11 +1836,11 @@ class Collection(NextGenerationBase):
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
                 @type _reads: bsf.ngs.Reads | None
                 @param _reads_file: File path
-                @type _reads_file: str | unicode
+                @type _reads_file: str
                 @param _reads_name: Name
-                @type _reads_name: str | unicode
+                @type _reads_name: str
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype:  bsf.ngs.Reads | None
                 """
@@ -1856,11 +1856,11 @@ class Collection(NextGenerationBase):
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
                 @type _reads: bsf.ngs.Reads | None
                 @param _reads_file: File path
-                @type _reads_file: str | unicode
+                @type _reads_file: str
                 @param _reads_name: Name
-                @type _reads_name: str | unicode
+                @type _reads_name: str
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype:  bsf.ngs.Reads | None
                 """
@@ -1876,11 +1876,11 @@ class Collection(NextGenerationBase):
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
                 @type _reads: bsf.ngs.Reads | None
                 @param _reads_file: File path
-                @type _reads_file: str | unicode
+                @type _reads_file: str
                 @param _reads_name: Name
-                @type _reads_name: str | unicode
+                @type _reads_name: str
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype:  bsf.ngs.Reads | None
                 """
@@ -1896,11 +1896,11 @@ class Collection(NextGenerationBase):
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
                 @type _reads: bsf.ngs.Reads | None
                 @param _reads_file: File path
-                @type _reads_file: str | unicode
+                @type _reads_file: str
                 @param _reads_name: Name
-                @type _reads_name: str | unicode
+                @type _reads_name: str
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype:  bsf.ngs.Reads | None
                 """
@@ -1995,10 +1995,10 @@ class Collection(NextGenerationBase):
                 }
 
             reads_file = None
-            """ @type reads_file: str | unicode | None """
+            """ @type reads_file: str | None """
 
             reads_name = None
-            """ @type reads_name: str | unicode | None """
+            """ @type reads_name: str | None """
 
             # Reads{suffix} File
             _key = 'Reads' + suffix + ' File'
@@ -2058,7 +2058,7 @@ class Collection(NextGenerationBase):
             @param paired_reads: C{bsf.ngs.PairedReads} or C{None} object
             @type paired_reads: bsf.ngs.PairedReads | None
             @param default_path: Default file path
-            @type default_path: str | unicode
+            @type default_path: str
             @return: C{bsf.ngs.PairedReads} or C{None} object
             @rtype: bsf.ngs.PairedReads | None
             """
@@ -2097,7 +2097,7 @@ class Collection(NextGenerationBase):
                 @param _paired_reads: C{bsf.ngs.PairedReads} or C{None} object
                 @type _paired_reads: bsf.ngs.PairedReads | None
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @param _reads_1: First C{bsf.ngs.Reads} or C{None} object
                 @type _reads_1: bsf.ngs.Reads | None
                 @param _reads_2: Second C{bsf.ngs.Reads} or C{None} object
@@ -2126,7 +2126,7 @@ class Collection(NextGenerationBase):
                 @param _paired_reads: C{bsf.ngs.PairedReads} or C{None} object
                 @type _paired_reads: bsf.ngs.PairedReads | None
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @param _reads_1: First C{bsf.ngs.Reads} or C{None} object
                 @type _reads_1: bsf.ngs.Reads | None
                 @param _reads_2: Second C{bsf.ngs.Reads} or C{None} object
@@ -2155,7 +2155,7 @@ class Collection(NextGenerationBase):
                 @param _paired_reads: C{bsf.ngs.PairedReads} or C{None} object
                 @type _paired_reads: bsf.ngs.PairedReads | None
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @param _reads_1: First C{bsf.ngs.Reads} or C{None} object
                 @type _reads_1: bsf.ngs.Reads | None
                 @param _reads_2: Second C{bsf.ngs.Reads} or C{None} object
@@ -2184,7 +2184,7 @@ class Collection(NextGenerationBase):
                 @param _paired_reads: C{bsf.ngs.PairedReads} or C{None} object
                 @type _paired_reads: bsf.ngs.PairedReads | None
                 @param _file_type: File type
-                @type _file_type: str | unicode
+                @type _file_type: str
                 @param _reads_1: First C{bsf.ngs.Reads} or C{None} object
                 @type _reads_1: bsf.ngs.Reads | None
                 @param _reads_2: Second C{bsf.ngs.Reads} or C{None} object
@@ -2433,9 +2433,9 @@ class Collection(NextGenerationBase):
         """Initialise a C{bsf.ngs.Collection} object.
 
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
@@ -2479,12 +2479,12 @@ class Collection(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
@@ -2528,7 +2528,7 @@ class Collection(NextGenerationBase):
         clear the weak reference, if it points back at the C{bsf.ngs.Collection} object.
 
         @param name: C{bsf.ngs.ProcessedRunFolder.name}
-        @type name: str | unicode
+        @type name: str
         @return: C{bsf.ngs.ProcessedRunFolder}
         @rtype: bsf.ngs.ProcessedRunFolder
         """
@@ -2547,7 +2547,7 @@ class Collection(NextGenerationBase):
         If the C{bsf.ngs.ProcessedRunFolder} does not exist in the C{bsf.ngs.Collection} object,
         it will be automatically discovered and added.
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param file_type: File type
         @type file_type: str | None
         @return: C{bsf.ngs.ProcessedRunFolder}
@@ -2619,7 +2619,7 @@ class Collection(NextGenerationBase):
         automatically discovered and registered.
         Return the corresponding C{bsf.ngs.Sample}.
         @param row_dict: C{bsf.ngs.SampleAnnotationSheet} row Python C{dict}
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
         @type prefix: str | None
@@ -2676,7 +2676,7 @@ class Collection(NextGenerationBase):
         as a Python C{tuple} from a C{bsf.ngs.SampleAnnotationSheet} row Python C{dict}.
 
         @param row_dict: Comparison CSV file row Python C{dict}
-        @type row_dict: dict[str, str | unicode]
+        @type row_dict: dict[str, str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         @type prefix: str | None
@@ -2721,9 +2721,9 @@ class Collection(NextGenerationBase):
         """Convert a C{bsf.ngs.Collection} into a SampleAnnotationSheet object.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @return: SampleAnnotationSheet object
         @rtype: SampleAnnotationSheet
         """
@@ -2912,9 +2912,9 @@ class Collection(NextGenerationBase):
         """Write as a SampleAnnotationSheet to a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @return:
         @rtype:
         """
@@ -2930,7 +2930,7 @@ class SampleGroup(object):
     The grouping is usually defined in a sample annotation sheet.
     Attributes:
     @ivar name: Name
-    @type name: str | unicode | None
+    @type name: str | None
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
     @type sample_list: list[bsf.ngs.Sample]
     """
@@ -2946,7 +2946,7 @@ class SampleGroup(object):
         """Initialise a C{bsf.ngs.SampleGroup} object.
 
         @param name: Name
-        @type name: str | unicode | None
+        @type name: str | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample] | None
         @return:

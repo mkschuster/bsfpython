@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Simple Linux Utility for Resource Management (SLURM) DRMS module
+"""Simple Linux Utility for Resource Management (SLURM) DRMS module.
 
 A package of methods supporting the Simple Linux Utility for Resource Management (SLURM) system as
 Distributed Resource Management System (DRMS) module.
@@ -637,7 +637,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         """Select all C{bsf.drms.slurm.ProcessSLURM} objects by a list of states.
 
         @param state_list: State
-        @type state_list: list[str | unicode]
+        @type state_list: list[str]
         @param negation: Negation i.e. SQL NOT IN
         @type negation: bool
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
@@ -792,7 +792,7 @@ def submit(stage, debug=0):
         raise Exception('Cannot write to SQLite database file path:', repr(file_path))
 
     output_list = list()
-    """ @type output_list: list[str | unicode] """
+    """ @type output_list: list[str] """
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -896,7 +896,7 @@ def submit(stage, debug=0):
         # Consequently, SLURM process identifiers need to be tracked here, by means of a SQLite database.
 
         process_identifier_list = list()
-        """ @type process_identifier_list: list[str | unicode] """
+        """ @type process_identifier_list: list[str] """
         for executable_name in executable.dependencies:
             process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable_name)
             if len(process_slurm_list):
@@ -991,7 +991,7 @@ def check_state(stage, debug=0):
         @param _process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
         @type _process_slurm_adaptor: bsf.drms.slurm.ProcessSLURMAdaptor
         @param _stdout_path: I{STDOUT} file path
-        @type _stdout_path: str | unicode | None
+        @type _stdout_path: str | None
         @return:
         @rtype:
         """

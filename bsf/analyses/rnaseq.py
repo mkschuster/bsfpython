@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RNA-seq Analysis module
+"""RNA-seq Analysis module.
 
 A package of classes and methods supporting RNA-seq analyses.
 """
@@ -51,50 +51,50 @@ class FilePathTophat(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar accepted_hits_bam: TopHat accepted hits BAM file
-    @type accepted_hits_bam: str | unicode
+    @type accepted_hits_bam: str
     @ivar accepted_hits_bam_link_source: TopHat accepted hits BAM file symbolic link source
-    @type accepted_hits_bam_link_source: str | unicode
+    @type accepted_hits_bam_link_source: str
     @ivar accepted_hits_bam_link_target: TopHat accepted hits BAM file symbolic link target
-    @type accepted_hits_bam_link_target: str | unicode
+    @type accepted_hits_bam_link_target: str
     @ivar accepted_hits_bai: TopHat accepted hits BAI file
-    @type accepted_hits_bai: str | unicode
+    @type accepted_hits_bai: str
     @ivar accepted_hits_bai_link_source: TopHat accepted hits BAI file symbolic link source
-    @type accepted_hits_bai_link_source: str | unicode
+    @type accepted_hits_bai_link_source: str
     @ivar accepted_hits_bai_link_target: TopHat accepted hits BAI file symbolic link target
-    @type accepted_hits_bai_link_target: str | unicode
+    @type accepted_hits_bai_link_target: str
     @ivar accepted_hits_bw: TopHat accepted hits bigWig file
-    @type accepted_hits_bw: str | unicode
+    @type accepted_hits_bw: str
     @ivar align_summary: TopHat align summary file
-    @type align_summary: str | unicode
+    @type align_summary: str
     @ivar deletions_bb: TopHat deletions bigBed file
-    @type deletions_bb: str | unicode
+    @type deletions_bb: str
     @ivar deletions_bed: TopHat deletions BED file
-    @type deletions_bed: str | unicode
+    @type deletions_bed: str
     @ivar insertions_bb: TopHat insertions bigBed file
-    @type insertions_bb: str | unicode
+    @type insertions_bb: str
     @ivar insertions_bed: TopHat insertions BED file
-    @type insertions_bed: str | unicode
+    @type insertions_bed: str
     @ivar junctions_bb: TopHat junctions bigBed file
-    @type junctions_bb: str | unicode
+    @type junctions_bb: str
     @ivar junctions_bed: TopHat junctions BED file
-    @type junctions_bed: str | unicode
+    @type junctions_bed: str
     @ivar prep_reads_info: TopHat prepare reads information file
-    @type prep_reads_info: str | unicode
+    @type prep_reads_info: str
     @ivar unmapped_bam: TopHat unmapped BAM file
-    @type unmapped_bam: str | unicode
+    @type unmapped_bam: str
     @ivar unmapped_bam_link_source: TopHat unmapped BAM file symbolic link source
-    @type unmapped_bam_link_source: str | unicode
+    @type unmapped_bam_link_source: str
     @ivar unmapped_bam_link_target: TopHat unmapped BAM file symbolic link target
-    @type unmapped_bam_link_target: str | unicode
+    @type unmapped_bam_link_target: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathTophat} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -128,46 +128,46 @@ class FilePathCufflinks(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes tab-separated value (TSV) file
-    @type fpkm_tracking_genes_tsv: str | unicode
+    @type fpkm_tracking_genes_tsv: str
     @ivar fpkm_tracking_isoforms_tsv: Cufflinks FPKM tracking isoforms tab-separated value (TSV) file
-    @type fpkm_tracking_isoforms_tsv: str | unicode
+    @type fpkm_tracking_isoforms_tsv: str
     @ivar skipped_gtf: Cufflinks skipped regions GTF file
-    @type skipped_gtf: str | unicode
+    @type skipped_gtf: str
     @ivar skipped_gtf_link_source: Cufflinks skipped regions GTF symbolic links source
-    @type skipped_gtf_link_source: str | unicode
+    @type skipped_gtf_link_source: str
     @ivar skipped_gtf_link_target: Cufflinks skipped regions GTF symbolic links target
-    @type skipped_gtf_link_target: str | unicode
+    @type skipped_gtf_link_target: str
     @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
-    @type temporary_big_gene_prediction: str | unicode
+    @type temporary_big_gene_prediction: str
     @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
-    @type temporary_gene_prediction: str | unicode
+    @type temporary_gene_prediction: str
     @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
-    @type temporary_sorted_tsv: str | unicode
+    @type temporary_sorted_tsv: str
     @ivar temporary_slopped_tsv: Temporary slopped (bedtools slop) tab-separated value (TSV) file
-    @type temporary_slopped_tsv: str | unicode
-    @ivar temporary_fixed_tsv: Temporary splopped and fixed (tab at end) tab-separated value (TSV) file
-    @type temporary_fixed_tsv: str | unicode
+    @type temporary_slopped_tsv: str
+    @ivar temporary_fixed_tsv: Temporary slopped and fixed (tab at end) tab-separated value (TSV) file
+    @type temporary_fixed_tsv: str
     @ivar transcripts_bb: Cufflinks transcript assembly bigBed file
-    @type transcripts_bb: str | unicode
+    @type transcripts_bb: str
     @ivar transcripts_bb_link_source: Cufflinks transcript assembly bigBed symbolic link source
-    @type transcripts_bb_link_source: str | unicode
+    @type transcripts_bb_link_source: str
     @ivar transcripts_bb_link_target: Cufflinks transcript assembly bigBed symbolic link target
-    @type transcripts_bb_link_target: str | unicode
+    @type transcripts_bb_link_target: str
     @ivar transcripts_gtf: Cufflinks transcript assembly GTF file
-    @type transcripts_gtf: str | unicode
+    @type transcripts_gtf: str
     @ivar transcripts_gtf_link_source: Cufflinks transcript assembly GTF symbolic links source
-    @type transcripts_gtf_link_source: str | unicode
+    @type transcripts_gtf_link_source: str
     @ivar transcripts_gtf_link_target: Cufflinks transcript assembly GTF symbolic links target
-    @type transcripts_gtf_link_target: str | unicode
+    @type transcripts_gtf_link_target: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathCufflinks} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -199,48 +199,48 @@ class FilePathCuffmerge(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar assembly_txt: Assembly text file
-    @type assembly_txt: str | unicode
+    @type assembly_txt: str
     @ivar merged_bb: Cuffmerge transcript assembly bigBed file
-    @type merged_bb: str | unicode
+    @type merged_bb: str
     @ivar merged_bb_link_source: Cuffmerge transcript assembly bigBed symbolic link source
-    @type merged_bb_link_source: str | unicode
+    @type merged_bb_link_source: str
     @ivar merged_bb_link_target: Cuffmerge transcript assembly bigBed symbolic link target
-    @type merged_bb_link_target: str | unicode
+    @type merged_bb_link_target: str
     @ivar merged_gtf: Cuffmerge merged GTF file
-    @type merged_gtf: str | unicode
+    @type merged_gtf: str
     @ivar merged_gtf_link_source: Cuffmerge transcript assembly GTF symbolic links source
-    @type merged_gtf_link_source: str | unicode
+    @type merged_gtf_link_source: str
     @ivar merged_gtf_link_target: Cuffmerge transcript assembly GTF symbolic links target
-    @type merged_gtf_link_target: str | unicode
+    @type merged_gtf_link_target: str
     @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
-    @type temporary_gene_prediction: str | unicode
+    @type temporary_gene_prediction: str
     @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
-    @type temporary_big_gene_prediction: str | unicode
+    @type temporary_big_gene_prediction: str
     @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
-    @type temporary_sorted_tsv: str | unicode
+    @type temporary_sorted_tsv: str
     @ivar cuffcompare_prefix: Cuffcompare output prefix, including the cuffmerge directory path
-    @type cuffcompare_prefix: str | unicode
+    @type cuffcompare_prefix: str
     @ivar cuffcompare_combined_gtf: Cuffcompare merged GTF file
-    @type cuffcompare_combined_gtf: str | unicode
-    @ivar cuffcompare_loci: Cuffcomapre loci file
-    @type cuffcompare_loci: str | unicode
+    @type cuffcompare_combined_gtf: str
+    @ivar cuffcompare_loci: Cuffcompare loci file
+    @type cuffcompare_loci: str
     @ivar cuffcompare_stats: Cuffcompare stats file
-    @type cuffcompare_stats: str | unicode
+    @type cuffcompare_stats: str
     @ivar cuffcompare_tracking: Cuffcompare tracking file
-    @type cuffcompare_tracking: str | unicode
+    @type cuffcompare_tracking: str
     @ivar cuffcompare_refmap: Cuffcompare merged.gtf.refmap
-    @type cuffcompare_refmap: str | unicode
+    @type cuffcompare_refmap: str
     @ivar cuffcompare_tmap: Cuffcompare merged.gtf.tmap
-    @type cuffcompare_tmap: str | unicode
+    @type cuffcompare_tmap: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathCuffmerge} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -273,16 +273,16 @@ class FilePathCuffquant(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar abundances: Cuffquant abundances file
-    @type abundances: str | unicode
+    @type abundances: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathCuffquant} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -299,16 +299,16 @@ class FilePathCuffnorm(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar abundances_tsv: Abundances TSV file
-    @type abundances_tsv: str | unicode
+    @type abundances_tsv: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathCuffnorm} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -325,14 +325,14 @@ class FilePathCuffdiff(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathCuffdiff} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -359,16 +359,16 @@ class FilePathMonocle(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar annotation_tsv: Monocle annotation TSV
-    @type annotation_tsv: str | unicode
+    @type annotation_tsv: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rnaseq.FilePathMonocle} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -409,21 +409,21 @@ class Tuxedo(bsf.analysis.Analysis):
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool | None
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode | None
+    @type comparison_path: str | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode | None
+    @type genome_fasta_path: str | None
     @ivar genome_index_path: Bowtie genome index path
-    @type genome_index_path: str | unicode | None
+    @type genome_index_path: str | None
     @ivar genome_sizes_path: Reference genome sizes file path
-    @type genome_sizes_path: str | unicode | None
+    @type genome_sizes_path: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | unicode | None
+    @type transcriptome_index_path: str | None
     @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | unicode | None
+    @type transcriptome_gtf_path: str | None
     @ivar mask_gtf_path: GTF file path to mask transcripts
-    @type mask_gtf_path: str | unicode | None
+    @type mask_gtf_path: str | None
     @ivar multi_read_correction: Apply multi-read correction
     @type multi_read_correction: bool | None
     @ivar library_type: Library type
@@ -653,7 +653,7 @@ class Tuxedo(bsf.analysis.Analysis):
         @param sample_name: Sample name
         @type sample_name: str
         @return: C{FilePathTophat} object
-        @rtype FilePathTophat
+        @rtype: FilePathTophat
         """
         return FilePathTophat(
             prefix='_'.join(('rnaseq_tophat', sample_name)))
@@ -667,7 +667,7 @@ class Tuxedo(bsf.analysis.Analysis):
         @param sample_name: Sample name
         @type sample_name: str
         @return: C{FilePathTophat} object
-        @rtype FilePathTophat
+        @rtype: FilePathTophat
         """
         return FilePathTophat(
             prefix='_'.join(('rnaseq_tophat', sample_name)))
@@ -834,21 +834,21 @@ class Tuxedo(bsf.analysis.Analysis):
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool | None
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode | None
+        @type comparison_path: str | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode | None
+        @type genome_fasta_path: str | None
         @param genome_index_path: Bowtie genome index path
-        @type genome_index_path: str | unicode | None
+        @type genome_index_path: str | None
         @param genome_sizes_path: Reference genome sizes file path
-        @type genome_sizes_path: str | unicode | None
+        @type genome_sizes_path: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | unicode | None
+        @type transcriptome_index_path: str | None
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | unicode | None
+        @type transcriptome_gtf_path: str | None
         @param mask_gtf_path: GTF file path to mask transcripts
-        @type mask_gtf_path: str | unicode | None
+        @type mask_gtf_path: str | None
         @param multi_read_correction: Apply multi-read correction
         @type multi_read_correction: bool | None
         @param library_type: Library type
@@ -1163,9 +1163,9 @@ class Tuxedo(bsf.analysis.Analysis):
             """Private function to write a sample annotation file for Cuffdiff or Cuffnorm to disk.
 
             @param annotation_path: Annotation file path
-            @type annotation_path: str | unicode
+            @type annotation_path: str
             @param annotation_dict: Annotation dict
-            @type annotation_dict: dict[str, list[str | unicode]]
+            @type annotation_dict: dict[str, list[str]]
             """
             with open(file=annotation_path, mode='wt') as _annotation_file:
                 _annotation_file.write('sample_id\tgroup_label\n')
@@ -1460,9 +1460,9 @@ class Tuxedo(bsf.analysis.Analysis):
                 # Set rnaseq_tophat arguments for reads1 and reads2.
 
                 reads_1_file_path_list = list()
-                """ @type reads_1_file_path_list: list[str | unicode] """
+                """ @type reads_1_file_path_list: list[str] """
                 reads_2_file_path_list = list()
-                """ @type reads_2_file_path_list: list[str | unicode] """
+                """ @type reads_2_file_path_list: list[str] """
 
                 for paired_reads_name in sorted(paired_reads_dict):
                     for paired_reads in paired_reads_dict[paired_reads_name]:
@@ -1829,15 +1829,15 @@ class Tuxedo(bsf.analysis.Analysis):
             # Check that the comparison contains at least one sample group.
 
             cuffdiff_cuffnorm_abundances_dict = dict()
-            """ @type cuffdiff_cuffnorm_abundances_dict: dict[str, list[str | unicode]] """
+            """ @type cuffdiff_cuffnorm_abundances_dict: dict[str, list[str]] """
             cuffdiff_cuffnorm_alignments_dict = dict()
-            """ @type cuffdiff_cuffnorm_alignments_dict: dict[str, list[str | unicode]] """
+            """ @type cuffdiff_cuffnorm_alignments_dict: dict[str, list[str]] """
             cuffdiff_cuffnorm_dependencies = list()
             """ @type cuffdiff_cuffnorm_dependencies: list[str] """
             cuffmerge_cuffnorm_submit = len(sample_group_list) >= 1
             """ @type cuffmerge_cuffnorm_submit: bool """
             cuffmerge_transcript_gtf_list = list()
-            """ @type cuffmerge_transcript_gtf_list: list[str | unicode] """
+            """ @type cuffmerge_transcript_gtf_list: list[str] """
 
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_run_cuffmerge = self.get_prefix_run_cuffmerge(comparison_name=comparison_name)
@@ -2019,9 +2019,9 @@ class Tuxedo(bsf.analysis.Analysis):
                     print('    SampleGroup name:', sample_group.name)
 
                 per_group_abundances_list = list()
-                """ @type per_group_abundances_list: list[str | unicode] """
+                """ @type per_group_abundances_list: list[str] """
                 per_group_alignments_list = list()
-                """ @type per_group_alignments_list: list[str | unicode] """
+                """ @type per_group_alignments_list: list[str] """
 
                 for sample in sample_group.sample_list:
                     if self.debug > 0:
@@ -2165,7 +2165,7 @@ class Tuxedo(bsf.analysis.Analysis):
                         # 'sample_name' is used by Monocle in the plot_cell_clusters() function internally.
                         'original_name': sample.name
                     }
-                    """ @type monocle_row_dict: dict[str, str | unicode] """
+                    """ @type monocle_row_dict: dict[str, str] """
                     # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample Monocle *'.
                     for annotation_key in filter(
                             lambda x: x.startswith('Monocle '), sample.annotation_dict.keys()):
@@ -2450,7 +2450,7 @@ class Tuxedo(bsf.analysis.Analysis):
             # Write a HTML document.
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">')
             str_list.append(self.project_name + ' ' + self.name)
@@ -3422,7 +3422,7 @@ class Tuxedo(bsf.analysis.Analysis):
             """
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             # Group via UCSC super tracks.
 
@@ -3688,7 +3688,7 @@ class FilePathDESeq(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.rnaseq.FilePathDESeq} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -3710,15 +3710,15 @@ class DESeq(bsf.analysis.Analysis):
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode | None
+    @type comparison_path: str | None
     @ivar contrast_path: Contrast file path
-    @type contrast_path: str | unicode | None
+    @type contrast_path: str | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode | None
+    @type genome_fasta_path: str | None
     @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | unicode | None
+    @type transcriptome_gtf_path: str | None
     @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | unicode | None
+    @type transcriptome_index_path: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     """
@@ -3796,17 +3796,17 @@ class DESeq(bsf.analysis.Analysis):
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode | None
+        @type comparison_path: str | None
         @param contrast_path: Contrast file path
-        @type contrast_path: str | unicode | None
+        @type contrast_path: str | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode | None
+        @type genome_fasta_path: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | unicode | None
+        @type transcriptome_gtf_path: str | None
         @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | unicode | None
+        @type transcriptome_index_path: str | None
         @return:
         @rtype:
         """
@@ -4026,7 +4026,7 @@ class DESeq(bsf.analysis.Analysis):
                     row_dict['run'] = sample.name
                 else:
                     row_dict['sample'] = sample.name
-                """ @type row_dict: dict[str, str | unicode] """
+                """ @type row_dict: dict[str, str] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
                 for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                     row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
@@ -4062,7 +4062,7 @@ class DESeq(bsf.analysis.Analysis):
             @param suffix: Suffix
             @type suffix: str
             @return: Relative HTML image source path
-            @rtype: str | unicode
+            @rtype: str
             """
             return prefix + '/' + prefix + '_' + suffix
 
@@ -4081,7 +4081,7 @@ class DESeq(bsf.analysis.Analysis):
             # Write a HTML document.
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')

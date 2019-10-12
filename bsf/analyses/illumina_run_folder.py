@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Illumina Run Folder Analysis module
+"""Illumina Run Folder Analysis module.
 
 A package of classes and methods supporting analyses to archive and restore Illumina Run Folders.
 """
@@ -48,9 +48,9 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
     @cvar compress_archive_files: Compress archive files with GNU Zip
     @type compress_archive_files: bool
     @ivar archive_directory: Archive directory
-    @type archive_directory: str | unicode | None
+    @type archive_directory: str | None
     @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | unicode | None
+    @type run_directory: str | None
     @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str | None
@@ -279,9 +279,9 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: Archive directory
-        @type archive_directory: str | unicode | None
+        @type archive_directory: str | None
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode | None
+        @type run_directory: str | None
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
@@ -598,7 +598,7 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         # Cluster intensity file (*.cif) directories, if present, need excluding from archiving at a later stage.
 
         exclude_intensities_patterns = list()
-        """ @type exclude_intensities_patterns: list[str | unicode] """
+        """ @type exclude_intensities_patterns: list[str] """
         archive_folder_dependencies = list()
         """ @type archive_folder_dependencies: list[str] """
 
@@ -898,16 +898,16 @@ class FilePathIlluminaRunFolderRestore(bsf.procedure.FilePath):
 
     Attributes:
     @ivar folder: Folder GNU Tar archive file
-    @type folder: str | unicode
+    @type folder: str
     @ivar intensities: Intensities GNU Tar archive file
-    @type intensities: str | unicode
+    @type intensities: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -932,9 +932,9 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int
     @ivar archive_directory: File path to an archive directory
-    @type archive_directory: str | unicode | None
+    @type archive_directory: str | None
     @ivar illumina_directory: File path to the directory of I{Illumina Run Folder} directories
-    @type illumina_directory: str | unicode | None
+    @type illumina_directory: str | None
     @ivar extract_intensities: Extract cluster intensity file (*.cif) directories
     @type extract_intensities: bool | None
     @ivar force: Force processing of incomplete Illumina Run Folders
@@ -1057,9 +1057,9 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: File path to an archive directory
-        @type archive_directory: str | unicode | None
+        @type archive_directory: str | None
         @param illumina_directory: File path to the directory of I{Illumina Run Folder} directories
-        @type illumina_directory: str | unicode | None
+        @type illumina_directory: str | None
         @param extract_intensities: Extract cluster intensity file (*.cif) directories
         @type extract_intensities: bool | None
         @param force: Force processing of incomplete Illumina Run Folders

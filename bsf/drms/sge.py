@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Son of Grid Engine (SGE) DRMS module
+"""Son of Grid Engine (SGE) DRMS module.
 
 A package of methods supporting the Son of Grid Engine (SGE) system as
 Distributed Resource Management System (DRMS) module
@@ -476,7 +476,7 @@ def submit(stage, debug=0):
         return
 
     output_list = list()
-    """ @type output_list: list[str | unicode] """
+    """ @type output_list: list[str] """
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -522,7 +522,7 @@ def submit(stage, debug=0):
             stage.memory_free_virtual = stage.memory_limit_hard
 
         resource_list = list()
-        """ @type resource_list: list[str | unicode] """
+        """ @type resource_list: list[str] """
 
         # Require physical memory to be free ...
         if stage.memory_free_mem:

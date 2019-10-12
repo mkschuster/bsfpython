@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Trimmomatic Analysis module
+"""Trimmomatic Analysis module.
 
 A package of classes and methods supporting the Trimmomatic tool.
 """
@@ -42,32 +42,32 @@ class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar trim_log_tsv: Trimmomatic trim log Tab-Separated Value (TSV) file path
-    @type trim_log_tsv: str | unicode
+    @type trim_log_tsv: str
     @ivar summary_tsv: Summary Tab-Separated Value (TSV) file path
-    @type summary_tsv: str | unicode
+    @type summary_tsv: str
     @ivar coverage_png: Coverage Portable Network Graphics (PNG) file path
-    @type coverage_png: str | unicode
+    @type coverage_png: str
     @ivar frequency_png: Frequency Portable Network Graphics (PNG) file path
-    @type frequency_png: str | unicode
+    @type frequency_png: str
     @ivar surviving_png: Surviving Portable Network Graphics (PNG) file path
-    @type surviving_png: str | unicode
+    @type surviving_png: str
     @ivar reads_1p: First Reads paired
-    @type reads_1p: str | unicode
+    @type reads_1p: str
     @ivar reads_1u: First Reads unpaired
-    @type reads_1u: str | unicode
+    @type reads_1u: str
     @ivar reads_2p: Second Reads paired
-    @type reads_2p: str | unicode
+    @type reads_2p: str
     @ivar reads_2u: Second Reads unpaired
-    @type reads_2u: str | unicode
+    @type reads_2u: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -93,18 +93,18 @@ class FilePathTrimmomaticProject(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar sas_path_old: Old Sample Annotation Sheet file path
-    @type sas_path_old: str | unicode
+    @type sas_path_old: str
     @ivar sas_path_new: New Sample Annotation Sheet file path
-    @type sas_path_new: str | unicode
+    @type sas_path_new: str
     """
 
     def __init__(self, prefix, prefix_analysis, project_name):
         """Initialise a C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param prefix_analysis: C{bsf.analysis.Analysis.prefix}
         @type prefix_analysis: str
         @param project_name: Project name
@@ -131,13 +131,13 @@ class Trimmomatic(bsf.analysis.Analysis):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar adapter_path: Adapter file path
-    @type adapter_path: None | str | unicode
+    @type adapter_path: str | None
     @ivar trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
-    @type trimming_step_pe_list: None | list[str | unicode]
+    @type trimming_step_pe_list: list[str] | None
     @ivar trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
-    @type trimming_step_se_list: None | list[str | unicode]
+    @type trimming_step_se_list: list[str] | None
     @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
-    @type classpath_trimmomatic: None | str | unicode
+    @type classpath_trimmomatic: str | None
     """
 
     name = 'Trimmomatic Analysis'
@@ -274,13 +274,13 @@ class Trimmomatic(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param adapter_path: Adapter file path
-        @type adapter_path: None | str | unicode
+        @type adapter_path: str | None
         @param trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
-        @type trimming_step_pe_list: None | list[str | unicode]
+        @type trimming_step_pe_list: list[str] | None
         @param trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
-        @type trimming_step_se_list: None | list[str | unicode]
+        @type trimming_step_se_list: list[str] | None
         @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
-        @type classpath_trimmomatic: None | str | unicode
+        @type classpath_trimmomatic: str | None
         @return:
         @rtype:
         """
@@ -360,7 +360,7 @@ class Trimmomatic(bsf.analysis.Analysis):
             If the file path is not absolute, prepend the value of the adapter_path
             instance variable.
             @param trimming_step_list: Python C{list} of trimming steps.
-            @type trimming_step_list: list[str | unicode]
+            @type trimming_step_list: list[str]
             @return:
             @rtype:
             """
@@ -430,7 +430,7 @@ class Trimmomatic(bsf.analysis.Analysis):
                 sys.stdout.writelines(sample.trace(level=1))
 
             sample_step_list = list()
-            """ @type sample_step_list: list[str | unicode] """
+            """ @type sample_step_list: list[str] """
             if 'Trimmomatic Steps' in sample.annotation_dict:
                 for trimming_step in sample.annotation_dict['Trimmomatic Steps']:
                     sample_step_list.extend(self.configuration.list_from_csv(csv_string=trimming_step))
@@ -659,7 +659,7 @@ class Trimmomatic(bsf.analysis.Analysis):
         # Write a HTML document.
 
         report_list = list()
-        """ @type report_list: list[str | unicode] """
+        """ @type report_list: list[str] """
 
         report_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         report_list.append('\n')

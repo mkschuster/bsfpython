@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generic ConsecutiveRunnable module
+"""Generic ConsecutiveRunnable module.
 
 A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConsecutiveRunnable}.
 Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for

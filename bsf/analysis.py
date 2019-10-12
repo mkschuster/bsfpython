@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Analysis module
+"""Analysis module.
 
 A package of classes and methods modelling analyses.
 """
@@ -70,17 +70,17 @@ class Analysis(object):
     @ivar genome_version: Genome version (e.g. hg19, mm10, GRCh37, GRCm38, ...)
     @type genome_version: str | None
     @ivar cache_directory: C{bsf.analysis.Analysis}-wide cache directory
-    @type cache_directory: str | unicode | None
+    @type cache_directory: str | None
     @ivar input_directory: Input directory
-    @type input_directory: str | unicode | None
+    @type input_directory: str | None
     @ivar output_directory: Output directory, user-specified including a genome version sub-directory
-    @type output_directory: str | unicode | None
+    @type output_directory: str | None
     @ivar project_directory: Project-specific directory
-    @type project_directory: str | unicode | None
+    @type project_directory: str | None
     @ivar genome_directory: Genome-specific directory
-    @type genome_directory: str | unicode | None
+    @type genome_directory: str | None
     @ivar sas_file: Sample Annotation Sheet (SAS) file path
-    @type sas_file: str | unicode | None
+    @type sas_file: str | None
     @ivar sas_prefix: A prefix to columns in a Sample Annotation Sheet
         (e.g. Control Sample, Treatment Sample, ...)
     @type sas_prefix: str | None
@@ -112,7 +112,7 @@ class Analysis(object):
         before the project-specific one gets read, if it is not the same file.
 
         @param config_path: UNIX-style configuration file path
-        @type config_path: str | unicode
+        @type config_path: str
         @return: C{bsf.analysis.Analysis}
         @rtype: Analysis
         """
@@ -169,19 +169,19 @@ class Analysis(object):
         @param genome_version: Genome version
         @type genome_version: str | None
         @param cache_directory: C{bsf.analysis.Analysis}-wide cache directory
-        @type cache_directory: str | unicode | None
+        @type cache_directory: str | None
         @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str | unicode | None
+        @type input_directory: str | None
         @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str | unicode | None
+        @type output_directory: str | None
         @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
             normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str | unicode | None
+        @type project_directory: str | None
         @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
             normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str | unicode | None
+        @type genome_directory: str | None
         @param sas_file: Sample Annotation Sheet (SAS) file path
-        @type sas_file: str | unicode | None
+        @type sas_file: str | None
         @param sas_prefix: A prefix to columns in a Sample Annotation Sheet
             (e.g. Control Sample, Treatment Sample, ...)
         @type sas_prefix: str | None
@@ -250,12 +250,12 @@ class Analysis(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  project_name: {!r}\n'.format(indent, self.project_name))
@@ -377,12 +377,12 @@ class Analysis(object):
 
         Based on the project name, a list of file name prefixes and one file name suffix,
         the file name that exists in the file system will be returned.
-        @param prefix_list: Python C{list} of Python C{str} or C{unicode} (prefix) objects
-        @type prefix_list: list[str | unicode] | None
+        @param prefix_list: Python C{list} of Python C{str} (prefix) objects
+        @type prefix_list: list[str] | None
         @param suffix: File name suffix
-        @type suffix: str | unicode
+        @type suffix: str
         @return: File name or None
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if prefix_list is None:
             prefix_list = [self.prefix]
@@ -770,13 +770,13 @@ class Analysis(object):
 
         <a href="prefix/prefix_suffix">text</a>
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param suffix: Suffix
-        @type suffix: str | unicode
+        @type suffix: str
         @param text: Link text
-        @type text: str | unicode
+        @type text: str
         @return: HTML anchor element
-        @rtype: str | unicode
+        @rtype: str
         """
         return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
 
@@ -786,20 +786,20 @@ class Analysis(object):
 
         <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param suffix: Suffix
-        @type suffix: str | unicode
+        @type suffix: str
         @param text: Alternative text
-        @type text: str | unicode
+        @type text: str
         @param height: Image height attribute
         @type height: str
         @param width: Image width attribute
         @type width: str
         @return: HTML image element
-        @rtype: str | unicode
+        @rtype: str
         """
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('<img')
         str_list.append('alt="' + text + '"')
@@ -820,12 +820,12 @@ class Analysis(object):
         """Get a genome description HTML paragraph.
 
         @param genome_version: Genome version
-        @type genome_version: None | str | unicode
+        @type genome_version: str | None
         @return: Genome description
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         if genome_version is None:
             return str_list
@@ -856,12 +856,12 @@ class Analysis(object):
         """Get a transcriptome description HTML paragraph.
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str | unicode
+        @type transcriptome_version: str | None
         @return: Transcriptome description
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         if transcriptome_version is None:
             return str_list
@@ -909,8 +909,8 @@ class Analysis(object):
             C{bsf.analysis.Analysis.project_name} and
             C{bsf.analysis.Analysis.report_name}
         @type title: str
-        @return: XHTML 1.0 header section as Python C{list} of Python C{str} or C{unicode} objects
-        @rtype: list[str | unicode]
+        @return: XHTML 1.0 header section as Python C{list} of Python C{str} objects
+        @rtype: list[str]
         """
         if creator is None or not creator:
             creator = getpass.getuser()
@@ -924,7 +924,7 @@ class Analysis(object):
             title = ' '.join((self.project_name, self.name))
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         if strict:
             str_list.append('<!DOCTYPE html PUBLIC ')
@@ -981,8 +981,8 @@ class Analysis(object):
             C{bsf.analysis.Analysis.project_name} and
             C{bsf.analysis.Analysis.report_name}
         @type title: str
-        @return: XHTML 1.0 footer section as Python C{list} of Python C{str} or C{unicode} objects
-        @rtype: list[str | unicode]
+        @return: XHTML 1.0 footer section as Python C{list} of Python C{str} objects
+        @rtype: list[str]
         """
         if not contact:
             contact = bsf.standards.Operator.get_contact()
@@ -1000,7 +1000,7 @@ class Analysis(object):
             title = ' '.join((self.project_name, self.name))
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('<hr class="footer" />\n')
         str_list.append('<p class="footer">\n')
@@ -1048,7 +1048,7 @@ class Analysis(object):
         XHTML header C{bsf.analysis.Analysis.get_html_header}, the XHTML content and the
         XHTML footer C{bsf.analysis.Analysis.get_html_footer} before returning the report.
         @param content: XHTML 1.0 content
-        @type content: list[str | unicode]
+        @type content: list[str]
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
             defaults to XHTML 1.0 Strict
         @type strict: bool
@@ -1075,11 +1075,11 @@ class Analysis(object):
         @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
             defaults to C{bsf.standards.URL.get_host_name()}
         @type url_host_name: str
-        @return: XHTML 1.0 report as Python C{list} of Python C{str} or C{unicode} objects
-        @rtype: list[str | unicode]
+        @return: XHTML 1.0 report as Python C{list} of Python C{str} objects
+        @rtype: list[str]
         """
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.extend(
             self.get_html_header(
@@ -1116,7 +1116,7 @@ class Analysis(object):
         XHTML header C{bsf.analysis.Analysis.get_html_header}, the XHTML content and the
         XHTML footer C{bsf.analysis.Analysis.get_html_footer} before writing the file.
         @param content: XHTML 1.0 content
-        @type content: list[str | unicode]
+        @type content: list[str]
         @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.analysis.Analysis.prefix}
         @type prefix: str
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
@@ -1353,7 +1353,7 @@ class Analysis(object):
         """Return a URL to automatically attach a UCSC Genome Browser Track Hub.
 
         @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
-        @type link_path: str | unicode
+        @type link_path: str
         @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
         @type options_dict: dict[str, str]
         @return: A URL to automatically attach a UCSC Genome Browser Track Hub
@@ -1376,13 +1376,13 @@ class Analysis(object):
         """Return a XHTML 1.0 anchor element to automatically attach a UCSC Genome Browser Track Hub.
 
         @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
-        @type link_path: str | unicode
+        @type link_path: str
         @see: C{bsf.analysis.Analysis.create_public_project_link}
-        @return: XHTML 1.0 anchor element as Python C{list} of Python C{str} or C{unicode} objects
-        @rtype: list[str | unicode]
+        @return: XHTML 1.0 anchor element as Python C{list} of Python C{str} objects
+        @rtype: list[str]
         """
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('UCSC Genome Browser Track Hub ')
         str_list.append('<a href="' + self.ucsc_hub_url(link_path=link_path) + '">' + self.project_name + '</a>')
@@ -1403,7 +1403,7 @@ class Analysis(object):
             prefix = self.prefix
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('hub ' + '_'.join((self.project_name, prefix)) + '\n')
         str_list.append('shortLabel ' + '_'.join((self.project_name, prefix)) + '\n')
@@ -1469,7 +1469,7 @@ class Analysis(object):
             '/'.join((self.genome_version, '_'.join((prefix, self.ucsc_name_tracks))))
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         for genome_version in sorted(genome_version_dict):
             str_list.append('genome ' + genome_version + '\n')
@@ -1485,7 +1485,7 @@ class Analysis(object):
         """Write a UCSC Track Hub I{prefix_tracks.txt} file into the C{bsf.analysis.Analysis.genome_directory}.
 
         @param content: Content
-        @type content: list[str | unicode]
+        @type content: list[str]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
         @return:
@@ -1509,7 +1509,7 @@ class Analysis(object):
         I{prefix_tracks.txt} file into the C{bsf.analysis.Analysis.genome_directory}.
 
         @param content: Content of the track database file
-        @type content: list[str | unicode]
+        @type content: list[str]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.analysis.Analysis.prefix}
         @type prefix: str
         @return:
@@ -1737,12 +1737,12 @@ class Stage(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:                 {!r}\n'.format(indent, self.name))

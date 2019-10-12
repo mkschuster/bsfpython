@@ -109,7 +109,7 @@ def parse_sam_format(file_path):
     and increments the respective count in a Python C{dict}.
 
     @param file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str
     @return:
     @rtype:
     """
@@ -135,7 +135,7 @@ def parse_sam_file(input_filename):
     Parse a SAM file, processing barcodes in the 12th column.
 
     @param input_filename: File path
-    @type input_filename: str | unicode
+    @type input_filename: str
     @return: Python C{dict} of barcode key and count value data
     @rtype: dict
     """
@@ -174,7 +174,7 @@ def parse_bam_file(input_filename):
     Internally converts a BAM file to a SAM file and subsequently runs parse_sam_file over it.
 
     @param input_filename: File path
-    @type input_filename: str | unicode
+    @type input_filename: str
     @return: Python C{dict} of barcode key and count value data
     @rtype: dict
     """

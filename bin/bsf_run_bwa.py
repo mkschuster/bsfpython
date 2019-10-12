@@ -104,9 +104,9 @@ path_sorted_bam = "{}{}.bam".format(prefix, replicate_key)
 
 # SAM header lines that need propagating around FASTQ files. Sigh!
 sam_header_pg = list()
-""" @type sam_header_pg: list[str | unicode] """
+""" @type sam_header_pg: list[str] """
 sam_header_rg = list()
-""" @type sam_header_rg: list[str | unicode] """
+""" @type sam_header_rg: list[str] """
 
 # Run BWA to produce an aligned SAM file.
 
@@ -310,7 +310,7 @@ if len(sam_header_pg) or len(sam_header_rg):
                     for line_pg in sam_header_pg:
                         output_file.write(line_pg + "\n")
                     sam_header_pg = list()
-                    """ @type sam_header_pg: list[str | unicode] """
+                    """ @type sam_header_pg: list[str] """
                 output_file.write(line_str)
 
             # Add remaining @PG lines it they were not present in the cleaned SAM file.
@@ -318,7 +318,7 @@ if len(sam_header_pg) or len(sam_header_rg):
             for line_pg in sam_header_pg:
                 output_file.write(line_pg + "\n")
             sam_header_pg = list()
-            """ @type sam_header_pg: list[str | unicode] """
+            """ @type sam_header_pg: list[str] """
 
     os.remove(path_temporary_sam)
 

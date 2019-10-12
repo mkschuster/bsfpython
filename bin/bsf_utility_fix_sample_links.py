@@ -41,7 +41,7 @@ def scan_directory(directory_path, debug=0):
     """Scan a directory for symbolic links or directories recursively.
 
     @param directory_path: Directory path
-    @type directory_path: str | unicode
+    @type directory_path: str
     @param debug: Debug level
     @type debug: int
     @return:

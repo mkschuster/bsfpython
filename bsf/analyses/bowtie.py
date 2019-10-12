@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bowtie Analysis module
+"""Bowtie Analysis module.
 
 A package of classes and methods supporting Bowtie alignment analyses.
 """
@@ -53,9 +53,9 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | unicode | None
+        @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | unicode | None
+        @type file_path_2: str | None
         @return:
         @rtype:
         """
@@ -133,9 +133,9 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | unicode | None
+        @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | unicode | None
+        @type file_path_2: str | None
         @return:
         @rtype:
         """

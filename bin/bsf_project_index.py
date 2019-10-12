@@ -45,11 +45,11 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
     directory_path key data and Python C{list} of report_type value data.
 
     @param report_dict_local: Python C{dict} of directory_path key data and Python C{list} of report_type value data
-    @type report_dict_local: dict[str | unicode, list[str]]
+    @type report_dict_local: dict[str, list[str]]
     @param directory_root: Directory root
-    @type directory_root: str | unicode
+    @type directory_root: str
     @param directory_path: Directory path
-    @type directory_path: str | unicode
+    @type directory_path: str
     @return:
     @rtype:
     """
@@ -81,9 +81,9 @@ def scan_projects(project_name_local):
     Resolve something like BSA_0001 to BSA_0001_ASP14_40d0aa70bf854ac99599caf5a52a9aa3
 
     @param project_name_local: Project name or prefix
-    @type project_name_local: str | unicode
+    @type project_name_local: str
     @return:
-    @rtype: str | unicode | None
+    @rtype: str | None
     """
 
     directory_path = os.path.join(bsf.standards.FilePath.get_public_html(absolute=True), 'projects')
@@ -108,9 +108,9 @@ analysis = bsf.analysis.Analysis(project_name=name_space.project)
 analysis.run()
 
 project_name = name_space.project
-""" @type project_name: str | unicode | None """
+""" @type project_name: str | None """
 project_directory = name_space.project
-""" @type project_directory: str | unicode """
+""" @type project_directory: str """
 
 if not os.path.isabs(project_directory):
 

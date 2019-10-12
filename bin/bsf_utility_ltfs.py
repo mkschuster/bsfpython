@@ -82,13 +82,13 @@ class LinearTapeFileSystemDirectory(object):
 
     Attributes:
     @ivar source_path: Source directory path
-    @type source_path: str | unicode | None
+    @type source_path: str | None
     @ivar target_path: Target directory path
-    @type target_path: str | unicode | None
+    @type target_path: str | None
     @ivar source_specification: Source specification pattern including wildcard characters
-    @type source_specification: str | unicode | None
+    @type source_specification: str | None
     @ivar source_file_path_list: Python C{list} of source file paths in the directory
-    @type source_file_path_list: list[str | unicode]
+    @type source_file_path_list: list[str]
     """
 
     def __init__(
@@ -100,13 +100,13 @@ class LinearTapeFileSystemDirectory(object):
         """Initialise a C{LinearTapeFileSystemDirectory} object.
 
         @param source_path: Source directory path
-        @type source_path: str | unicode | None
+        @type source_path: str | None
         @param target_path: Target directory path
-        @type target_path: str | unicode | None
+        @type target_path: str | None
         @param source_specification: Source specification pattern including wildcard characters
-        @type source_specification: str | unicode | None
+        @type source_specification: str | None
         @param source_file_path_list: Python C{list} of source file paths in the directory
-        @type source_file_path_list: list[str | unicode] | None
+        @type source_file_path_list: list[str] | None
         @return:
         @rtype:
         """
@@ -127,7 +127,7 @@ class LinearTapeFileSystemDirectory(object):
         """Add a source file path to a C{LinearTapeFileSystemDirectory} object.
 
         @param source_file_path: Source file path
-        @type source_file_path: str | unicode
+        @type source_file_path: str
         @return:
         @rtype:
         """
@@ -155,10 +155,10 @@ class LinearTapeFileSystemCopy(object):
     @ivar sparse: Support sparse files
     @type sparse: bool | None
     @ivar default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
-    @type default_target_path: str | unicode | None
+    @type default_target_path: str | None
     @ivar ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
         C{LinearTapeFileSystemDirectory} objects
-    @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory]
+    @type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory]
 
     XML batch file format
     http://www-01.ibm.com/support/knowledgecenter/STZMZN/com.ibm.storage.hollywood.doc/ltfs_reference_lcp_cli.html
@@ -205,10 +205,10 @@ class LinearTapeFileSystemCopy(object):
         @param sparse: Support sparse files
         @type sparse: bool | None
         @param default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
-        @type default_target_path: str | unicode | None
-        @param ltfs_directory_dict: Python C{dict} of Python C{str} or C{unicode} directory path and
+        @type default_target_path: str | None
+        @param ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
             C{LinearTapeFileSystemDirectory} objects
-        @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory] | None
+        @type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory] | None
         @return:
         @rtype:
         """
@@ -229,9 +229,9 @@ class LinearTapeFileSystemCopy(object):
         return
 
     def get_or_add_ltfs_directory(self, ltfs_directory):
-        """Add a C{LinearTapeFileSystemDirectory} object to the C{LinearTapeFileSystemCopy} object,
-        if it does not exist already.
+        """Add a C{LinearTapeFileSystemDirectory} object to the C{LinearTapeFileSystemCopy} object.
 
+        The C{LinearTapeFileSystemDirectory} object is only added, if it does not exist already.
         @param ltfs_directory: C{LinearTapeFileSystemDirectory}
         @type ltfs_directory: LinearTapeFileSystemDirectory
         @return: C{LinearTapeFileSystemDirectory}
@@ -247,13 +247,13 @@ class LinearTapeFileSystemCopy(object):
             return ltfs_directory
 
     def get_or_add_source_directory(self, source_path, source_specification=None):
-        """Add a source directory to the C{LinearTapeFileSystemCopy} object and return the
-        corresponding C{LinearTapeFileSystemDirectory} object.
+        """Add a source directory to a C{LinearTapeFileSystemCopy} object.
 
+        The corresponding C{LinearTapeFileSystemDirectory} object is returned.
         @param source_path: Source directory path
-        @type source_path: str | unicode
+        @type source_path: str
         @param source_specification: Source specification
-        @type source_specification: str | unicode | None
+        @type source_specification: str | None
         @return: C{LinearTapeFileSystemDirectory}
         @rtype: LinearTapeFileSystemDirectory
         """
@@ -270,7 +270,7 @@ class LinearTapeFileSystemCopy(object):
         """Add a source file path to a C{LinearTapeFileSystemCopy} object.
 
         @param source_path: Source file path
-        @type source_path: str | unicode
+        @type source_path: str
         @return:
         @rtype:
         """
@@ -359,7 +359,7 @@ class LinearTapeFileSystemCopy(object):
         """Write a Linear Tape File System Copy tool batch file.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return:
         @rtype:
         """

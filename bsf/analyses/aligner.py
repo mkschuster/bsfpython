@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Aligner Analysis module
+"""Aligner Analysis module.
 
 A package of classes and methods supporting Aligner analyses.
 """
@@ -45,32 +45,32 @@ class FilePathAlign(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar stderr_txt: Text file to capture STDERR of the aligner
-    @type stderr_txt: str | unicode
+    @type stderr_txt: str
     @ivar stdout_txt: Text file to capture STDOUT of the aligner
-    @type stdout_txt: str | unicode
+    @type stdout_txt: str
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
-    @type aligned_sam: str | unicode
+    @type aligned_sam: str
     @ivar cleaned_bam: Cleaned sequence alignment map (SAM) file path
-    @type cleaned_bam: str | unicode
+    @type cleaned_bam: str
     @ivar aligned_bai: Aligned binary alignment map index (BAI) file path
-    @type aligned_bai: str | unicode
+    @type aligned_bai: str
     @ivar aligned_bam: Aligned binary alignment map (BAM) file path
-    @type aligned_bam: str | unicode
+    @type aligned_bam: str
     @ivar aligned_md5: Aligned binary alignment map (BAM) file path
-    @type aligned_md5: str | unicode
+    @type aligned_md5: str
     @ivar aligned_bai_link_source: Symbolic link source of the aligned binary alignment map index (BAI) file path
-    @type aligned_bai_link_source: str | unicode
+    @type aligned_bai_link_source: str
     @ivar aligned_bai_link_target: Symbolic link target of the aligned binary alignment map index (BAI) file path
-    @type aligned_bai_link_target: str | unicode
+    @type aligned_bai_link_target: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathAlign} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -100,40 +100,40 @@ class FilePathReadGroup(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar merged_bai: Merged binary alignment map index (BAI) file path
-    @type merged_bai: str | unicode
+    @type merged_bai: str
     @ivar merged_bam: Merged binary alignment map (BAM) file path
-    @type merged_bam: str | unicode
+    @type merged_bam: str
     @ivar merged_md5: Merged binary alignment map (BAM) file path
-    @type merged_md5: str | unicode
+    @type merged_md5: str
     @ivar merged_bai_link_source: Symbolic link source of the merged binary alignment map index (BAI) file path
-    @type merged_bai_link_source: str | unicode
+    @type merged_bai_link_source: str
     @ivar merged_bai_link_target: Symbolic link target of the merged binary alignment map index (BAI) file path
-    @type merged_bai_link_target: str | unicode
+    @type merged_bai_link_target: str
     @ivar sorted_bai: Sorted binary alignment map index (BAI) file path
-    @type sorted_bai: str | unicode
+    @type sorted_bai: str
     @ivar sorted_bam: Sorted binary alignment map (BAM) file path
-    @type sorted_bam: str | unicode
+    @type sorted_bam: str
     @ivar sorted_md5: Sorted binary alignment map (BAM) file path
-    @type sorted_md5: str | unicode
+    @type sorted_md5: str
     @ivar sorted_bai_link_source: Symbolic link source of the sorted binary alignment map index (BAI) file path
-    @type sorted_bai_link_source: str | unicode
+    @type sorted_bai_link_source: str
     @ivar sorted_bai_link_target: Symbolic link target of the sorted binary alignment map index (BAI) file path
-    @type sorted_bai_link_target: str | unicode
+    @type sorted_bai_link_target: str
     @ivar read_group_bai: Read group binary alignment map index (BAI) file path
-    @type read_group_bai: str | unicode
+    @type read_group_bai: str
     @ivar read_group_bam: Read group binary alignment map (BAM) file path
-    @type read_group_bam: str | unicode
+    @type read_group_bam: str
     @ivar read_group_md5: Read group binary alignment map (BAM) file path
-    @type read_group_md5: str | unicode
+    @type read_group_md5: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathReadGroup} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -167,40 +167,40 @@ class FilePathSample(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar merged_bai: Merged binary alignment map index (BAI) file path
-    @type merged_bai: str | unicode
+    @type merged_bai: str
     @ivar merged_bam: Merged binary alignment map (BAM) file path
-    @type merged_bam: str | unicode
+    @type merged_bam: str
     @ivar merged_md5: Merged binary alignment map (BAM) file path
-    @type merged_md5: str | unicode
+    @type merged_md5: str
     @ivar duplicate_bai: Duplicate-marked binary alignment map index (BAI) file path
-    @type duplicate_bai: str | unicode
+    @type duplicate_bai: str
     @ivar duplicate_bam: Duplicate-marked binary alignment map (BAM) file path
-    @type duplicate_bam: str | unicode
+    @type duplicate_bam: str
     @ivar duplicate_md5: Duplicate-marked binary alignment map (BAM) file path
-    @type duplicate_md5: str | unicode
+    @type duplicate_md5: str
     @ivar duplicate_bai_link_source: Symbolic link source of the binary alignment map index (BAI) file path
-    @type duplicate_bai_link_source: str | unicode
+    @type duplicate_bai_link_source: str
     @ivar duplicate_bai_link_target: Symbolic link target of the binary alignment map index (BAI) file path
-    @type duplicate_bai_link_target: str | unicode
+    @type duplicate_bai_link_target: str
     @ivar duplicate_metrics_tsv: Picard Duplicate Metrics TSV file path
-    @type duplicate_metrics_tsv: str | unicode
+    @type duplicate_metrics_tsv: str
     @ivar alignment_summary_metrics_tsv: Picard Alignment Summary Metrics file path
-    @type alignment_summary_metrics_tsv: str | unicode
+    @type alignment_summary_metrics_tsv: str
     @ivar sample_bai: Sample binary alignment map index (BAI) file path
-    @type sample_bai: str | unicode
+    @type sample_bai: str
     @ivar sample_bam: Sample binary alignment map (BAM) file path
-    @type sample_bam: str | unicode
+    @type sample_bam: str
     @ivar sample_md5: Sample binary alignment map (BAM) file path
-    @type sample_md5: str | unicode
+    @type sample_md5: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathSample} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -237,60 +237,60 @@ class FilePathSummary(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar pasm_alignment_read_group_pdf: Picard Alignment Summary Metrics per read group PDF plot
-    @type pasm_alignment_read_group_pdf: str | unicode
+    @type pasm_alignment_read_group_pdf: str
     @ivar pasm_alignment_read_group_png: Picard Alignment Summary Metrics per read group PNG plot
-    @type pasm_alignment_read_group_pdf: str | unicode
+    @type pasm_alignment_read_group_pdf: str
     @ivar pasm_alignment_sample_pdf: Picard Alignment Summary Metrics per sample PDF plot
-    @type pasm_alignment_sample_pdf: str | unicode
+    @type pasm_alignment_sample_pdf: str
     @ivar pasm_alignment_sample_png: Picard Alignment Summary Metrics per sample PNG plot
-    @type pasm_alignment_sample_png: str | unicode
+    @type pasm_alignment_sample_png: str
     @ivar pasm_absolute_read_group_pdf: Picard Alignment Summary Metrics absolute per read group PDF plot
-    @type pasm_absolute_read_group_pdf: str | unicode
+    @type pasm_absolute_read_group_pdf: str
     @ivar pasm_absolute_read_group_png: Picard Alignment Summary Metrics absolute per read group PNG plot
-    @type pasm_absolute_read_group_pdf: str | unicode
+    @type pasm_absolute_read_group_pdf: str
     @ivar pasm_absolute_sample_pdf: Picard Alignment Summary Metrics absolute per sample PDF plot
-    @type pasm_absolute_sample_pdf: str | unicode
+    @type pasm_absolute_sample_pdf: str
     @ivar pasm_absolute_sample_png: Picard Alignment Summary Metrics absolute per sample PNG plot
-    @type pasm_absolute_sample_png: str | unicode
+    @type pasm_absolute_sample_png: str
     @ivar pasm_percentage_read_group_pdf: Picard Alignment Summary Metrics percentage per read group PDF plot
-    @type pasm_percentage_read_group_pdf: str | unicode
+    @type pasm_percentage_read_group_pdf: str
     @ivar pasm_percentage_read_group_png: Picard Alignment Summary Metrics percentage per read group PNG plot
-    @type pasm_percentage_read_group_png: str | unicode
+    @type pasm_percentage_read_group_png: str
     @ivar pasm_percentage_sample_pdf: Picard Alignment Summary Metrics percentage per sample PDF plot
-    @type pasm_percentage_sample_pdf: str | unicode
+    @type pasm_percentage_sample_pdf: str
     @ivar pasm_percentage_sample_png: Picard Alignment Summary Metrics percentage per sample PNG plot
-    @type pasm_percentage_sample_png: str | unicode
+    @type pasm_percentage_sample_png: str
     @ivar pasm_strand_balance_read_group_pdf: Picard Alignment Summary Metrics strand balance per read group PDF plot
-    @type pasm_strand_balance_read_group_pdf: str | unicode
+    @type pasm_strand_balance_read_group_pdf: str
     @ivar pasm_strand_balance_read_group_png: Picard Alignment Summary Metrics strand balance per read group PNG plot
-    @type pasm_strand_balance_read_group_pdf: str | unicode
+    @type pasm_strand_balance_read_group_pdf: str
     @ivar pasm_strand_balance_sample_pdf: Picard Alignment Summary Metrics strand balance per sample PDF plot
-    @type pasm_strand_balance_sample_pdf: str | unicode
+    @type pasm_strand_balance_sample_pdf: str
     @ivar pasm_strand_balance_sample_png: Picard Alignment Summary Metrics strand balance per sample PDF plot
-    @type pasm_strand_balance_sample_png: str | unicode
+    @type pasm_strand_balance_sample_png: str
     @ivar pasm_table_read_group_tsv: Picard Alignment Summary Metrics table per read group
-    @type pasm_table_read_group_tsv: str | unicode
+    @type pasm_table_read_group_tsv: str
     @ivar pasm_table_sample_tsv: Picard Alignment Summary Metrics table per sample
-    @type pasm_table_sample_tsv: str | unicode
+    @type pasm_table_sample_tsv: str
     @ivar pdsm_levels_sample_pdf: Picard Duplication Metrics levels per sample PDF plot
-    @type pdsm_levels_sample_pdf: str | unicode
+    @type pdsm_levels_sample_pdf: str
     @ivar pdsm_levels_sample_png: Picard Duplication Metrics levels per sample PNG plot
-    @type pdsm_levels_sample_png: str | unicode
+    @type pdsm_levels_sample_png: str
     @ivar pdsm_percentage_sample_pdf: Picard Duplication Metrics percentage per sample PDF plot
-    @type pdsm_percentage_sample_pdf: str | unicode
+    @type pdsm_percentage_sample_pdf: str
     @ivar pdsm_percentage_sample_png: Picard Duplication Metrics percentage per sample PNG plot
-    @type pdsm_percentage_sample_png: str | unicode
+    @type pdsm_percentage_sample_png: str
     @ivar pdsm_table_sample_tsv: Picard Duplication Metrics table per sample
-    @type pdsm_table_sample_tsv: str | unicode
+    @type pdsm_table_sample_tsv: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathSummary} object
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -350,15 +350,15 @@ class Aligner(bsf.analysis.Analysis):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar genome_fasta: Genome FASTA file
-    @type genome_fasta: str | unicode | None
+    @type genome_fasta: str | None
     @ivar genome_index: Genome index
-    @type genome_index: str | unicode | None
+    @type genome_index: str | None
     @ivar keep_read_group: Keep the Read Group-level BAM files
     @type keep_read_group: bool | None
     @ivar skip_mark_duplicates: Skip Picard MarkDuplicates
     @type skip_mark_duplicates: bool | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     """
 
     name = 'Aligner Analysis'
@@ -532,15 +532,15 @@ class Aligner(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample] | None
         @param genome_fasta: Genome FASTA file
-        @type genome_fasta: str | unicode | None
+        @type genome_fasta: str | None
         @param genome_index: Genome index
-        @type genome_index: str | unicode | None
+        @type genome_index: str | None
         @param keep_read_group: Keep the Read Group-level BAM files
         @type keep_read_group: bool | None
         @param skip_mark_duplicates: Skip Picard MarkDuplicates
         @type skip_mark_duplicates: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @return:
         @rtype:
         """
@@ -616,9 +616,9 @@ class Aligner(bsf.analysis.Analysis):
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | unicode | None
+        @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | unicode | None
+        @type file_path_2: str | None
         @return:
         @rtype:
         """
@@ -661,8 +661,8 @@ class Aligner(bsf.analysis.Analysis):
 
             @param _paired_reads: C{bsf.ngs.PairedReads} object
             @type _paired_reads: bsf.ngs.PairedReads
-            @return: Python tuple of Python str (base name) and Python str or unicode (unmapped BAM file path)
-            @rtype: (str, str | unicode | None)
+            @return: Python C{tuple} of Python C{str} (base name) and Python C{str} (unmapped BAM file path)
+            @rtype: (str, str | None)
             """
             if 'BAM File' in _paired_reads.annotation_dict and _paired_reads.annotation_dict['BAM File']:
                 # Consider only the first list component.
@@ -752,7 +752,7 @@ class Aligner(bsf.analysis.Analysis):
             # To run Picard MergeBamAlignment, all alignments from a BAM file need merging into one.
 
             unmapped_bam_file_dict = dict()
-            """ @type unmapped_bam_file_dict: dict[str | unicode, (str | unicode, list[bsf.procedure.Runnable])] """
+            """ @type unmapped_bam_file_dict: dict[str, (str, list[bsf.procedure.Runnable])] """
 
             runnable_read_group_list = list()
             """ @type runnable_read_group_list: list[bsf.procedure.Runnable] """
@@ -1451,7 +1451,7 @@ class Aligner(bsf.analysis.Analysis):
             # Write a HTML document.
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -1685,7 +1685,7 @@ class Aligner(bsf.analysis.Analysis):
             """
 
             str_list = list()
-            """ @type str_list: list[str | unicode] """
+            """ @type str_list: list[str] """
 
             # Group via UCSC super tracks.
 

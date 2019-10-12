@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Picard Analysis module
+"""Picard Analysis module.
 
 A package of classes and methods modelling Picard analyses data files and data directories.
 """
@@ -55,18 +55,18 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | unicode | None
+    @type run_directory: str | None
     @ivar intensity_directory: File path to the I{Intensities} directory,
         defaults to I{illumina_run_folder/Data/Intensities}
-    @type intensity_directory: str | unicode | None
+    @type intensity_directory: str | None
     @ivar basecalls_directory: File path to the I{BaseCalls} directory,
         defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-    @type basecalls_directory: str | unicode | None
+    @type basecalls_directory: str | None
     @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     """
@@ -165,18 +165,18 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode | None
+        @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
             defaults to I{illumina_run_folder/Data/Intensities}
-        @type intensity_directory: str | unicode | None
+        @type intensity_directory: str | None
         @param basecalls_directory: File path to the I{BaseCalls} directory,
             defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-        @type basecalls_directory: str | unicode | None
+        @type basecalls_directory: str | None
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @return:
@@ -409,7 +409,7 @@ class IlluminaBasecallsToSamSheet(bsf.annotation.AnnotationSheet):
         @param barcode_length_tuple: Python C{tuple} of Python C{int} barcode length objects
         @type barcode_length_tuple: (int, int)
         @param unassigned_file_path: File path for unassigned reads
-        @type unassigned_file_path: str | unicode
+        @type unassigned_file_path: str
         @return:
         @rtype:
         """
@@ -448,9 +448,9 @@ class FilePathExtractIlluminaCell(bsf.procedure.FilePath):
 
     Attributes:
     @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
-    @type prefix_cell: str | unicode
+    @type prefix_cell: str
     @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
-    @type sample_annotation_sheet_csv: str | unicode
+    @type sample_annotation_sheet_csv: str
     @see: FilePathBamIndexDecoderCell
     @see: FilePathIlluminaDemultiplexSamCell
     """
@@ -459,7 +459,7 @@ class FilePathExtractIlluminaCell(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.picard.FilePathExtractIlluminaCell} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @return:
@@ -482,25 +482,25 @@ class FilePathExtractIlluminaLane(bsf.procedure.FilePath):
 
     Attributes:
     @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
-    @type prefix_lane: str | unicode
+    @type prefix_lane: str
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar samples_directory: Samples directory
-    @type samples_directory: str | unicode
+    @type samples_directory: str
     @ivar barcode_tsv: Barcode TSV file for Picard I{ExtractIlluminaBarcodes}
-    @type barcode_tsv: str | unicode
+    @type barcode_tsv: str
     @ivar library_tsv: Library TSV file for Picard I{IlluminaBasecallsToSam}
-    @type library_tsv: str | unicode
+    @type library_tsv: str
     @ivar metrics_tsv: Metrics TSV file
-    @type metrics_tsv: str | unicode
+    @type metrics_tsv: str
     @ivar metrics_fraction_pdf: Lane-specific Picard I{ExtractIlluminaBarcodes} fraction metrics PDF file
-    @type metrics_fraction_pdf: str | unicode
+    @type metrics_fraction_pdf: str
     @ivar metrics_fraction_png: Lane-specific Picard I{ExtractIlluminaBarcodes} fraction metrics PNG file
-    @type metrics_fraction_png: str | unicode
+    @type metrics_fraction_png: str
     @ivar metrics_number_pdf: Lane-specific Picard I{ExtractIlluminaBarcodes} number metrics PDF file
-    @type metrics_number_pdf: str | unicode
+    @type metrics_number_pdf: str
     @ivar metrics_number_png: Lane-specific Picard I{ExtractIlluminaBarcodes} number metrics PNG file
-    @type metrics_number_png: str | unicode
+    @type metrics_number_png: str
     @see: FilePathBamIndexDecoderLane
     @see: FilePathIlluminaDemultiplexSamLane
     """
@@ -509,7 +509,7 @@ class FilePathExtractIlluminaLane(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.picard.FilePathExtractIlluminaLane} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
@@ -546,9 +546,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar samples_directory: BSF samples directory
-    @type samples_directory: str | unicode | None
+    @type samples_directory: str | None
     @ivar library_path: Library annotation file path
-    @type library_path: str | unicode | None
+    @type library_path: str | None
     @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
@@ -655,24 +655,24 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode | None
+        @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
             defaults to I{illumina_run_folder/Data/Intensities}
-        @type intensity_directory: str | unicode | None
+        @type intensity_directory: str | None
         @param basecalls_directory: File path to the I{BaseCalls} directory,
             defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-        @type basecalls_directory: str | unicode | None
+        @type basecalls_directory: str | None
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @param samples_directory: BSF samples directory
-        @type samples_directory: str | unicode | None
+        @type samples_directory: str | None
         @param library_path: Library annotation file path
-        @type library_path: str | unicode | None
+        @type library_path: str | None
         @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
@@ -728,7 +728,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         The experiment directory is a concatenation of the sequences directory and the project name.
         @return: Experiment directory
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
@@ -798,9 +798,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             """Private function to format sample-specific BAM file names (i.e. project_lane#sample.bam).
 
             @param sample_name:
-            @type sample_name: str | unicode
+            @type sample_name: str
             @return:
-            @rtype: str | unicode
+            @rtype: str
             """
             return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
 
@@ -1258,30 +1258,30 @@ class FilePathIlluminaMultiplexSamLane(bsf.procedure.FilePath):
 
     Attributes:
     @ivar unsorted_bam: Unsorted BAM file
-    @type unsorted_bam: str | unicode
+    @type unsorted_bam: str
     @ivar unsorted_md5: Unsorted BAM file MD5 check sum
-    @type unsorted_md5: str | unicode
+    @type unsorted_md5: str
     @ivar sorted_bam: Sorted BAM file
-    @type sorted_bam: str | unicode
+    @type sorted_bam: str
     @ivar sorted_md5: Sorted BAM file MD5 check sum
-    @type sorted_md5: str | unicode
+    @type sorted_md5: str
     @ivar archive_bam: Archive BAM file
-    @type archive_bam: str | unicode
+    @type archive_bam: str
     @ivar archive_md5: Archive BAM file MD5 check sum
-    @type archive_md5: str | unicode
+    @type archive_md5: str
     """
 
     def __init__(self, prefix, project_name, lane, experiment_directory):
         """Initialise a C{bsf.analyses.picard.FilePathIlluminaMultiplexSamLane} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
         @type lane: str
         @param experiment_directory: Experiment-specific directory
-        @type experiment_directory: str | unicode
+        @type experiment_directory: str
         @return:
         @rtype:
         """
@@ -1316,7 +1316,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     @ivar sequencing_centre: Sequencing centre
     @type sequencing_centre: str | None
     @ivar sequences_directory: Sequences directory to store archive BAM files
-    @type sequences_directory: str | unicode | None
+    @type sequences_directory: str | None
     @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
@@ -1367,7 +1367,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @param lane: Lane
         @type lane: str
         @param experiment_directory: BSF experiment directory
-        @type experiment_directory: str | unicode
+        @type experiment_directory: str
         @return: C{FilePathIlluminaMultiplexSamLane} object
         @rtype: FilePathIlluminaMultiplexSamLane
         """
@@ -1435,24 +1435,24 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode | None
+        @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
             defaults to I{illumina_run_folder/Data/Intensities}
-        @type intensity_directory: str | unicode | None
+        @type intensity_directory: str | None
         @param basecalls_directory: File path to the I{BaseCalls} directory,
             defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-        @type basecalls_directory: str | unicode | None
+        @type basecalls_directory: str | None
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @param sequencing_centre: Sequencing centre
         @type sequencing_centre: str | None
         @param sequences_directory: Sequences directory to store archive BAM files
-        @type sequences_directory: str | unicode | None
+        @type sequences_directory: str | None
         @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
@@ -1506,7 +1506,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         The experiment directory is a concatenation of the sequences directory and the project name.
         @return: Experiment directory
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if self.sequences_directory and self.project_name:
             return os.path.join(self.sequences_directory, self.project_name)
@@ -1831,9 +1831,9 @@ class FilePathIlluminaDemultiplexSamCell(bsf.procedure.FilePath):
 
     Attributes:
     @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
-    @type prefix_cell: str | unicode
+    @type prefix_cell: str
     @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
-    @type sample_annotation_sheet_csv: str | unicode
+    @type sample_annotation_sheet_csv: str
     @see: FilePathBamIndexDecoderCell
     @see: FilePathExtractIlluminaCell
     """
@@ -1842,7 +1842,7 @@ class FilePathIlluminaDemultiplexSamCell(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @return:
@@ -1865,27 +1865,27 @@ class FilePathIlluminaDemultiplexSamLane(bsf.procedure.FilePath):
 
     Attributes:
     @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
-    @type prefix_lane: str | unicode
+    @type prefix_lane: str
     @ivar project_barcode: Project-specific barcode CSV file
-    @type project_barcode: str | unicode
+    @type project_barcode: str
     @ivar library_tsv: Library TSV file for Picard I{IlluminaBamDemux}
-    @type library_tsv: str | unicode
+    @type library_tsv: str
     @ivar metrics_tsv: Lane-specific metrics TSV file
-    @type metrics_tsv: str | unicode
+    @type metrics_tsv: str
     @ivar metrics_fraction_pdf: Lane-specific Picard I{IlluminaBamDemux} fraction metrics PDF file
-    @type metrics_fraction_pdf: str | unicode
+    @type metrics_fraction_pdf: str
     @ivar metrics_fraction_png: Lane-specific Picard I{IlluminaBamDemux} fraction metrics PNG file
-    @type metrics_fraction_png: str | unicode
+    @type metrics_fraction_png: str
     @ivar metrics_number_pdf: Lane-specific Picard I{IlluminaBamDemux} number metrics PDF file
-    @type metrics_number_pdf: str | unicode
+    @type metrics_number_pdf: str
     @ivar metrics_number_png: Lane-specific Picard I{IlluminaBamDemux} number metrics PNG file
-    @type metrics_number_png: str | unicode
+    @type metrics_number_png: str
     @ivar samples_directory: Sample directory
-    @type samples_directory: str | unicode
+    @type samples_directory: str
     @ivar archive_bam: Archive BAM file
-    @type archive_bam: str | unicode
+    @type archive_bam: str
     @ivar archive_md5: Archive BAM MD5 check sum
-    @type archive_md5: str | unicode
+    @type archive_md5: str
     @see: FilePathBamIndexDecoderLane
     @see: FilePathExtractIlluminaLane
     """
@@ -1894,13 +1894,13 @@ class FilePathIlluminaDemultiplexSamLane(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
         @type lane: str
         @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | unicode
+        @type sequences_directory: str
         @return:
         @rtype:
         """
@@ -1986,19 +1986,19 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar library_path: Library annotation file path
-    @type library_path: str | unicode | None
+    @type library_path: str | None
     @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | unicode | None
+    @type run_directory: str | None
     @ivar sequences_directory: BSF sequences directory
-    @type sequences_directory: str | unicode | None
+    @type sequences_directory: str | None
     @ivar samples_directory: BSF samples directory
-    @type samples_directory: str | unicode | None
+    @type samples_directory: str | None
     @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_file: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     @ivar compression_level: (Zlib) Compression level
     @type compression_level: int | None
     @ivar lanes: Number of lanes on the flow cell
@@ -2074,7 +2074,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         @param lane: Lane
         @type lane: str
         @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | unicode
+        @type sequences_directory: str
         @return: C{FilePathIlluminaDemultiplexSamLane} object
         @rtype: FilePathIlluminaDemultiplexSamLane
         """
@@ -2138,19 +2138,19 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param library_path: Library annotation file path
-        @type library_path: str | unicode | None
+        @type library_path: str | None
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode | None
+        @type run_directory: str | None
         @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | unicode | None
+        @type sequences_directory: str | None
         @param samples_directory: BSF samples directory
-        @type samples_directory: str | unicode | None
+        @type samples_directory: str | None
         @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_file: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param compression_level: (Zlib) Compression level
         @type compression_level: int | None
         @param lanes: Number of lanes on the flow cell
@@ -2200,7 +2200,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
         The experiment directory is a concatenation of the samples directory and the project name.
         @return: Experiment directory
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
@@ -2283,9 +2283,9 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
             """Private function to format sample-specific BAM file names (i.e. project_lane#sample.bam).
 
             @param sample_name:
-            @type sample_name: str | unicode
+            @type sample_name: str
             @return:
-            @rtype: str | unicode
+            @rtype: str
             """
             return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
 
@@ -2730,16 +2730,16 @@ class FilePathCollectHiSeqXPfFailMetricsLane(bsf.procedure.FilePath):
 
     Attributes:
     @ivar summary_tsv: Summary metrics TSV file
-    @type summary_tsv: str | unicode
+    @type summary_tsv: str
     @ivar detailed_tsv: Detailed metrics TSV file
-    @type detailed_tsv: str | unicode
+    @type detailed_tsv: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -2842,16 +2842,16 @@ class FilePathDownsampleSamReadGroup(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar downsampled_bam: Down-sampled BAM file
-    @type downsampled_bam: str | unicode
+    @type downsampled_bam: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.picard.FilePathDownsampleSamReadGroup} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -2873,7 +2873,7 @@ class DownsampleSam(bsf.analysis.Analysis):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     """
 
     name = 'Picard DownsampleSam Analysis'
@@ -2955,7 +2955,7 @@ class DownsampleSam(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @return:
         @rtype:
         """
@@ -3151,14 +3151,14 @@ class FilePathSamToFastqReadGroup(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.picard.FilePathSamToFastqReadGroup} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -3174,18 +3174,18 @@ class FilePathSamToFastqProject(bsf.procedure.FilePath):
 
     Attributes:
     @ivar output_directory: Output directory
-    @type output_directory: str | unicode
+    @type output_directory: str
     @ivar sas_path_old: Old Sample Annotation Sheet file path
-    @type sas_path_old: str | unicode
+    @type sas_path_old: str
     @ivar sas_path_new: New Sample Annotation Sheet file path
-    @type sas_path_new: str | unicode
+    @type sas_path_new: str
     """
 
     def __init__(self, prefix, prefix_analysis, project_name):
         """Initialise a C{bsf.analyses.picard.FilePathSamToFastqProject} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param prefix_analysis: C{bsf.analysis.Analysis.prefix}
         @type prefix_analysis: str
         @param project_name: Project name
@@ -3215,7 +3215,7 @@ class SamToFastq(bsf.analysis.Analysis):
     @cvar stage_name_project: C{bsf.analysis.Stage.name} for project-specific C{bsf.procedure.Runnable} objects
     @type stage_name_project: str
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: None | str | unicode
+    @type classpath_picard: str | None
     @ivar include_non_pf_reads: Include non-pass filer reads
     @type include_non_pf_reads: bool | None
     @ivar drop_read_1: Drop read 1
@@ -3264,7 +3264,7 @@ class SamToFastq(bsf.analysis.Analysis):
         """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: Project name
-        @type project_name: str | unicode
+        @type project_name: str
         @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
@@ -3345,7 +3345,7 @@ class SamToFastq(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param include_non_pf_reads: Include non-pass filer reads
         @type include_non_pf_reads: bool | None
         @param drop_read_1: Drop read 1

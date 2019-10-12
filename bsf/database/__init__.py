@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""SQLite Database module
+"""SQLite Database module.
 
 A package that centralises (SQLite) Database access.
 """
@@ -36,7 +36,7 @@ class DatabaseConnection(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str
     """
 
     def __init__(
@@ -48,7 +48,7 @@ class DatabaseConnection(object):
         C{bsf.database.DatabaseConnection.connect}.
 
         @param file_path: File path
-        @type file_path: str | unicode | None
+        @type file_path: str | None
         @return:
         @rtype:
         """
@@ -130,15 +130,15 @@ class SQLiteMaster(object):
 
     Attributes:
     @ivar sql_object_type: SQLite object type
-    @type sql_object_type: str | unicode | None
+    @type sql_object_type: str | None
     @ivar sql_object_name: SQLite object name
-    @type sql_object_name: str | unicode | None
+    @type sql_object_name: str | None
     @ivar sql_table_name: SQLite table name
-    @type sql_table_name: str | unicode | None
+    @type sql_table_name: str | None
     @ivar root_page: B-Tree root page
     @type root_page: int | None
     @ivar sql_statement: SQLite CREATE TABLE statement
-    @type sql_statement: str | unicode | None
+    @type sql_statement: str | None
     """
 
     def __init__(
@@ -151,15 +151,15 @@ class SQLiteMaster(object):
         """Initialise a C{bsf.database.SQLiteMaster} object.
 
         @param sql_object_type: SQLite object type
-        @type sql_object_type: str | unicode | None
+        @type sql_object_type: str | None
         @param sql_object_name: SQLite object name
-        @type sql_object_name: str | unicode | None
+        @type sql_object_name: str | None
         @param sql_table_name: SQLite table name
-        @type sql_table_name: str | unicode | None
+        @type sql_table_name: str | None
         @param root_page: B-Tree root page
         @type root_page: int | None
         @param sql_statement: SQLite CREATE TABLE statement
-        @type sql_statement: str | unicode | None
+        @type sql_statement: str | None
         @return:
         @rtype:
         """
@@ -238,7 +238,7 @@ class SQLiteMasterAdaptor(object):
         @param statement: Complete SQL I{SELECT} statement
         @type statement: str
         @param parameters: Python C{list} of Python C{str} (parameter) objects or C{None}
-        @type parameters: list[None | int | float | str | unicode] | None
+        @type parameters: list[int | float | str | None] | None
         @return: Python C{list} of C{bsf.database.SQLiteMaster} objects
         @rtype: list[bsf.database.SQLiteMaster]
         """
@@ -275,7 +275,7 @@ class SQLiteMasterAdaptor(object):
         @param sql_object_type: SQL object type
         @type sql_object_type: str
         @param sql_object_name: SQL object name
-        @type sql_object_name: str | unicode
+        @type sql_object_name: str
         @return: C{bsf.database.SQLiteMaster}
         @rtype: bsf.database.SQLiteMaster | None
         """
@@ -290,7 +290,7 @@ class SQLiteMasterAdaptor(object):
 
 
 class SQLiteTableInfo(object):
-    """SQLite-specific PRAGMA table_info() row object
+    """SQLite-specific PRAGMA table_info() row object.
 
     Attributes:
     @ivar column_identifier: SQLite column identifier
@@ -371,9 +371,9 @@ class SQLiteTableInfoAdaptor(object):
         """Build a SQLite I{PRAGMA table_info} statement.
 
         @param table_name: SQL table name
-        @type table_name: str | unicode
+        @type table_name: str
         @return: SQLite I{PRAGMA table_info} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         return "PRAGMA table_info('" + table_name + "')"
 
@@ -381,7 +381,7 @@ class SQLiteTableInfoAdaptor(object):
         """Select all C{bsf.database.SQLiteTableInfo} objects by SQLite table name.
 
         @param table_name: SQLite table name
-        @type table_name: str| unicode
+        @type table_name: str
         @return: Python C{list} of C{bsf.database.SQLiteTableInfo} objects
         @rtype: list[bsf.database.SQLiteTableInfo]
         """
@@ -407,13 +407,13 @@ class DatabaseAdaptor(object):
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: bsf.database.DatabaseConnection
     @ivar table_name: SQL database table name
-    @type table_name: str | unicode
+    @type table_name: str
     @ivar column_definition: Python C{list} of Python C{tuple} objects of
-        Python C{str} or C{unicode} (SQL column name) and
-        Python C{str} or C{unicode} (SQL column constraint) objects
-    @type column_definition: list[(str | unicode, str | unicode)]
+        Python C{str} (SQL column name) and
+        Python C{str} (SQL column constraint) objects
+    @type column_definition: list[(str, str)]
     @ivar table_constraint: SQL table constraint expression
-    @type table_constraint: list[str | unicode]
+    @type table_constraint: list[str]
     """
 
     def __init__(
@@ -430,13 +430,13 @@ class DatabaseAdaptor(object):
         @param object_type: Object type
         @type object_type: type
         @param table_name: SQL database table name
-        @type table_name: str | unicode
+        @type table_name: str
         @param column_definition: Python C{list} of Python C{tuple} objects of
-            Python C{str} or C{unicode} (SQL column name) and
-            Python C{str} or C{unicode} (SQL column constraint) objects
-        @type column_definition: list[(str | unicode, str | unicode)]
+            Python C{str} (SQL column name) and
+            Python C{str} (SQL column constraint) objects
+        @type column_definition: list[(str, str)]
         @param table_constraint: SQL table constraint expression
-        @type table_constraint: list[str | unicode] | None
+        @type table_constraint: list[str] | None
         @return:
         @rtype:
         """
@@ -464,8 +464,8 @@ class DatabaseAdaptor(object):
     def _get_column_name_list_with_primary(self):
         """Build a Python C{list} of SQL column names including the primary key.
 
-        @return: Python C{list} of Python C{str} or C{unicode} (SQL column name) objects
-        @rtype: list[str | unicode]
+        @return: Python C{list} of Python C{str} (SQL column name) objects
+        @rtype: list[str]
         """
         return map(lambda x: x[0], self.column_definition)
 
@@ -475,8 +475,8 @@ class DatabaseAdaptor(object):
         This method excludes I{PRIMARY KEY} columns with definition I{AUTOINCREMENT},
         which must not be assigned a value in I{INSERT} or I{UPDATE} statements.
 
-        @return: Python C{list} of Python C{str} or C{unicode} (SQL column name) objects
-        @rtype: list[str | unicode]
+        @return: Python C{list} of Python C{str} (SQL column name) objects
+        @rtype: list[str]
         """
         return map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' not in x[1], self.column_definition))
 
@@ -486,7 +486,7 @@ class DatabaseAdaptor(object):
         This method returns the I{PRIMARY KEY} column with definition I{AUTOINCREMENT}.
 
         @return: Column name for primary key
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         primary_key = None
 
@@ -505,7 +505,7 @@ class DatabaseAdaptor(object):
         This method simply lists all column names of the column definition.
 
         @return: Column result expression string
-        @rtype: str | unicode
+        @rtype: str
         """
         return ', '.join(self._get_column_name_list_with_primary())
 
@@ -513,7 +513,7 @@ class DatabaseAdaptor(object):
         """Build a SQL expression of column definitions typically used in I{CREATE TABLE} statements.
 
         @return: Column definition expression string
-        @rtype: str | unicode
+        @rtype: str
         """
         return ', '.join(map(lambda x: ' '.join((x[0], x[1])), self.column_definition))
 
@@ -524,7 +524,7 @@ class DatabaseAdaptor(object):
         which must not be assigned a value.
 
         @return: Column definition expression string
-        @rtype: str | unicode
+        @rtype: str
         """
         return ', '.join(self._get_column_name_list_without_primary())
 
@@ -542,7 +542,7 @@ class DatabaseAdaptor(object):
         As in I{INSERT} expressions, leave out the I{PRIMARY KEY} columns with definition I{AUTOINCREMENT}.
 
         @return: SQL column name and value placeholder pair expression string
-        @rtype: str | unicode
+        @rtype: str
         """
         return ', '.join(map(lambda x: ' '.join((x, '=', '?')), self._get_column_name_list_without_primary()))
 
@@ -592,11 +592,11 @@ class DatabaseAdaptor(object):
         """Build a SQL I{ALTER TABLE} statement.
 
         @param table_name_old: Old table name, defaults to table_name.
-        @type table_name_old: str | unicode
+        @type table_name_old: str
         @param table_name_new: New table name, defaults to table_name_altered.
-        @type table_name_new: str | unicode
+        @type table_name_new: str
         @return: SQL I{ALTER TABLE table RENAME TO table_name} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         if not table_name_old:
             table_name_old = self.table_name
@@ -605,7 +605,7 @@ class DatabaseAdaptor(object):
             table_name_new = '_'.join((self.table_name, 'altered'))
 
         statement_list = list()
-        """ @type statement_list: list[str | unicode] """
+        """ @type statement_list: list[str] """
 
         statement_list.append('ALTER')
         statement_list.append('TABLE')
@@ -620,10 +620,10 @@ class DatabaseAdaptor(object):
         """Build a SQL I{CREATE TABLE} statement.
 
         @return: SQL I{CREATE TABLE} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         statement_list = list()
-        """ @type statement_list: list[str | unicode] """
+        """ @type statement_list: list[str] """
 
         statement_list.append('CREATE')
         statement_list.append('TABLE')
@@ -637,10 +637,10 @@ class DatabaseAdaptor(object):
         """Build a SQL I{DROP TABLE} statement.
 
         @return: SQL I{DROP TABLE} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         statement_list = list()
-        """ @type statement_list: list[str | unicode] """
+        """ @type statement_list: list[str] """
 
         statement_list.append('DROP')
         statement_list.append('TABLE')
@@ -654,10 +654,10 @@ class DatabaseAdaptor(object):
         """Build a SQL I{INSERT INTO} statement.
 
         @return: SQL I{INSERT INTO} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         statement_list = list()
-        """ @type statement_list: list[str | unicode] """
+        """ @type statement_list: list[str] """
 
         statement_list.append('INSERT')
         statement_list.append('INTO')
@@ -672,16 +672,16 @@ class DatabaseAdaptor(object):
         """Build a SQL I{SELECT} statement.
 
         @param where_clause: SQL I{WHERE} clause
-        @type where_clause: str | unicode | None
+        @type where_clause: str | None
         @param group_clause: SQL I{GROUP BY} clause
-        @type group_clause: str | unicode | None
+        @type group_clause: str | None
         @param having_clause: SQL I{HAVING} clause
-        @type having_clause: str | unicode | None
+        @type having_clause: str | None
         @return: SQL I{SELECT} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         statement_list = list()
-        """ @type statement_list: list[str | unicode] """
+        """ @type statement_list: list[str] """
 
         statement_list.append('SELECT')
         statement_list.append(self._build_column_result_expression())
@@ -706,7 +706,7 @@ class DatabaseAdaptor(object):
         """Build a SQL I{UPDATE} statement.
 
         @return: SQL I{UPDATE} statement
-        @rtype: str | unicode
+        @rtype: str
         """
         primary_name = self._get_column_name_for_primary()
 
@@ -753,9 +753,9 @@ class DatabaseAdaptor(object):
         """Execute a SQL I{SELECT} statement and return canonical Python C{object} instances.
 
         @param statement: Complete SQL I{SELECT} statement
-        @type statement: str | unicode
+        @type statement: str
         @param parameters: Python C{list} of Python C{str} (parameter) objects or C{None}
-        @type parameters: list[None | int | float | str | unicode] | None
+        @type parameters: list[int | float | str | None] | None
         @return: Python C{list} of Python C{object} objects
         @rtype: list[object]
         """
@@ -883,9 +883,9 @@ class DatabaseAdaptor(object):
         """Compare the current table definition to the SQLite PRAGMA table_info().
 
         @return: Python C{tuple} of Python C{dict} objects of
-            Python C{str} or C{unicode} (column name) key and
+            Python C{str} (column name) key and
             Python C{None} value for the table_info() and the column definition.
-        @rtype: (dict[str | unicode, None], dict[str | unicode, None])
+        @rtype: (dict[str, None], dict[str, None])
         """
         pragma_table_info_adaptor = SQLiteTableInfoAdaptor(
             database_connection=self.database_connection)
@@ -894,9 +894,9 @@ class DatabaseAdaptor(object):
             table_name=self.table_name)
 
         column_dict_old = dict(map(lambda x: (x, None), map(lambda x: x.column_name, pragma_table_info_list)))
-        """ @type column_dict_old: dict[str | unicode, None] """
+        """ @type column_dict_old: dict[str, None] """
         column_dict_new = dict(map(lambda x: (x, None), map(lambda x: x[0], self.column_definition)))
-        """ @type column_dict_new: dict[str | unicode, None] """
+        """ @type column_dict_new: dict[str, None] """
 
         # Use a list comprehension to create a list of key objects since the dict gets modified in the loop.
         for key in [key for key in column_dict_new]:
@@ -982,7 +982,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
         """Select one C{bsf.database.JobSubmission} object by name.
 
         @param name: Name
-        @type name: str | unicode
+        @type name: str
         @return: C{bsf.database.JobSubmission} or C{None}
         @rtype: bsf.database.JobSubmission | None
         """

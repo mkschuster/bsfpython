@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""European Genome Phenome Archive (EGA) Cryptor Analysis module
+"""European Genome Phenome Archive (EGA) Cryptor Analysis module.
 
 A package of classes and methods supporting the EGA Cryptor tool.
 """
@@ -43,7 +43,7 @@ class FilePathEGACryptorReadGroup(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.ega.FilePathEGACryptorReadGroup} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -142,7 +142,7 @@ class EGACryptor(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_ega_cryptor: EGA Cryptor tool Java Archive (JAR) class path directory
-        @type classpath_ega_cryptor: str | unicode | None
+        @type classpath_ega_cryptor: str | None
         @return:
         @rtype:
         """

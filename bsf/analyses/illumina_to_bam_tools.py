@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""IlluminaToBam Tools Analysis module
+"""IlluminaToBam Tools Analysis module.
 
 A package of classes and methods supporting analyses of the Illumina2Bam-Tools package.
 """
@@ -65,8 +65,7 @@ class BamIndexDecoderSheet(bsf.annotation.AnnotationSheet):
 
 
 class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
-    """The C{LibraryAnnotationSheet} class represents a Comma-Separated Value (CSV) table of
-    library information for the C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.analysis.Analysis}.
+    """The C{LibraryAnnotationSheet} class represents a Comma-Separated Value (CSV) table for de-multiplexing.
 
     Attributes:
     """
@@ -138,10 +137,10 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
         return flow_cell_dict
 
     def get_barcode_length_dict(self):
-        """Get a Python C{dict} of Python C(int} (lane) key and
-        Python C{tuple} of Python C{int} (barcode sequence length) values.
+        """Get a Python C{dict} of i7 and i5 barcode sequence lengths by lane.
 
-        @return: Python C{dict} of Python C(int} (lane) and Python C{tuple} of Python C{int} barcode sequence lengths
+        @return: Python C{dict} of Python C{int} (lane) key and Python C{tuple} of Python C{int} (i7) and
+            Python C{int} (i5) barcode sequence length value data
         @rtype: dict[int, (int, int)]
         """
         flow_cell_dict = dict()
@@ -324,9 +323,9 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
 
     Attributes:
     @ivar java_jar_path: Java archive file path
-    @type java_jar_path: str | unicode | None
+    @type java_jar_path: str | None
     @ivar itb_classpath: IlluminaToBam class path
-    @type itb_classpath: str | unicode | None
+    @type itb_classpath: str | None
     @ivar itb_command: IlluminaToBam command
     @type itb_command: str | None
     """
@@ -362,8 +361,8 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
-        @type arguments: list[str | unicode] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
         @type stdin: bsf.connector.Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
@@ -385,15 +384,15 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
         @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode] | None
+        @type obsolete_file_path_list: list[str] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
-        @type java_temporary_path: str | unicode | None
+        @type java_temporary_path: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
         @param java_jar_path: Java archive file path
-        @type java_jar_path: str | unicode | None
+        @type java_jar_path: str | None
         @param itb_classpath: IlluminaToBam class path
-        @type itb_classpath: str | unicode | None
+        @type itb_classpath: str | None
         @param itb_command: IlluminaToBam command
         @type itb_command: str | None
         @return:
@@ -449,30 +448,30 @@ class FilePathIlluminaToBamLane(bsf.procedure.FilePath):
 
     Attributes:
     @ivar unsorted_bam: Unsorted BAM file
-    @type unsorted_bam: str | unicode
+    @type unsorted_bam: str
     @ivar unsorted_md5: Unsorted BAM file MD5 check sum
-    @type unsorted_md5: str | unicode
+    @type unsorted_md5: str
     @ivar sorted_bam: Sorted BAM file
-    @type sorted_bam: str | unicode
+    @type sorted_bam: str
     @ivar sorted_md5: Sorted BAM file MD5 check sum
-    @type sorted_md5: str | unicode
+    @type sorted_md5: str
     @ivar archive_bam: Archive BAM file
-    @type archive_bam: str | unicode
+    @type archive_bam: str
     @ivar archive_md5: Archive BAM file MD5 check sum
-    @type archive_md5: str | unicode
+    @type archive_md5: str
     """
 
     def __init__(self, prefix, project_name, lane, experiment_directory):
         """Initialise a C{bsf.analyses.illumina_to_bam_tools.FilePathIlluminaToBamLane} object.
         
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
         @type lane: str
         @param experiment_directory: Experiment-specific directory
-        @type experiment_directory: str | unicode
+        @type experiment_directory: str
         @return:
         @rtype:
         """
@@ -500,13 +499,13 @@ class IlluminaToBam(bsf.analysis.Analysis):
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | unicode | None
+    @type run_directory: str | None
     @ivar intensity_directory: File path to the I{Intensities} directory,
         defaults to I{illumina_run_folder/Data/Intensities}
-    @type intensity_directory: str | unicode | None
+    @type intensity_directory: str | None
     @ivar basecalls_directory: File path to the I{BaseCalls} directory,
         defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-    @type basecalls_directory: str | unicode | None
+    @type basecalls_directory: str | None
     @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str | None
@@ -515,15 +514,15 @@ class IlluminaToBam(bsf.analysis.Analysis):
     @ivar sort_output: Sort BAM files
     @type sort_output: bool | None
     @ivar sequences_directory: Sequences directory to store archive BAM files
-    @type sequences_directory: str | unicode | None
+    @type sequences_directory: str | None
     @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_file: str | None
     @ivar classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-    @type classpath_illumina2bam: str | unicode | None
+    @type classpath_illumina2bam: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     @ivar vendor_quality_filter: Vendor quality filter
     @type vendor_quality_filter: bool
     @ivar force: Force processing of incomplete Illumina Run Folders
@@ -584,7 +583,7 @@ class IlluminaToBam(bsf.analysis.Analysis):
         @param lane: Lane
         @type lane: str
         @param experiment_directory: BSF experiment directory
-        @type experiment_directory: str | unicode
+        @type experiment_directory: str
         @return: C{FilePathIlluminaToBamLane} object
         @rtype: FilePathIlluminaToBamLane
         """
@@ -650,13 +649,13 @@ class IlluminaToBam(bsf.analysis.Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode | None
+        @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
             defaults to I{illumina_run_folder/Data/Intensities}
-        @type intensity_directory: str | unicode | None
+        @type intensity_directory: str | None
         @param basecalls_directory: File path to the I{BaseCalls} directory,
             defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-        @type basecalls_directory: str | unicode | None
+        @type basecalls_directory: str | None
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
@@ -665,15 +664,15 @@ class IlluminaToBam(bsf.analysis.Analysis):
         @param sort_output: Sort BAM files
         @type sort_output: bool | None
         @param sequences_directory: Sequences directory to store archive BAM files
-        @type sequences_directory: str | unicode | None
+        @type sequences_directory: str | None
         @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_file: str | None
         @param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-        @type classpath_illumina2bam: str | unicode | None
+        @type classpath_illumina2bam: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param vendor_quality_filter: Vendor quality filter
         @type vendor_quality_filter: bool | None
         @param force: Force processing of incomplete Illumina Run Folders
@@ -719,7 +718,7 @@ class IlluminaToBam(bsf.analysis.Analysis):
 
         The experiment directory is a concatenation of the sequences directory and the project name.
         @return: Experiment directory
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if self.sequences_directory and self.project_name:
             return os.path.join(self.sequences_directory, self.project_name)
@@ -1176,9 +1175,9 @@ class FilePathBamIndexDecoderCell(bsf.procedure.FilePath):
 
     Attributes:
     @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
-    @type prefix_cell: str | unicode
+    @type prefix_cell: str
     @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
-    @type sample_annotation_sheet_csv: str | unicode
+    @type sample_annotation_sheet_csv: str
     @see: FilePathIlluminaDemultiplexSamCell
     @see: FilePathExtractIlluminaCell
     """
@@ -1187,7 +1186,7 @@ class FilePathBamIndexDecoderCell(bsf.procedure.FilePath):
         """Initialise a C{FilePathBamIndexDecoderCell} object.
 
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @return:
@@ -1210,27 +1209,27 @@ class FilePathBamIndexDecoderLane(bsf.procedure.FilePath):
 
     Attributes:
     @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
-    @type prefix_lane: str | unicode
+    @type prefix_lane: str
     @ivar project_barcode: Project-specific barcode CSV file
-    @type project_barcode: str | unicode
+    @type project_barcode: str
     @ivar barcode_tsv: Lane-specific barcode TSV file
-    @type barcode_tsv: str | unicode
+    @type barcode_tsv: str
     @ivar metrics_tsv: Lane-specific metrics TSV file
-    @type metrics_tsv: str | unicode
+    @type metrics_tsv: str
     @ivar metrics_fraction_pdf: Lane-specific Illumina2bam I{BamIndexDecoder} fraction metrics PDF file
-    @type metrics_fraction_pdf: str | unicode
+    @type metrics_fraction_pdf: str
     @ivar metrics_fraction_png: Lane-specific Illumina2bam I{BamIndexDecoder} fraction metrics PNG file
-    @type metrics_fraction_png: str | unicode
+    @type metrics_fraction_png: str
     @ivar metrics_number_pdf: Lane-specific Illumina2bam I{BamIndexDecoder} number metrics PDF file
-    @type metrics_number_pdf: str | unicode
+    @type metrics_number_pdf: str
     @ivar metrics_number_png: Lane-specific Illumina2bam I{BamIndexDecoder} number metrics PNG file
-    @type metrics_number_png: str | unicode
+    @type metrics_number_png: str
     @ivar samples_directory: Sample directory
-    @type samples_directory: str | unicode
+    @type samples_directory: str
     @ivar archive_bam: Archive BAM file
-    @type archive_bam: str | unicode
+    @type archive_bam: str
     @ivar archive_md5: Archive BAM MD5 check sum
-    @type archive_md5: str | unicode
+    @type archive_md5: str
     @see: FilePathExtractIlluminaLane
     @see: FilePathIlluminaDemultiplexSamLane
     """
@@ -1239,13 +1238,13 @@ class FilePathBamIndexDecoderLane(bsf.procedure.FilePath):
         """Initialise a C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} object.
         
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
         @type lane: str
         @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | unicode
+        @type sequences_directory: str
         @return:
         @rtype:
         """
@@ -1284,19 +1283,19 @@ class BamIndexDecoder(bsf.analysis.Analysis):
     @ivar hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
     @type hash_algorithm: bool | None
     @ivar library_path: Library annotation file path
-    @type library_path: str | unicode | None
+    @type library_path: str | None
     @ivar sequences_directory: BSF sequences directory
-    @type sequences_directory: str | unicode | None
+    @type sequences_directory: str | None
     @ivar samples_directory: BSF samples directory
-    @type samples_directory: str | unicode | None
+    @type samples_directory: str | None
     @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_file: str | None
     @ivar classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-    @type classpath_illumina2bam: str | unicode | None
+    @type classpath_illumina2bam: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode | None
+    @type classpath_picard: str | None
     @ivar lanes: Number of lanes on the flow cell
     @type lanes: int | None
     @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -1370,7 +1369,7 @@ class BamIndexDecoder(bsf.analysis.Analysis):
         @param lane: Lane
         @type lane: str
         @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | unicode
+        @type sequences_directory: str
         @return: C{FilePathBamIndexDecoderLane} object
         @rtype: FilePathBamIndexDecoderLane
         """
@@ -1386,7 +1385,7 @@ class BamIndexDecoder(bsf.analysis.Analysis):
         flow cell-specific I{BSF samples} directory.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @return: C{bsf.ngs.SampleAnnotationSheet}
         @rtype: bsf.ngs.SampleAnnotationSheet
         """
@@ -1468,19 +1467,19 @@ class BamIndexDecoder(bsf.analysis.Analysis):
         @param hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
         @type hash_algorithm: bool | None
         @param library_path: Library annotation file path
-        @type library_path: str | unicode | None
+        @type library_path: str | None
         @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | unicode | None
+        @type sequences_directory: str | None
         @param samples_directory: BSF samples directory
-        @type samples_directory: str | unicode | None
+        @type samples_directory: str | None
         @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_file: str | None
         @param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-        @type classpath_illumina2bam: str | unicode | None
+        @type classpath_illumina2bam: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode | None
+        @type classpath_picard: str | None
         @param lanes: Number of lanes on the flow cell
         @type lanes: int | None
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -1523,7 +1522,7 @@ class BamIndexDecoder(bsf.analysis.Analysis):
 
         The experiment directory is a concatenation of the samples directory and the project name.
         @return: Experiment directory
-        @rtype: str | unicode | None
+        @rtype: str | None
         """
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
@@ -1597,9 +1596,9 @@ class BamIndexDecoder(bsf.analysis.Analysis):
             """Private function to format sample-specific BAM file names (i.e. project_lane#sample.bam).
 
             @param sample_name:
-            @type sample_name: str | unicode
+            @type sample_name: str
             @return:
-            @rtype: str | unicode
+            @rtype: str
             """
             return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
 

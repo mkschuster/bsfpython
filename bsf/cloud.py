@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Cloud services module
+"""Cloud services module.
 
 """
 #  Copyright 2013 - 2019 Michael K. Schuster

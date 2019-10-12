@@ -37,8 +37,6 @@ from __future__ import print_function
 import argparse
 import fnmatch
 import os
-import warnings
-
 
 argument_parser = argparse.ArgumentParser(
     description='LTFS archive collection and update script.')

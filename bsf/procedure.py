@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Procedure module
+"""Procedure module.
 
 A package of classes and methods modelling procedures.
 """
@@ -42,16 +42,16 @@ class FilePath(object):
     Each C{bsf.procedure.Runnable} class is expected to define its corresponding C{bsf.procedure.FilePath} sub-class.
     Attributes:
     @ivar prefix: File path prefix
-    @type prefix: str | unicode
+    @type prefix: str
     #ivar temporary_directory: Temporary directory path
-    #type temporary_directory: str | unicode
+    #type temporary_directory: str
     """
 
     def __init__(self, prefix):
         """Initialise a C{bsf.procedure.FilePath}.
 
         @param prefix: File path prefix
-        @type prefix: str | unicode
+        @type prefix: str
         @return:
         @rtype:
         """
@@ -70,20 +70,20 @@ class Runnable(object):
 
     Attributes:
     @cvar runner_script: Name of the I{Runner} script
-    @type runner_script: str | unicode
+    @type runner_script: str
     @ivar name: Name
     @type name: str
     @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
         C{bsf.process.Executable} objects via the C{bsf.procedure.Runnable.runner_script}.
     @type code_module: str
     @ivar cache_directory: Cache directory
-    @type cache_directory: str | unicode | None
+    @type cache_directory: str | None
     @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
         Python C{str} (file_path) value data of files that will be copied into the
         C{bsf.procedure.Runnable.cache_directory}
-    @type cache_path_dict: dict[str, str | unicode]
+    @type cache_path_dict: dict[str, str]
     @ivar working_directory: Working directory to write C{pickle.Pickler} files
-    @type working_directory: str | unicode | None
+    @type working_directory: str | None
     @ivar debug: Debug level
     @type debug: int
     """
@@ -106,13 +106,13 @@ class Runnable(object):
             C{bsf.process.Executable} objects via the C{bsf.procedure.Runnable.runner_script}
         @type code_module: str
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str | unicode
+        @type working_directory: str
         @param cache_directory: Cache directory
-        @type cache_directory: str | unicode | None
+        @type cache_directory: str | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the
             C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str | unicode]
+        @type cache_path_dict: dict[str, str]
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -145,12 +145,12 @@ class Runnable(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -171,7 +171,7 @@ class Runnable(object):
         """Get the Python C{pickle.Pickler} file path.
 
         @return: Python C{pickle.Pickler} file path
-        @rtype: str | unicode
+        @rtype: str
         """
         return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
@@ -192,7 +192,7 @@ class Runnable(object):
         """Create a C{bsf.procedure.Runnable} from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
 
         @param file_path: File path to a Python C{pickle.Pickler} file
-        @type file_path: str | unicode
+        @type file_path: str
         @return: C{bsf.procedure.Runnable}
         @rtype: Runnable
         """
@@ -218,7 +218,7 @@ class Runnable(object):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Absolute or relative cache directory path
-        @rtype: str | unicode
+        @rtype: str
         """
         directory_name = '_'.join((self.name, 'cache'))
 
@@ -284,11 +284,11 @@ class Runnable(object):
         """Get the absolute or relative cache file path for a file path.
 
         @param file_path: Default file path
-        @type file_path: str | unicode
+        @type file_path: str
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Absolute or relative cache file path
-        @rtype: str | unicode
+        @rtype: str
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -303,7 +303,7 @@ class Runnable(object):
         @param absolute: Absolute or relative file path
         @type absolute: bool
         @return: Absolute or relative temporary directory path
-        @rtype: str | unicode
+        @rtype: str
         """
         directory_name = '_'.join((self.name, 'temporary'))
 
@@ -350,7 +350,7 @@ class Runnable(object):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Status file path
-        @rtype: str | unicode
+        @rtype: str
         """
         if success:
             file_name = '_'.join((self.name, 'completed.txt'))
@@ -591,13 +591,13 @@ class ConsecutiveRunnable(Runnable):
             C{bsf.process.RunnableStep} objects via the C{bsf.procedure.Runnable.runner_script} consecutively
         @type code_module: str
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str | unicode
+        @type working_directory: str
         @param cache_directory: Cache directory
-        @type cache_directory: str | unicode | None
+        @type cache_directory: str | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the
             C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str | unicode]
+        @type cache_path_dict: dict[str, str]
         @param debug: Integer debugging level
         @type debug: int
         @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
@@ -626,12 +626,12 @@ class ConsecutiveRunnable(Runnable):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -708,13 +708,13 @@ class ConcurrentRunnable(Runnable):
             C{bsf.process.RunnableStep} objects via the C{bsf.procedure.Runnable.runner_script} concurrently
         @type code_module: str
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str | unicode
+        @type working_directory: str
         @param cache_directory: Cache directory
-        @type cache_directory: str | unicode | None
+        @type cache_directory: str | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the
             C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str | unicode] | None
+        @type cache_path_dict: dict[str, str] | None
         @param debug: Integer debugging level
         @type debug: int
         @param runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
@@ -757,12 +757,12 @@ class ConcurrentRunnable(Runnable):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Standards module
+"""Standards module.
 
 A package of classes and methods modelling configuration and default information.
 """
@@ -39,9 +39,9 @@ class Configuration(object):
     @cvar global_configuration: Global C{bsf.standards.Configuration}
     @type global_configuration: bsf.standards.Configuration
     @cvar global_file_path: Global configuration file
-    @type global_file_path: str | unicode
+    @type global_file_path: str
     @ivar file_path_list: C{bsf.standards.Configuration} file path
-    @type file_path_list: list[str | unicode]
+    @type file_path_list: list[str]
     @ivar config_parser: Python C{configparser.ConfigParser}
     @type config_parser: configparser.ConfigParser
     """
@@ -75,11 +75,11 @@ class Configuration(object):
         Finally, normalise the file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str
         @param default_path: Default absolute path
-        @type default_path: str | unicode
+        @type default_path: str
         @return: Absolute path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         if file_path:
             file_path = os.path.expanduser(file_path)
@@ -123,8 +123,8 @@ class Configuration(object):
         Both, user and variable expansion gets applied to each file path.
         Identical files are read only once.
 
-        @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
-        @type file_path_list: list[str | unicode]
+        @param file_path_list: Python C{list} of Python C{str} configuration file path objects
+        @type file_path_list: list[str]
         @return: C{bsf.standards.Configuration}
         @rtype: bsf.standards.Configuration
         @raise Exception: Configuration file path does not exist
@@ -162,8 +162,8 @@ class Configuration(object):
     def __init__(self, file_path_list=None, config_parser=None):
         """Initialise a C{bsf.standards.Configuration}.
 
-        @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
-        @type file_path_list: list[str | unicode]
+        @param file_path_list: Python C{list} of Python C{str} configuration file path objects
+        @type file_path_list: list[str]
         @param config_parser: Python C{configparser.ConfigParser}
         @type config_parser: configparser.ConfigParser
         @return:
@@ -184,7 +184,7 @@ class Configuration(object):
             self.config_parser = config_parser
 
         self._config_path_list = None
-        """ @type _config_path_list: list[str | unicode] | None """
+        """ @type _config_path_list: list[str] | None """
 
         return
 
@@ -194,12 +194,12 @@ class Configuration(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str | unicode]
+        @rtype: list[str]
         """
         indent = '  ' * level
 
         str_list = list()
-        """ @type str_list: list[str | unicode] """
+        """ @type str_list: list[str] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  file_path_list: {!r}\n'.format(indent, self.file_path_list))
@@ -213,11 +213,11 @@ class Configuration(object):
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
         any environment variables i.e. on UNIX ${NAME} or $NAME.
         @param section: Configuration file section string
-        @type section: str | unicode
+        @type section: str
         @param option: Configuration file option string
-        @type option: str | unicode
+        @type option: str
         @return: Expanded directory
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return self.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
 
@@ -236,9 +236,9 @@ class Configuration(object):
 
         All elements are stripped and only non-empty elements are appended to the list.
         @param section: Configuration file section string
-        @type section: str | unicode
+        @type section: str
         @param option: Configuration file option string
-        @type option: str | unicode
+        @type option: str
         @return: Python C{list} of Python C{str} objects
         @rtype: list[str] | None
         """
@@ -253,7 +253,7 @@ class BaseSection(object):
     The defaults are read from the [{section}] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = None
 
@@ -264,9 +264,9 @@ class BaseSection(object):
         This method is a re-implementation of the C{configparser.ConfigParser.get()} method that returns C{None}
         upon non-existing sections or options.
         @param option: Configuration option
-        @type option: None | str | unicode
+        @type option: str | None
         @return: Configuration value
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         if not cls.section:
             return
@@ -290,9 +290,9 @@ class BaseSection(object):
         This method is a re-implementation of the C{configparser.ConfigParser.getboolean()} method that returns C{None}
         upon non-existing sections or options.
         @param option: Configuration option
-        @type option: None | str | unicode
+        @type option: str | None
         @return: Configuration value
-        @rtype: None | bool
+        @rtype: bool | None
         """
         if not cls.section:
             return
@@ -316,7 +316,7 @@ class BaseSectionVersion(object):
     The defaults are read from the [{section}_{version}] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = None
 
@@ -325,7 +325,7 @@ class BaseSectionVersion(object):
         """Get the the section defined by the sub-class section class variable and a version.
 
         @param version: Version
-        @type version: None | str
+        @type version: str | None
         @return: Configuration section
         @rtype: str
         """
@@ -339,11 +339,11 @@ class BaseSectionVersion(object):
         """Get the value for a configuration option in the section defined by the sub-class section class variable.
 
         @param option: Configuration option
-        @type option: None | str | unicode
+        @type option: str | None
         @param version: Version
-        @type version: None | str | unicode
+        @type version: str | None
         @return: Configuration value
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         if not cls.section:
             return
@@ -364,11 +364,11 @@ class BaseSectionVersion(object):
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
         any environment variables i.e. on UNIX ${NAME} or $NAME.
         @param option: Configuration option
-        @type option: None | str | unicode
+        @type option: str | None
         @param version: Version
-        @type version: None | str
+        @type version: str | None
         @return: Expanded directory
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         if not option:
             return
@@ -386,7 +386,7 @@ class JavaClassPath(BaseSection):
     The defaults are read from the [classpath] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'classpath'
 
@@ -395,7 +395,7 @@ class JavaClassPath(BaseSection):
         """Get the GATK Java class path.
 
         @return: GATK Java class path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='gatk')
 
@@ -404,7 +404,7 @@ class JavaClassPath(BaseSection):
         """Get the Illumina2bam tools Java class path.
 
         @return: Illumina2bam tools Java class path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='illumina2bam')
 
@@ -413,7 +413,7 @@ class JavaClassPath(BaseSection):
         """Get the Picard tools Java class path.
 
         @return: Picard tools Java class path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='picard')
 
@@ -422,7 +422,7 @@ class JavaClassPath(BaseSection):
         """Get the snpEff Java class path.
 
         @return: snpEff Java class path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='snpeff')
 
@@ -431,7 +431,7 @@ class JavaClassPath(BaseSection):
         """Get the Trimmomatic Java class path.
 
         @return: Trimmomatic Java class path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='trimmomatic')
 
@@ -440,7 +440,7 @@ class JavaClassPath(BaseSection):
         """Get the VCF.Filter Java class path.
 
         @return: VCF.Filter Java class path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='vcf_filter')
 
@@ -451,7 +451,7 @@ class EnsemblVEP(BaseSectionVersion):
     The defaults are read from the [ensembl_vep_{genome_version}] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'ensembl_vep'
 
@@ -460,9 +460,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the cache directory path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Cache directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_cache', version=genome_version)
 
@@ -471,9 +471,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the FASTA directory path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: FASTA directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_fasta', version=genome_version)
 
@@ -482,9 +482,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the plug-ins directory path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Plug-ins directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_plugin', version=genome_version)
 
@@ -493,9 +493,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the source directory path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Source directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_source', version=genome_version)
 
@@ -504,9 +504,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the genome assembly name.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Genome assembly name
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='name_assembly', version=genome_version)
 
@@ -515,9 +515,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the scientific species name.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Scientific species name
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='name_species', version=genome_version)
 
@@ -526,9 +526,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the SQL database user name.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: SQL database user name
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='sql_user', version=genome_version)
 
@@ -537,9 +537,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the SQL database password.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: SQL database password
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='sql_pass', version=genome_version)
 
@@ -548,9 +548,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the SQL database host name.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: SQL database host name
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='sql_host', version=genome_version)
 
@@ -559,9 +559,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the SQL database TCP/IP port number.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: SQL database TCP/IP port number
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='sql_port', version=genome_version)
 
@@ -570,9 +570,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the output fields configuration (TSV) file path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Output fields configuration (TSV) file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='ofc_path', version=genome_version)
 
@@ -581,9 +581,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the Sequence Ontology configuration (TSV) file path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Sequence Ontology configuration (TSV) file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='soc_path', version=genome_version)
 
@@ -592,9 +592,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the NCBI RefSeq alignments (BAM) file path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: NCBI RefSeq alignments (BAM) file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='refseq_alignments_path', version=genome_version)
 
@@ -603,9 +603,9 @@ class EnsemblVEP(BaseSectionVersion):
         """Get the Combined Annotation Dependent Depletion (CADD) file path.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Combined Annotation Dependent Depletion (CADD) file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='cadd_path', version=genome_version)
 
@@ -616,7 +616,7 @@ class Genome(BaseSectionVersion):
     The defaults are read from the [genome_{genome_version}] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'genome'
 
@@ -625,9 +625,9 @@ class Genome(BaseSectionVersion):
         """Get the (ENCODE) black list file path of problematic regions.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Back list file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='black_list', version=genome_version)
 
@@ -636,9 +636,9 @@ class Genome(BaseSectionVersion):
         """Get the release date.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Release date
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='date', version=genome_version)
 
@@ -647,9 +647,9 @@ class Genome(BaseSectionVersion):
         """Get the effective genome size.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Effective size
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='effective_size', version=genome_version)
 
@@ -660,9 +660,9 @@ class Genome(BaseSectionVersion):
         The suffix could be 'fa' or 'fasta' as in "*.fa" or "*.fasta".
         THe NCBI uses fna for nucleotide FASTA files.
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Description
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='fasta_suffix', version=genome_version)
 
@@ -671,9 +671,9 @@ class Genome(BaseSectionVersion):
         """Get the description.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Description
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='description', version=genome_version)
 
@@ -682,9 +682,9 @@ class Genome(BaseSectionVersion):
         """Get the provider.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Provider
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='provider', version=genome_version)
 
@@ -693,9 +693,9 @@ class Genome(BaseSectionVersion):
         """Get the species.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Species
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='species', version=genome_version)
 
@@ -704,9 +704,9 @@ class Genome(BaseSectionVersion):
         """Get the UCSC Genome Browser alias.
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: UCSC Genome Browser alias
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='ucsc', version=genome_version)
 
@@ -715,9 +715,9 @@ class Genome(BaseSectionVersion):
         """Get the uniform resource identifier (URI).
 
         @param genome_version: Genome assembly version
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Uniform resource identifier (URI)
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='uri', version=genome_version)
 
@@ -745,7 +745,7 @@ class Transcriptome(BaseSectionVersion):
     The defaults are read from the [transcriptome_{transcriptome_version}] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'transcriptome'
 
@@ -754,9 +754,9 @@ class Transcriptome(BaseSectionVersion):
         """Get the release date.
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @return: Release date
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='date', version=transcriptome_version)
 
@@ -765,9 +765,9 @@ class Transcriptome(BaseSectionVersion):
         """Get the description.
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @return: Description
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='description', version=transcriptome_version)
 
@@ -776,9 +776,9 @@ class Transcriptome(BaseSectionVersion):
         """Get the genome version.
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @return: Genome version
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='genome', version=transcriptome_version)
 
@@ -787,9 +787,9 @@ class Transcriptome(BaseSectionVersion):
         """Get the provider.
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @return: Provider
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='provider', version=transcriptome_version)
 
@@ -798,9 +798,9 @@ class Transcriptome(BaseSectionVersion):
         """Get the species.
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @return: Species
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='species', version=transcriptome_version)
 
@@ -809,9 +809,9 @@ class Transcriptome(BaseSectionVersion):
         """Get the uniform resource identifier (URI).
 
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @return: Uniform resource identifier (URI)
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='uri', version=transcriptome_version)
 
@@ -822,7 +822,7 @@ class FilePath(BaseSection):
     The defaults are read from the [directories] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
 
     section = 'directories'
@@ -832,7 +832,7 @@ class FilePath(BaseSection):
         """Get the (absolute) cache directory path locally on the compute node (e.g. /dev/shm).
 
         @return: Cache directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='cache')
 
@@ -841,7 +841,7 @@ class FilePath(BaseSection):
         """Get the (absolute) Home directory path.
 
         @return: Home directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='home')
 
@@ -852,9 +852,9 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @param file_path: File path
-        @type file_path: None | str | unicode
+        @type file_path: str | None
         @return: File path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         if file_path is None:
             return
@@ -871,7 +871,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Illumina Run Folder directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='illumina_run'))
 
@@ -882,7 +882,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Illumina Sequence Analysis Viewer directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='illumina_sav'))
 
@@ -893,7 +893,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Sequences directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='sequences'))
 
@@ -904,7 +904,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Samples directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='samples'))
 
@@ -915,7 +915,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Analysis projects directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='projects'))
 
@@ -926,7 +926,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Web server directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='public_html'))
 
@@ -937,7 +937,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Resources directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get(option='resources'))
 
@@ -948,9 +948,9 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @param file_path: File path
-        @type file_path: None | str | unicode
+        @type file_path: str | None
         @return: File path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         if file_path is None:
             return
@@ -965,11 +965,11 @@ class FilePath(BaseSection):
         """Get the Genome resource directory path.
 
         @param genome_version: The genome version (e.g. mm10, ...)
-        @type genome_version: None | str
+        @type genome_version: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         file_path = cls.get(option='genomes')
 
@@ -983,9 +983,9 @@ class FilePath(BaseSection):
         """Get the Genome black list file path.
 
         @param genome_version: The genome version (e.g. mm10, ...)
-        @type genome_version: None | str
+        @type genome_version: str | None
         @return: Genome black list file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         black_list_file_path = Genome.get_black_list(genome_version=genome_version)
         if not black_list_file_path:
@@ -1010,7 +1010,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome index resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         @raise Exception: Unknown genome index name
         """
         if genome_index is None:
@@ -1036,7 +1036,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome FASTA resource file path
-        @rtype: str | unicode
+        @rtype: str
         @raise Exception: Unknown genome index name
         """
         fasta_suffix = Genome.get_fasta_suffix(genome_version=genome_version)
@@ -1061,7 +1061,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome FASTA resource file path
-        @rtype: str | unicode
+        @rtype: str
         """
         return cls.get_resource_genome_fasta(
             genome_version=genome_version,
@@ -1073,11 +1073,11 @@ class FilePath(BaseSection):
         """Get the transcriptome resource directory path.
 
         @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: None | str
+        @type transcriptome_version: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Transcriptome resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         file_path = cls.get(option='transcriptomes')
 
@@ -1097,7 +1097,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Transcriptome index resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         @raise Exception: Unknown transcriptome index name
         """
         index_directory = Index.get(option=transcriptome_index)
@@ -1122,7 +1122,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Transcriptome GTF resource file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         @raise Exception: Unknown transcriptome index name
         """
         if basic:
@@ -1150,7 +1150,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Transcriptome TxDb resource file path
-        @rtype: None | str | unicode
+        @rtype: str | None
         @raise Exception: Unknown transcriptome index name
         """
         if basic:
@@ -1170,13 +1170,13 @@ class FilePath(BaseSection):
         """Get the GATK Bundle resource directory path.
 
         @param gatk_bundle_version: The GATK bundle version
-        @type gatk_bundle_version: None | str
+        @type gatk_bundle_version: str | None
         @param genome_version: The genome version (e.g. b37, ...)
-        @type genome_version: None | str
+        @type genome_version: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: GATK Bundle resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         file_path = cls.get(option='gatk_bundle')
 
@@ -1195,7 +1195,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Target Intervals resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='intervals'))
 
@@ -1206,7 +1206,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Combined Annotation Dependent Depletion (CADD) resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cadd'))
 
@@ -1217,7 +1217,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cosmic'))
 
@@ -1228,7 +1228,7 @@ class FilePath(BaseSection):
         @param absolute: Absolute file path
         @type absolute: bool
         @return: snpEff Data resource directory path
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='snpeff_data'))
 
@@ -1239,7 +1239,7 @@ class Index(BaseSection):
     The defaults are read from the [indices] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'indices'
 
@@ -1250,7 +1250,7 @@ class Operator(BaseSection):
     The defaults are read from the [operator] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'operator'
 
@@ -1259,7 +1259,7 @@ class Operator(BaseSection):
         """Get the operator contact information.
 
         @return: Operator contact information
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='contact')
 
@@ -1268,7 +1268,7 @@ class Operator(BaseSection):
         """Get the operator e-mail information.
 
         @return: Operator e-mail information
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='e_mail')
 
@@ -1277,7 +1277,7 @@ class Operator(BaseSection):
         """Get the operator institution information.
 
         @return: Operator institution information
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='institution')
 
@@ -1286,7 +1286,7 @@ class Operator(BaseSection):
         """Get the operator sequencing centre information.
 
         @return: Operator sequencing centre information
-        @rtype: None | str | unicode
+        @rtype: str | None
         """
         return cls.get(option='sequencing_centre')
 
@@ -1297,7 +1297,7 @@ class UCSC(BaseSection):
     The defaults are read from the [ucsc] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
 
     section = 'ucsc'
@@ -1327,7 +1327,7 @@ class URL(BaseSection):
     The defaults are read from the [url] section of the global configuration file.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
 
     section = 'url'
@@ -1406,7 +1406,7 @@ class VendorQualityFilter(BaseSection):
     For each flow cell type a boolean specifies whether vendor quality filtering should be applied or not.
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
 
     section = 'vendor_quality_filter'
@@ -1418,7 +1418,7 @@ class VendorQualityFilter(BaseSection):
         The flow cell type is accessible via property C{bsf.illumina.RunParameters.get_flow_cell_type},
         practically directly via C{bsf.illumina.RunFolder.run_parameters.get_flow_cell_type}.
         @param flow_cell_type: FLow cell (chemistry) type
-        @type flow_cell_type: str | unicode | None
+        @type flow_cell_type: str | None
         @return: Vendor quality filer setting
         @rtype: bool
         """
@@ -1444,7 +1444,7 @@ class Secrets(BaseSection):
 
     Attributes:
     @cvar section: C{configparser.ConfigParser} section
-    @type section: str | unicode
+    @type section: str
     """
     section = 'secrets'
 
