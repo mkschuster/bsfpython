@@ -38,6 +38,7 @@ import bsf.analyses.hisat
 import bsf.analyses.star_aligner
 import bsf.analysis
 import bsf.annotation
+import bsf.connector
 import bsf.executables
 import bsf.ngs
 import bsf.procedure
@@ -144,6 +145,10 @@ class FilePathCufflinks(bsf.procedure.FilePath):
     @type temporary_gene_prediction: str | unicode
     @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
     @type temporary_sorted_tsv: str | unicode
+    @ivar temporary_slopped_tsv: Temporary slopped (bedtools slop) tab-separated value (TSV) file
+    @type temporary_slopped_tsv: str | unicode
+    @ivar temporary_fixed_tsv: Temporary splopped and fixed (tab at end) tab-separated value (TSV) file
+    @type temporary_fixed_tsv: str | unicode
     @ivar transcripts_bb: Cufflinks transcript assembly bigBed file
     @type transcripts_bb: str | unicode
     @ivar transcripts_bb_link_source: Cufflinks transcript assembly bigBed symbolic link source
@@ -177,6 +182,8 @@ class FilePathCufflinks(bsf.procedure.FilePath):
         self.temporary_big_gene_prediction = os.path.join(prefix, 'transcripts_big_gene_prediction.tsv')
         self.temporary_gene_prediction = os.path.join(prefix, 'transcripts_gene_prediction.tsv')
         self.temporary_sorted_tsv = os.path.join(prefix, 'transcripts_sorted.tsv')
+        self.temporary_slopped_tsv = os.path.join(prefix, 'transcripts_slopped.tsv')
+        self.temporary_fixed_tsv = os.path.join(prefix, 'transcripts_fixed.tsv')
         self.transcripts_bb = os.path.join(prefix, 'transcripts.bb')
         self.transcripts_bb_link_source = 'transcripts.bb'
         self.transcripts_bb_link_target = os.path.join(prefix, prefix + '_transcripts.bb')
@@ -428,8 +435,8 @@ class Tuxedo(bsf.analysis.Analysis):
     @type false_discovery_rate: float | None
     @ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
     @type no_length_correction: bool | None
-    @ivar run_tophat: Run Tophat for alignment or rely on Hisat2 otherwise
-    @type run_tophat: bool | None
+    @ivar aligner: Alignment program
+    @type aligner: str | None
     """
 
     name = 'RNA-seq Analysis'
@@ -795,7 +802,7 @@ class Tuxedo(bsf.analysis.Analysis):
             novel_transcripts=None,
             false_discovery_rate=None,
             no_length_correction=None,
-            run_tophat=None):
+            aligner=None):
         """Initialise a C{bsf.analyses.rnaseq.Tuxedo} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -853,8 +860,8 @@ class Tuxedo(bsf.analysis.Analysis):
         @type false_discovery_rate: float | None
         @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
         @type no_length_correction: bool | None
-        @param run_tophat: Run Tophat for alignment or rely on Hisat2 otherwise
-        @type run_tophat: bool | None
+        @param aligner: Alignment program
+        @type aligner: str | None
         @return:
         @rtype:
         """
@@ -888,7 +895,7 @@ class Tuxedo(bsf.analysis.Analysis):
         self.novel_transcripts = novel_transcripts
         self.false_discovery_rate = false_discovery_rate
         self.no_length_correction = no_length_correction
-        self.run_tophat = run_tophat
+        self.aligner = aligner
 
         self._comparison_dict = dict()
         """ @type _comparison_dict: dict[str, list[bsf.ngs.SampleGroup]] """
@@ -967,9 +974,9 @@ class Tuxedo(bsf.analysis.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.no_length_correction = configuration.config_parser.getboolean(section=section, option=option)
 
-        option = 'run_tophat'
+        option = 'aligner'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.run_tophat = configuration.config_parser.getboolean(section=section, option=option)
+            self.aligner = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -1329,6 +1336,13 @@ class Tuxedo(bsf.analysis.Analysis):
             raise Exception("Invalid 'library_type' configuration option: " + self.library_type + '\n' +
                             'Supported types: ' + repr(library_type_tuple))
 
+        if self.aligner:
+            # Defaults to '',
+            aligner_tuple = ('hisat2', 'star', 'tophat2')
+            if self.aligner not in aligner_tuple:
+                raise Exception("Invalid 'aligner' configuration option: " + self.aligner + '\n' +
+                                'Supported aligners: ' + repr(aligner_tuple))
+
         # Read configuration options.
 
         # TODO: Move the ConfigParser code.
@@ -1364,7 +1378,13 @@ class Tuxedo(bsf.analysis.Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
-            if self.run_tophat:
+            if self.aligner == 'hisat2':
+                run_cufflinks_dependency = bsf.analyses.hisat.Hisat2.get_prefix_sample(
+                    sample_name=sample.name)
+            elif self.aligner == 'star':
+                run_cufflinks_dependency = bsf.analyses.star_aligner.StarAligner.get_prefix_sample(
+                    sample_name=sample.name)
+            else:  # tophat2 is the default case.
                 # Create a Tophat Runnable per Sample.name.
 
                 # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
@@ -1540,8 +1560,6 @@ class Tuxedo(bsf.analysis.Analysis):
                     executable_process_tophat.submit = False
 
                 run_cufflinks_dependency = executable_run_tophat.name
-            else:
-                run_cufflinks_dependency = bsf.analyses.hisat.Hisat2.get_prefix_sample(sample_name=sample.name)
 
             # Create a run_cufflinks Runnable per Sample name.
 
@@ -1645,12 +1663,15 @@ class Tuxedo(bsf.analysis.Analysis):
 
             # Set Cufflinks arguments.
 
-            if self.run_tophat:
+            if self.aligner == "hisat2":
                 runnable_step.arguments.append(
-                    self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
+                    bsf.analyses.hisat.Hisat2.get_file_path_sample(sample_name=sample.name).sample_bam)
+            elif self.aligner == 'star':
+                runnable_step.arguments.append(
+                    bsf.analyses.star_aligner.StarAligner.get_file_path_sample(sample_name=sample.name).sample_bam)
             else:
                 runnable_step.arguments.append(
-                    bsf.analyses.hisat.Hisat2.get_file_path_sample(sample_name=sample.name).duplicate_bam)
+                    self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
 
             # Convert the resulting transcripts GTF file into a UCSC genePred file.
 
@@ -1689,13 +1710,45 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
             runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
 
+            # Run bedtools slop on the sorted UCSC bigGenePred file to constrain to chromosome coordinates.
+
+            runnable_step = bsf.process.RunnableStep(
+                name='bedtools_slop',
+                program='bedtools',
+                sub_command=bsf.process.Command(program='slop'),
+                obsolete_file_path_list=[
+                    file_path_cufflinks.temporary_sorted_tsv,
+                ],
+                stdout=bsf.connector.ConnectorFile(file_path=file_path_cufflinks.temporary_slopped_tsv, file_mode='wt'))
+            runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
+
+            runnable_step.sub_command.add_option_short(key='b', value='0')
+            runnable_step.sub_command.add_option_short(key='i', value=file_path_cufflinks.temporary_sorted_tsv)
+            runnable_step.sub_command.add_option_short(key='g', value=self.genome_sizes_path)
+
+            # Since bedtools slop, at least in version v2.27.1, looses the last tab character,
+            # it has to be put back with sed, before UCSC bedToBigBed can run.
+
+            runnable_step = bsf.process.RunnableStep(
+                name='sed',
+                program='sed',
+                obsolete_file_path_list=[
+                    file_path_cufflinks.temporary_slopped_tsv,
+                ],
+                stdout=bsf.connector.ConnectorFile(file_path=file_path_cufflinks.temporary_fixed_tsv, file_mode='wt'))
+            runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
+
+            runnable_step.add_option_short(key='e', value='s/$/\\t/')
+
+            runnable_step.arguments.append(file_path_cufflinks.temporary_slopped_tsv)
+
             # Convert the sorted UCSC bigGenePred into a bigBed file.
 
             runnable_step = bsf.process.RunnableStep(
                 name='bgp_to_bb',
                 program='bedToBigBed',
                 obsolete_file_path_list=[
-                    file_path_cufflinks.temporary_sorted_tsv,
+                    file_path_cufflinks.temporary_fixed_tsv,
                 ])
             runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
 
@@ -1703,7 +1756,7 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_step.add_option_pair_short(key='as', value='/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
             runnable_step.add_switch_short(key='tab')
             runnable_step.add_option_pair_short(key='type', value='bed12+8')
-            runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
+            runnable_step.arguments.append(file_path_cufflinks.temporary_fixed_tsv)
             runnable_step.arguments.append(self.genome_sizes_path)
             runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
 
@@ -2075,16 +2128,25 @@ class Tuxedo(bsf.analysis.Analysis):
                     # Add the TopHat BAM file to the Cuffdiff alignments list.
 
                     runnable_step_cuffquant.arguments.append(file_path_cuffmerge.merged_gtf)
-                    if self.run_tophat:
+                    if self.aligner == 'hisat2':
                         runnable_step_cuffquant.arguments.append(
-                            self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
+                            bsf.analyses.hisat.Hisat2.get_file_path_sample(
+                                sample_name=sample.name).sample_bam)
                         per_group_alignments_list.append(
-                            self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
+                            bsf.analyses.hisat.Hisat2.get_file_path_sample(
+                                sample_name=sample.name).sample_bam)
+                    elif self.aligner == 'star':
+                        runnable_step_cuffquant.arguments.append(
+                            bsf.analyses.star_aligner.StarAligner.get_file_path_sample(
+                                sample_name=sample.name).sample_bam)
+                        per_group_alignments_list.append(
+                            bsf.analyses.star_aligner.StarAligner.get_file_path_sample(
+                                sample_name=sample.name).sample_bam)
                     else:
                         runnable_step_cuffquant.arguments.append(
-                            bsf.analyses.hisat.Hisat2.get_file_path_sample(sample_name=sample.name).duplicate_bam)
+                            self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
                         per_group_alignments_list.append(
-                            bsf.analyses.hisat.Hisat2.get_file_path_sample(sample_name=sample.name).duplicate_bam)
+                            self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
 
                     # Add the Cuffquant abundances file to the Cuffdiff list.
 
@@ -2407,7 +2469,35 @@ class Tuxedo(bsf.analysis.Analysis):
             str_list.append('<h3 id="read_alignments">Read Alignments</h3>\n')
             str_list.append('\n')
 
-            if self.run_tophat:
+            if self.aligner == 'hisat2':
+                str_list.append('<p id="hisat2">')
+                str_list.append('<a href="https://ccb.jhu.edu/software/hisat2/index.shtml">')
+                str_list.append('<strong>HISAT2</strong>')
+                str_list.append('</a> ')
+                str_list.append('aligns RNA-seq reads to a reference genome in order to identify ')
+                str_list.append('exon-exon splice junctions. ')
+                # str_list.append('<br />\n')
+                str_list.append('Please see the ')
+                str_list.append('<a href="' + bsf.analyses.hisat.Hisat2.prefix + '_report.html">')
+                str_list.append(self.project_name + ' ' + bsf.analyses.hisat.Hisat2.name)
+                str_list.append('</a> report for quality plots and ')
+                str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
+                str_list.append('</p>\n')
+                str_list.append('\n')
+            elif self.aligner == 'star':
+                str_list.append('<p id="star_aligner">')
+                str_list.append('<a href="https://github.com/alexdobin/STAR">STAR</a> ')
+                str_list.append('aligns RNA-seq reads to a reference genome in order to identify ')
+                str_list.append('exon-exon splice junctions. ')
+                # str_list.append('<br />\n')
+                str_list.append('Please see the ')
+                str_list.append('<a href="' + bsf.analyses.star_aligner.StarAligner.prefix + '_report.html">')
+                str_list.append(self.project_name + ' ' + bsf.analyses.star_aligner.StarAligner.name)
+                str_list.append('</a> report for quality plots and ')
+                str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
+                str_list.append('</p>\n')
+                str_list.append('\n')
+            else:
                 str_list.append('<p id ="tophat">')
                 # http://tophat.cbcb.umd.edu/manual.html
                 str_list.append('<a href="http://ccb.jhu.edu/software/tophat/index.shtml"><strong>TopHat</strong></a> ')
@@ -2469,21 +2559,6 @@ class Tuxedo(bsf.analysis.Analysis):
                 # str_list.append('UCSC Genome Browser. Since each file needs transferring to\n')
                 # str_list.append('the UCSC site, subsequent pages will take some time to load.')
                 # str_list.append('</p>\n')
-            else:
-                str_list.append('<p id="hisat2">')
-                str_list.append('<a href="https://ccb.jhu.edu/software/hisat2/index.shtml">')
-                str_list.append('<strong>HISAT2</strong>')
-                str_list.append('</a> ')
-                str_list.append('aligns RNA-seq reads to a reference genome in order to identify ')
-                str_list.append('exon-exon splice junctions. ')
-                # str_list.append('<br />\n')
-                str_list.append('Please see the ')
-                str_list.append('<a href="' + bsf.analyses.hisat.Hisat2.prefix + '_report.html">')
-                str_list.append(self.project_name + ' ' + bsf.analyses.hisat.Hisat2.name)
-                str_list.append('</a> report for quality plots and ')
-                str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
-                str_list.append('</p>\n')
-                str_list.append('\n')
 
             str_list.append('<h2 id="raw_gene_expression_profiles">Raw Gene Expression Profiles</h2>\n')
             str_list.append('\n')
@@ -2540,10 +2615,12 @@ class Tuxedo(bsf.analysis.Analysis):
             str_list.append('<th>Isoforms (Symbols)</th>\n')
             str_list.append('<th>Aligned BAM</th>\n')
             str_list.append('<th>Aligned BAI</th>\n')
-            if self.run_tophat:
-                str_list.append('<th>Unaligned BAM</th>\n')
-            else:
+            if self.aligner == 'hisat2':
                 str_list.append('<th>Aligned MD5</th>\n')
+            elif self.aligner == 'star':
+                str_list.append('<th>Aligned MD5</th>\n')
+            else:
+                str_list.append('<th>Unaligned BAM</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -2561,13 +2638,20 @@ class Tuxedo(bsf.analysis.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                if self.run_tophat:
-                    # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
-                    # skipped.gtf and transcripts.gtf.
+                if self.aligner == 'hisat2' or self.aligner == 'star':
+                    if self.aligner == 'hisat2':
+                        file_path_aligner_sample = bsf.analyses.hisat.Hisat2.get_file_path_sample(
+                            sample_name=sample.name)
+                    elif self.aligner == 'star':
+                        file_path_aligner_sample = bsf.analyses.star_aligner.StarAligner.get_file_path_sample(
+                            sample_name=sample.name)
+                    else:
+                        raise Exception()
 
                     path_prefix = 'rnaseq_cufflinks_' + sample.name
 
                     str_list.append('<tr>\n')
+
                     # Sample
                     str_list.append('<td class="left">' + sample.name + '</td>\n')
                     # Assembled Transcripts
@@ -2577,14 +2661,17 @@ class Tuxedo(bsf.analysis.Analysis):
                         suffix='transcripts.gtf',
                         text='Transcript Assembly'))
                     str_list.append('</td>\n')
+
                     # Gene FPKM
                     str_list.append('<td class="center">')
                     str_list.append('<a href="' + path_prefix + '/genes.fpkm_tracking">Genes FPKM</a>')
                     str_list.append('</td>\n')
+
                     # Transcript FPKM
                     str_list.append('<td class="center">')
                     str_list.append('<a href="' + path_prefix + '/isoforms.fpkm_tracking">Isoforms FPKM</a>')
                     str_list.append('</td>\n')
+
                     # Genes (Symbols)
                     str_list.append('<td class="center">')
                     str_list.append(self.get_html_anchor(
@@ -2592,6 +2679,72 @@ class Tuxedo(bsf.analysis.Analysis):
                         suffix='genes_fpkm_tracking.tsv',
                         text='Genes (Symbols)'))
                     str_list.append('</td>\n')
+
+                    # Isoforms (Symbols)
+                    str_list.append('<td class="center">')
+                    str_list.append(self.get_html_anchor(
+                        prefix=path_prefix,
+                        suffix='isoforms_fpkm_tracking.tsv',
+                        text='Isoforms (Symbols)'))
+                    str_list.append('</td>\n')
+
+                    # Aligned BAM file
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + file_path_aligner_sample.sample_bam + '">')
+                    str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
+                    str_list.append('</a>')
+                    str_list.append('</td>\n')
+
+                    # Aligned BAI file
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + file_path_aligner_sample.sample_bai + '">')
+                    str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
+                    str_list.append('</a>')
+                    str_list.append('</td>\n')
+
+                    # Aligned BAI file
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + file_path_aligner_sample.sample_md5 + '">')
+                    str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
+                    str_list.append('</a>')
+                    str_list.append('</td>\n')
+                    str_list.append('</tr>\n')
+                else:
+                    # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
+                    # skipped.gtf and transcripts.gtf.
+
+                    path_prefix = 'rnaseq_cufflinks_' + sample.name
+
+                    str_list.append('<tr>\n')
+
+                    # Sample
+                    str_list.append('<td class="left">' + sample.name + '</td>\n')
+                    # Assembled Transcripts
+                    str_list.append('<td class="center">')
+                    str_list.append(self.get_html_anchor(
+                        prefix=path_prefix,
+                        suffix='transcripts.gtf',
+                        text='Transcript Assembly'))
+                    str_list.append('</td>\n')
+
+                    # Gene FPKM
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/genes.fpkm_tracking">Genes FPKM</a>')
+                    str_list.append('</td>\n')
+
+                    # Transcript FPKM
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/isoforms.fpkm_tracking">Isoforms FPKM</a>')
+                    str_list.append('</td>\n')
+
+                    # Genes (Symbols)
+                    str_list.append('<td class="center">')
+                    str_list.append(self.get_html_anchor(
+                        prefix=path_prefix,
+                        suffix='genes_fpkm_tracking.tsv',
+                        text='Genes (Symbols)'))
+                    str_list.append('</td>\n')
+
                     # Isoforms (Symbols)
                     str_list.append('<td class="center">')
                     str_list.append(self.get_html_anchor(
@@ -2603,84 +2756,26 @@ class Tuxedo(bsf.analysis.Analysis):
                     # TODO: The aligned BAM and BAI files and the unaligned BAM file are currently non standard.
                     # The files have a 'rnaseq_tophat_' prefix, but are in the 'rnaseq_cufflinks_' directory.
                     # This will be resolved when the process_tophat step gets re-engineered.
+
                     # Aligned BAM file
                     str_list.append('<td class="center">')
                     str_list.append('<a href="' + path_prefix + '/rnaseq_tophat_' + sample.name +
                                     '_accepted_hits.bam">Aligned BAM</a>')
                     str_list.append('</td>\n')
+
                     # Aligned BAI file
                     str_list.append('<td class="center">')
                     str_list.append('<a href="' + path_prefix + '/rnaseq_tophat_' + sample.name +
                                     '_accepted_hits.bam.bai">Aligned BAI</a>')
                     str_list.append('</td>\n')
+
                     # Unaligned BAM file
                     str_list.append('<td class="center">')
                     str_list.append('<a href="' + path_prefix + '/rnaseq_tophat_' + sample.name +
                                     '_unmapped.bam">Unaligned BAM</a>')
                     str_list.append('</td>\n')
+
                     str_list.append('</tr>\n')
-                else:
-                    path_prefix = 'rnaseq_cufflinks_' + sample.name
-                    file_path_hisat2_sample = bsf.analyses.hisat.Hisat2.get_file_path_sample(sample_name=sample.name)
-
-                    str_list.append('<tr>\n')
-
-                    # Sample
-                    str_list.append('<td class="left">' + sample.name + '</td>\n')
-                    # Assembled Transcripts
-                    str_list.append('<td class="center">')
-                    str_list.append(self.get_html_anchor(
-                        prefix=path_prefix,
-                        suffix='transcripts.gtf',
-                        text='Transcript Assembly'))
-                    str_list.append('</td>\n')
-
-                    # Gene FPKM
-                    str_list.append('<td class="center">')
-                    str_list.append('<a href="' + path_prefix + '/genes.fpkm_tracking">Genes FPKM</a>')
-                    str_list.append('</td>\n')
-
-                    # Transcript FPKM
-                    str_list.append('<td class="center">')
-                    str_list.append('<a href="' + path_prefix + '/isoforms.fpkm_tracking">Isoforms FPKM</a>')
-                    str_list.append('</td>\n')
-
-                    # Genes (Symbols)
-                    str_list.append('<td class="center">')
-                    str_list.append(self.get_html_anchor(
-                        prefix=path_prefix,
-                        suffix='genes_fpkm_tracking.tsv',
-                        text='Genes (Symbols)'))
-                    str_list.append('</td>\n')
-
-                    # Isoforms (Symbols)
-                    str_list.append('<td class="center">')
-                    str_list.append(self.get_html_anchor(
-                        prefix=path_prefix,
-                        suffix='isoforms_fpkm_tracking.tsv',
-                        text='Isoforms (Symbols)'))
-                    str_list.append('</td>\n')
-
-                    # Aligned BAM file
-                    str_list.append('<td class="center">')
-                    str_list.append('<a href="' + file_path_hisat2_sample.sample_bam + '">')
-                    str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
-                    str_list.append('</a>')
-                    str_list.append('</td>\n')
-
-                    # Aligned BAI file
-                    str_list.append('<td class="center">')
-                    str_list.append('<a href="' + file_path_hisat2_sample.sample_bai + '">')
-                    str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
-                    str_list.append('</a>')
-                    str_list.append('</td>\n')
-
-                    # Aligned BAI file
-                    str_list.append('<td class="center">')
-                    str_list.append('<a href="' + file_path_hisat2_sample.sample_md5 + '">')
-                    str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
-                    str_list.append('</a>')
-                    str_list.append('</td>\n')
 
             str_list.append('</tbody>\n')
             str_list.append('</table>\n')
@@ -3398,7 +3493,11 @@ class Tuxedo(bsf.analysis.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                if self.run_tophat:
+                if self.aligner == 'hisat2':
+                    pass
+                elif self.aligner == 'star':
+                    pass
+                else:
                     #
                     # Add a trackDB entry for each Tophat accepted_hits.bam file.
                     #
