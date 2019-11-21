@@ -4223,6 +4223,8 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('<th class="left">Differential Genes</th>\n')
             str_list.append('<th class="left">Significant Genes</th>\n')
             str_list.append('<th class="left">Significant Number</th>\n')
+            str_list.append('<th class="left">Significant Up</th>\n')
+            str_list.append('<th class="left">Significant Down</th>\n')
             str_list.append('<th class="left">MA Plot</th>\n')
             str_list.append('<th class="left">Volcano Plot</th>\n')
             str_list.append('<th class="left">Numerator</th>\n')
@@ -4296,6 +4298,16 @@ class DESeq(bsf.analysis.Analysis):
                     # Significant Number
                     if 'Significant' in row_dict:
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['Significant'])))
+                    else:
+                        str_list.append('<td></td>\n')
+                    # Significant Up genes
+                    if 'SignificantUp' in row_dict:
+                        str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['SignificantUp'])))
+                    else:
+                        str_list.append('<td></td>\n')
+                    # Significant Down genes
+                    if 'SignificantDown' in row_dict:
+                        str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['SignificantDown'])))
                     else:
                         str_list.append('<td></td>\n')
                     # MA Plot
