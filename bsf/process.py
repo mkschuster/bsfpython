@@ -1031,7 +1031,7 @@ class Executable(Command):
                     if connector.thread_callable is None:
                         # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
                         connector.thread = threading.Thread(
-                            target=connector.thread_callable,
+                            target=bsf.process.Executable.process_stdout,
                             args=[self.sub_process.stdout, thread_lock, debug],
                             kwargs={'stdout_path': connector.file_path})
                     else:
