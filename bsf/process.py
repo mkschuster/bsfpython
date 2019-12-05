@@ -696,7 +696,7 @@ class Executable(Command):
         """Process a I{STDOUT} or I{STDERR} text stream from the child process as a thread.
 
         If a file_path was provided, a corresponding Python C{file} will be opened in text mode,
-        if not C{sys.stdout} or C{sys.stderr} will be used according to the I{file_type}.
+        if not, C{sys.stdout} or C{sys.stderr} will be used according to the I{file_type}.
         If a debug level was set, diagnostic output will be printed to C{sys.stdout}, as well as the output stream.
         @param file_handle: The I{STDOUT} or I{STDERR} C{io.TextIOWrapper} file handle
         @type file_handle: io.TextIOWrapper
@@ -719,12 +719,13 @@ class Executable(Command):
         if debug > 0:
             print(get_timestamp(),
                   'Started Runner ' + repr(file_type) + ' processor in module ' + repr(__name__) + '.',
-                  file=sys.stdout)
+                  file=sys.stdout, flush=True)
         output_file = None
         if file_path:
             output_file = open(file=file_path, mode='wt')
             if debug > 0:
-                print(get_timestamp(), 'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.', file=sys.stdout)
+                print(get_timestamp(), 'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.',
+                      file=sys.stdout, flush=True)
         elif file_type == 'STDOUT':
             output_file = sys.stdout
         elif file_type == 'STDERR':
@@ -734,18 +735,21 @@ class Executable(Command):
         for line_str in file_handle:
             thread_lock.acquire(True)
             if debug > 0:
-                print(get_timestamp(), file_type + ': ' + line_str.rstrip(), file=output_file)
+                print(get_timestamp(), file_type + ': ' + line_str.rstrip(),
+                      file=output_file, flush=True)
             else:
-                output_file.write(line_str)
+                print(line_str.rstrip(), file=output_file, flush=True)
             thread_lock.release()
 
         thread_lock.acquire(True)
         if debug > 0:
-            print(get_timestamp(), 'Received EOF on ' + repr(file_type) + ' pipe.', file=sys.stdout)
+            print(get_timestamp(), 'Received EOF on ' + repr(file_type) + ' pipe.',
+                  file=sys.stdout, flush=True)
         if file_path:
             output_file.close()
             if debug > 0:
-                print(get_timestamp(), 'Closed ' + repr(file_type) + ' file ' + repr(file_path) + '.', file=sys.stdout)
+                print(get_timestamp(), 'Closed ' + repr(file_type) + ' file ' + repr(file_path) + '.',
+                      file=sys.stdout, flush=True)
         thread_lock.release()
 
         return
