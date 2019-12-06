@@ -1451,14 +1451,18 @@ class Secrets(BaseSection):
     user_mask = stat.S_IRWXG | stat.S_IRWXO
 
     @classmethod
-    def get_azure_file_path(cls):
-        """Get the configuration file path with Microsoft Azure secrets.
+    def get_file_path(cls, option=None):
+        """Get a configuration file path with secrets.
 
+        The configuration path is defined in the specified option under the
+        [secrets] configuration section.
         Also checks that the file is only readable by the user and not accessible for group and other.
+        @param option: Configuration option
+        @type option: str
         @return: File path to configuration file with secrets.
         @rtype: str | None
         """
-        file_path = os.path.normpath(os.path.expandvars(os.path.expanduser(cls.get(option='azure_file_path'))))
+        file_path = os.path.normpath(os.path.expandvars(os.path.expanduser(cls.get(option=option))))
 
         if not file_path:
             return None
@@ -1472,3 +1476,23 @@ class Secrets(BaseSection):
                     file_path, file_stat_result.st_mode, cls.user_mask))
 
         return file_path
+
+    @classmethod
+    def get_azure_file_path(cls):
+        """Get the configuration file path with Microsoft Azure secrets.
+
+        Also checks that the file is only readable by the user and not accessible for group and other.
+        @return: File path to configuration file with secrets.
+        @rtype: str | None
+        """
+        return cls.get_file_path(option='azure_file_path')
+
+    @classmethod
+    def get_mysql_file_path(cls):
+        """Get the configuration file path with MySQL secrets.
+
+        Also checks that the file is only readable by the user and not accessible for group and other.
+        @return: File path to configuration file with secrets.
+        @rtype: str | None
+        """
+        return cls.get_file_path(option='mysql_file_path')
