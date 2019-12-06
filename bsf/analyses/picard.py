@@ -1698,7 +1698,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             runnable_step = bsf.process.RunnableStepPicard(
                 name='picard_illumina_basecalls_to_multiplex_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx16G',
+                java_heap_maximum='Xmx24G',
                 picard_classpath=self.classpath_picard,
                 picard_command='IlluminaBasecallsToMultiplexSam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
