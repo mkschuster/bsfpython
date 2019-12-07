@@ -26,8 +26,6 @@ A package of classes and methods supporting variant calling analyses.
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-from __future__ import print_function
-
 import errno
 import os
 import pickle

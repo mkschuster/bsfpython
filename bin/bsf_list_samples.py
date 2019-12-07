@@ -27,7 +27,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import argparse
 import csv
 import os

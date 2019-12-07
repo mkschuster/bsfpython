@@ -25,8 +25,6 @@ A package of classes and methods supporting Bowtie alignment analyses.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-from __future__ import print_function
-
 import os
 
 import bsf.analyses.aligner

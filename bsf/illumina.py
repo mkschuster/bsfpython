@@ -26,8 +26,6 @@ specific for Illumina sequencing systems.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-from __future__ import print_function
-
 import datetime
 import os
 import warnings
@@ -2827,7 +2825,7 @@ class RunFolder(object):
             # Process the IRF/Thumbnail_Images/L00[1-8]/C[0-9]+.1/ directories.
 
             for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
-                if rta in ('v3.4.4', ) and cycle not in read_start_list:
+                if rta in ('v3.4.4',) and cycle not in read_start_list:
                     # Since RTA v3.4.4, only the first cycles of each read have thumbnail images.
                     continue
 
