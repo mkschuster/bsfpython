@@ -1297,7 +1297,7 @@ class FilePathIlluminaMultiplexSamLane(bsf.procedure.FilePath):
         self.final_md5 = '_'.join((project_name, lane)) + '.bam.md5'
         self.archive_bam = os.path.join(experiment_directory, self.final_bam)
         self.archive_md5 = os.path.join(experiment_directory, self.final_md5)
-        # The Microsoft Azure Service uses a slash character regardless of the local file system.
+        # The Azure Storage Blob Service always uses URL-compliant slash characters as path separators.
         self.cloud_bam = '/'.join((project_name, self.final_bam))
         self.cloud_md5 = '/'.join((project_name, self.final_md5))
 
@@ -1327,9 +1327,9 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     @type vendor_quality_filter: bool
     @ivar compression_level: (Zlib) Compression level
     @type compression_level: int | None
-    @ivar cloud_account: Microsoft Azure storage account name
+    @ivar cloud_account: I{Microsoft Azure Storage Account} name
     @type cloud_account: str | None
-    @ivar cloud_container: Microsoft Azure storage container name
+    @ivar cloud_container: I{Microsoft Azure Blob Service} container name
     @type cloud_container: str | None
     """
 
@@ -1463,9 +1463,9 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @type vendor_quality_filter: bool | None
         @param compression_level: (Zlib) Compression level
         @type compression_level: int | None
-        @param cloud_account: Microsoft Azure storage account name
+        @param cloud_account: I{Microsoft Azure Storage Account} name
         @type cloud_account: str | None
-        @param cloud_container: Microsoft Azure storage container name
+        @param cloud_container: I{Microsoft Azure Blob Service} container name
         @type cloud_container: str | None
         """
         super(IlluminaMultiplexSam, self).__init__(

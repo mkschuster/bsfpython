@@ -28,8 +28,7 @@
 import json
 import os
 
-import azure.storage.blob
-import azure.storage.blob.models
+from azure.storage.blob import BlobServiceClient, ContainerProperties, BlobProperties
 
 import bsf.standards
 
@@ -37,9 +36,9 @@ import bsf.standards
 def get_azure_secrets_dict(account_name):
     """Get Microsoft Azure secrets from a JSON configuration file.
 
-    @param account_name: Microsoft Azure account name
+    @param account_name: I{Microsoft Azure Storage Account} name
     @type account_name: str
-    @return: Python C{dict} with Microsoft Azure secrets i.e. I{azure_name} and I{azure_key}
+    @return: Python C{dict} with I{Microsoft Azure Storage Account} secrets
     @rtype: dict | None
     """
     file_path = bsf.standards.Secrets.get_azure_file_path()
@@ -49,87 +48,173 @@ def get_azure_secrets_dict(account_name):
             secrets_dict = json.load(io_object)
 
         if account_name not in secrets_dict:
-            raise Exception('Account name ' + repr(account_name) + ' not in secrets file ' +
+            raise Exception('Microsoft Azure Storage Account name ' + repr(account_name) + ' not in secrets file ' +
                             repr(bsf.standards.Secrets.get_azure_file_path()))
-        account_dict = secrets_dict[account_name]
 
-        if 'azure_name' not in account_dict:
-            raise Exception('The Azure secrets JSON file requires an "azure_name" dict entry.')
-
-        if 'azure_key' not in account_dict:
-            raise Exception('The Azure secrets JSON file requires an "azure_key" dict entry.')
-
-        return account_dict
+        return secrets_dict[account_name]
     else:
-        raise Exception('Could not get an Azure secrets JSON file.')
+        raise Exception('Could not get a Microsoft Azure secrets JSON file.')
 
 
-def get_azure_block_blob_service(account_name):
-    """Get a Microsoft Azure C{BlockBlobService} object.
+def get_azure_blob_name(blob):
+    """Get an Azure blob name from a C{azure.storage.blob.BlobProperties} or a Python C{str} object.
 
-    Automatically sets the C{azure.storage.blob.BlockBlobService.MAX_BLOCK_SIZE} class variable
-    to support 100 MiB blocks.
-    @param account_name: Microsoft Azure account name
+    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} object
+    @type blob: azure.storage.blob.BlobProperties | str
+    @return: Blob name
+    @rtype: str
+    """
+    if isinstance(blob, BlobProperties):
+        return blob.name
+    elif isinstance(blob, str):
+        return blob
+    else:
+        raise Exception("The 'blob' option has to be of type 'BlobProperties' or 'str'.")
+
+
+def get_container_name(container):
+    """Get a container name from a C{azure.storage.blob.ContainerProperties} or a Python C{str} object.
+
+    @param container: C{azure.storage.blob.ContainerProperties} or Python C{str} object
+    @type container: azure.storage.blob.ContainerProperties | str
+    @return: Container name
+    @rtype: str
+    """
+    if isinstance(container, ContainerProperties):
+        return container.name
+    elif isinstance(container, str):
+        return container
+    else:
+        raise Exception("The 'container' option has to be of type 'ContainerProperties' or 'str'.")
+
+
+def get_azure_blob_service_client(account_name):
+    """Get an C{azure.storage.blob.BlobServiceClient} object.
+
+    For uploading large files, the default block size of 4 * 1024 * 1024 (4 MiB) is not big enough,
+    since the number of blocks in a blob is limited to 50,000, which allows for 200,000 MiB
+    or 195 GiB blobs. Changing the maximum block size to 100 MiB allows for 4882 GiB or 4 TiB blobs.
+    @param account_name: I{Microsoft Azure Storage Account} name
     @type account_name: str
-    @return: Microsoft Azure C{BlockBlobService} object
-    @rtype: azure.storage.blob.BlockBlobService
+    @return: C{azure.storage.blob.BlobServiceClient} object
+    @rtype: azure.storage.blob.BlobServiceClient
     """
     secrets_dict = get_azure_secrets_dict(account_name=account_name)
 
-    azure.storage.blob.BlockBlobService.MAX_BLOCK_SIZE = 100 * 1024 * 1024
+    if 'azure_connection' not in secrets_dict:
+        raise Exception('The Azure secrets JSON file requires an "azure_connection" dict entry.')
 
-    return azure.storage.blob.BlockBlobService(
-        account_name=secrets_dict['azure_name'],
-        account_key=secrets_dict['azure_key'])
+    return BlobServiceClient.from_connection_string(
+        conn_str=secrets_dict['azure_connection'],
+        max_block_size=100 * 1024 * 1024)
 
 
-def azure_block_blob_upload(block_blob_service, container_name, file_path, blob_name=None):
-    """Upload a block blob into a Microsoft Azure I{BlockBlobService} container.
+def get_azure_container_client(azure_blob_service_client, container):
+    """Get an C{azure.storage.blob.ContainerClient} object.
 
-    @param block_blob_service: Microsoft Azure C{BlockBlobService} object
-    @type block_blob_service: azure.storage.blob.BlockBlobService
-    @param container_name: Container name
-    @type container_name: str
+    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
+    @type azure_blob_service_client: azure.storage.blob.BlobServiceClient
+    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
+    @type container: azure.storage.blob.ContainerProperties | str
+    @return: C{azure.storage.blob.ContainerClient} object
+    @rtype: azure.storage.blob.ContainerClient
+    """
+    return azure_blob_service_client.get_container_client(container=container)
+
+
+def get_azure_blob_client(azure_blob_service_client, container, blob):
+    """Get an C{azure.storage.blob.BlobClient} object.
+
+    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
+    @type azure_blob_service_client: azure.storage.blob.BlobServiceClient
+    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
+    @type container: azure.storage.blob.ContainerProperties | str
+    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
+    @type blob: azure.storage.blob.BlobProperties | str
+    @return: C{azure.storage.blob.BlobClient} object
+    @rtype: azure.storage.blob.BlobClient
+    """
+    return azure_blob_service_client.get_blob_client(container=container, blob=blob)
+
+
+def azure_container_exists(azure_blob_service_client, container):
+    """Check if a container exists in a I{Microsoft Azure Storage Account}.
+
+    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
+    @type azure_blob_service_client: azure.storage.blob.BlobServiceClient
+    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
+    @type container: azure.storage.blob.ContainerProperties | str
+    @return: C{True} if the container exists, C{False} otherwise
+    @rtype: bool
+    """
+    container_name = get_container_name(container=container)
+
+    result = False
+    for container_item in azure_blob_service_client.list_containers(name_starts_with=container_name):
+        if container_item.name == container_name:
+            result = True
+            break
+
+    return result
+
+
+def azure_block_blob_upload(file_path, azure_blob_service_client, container, blob=None):
+    """Upload a block blob into a I{Microsoft Azure Storage Account} I{Container}.
+
     @param file_path: Local file path
     @type file_path: str
-    @param blob_name: The Blob name
-    @type blob_name: str | None
-    @return: A C{azure.storage.blob.models.ResourceProperties} object
-    @rtype: azure.storage.blob.models.ResourceProperties
+    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
+    @type azure_blob_service_client: azure.storage.blob.BlobServiceClient
+    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
+    @type container: azure.storage.blob.ContainerProperties | str
+    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
+    @type blob: azure.storage.blob.BlobProperties | str | None
+    @return: C{azure.storage.blob.BlobProperties}
+    @rtype: azure.storage.blob.BlobProperties
     """
-    if not block_blob_service.exists(container_name=container_name):
-        raise Exception('Container ' + container_name + ' does not exists.')
+    # Test if the container exists.
+    if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
+        raise Exception(
+            'Container ' + repr(get_container_name(container=container)) + ' does not exist in this account.')
 
-    if not blob_name:
-        blob_name = os.path.basename(file_path)
+    if blob is None:
+        blob = os.path.basename(file_path)
 
-    return block_blob_service.create_blob_from_path(
-        container_name=container_name,
-        blob_name=blob_name,
-        file_path=file_path)
+    azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
+
+    with open(file=file_path, mode='rb') as file_io:
+        # This defaults to azure.storage.blob.BlobType.BlockBlob
+        azure_blob_client.upload_blob(data=file_io)
+
+    return azure_blob_client.get_blob_properties()
 
 
-def azure_block_blob_download(block_blob_service, container_name, blob_name, file_path=None):
-    """Download a block blob from a Microsoft Azure I{BlockBlobService} container.
+def azure_block_blob_download(file_path, azure_blob_service_client, container, blob):
+    """Download a block blob from a I{Microsoft Azure Storage Account} I{Container}.
 
-    @param block_blob_service: Microsoft Azure C{BlockBlobService} object
-    @type block_blob_service: azure.storage.blob.BlockBlobService
-    @param container_name: Container name
-    @type container_name: str
-    @param blob_name: The Blob name
-    @type blob_name: str | None
     @param file_path: Local file path
     @type file_path: str
-    @return: A C{azure.storage.blob.models.Blob} object
-    @rtype: azure.storage.blob.models.Blob
+    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
+    @type azure_blob_service_client: azure.storage.blob.BlobServiceClient
+    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
+    @type container: azure.storage.blob.ContainerProperties | str
+    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
+    @type blob: azure.storage.blob.BlobProperties | str | None
+    @return: C{azure.storage.blob.BlobProperties}
+    @rtype: azure.storage.blob.BlobProperties
     """
-    if not block_blob_service.exists(container_name=container_name):
-        raise Exception('Container ' + container_name + ' does not exists.')
+    # Test if the container exists.
+    if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
+        raise Exception(
+            'Container ' + repr(get_container_name(container=container)) + ' does not exist in this account.')
 
     if not file_path:
-        file_path = os.path.basename(blob_name)
+        # The Azure Storage Blob Service always uses URL-compliant slash characters as path separators.
+        file_path = get_azure_blob_name(blob=blob).split('/')[-1:]
 
-    return block_blob_service.get_blob_to_path(
-        container_name=container_name,
-        blob_name=blob_name,
-        file_path=file_path)
+    azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
+
+    with open(file=file_path, mode='wb') as file_io:
+        file_io.write(azure_blob_client.download_blob().readall())
+
+    return azure_blob_client.get_blob_properties()

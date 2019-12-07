@@ -3,7 +3,7 @@
 """Microsoft Azure cloud module.
 
 A package of classes and functions to transfer files to and from the
-Microsoft Azure cloud service.
+Microsoft Azure Storage Blob Service.
 """
 #  Copyright 2013 - 2019 Michael K. Schuster
 #
@@ -37,12 +37,13 @@ import bsf.process
 
 
 class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
-    """The C{bsf.executables.cloud.RunnableStepAzureBlockBlob} class supports the Azure C{BlockBlobService}.
+    """The C{bsf.executables.cloud.RunnableStepAzureBlockBlob} class supports the
+     I{Microsoft Azure Storage Blob Service}.
 
     Attributes:
-    @ivar account_name: Microsoft Azure storage account name
+    @ivar account_name: I{Microsoft Azure Storage Account} name
     @type account_name: str
-    @ivar container_name: Microsoft Azure storage container name
+    @ivar container_name: I{Microsoft Azure Storage Blob Service} container name
     @type container_name: str
     @ivar source_path: Source (local) file path
     @type source_path: str | None
@@ -106,9 +107,9 @@ class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str] | None
-        @param account_name: Microsoft Azure storage account name
+        @param account_name: I{Microsoft Azure Storage Account} name
         @type account_name: str
-        @param container_name: Microsoft Azure storage container name
+        @param container_name: I{Microsoft Azure Storage Blob Service} container name
         @type container_name: str
         @param source_path: Source (local) file path
         @type source_path: str | None
@@ -160,15 +161,16 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
         @return: Return 0 on success
         @rtype: int
         """
-        resource_properties = bsf.cloud.azure_block_blob_upload(
-            block_blob_service=bsf.cloud.get_azure_block_blob_service(account_name=self.account_name),
-            container_name=self.container_name,
+        blob_properties = bsf.cloud.azure_block_blob_upload(
             file_path=self.source_path,
-            blob_name=self.target_path)
+            azure_blob_service_client=bsf.cloud.get_azure_blob_service_client(account_name=self.account_name),
+            container=self.container_name,
+            blob=self.target_path)
 
-        print('Azure BlockBlob name:', self.target_path)
-        print('Azure BlockBlob ETag:', resource_properties.etag)
-        print('Azure BlockBlob Last Modified:', resource_properties.last_modified.isoformat())
+        print('Azure Blob name:', blob_properties.name)
+        print('Azure Blob size:', blob_properties.size)
+        print('Azure Blob ETag:', blob_properties.etag)
+        print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
 
         return 0
 
@@ -191,15 +193,16 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
         @return: Return 0 on success
         @rtype: int
         """
-        block_blob = bsf.cloud.azure_block_blob_download(
-            block_blob_service=bsf.cloud.get_azure_block_blob_service(account_name=self.account_name),
-            container_name=self.container_name,
+        blob_properties = bsf.cloud.azure_block_blob_download(
             file_path=self.source_path,
-            blob_name=self.target_path)
+            azure_blob_service_client=bsf.cloud.get_azure_blob_service_client(account_name=self.account_name),
+            container=self.container_name,
+            blob=self.target_path)
 
-        print('Azure BlockBlob name:', block_blob.name)
-        print('Azure BlockBlob ETag:', block_blob.properties.etag)
-        print('Azure BlockBlob Last Modified:', block_blob.properties.last_modified.isoformat())
+        print('Azure Blob name:', blob_properties.name)
+        print('Azure Blob size:', blob_properties.size)
+        print('Azure Blob ETag:', blob_properties.etag)
+        print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
 
         return 0
 

@@ -66,9 +66,9 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
     @ivar sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         for the Sequence Analysis Viewer (SAV) archive
     @type sav_mode_file: str | None
-    @ivar cloud_account: Microsoft Azure storage account name
+    @ivar cloud_account: I{Microsoft Azure Storage Account} name
     @type cloud_account: str | None
-    @ivar cloud_container: Microsoft Azure storage container name
+    @ivar cloud_container: I{Microsoft Azure Blob Service} container name
     @type cloud_container: str | None
     @ivar cloud_path_prefix: Blob file path prefix
     @type cloud_path_prefix: str | None
@@ -297,9 +297,9 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         @param sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
             for the Sequence Analysis Viewer (SAV) archive
         @type sav_mode_file: str | None
-        @param cloud_account: Microsoft Azure storage account name
+        @param cloud_account: I{Microsoft Azure Storage Account} name
         @type cloud_account: str | None
-        @param cloud_container: Microsoft Azure storage container name
+        @param cloud_container: I{Microsoft Azure Blob Service} container name
         @type cloud_container: str | None
         @param cloud_path_prefix: Blob file path prefix
         @type cloud_path_prefix: str | None
@@ -867,7 +867,7 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             # The target (blob) path is the base name and optionally the cloud path prefix.
             target_path = os.path.basename(archive_file_path)
             if self.cloud_path_prefix:
-                # The Microsoft Azure Service uses a slash character regardless of the local file system.
+                # The Azure Storage Blob Service always uses URL-compliant slash characters as path separators.
                 target_path = '/'.join((self.cloud_path_prefix, target_path))
 
             # Upload the GNU Tar file.

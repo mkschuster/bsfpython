@@ -1479,7 +1479,7 @@ class Secrets(BaseSection):
 
     @classmethod
     def get_azure_file_path(cls):
-        """Get the configuration file path with Microsoft Azure secrets.
+        """Get the configuration file path with I{Microsoft Azure} secrets.
 
         Also checks that the file is only readable by the user and not accessible for group and other.
         @return: File path to configuration file with secrets.
@@ -1489,7 +1489,7 @@ class Secrets(BaseSection):
 
     @classmethod
     def get_mysql_file_path(cls):
-        """Get the configuration file path with MySQL secrets.
+        """Get the configuration file path with I{Oracle MySQL} secrets.
 
         Also checks that the file is only readable by the user and not accessible for group and other.
         @return: File path to configuration file with secrets.
