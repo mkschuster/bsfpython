@@ -73,6 +73,8 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
         sub_command.add_option_short(key='v', value='1')
         # Mark shorter split hits as secondary (for Picard compatibility).
         sub_command.add_switch_short(key='M')
+        #  Use soft clipping CIGAR operation for supplementary alignments.
+        sub_command.add_switch_short(key='Y')
         # Output file [standard output]
         sub_command.add_option_short(key='o', value=file_path_align.aligned_sam)
         # -H header lines
