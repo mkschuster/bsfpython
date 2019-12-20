@@ -4275,7 +4275,7 @@ class DESeq(bsf.analysis.Analysis):
                     # TSV
                     numerator = row_dict['Numerator'].replace(',', '_')
                     denominator = row_dict['Denominator'].replace(',', '_')
-                    if not denominator:
+                    if not denominator or denominator == 'NA':
                         denominator = 'intercept'
                     # Differential Genes
                     str_list.append('<td>' +
