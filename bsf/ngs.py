@@ -104,25 +104,6 @@ class NextGenerationBase(object):
             and self.file_type == other.file_type \
             and self.annotation_dict == other.annotation_dict
 
-    def __ne__(self, other):
-        """Test C{bsf.ngs.NextGenerationBase} objects for inequality.
-
-        @param other: C{bsf.ngs.NextGenerationBase}
-        @type other: bsf.ngs.NextGenerationBase
-        @return: C{True} if unequal, C{False} otherwise
-        @rtype: bool
-        """
-        assert isinstance(other, NextGenerationBase)
-
-        if self is other:
-            return False
-
-        return \
-            self.name != other.name \
-            or self.file_path != other.file_path \
-            or self.file_type != other.file_type \
-            or self.annotation_dict != other.annotation_dict
-
     def add_annotation(self, key, value):
         """Add an annotation value under a key.
 
@@ -313,27 +294,7 @@ class Reads(NextGenerationBase):
             and self.read == other.read \
             and self.chunk == other.chunk
 
-    def __ne__(self, other):
-        """Test C{bsf.ngs.Reads} objects for inequality.
-
-        @param other: C{bsf.ngs.Reads}
-        @type other: bsf.ngs.Reads
-        @return: C{True} if unequal, C{False} otherwise
-        @rtype: bool
-        """
-        assert isinstance(other, Reads)
-
-        if self is other:
-            return False
-
-        return \
-            super(Reads, self).__ne__(other=other) \
-            or self.barcode != other.barcode \
-            or self.lane != other.lane \
-            or self.read != other.read \
-            or self.chunk != other.chunk
-
-    def __nonzero__(self):
+    def __bool__(self):
         """Test C{bsf.ngs.Reads} objects for non-zero.
 
         @return: C{True} if non-zero, i.e file_path or name are meaningfully defined.
@@ -601,28 +562,6 @@ class PairedReads(NextGenerationBase):
             and self.index_2 == other.index_2 \
             and self.read_group == other.read_group
 
-    def __ne__(self, other):
-        """Test C{bsf.ngs.PairedReads} objects for inequality.
-
-        @param other: C{bsf.ngs.PairedReads}
-        @type other: bsf.ngs.PairedReads
-        @return: C{True} if unequal, C{False} otherwise
-        @rtype: bool
-        """
-        assert isinstance(other, PairedReads)
-
-        if self is other:
-            return False
-
-        return \
-            super(PairedReads, self).__ne__(other=other) \
-            or self.reads_1 != other.reads_1 \
-            or self.reads_2 != other.reads_2 \
-            or self.exclude != other.exclude \
-            or self.index_1 != other.index_1 \
-            or self.index_2 != other.index_2 \
-            or self.read_group != other.read_group
-
     def trace(self, level):
         """Trace a C{bsf.ngs.PairedReads} object.
 
@@ -864,8 +803,8 @@ class Sample(NextGenerationBase):
 
         # Merge the PairedReads objects from both Sample objects,
         # but check, if the PairedReads objects are not already there.
-        # TODO: This method assumes that the PairedReads object are at the same address.
-        # The test with 'in' will not work for distinct PairedReads objects that point to the same files.
+        # The "in" membership operator in "x in y" is equivalent to "any(x is e or x == e for e in y)" so that the
+        # PairedReads.__eq__() method gets called in case the identity operator "is" yields False.
 
         for paired_reads in sample1.paired_reads_list:
             if paired_reads not in sample.paired_reads_list:
@@ -2393,10 +2332,11 @@ class Collection(NextGenerationBase):
                               '\nRow: ' + repr(row_dict), UserWarning)
 
         # Quench empty default objects that are a consequence of empty lines in the sample annotation sheet.
+        # Use a less efficient list() constructor here to allow for modification of the dict object while iterating.
 
-        for _prf in current_collection.processed_run_folder_dict.values():
-            for _project in _prf.project_dict.values():
-                for _sample in _project.sample_dict.values():
+        for _prf in list(current_collection.processed_run_folder_dict.values()):
+            for _project in list(_prf.project_dict.values()):
+                for _sample in list(_project.sample_dict.values()):
                     if _sample.name == Sample.default_name and not len(_sample.paired_reads_list):
                         _project.del_sample(name=_sample.name)
                 if _project.name == Project.default_name and not len(_project.sample_dict):
