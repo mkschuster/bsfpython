@@ -4052,17 +4052,21 @@ class DESeq(bsf.analysis.Analysis):
         @rtype:
         """
 
-        def relative_image_source(prefix, suffix):
-            """Get a relative HTML image source path.
+        def image_source_exists(prefix, suffix):
+            """Test whether an image source (i.e. path) exists.
 
             @param prefix: Prefix
             @type prefix: str
             @param suffix: Suffix
             @type suffix: str
-            @return: Relative HTML image source path
-            @rtype: str
+            @return: True for existing image sources, False otherwise
+            @rtype: bool
             """
-            return prefix + '/' + prefix + '_' + suffix
+            return os.path.exists(
+                os.path.join(
+                    self.genome_directory,
+                    prefix,
+                    prefix + '_' + suffix))
 
         def report_html():
             """Private function to create a HTML report.
@@ -4113,11 +4117,16 @@ class DESeq(bsf.analysis.Analysis):
             # Likelihood Ratio Testing (LRT) Table
 
             # Read the designs table as a backup, in case the design-specific LRT summary table is not available.
+            # Exclude designs if requested.
 
             design_sheet = bsf.annotation.AnnotationSheet.from_file_path(
                 file_path=self.comparison_path,
                 file_type='excel',
                 name='DESeq Design Table')
+
+            design_dict = {value['design']: value for value in design_sheet.row_dicts if
+                           not design_sheet.get_boolean(row_dict=value, key='exclude')}
+            """ @type design_dict: dict[str, dict[str, str]] """
 
             str_list.append('<h2 id="lrt">Likelihood Ratio Testing (LRT)</h2>\n')
             str_list.append('\n')
@@ -4152,7 +4161,8 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            for design_row_dict in design_sheet.row_dicts:
+            for design_name in sorted(design_dict):
+                design_row_dict = design_dict[design_name]
                 design_prefix = '_'.join((self.prefix, design_row_dict['design']))
                 lrt_summary_path = os.path.join(
                     self.genome_directory,
@@ -4231,26 +4241,24 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            # Read the contrast file as a backup, in case a design-specific summary table was not available.
+            # Read the contrasts from a design-specific summary file including numbers of significantly differentially
+            # expressed genes or the project-specific contrasts file as a backup.
 
             contrast_sheet = bsf.annotation.AnnotationSheet.from_file_path(
                 file_path=self.contrast_path,
                 file_type='excel',
                 name='DESeq Contrasts Table')
 
-            # Re-index the contrast sheet on design names.
+            # For compatibility with design-specific summary files, re-index the contrast sheet on design names.
             contrast_dict = dict()
             """ @type contrast_dict: dict[str, list] """
 
             for contrast_row_dict in contrast_sheet.row_dicts:
-                # Exclude contrasts if requested.
-                if contrast_sheet.get_boolean(row_dict=contrast_row_dict, key='Exclude'):
-                    continue
-
                 if contrast_row_dict['Design'] not in contrast_dict:
                     contrast_dict[contrast_row_dict['Design']] = list()
                 contrast_dict[contrast_row_dict['Design']].append(contrast_row_dict)
 
+            # Print contrasts ordered by design names.
             for design_name in sorted(contrast_dict):
                 design_prefix = '_'.join((self.prefix, design_name))
                 contrasts_summary_path = os.path.join(
@@ -4267,6 +4275,10 @@ class DESeq(bsf.analysis.Analysis):
                     summary_row_dicts = contrast_dict[design_name]
 
                 for row_dict in summary_row_dicts:
+                    # Exclude contrasts if requested.
+                    if contrast_sheet.get_boolean(row_dict=row_dict, key='Exclude'):
+                        continue
+
                     str_list.append('<tr>\n')
                     # Design
                     str_list.append('<td class="left">' + row_dict['Design'] + '</td>\n')
@@ -4337,7 +4349,12 @@ class DESeq(bsf.analysis.Analysis):
                     # Numerator
                     str_list.append('<td class="left">' + row_dict['Numerator'] + '</td>\n')
                     # Denominator
-                    str_list.append('<td class="left">' + row_dict['Denominator'] + '</td>\n')
+                    str_list.append('<td class="left">')
+                    if not row_dict['Denominator'] or row_dict['Denominator'] == 'NA':
+                        str_list.append('intercept')
+                    else:
+                        str_list.append(row_dict['Denominator'])
+                    str_list.append('</td>\n')
                     str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
@@ -4426,7 +4443,8 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            for design_row_dict in design_sheet.row_dicts:
+            for design_name in sorted(design_dict):
+                design_row_dict = design_dict[design_name]
                 design_prefix = '_'.join((self.prefix, design_row_dict['design']))
                 for plot_instance in design_row_dict['plot_aes'].split('|'):
                     ggplot_geom, ggplot_aes_list = plot_instance.split(':')
@@ -4439,10 +4457,7 @@ class DESeq(bsf.analysis.Analysis):
                             plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
                             plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
                             str_list.append('<td>')
-                            if os.path.exists(
-                                    os.path.join(
-                                        self.genome_directory,
-                                        relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
+                            if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
                                 str_list.append(
                                     self.get_html_anchor(
                                         prefix=design_prefix,
@@ -4461,10 +4476,7 @@ class DESeq(bsf.analysis.Analysis):
                         plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
                         plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
                         str_list.append('<td>')
-                        if os.path.exists(
-                                os.path.join(
-                                    self.genome_directory,
-                                    relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
+                        if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
                             str_list.append(
                                 self.get_html_anchor(
                                     prefix=design_prefix,
@@ -4489,7 +4501,19 @@ class DESeq(bsf.analysis.Analysis):
                 str_list.append('<tr>\n')
                 str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
                 str_list.append('<td></td>\n')  # MDS Blind
-                str_list.append('<td></td>\n')  # MDS Model
+                # str_list.append('<td></td>\n')  # MDS Model
+                str_list.append('<td>')  # MDS Model (use for RIN density plot if available)
+                if image_source_exists(prefix=design_prefix, suffix='rin_density.png'):
+                    str_list.append(self.get_html_anchor(
+                        prefix=design_prefix,
+                        suffix='rin_density.pdf',
+                        text=self.get_html_image(
+                            prefix=design_prefix,
+                            suffix='rin_density.png',
+                            text='RIN density plot',
+                            height='80',
+                            width='80')))
+                str_list.append('</td>\n')
 
                 # PCA Variance per component for Blind and Model.
                 plot_type = 'pca'
@@ -4498,10 +4522,7 @@ class DESeq(bsf.analysis.Analysis):
                     plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
                     plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
                     str_list.append('<td>')
-                    if os.path.exists(
-                            os.path.join(
-                                self.genome_directory,
-                                relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
+                    if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
                         str_list.append(
                             self.get_html_anchor(
                                 prefix=design_prefix,
@@ -4519,28 +4540,30 @@ class DESeq(bsf.analysis.Analysis):
 
                 # Cook's Distance Box Plot
                 str_list.append('<td>\n')
-                str_list.append(self.get_html_anchor(
-                    prefix=design_prefix,
-                    suffix='cooks_distances.pdf',
-                    text=self.get_html_image(
+                if image_source_exists(prefix=design_prefix, suffix='cooks_distances.png'):
+                    str_list.append(self.get_html_anchor(
                         prefix=design_prefix,
-                        suffix='cooks_distances.png',
-                        text='Cook\'s distance box plot',
-                        height='80',
-                        width='80')))
+                        suffix='cooks_distances.pdf',
+                        text=self.get_html_image(
+                            prefix=design_prefix,
+                            suffix='cooks_distances.png',
+                            text='Cook\'s distance box plot',
+                            height='80',
+                            width='80')))
                 str_list.append('</td>\n')
 
                 # FPKM Density
                 str_list.append('<td>\n')
-                str_list.append(self.get_html_anchor(
-                    prefix=design_prefix,
-                    suffix='fpkm_density.pdf',
-                    text=self.get_html_image(
+                if image_source_exists(prefix=design_prefix, suffix='fpkm_density.png'):
+                    str_list.append(self.get_html_anchor(
                         prefix=design_prefix,
-                        suffix='fpkm_density.png',
-                        text='FPKM density plot',
-                        height='80',
-                        width='80')))
+                        suffix='fpkm_density.pdf',
+                        text=self.get_html_image(
+                            prefix=design_prefix,
+                            suffix='fpkm_density.png',
+                            text='FPKM density plot',
+                            height='80',
+                            width='80')))
                 str_list.append('</td>\n')
                 str_list.append('</tr>\n')
 
@@ -4569,7 +4592,8 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            for design_row_dict in design_sheet.row_dicts:
+            for design_name in sorted(design_dict):
+                design_row_dict = design_dict[design_name]
                 design_prefix = '_'.join((self.prefix, design_row_dict['design']))
 
                 str_list.append('<tr>\n')
