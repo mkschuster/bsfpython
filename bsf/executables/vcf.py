@@ -500,6 +500,7 @@ if __name__ == '__main__':
 
     argument_parser.add_argument(
         '--debug',
+        default=0,
         help='Debug level',
         required=False,
         type=int)
