@@ -49,7 +49,7 @@ def get_azure_secrets_dict(account_name):
 
         if account_name not in secrets_dict:
             raise Exception('Microsoft Azure Storage Account name ' + repr(account_name) + ' not in secrets file ' +
-                            repr(bsf.standards.Secrets.get_azure_file_path()))
+                            repr(file_path))
 
         return secrets_dict[account_name]
     else:
@@ -88,7 +88,11 @@ def get_container_name(container):
         raise Exception("The 'container' option has to be of type 'ContainerProperties' or 'str'.")
 
 
-def get_azure_blob_service_client(account_name):
+def get_azure_blob_service_client(
+        account_name,
+        max_block_size=100 * 1024 * 1024,
+        retries_total=10,
+        logging_enable=False):
     """Get an C{azure.storage.blob.BlobServiceClient} object.
 
     For uploading large files, the default block size of 4 * 1024 * 1024 (4 MiB) is not big enough,
@@ -96,6 +100,13 @@ def get_azure_blob_service_client(account_name):
     or 195 GiB blobs. Changing the maximum block size to 100 MiB allows for 4882 GiB or 4 TiB blobs.
     @param account_name: I{Microsoft Azure Storage Account} name
     @type account_name: str
+    @param max_block_size: Maximum block size defaults to 100 MiB, which is als the maximum Azure supports
+    @type max_block_size: int
+    @param retries_total: Number of retries
+    @type retries_total: int
+    @param logging_enable: Enable logging
+    @type logging_enable: bool
+
     @return: C{azure.storage.blob.BlobServiceClient} object
     @rtype: azure.storage.blob.BlobServiceClient
     """
@@ -106,7 +117,9 @@ def get_azure_blob_service_client(account_name):
 
     return BlobServiceClient.from_connection_string(
         conn_str=secrets_dict['azure_connection'],
-        max_block_size=100 * 1024 * 1024)
+        max_block_size=max_block_size,
+        logging_enable=logging_enable,
+        retries_total=retries_total)
 
 
 def get_azure_container_client(azure_blob_service_client, container):
@@ -158,7 +171,13 @@ def azure_container_exists(azure_blob_service_client, container):
     return result
 
 
-def azure_block_blob_upload(file_path, azure_blob_service_client, container, blob=None):
+def azure_block_blob_upload(
+        file_path,
+        azure_blob_service_client,
+        container,
+        blob=None,
+        max_concurrency=4,
+        logging_enable=False):
     """Upload a block blob into a I{Microsoft Azure Storage Account} I{Container}.
 
     @param file_path: Local file path
@@ -169,6 +188,10 @@ def azure_block_blob_upload(file_path, azure_blob_service_client, container, blo
     @type container: azure.storage.blob.ContainerProperties | str
     @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
     @type blob: azure.storage.blob.BlobProperties | str | None
+    @param max_concurrency: Maximum number of network connections
+    @type max_concurrency: int
+    @param logging_enable: Enable logging via the Python C{logger} module
+    @type logging_enable: bool
     @return: C{azure.storage.blob.BlobProperties}
     @rtype: azure.storage.blob.BlobProperties
     """
@@ -183,13 +206,23 @@ def azure_block_blob_upload(file_path, azure_blob_service_client, container, blo
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
     with open(file=file_path, mode='rb') as file_io:
-        # This defaults to azure.storage.blob.BlobType.BlockBlob
-        azure_blob_client.upload_blob(data=file_io)
+        # The blob_type option defaults to azure.storage.blob.BlobType.BlockBlob
+        # The retries_total option cannot be used in the upload_blob() call.
+        azure_blob_client.upload_blob(
+            data=file_io,
+            max_concurrency=max_concurrency,
+            logging_enable=logging_enable)
 
     return azure_blob_client.get_blob_properties()
 
 
-def azure_block_blob_download(file_path, azure_blob_service_client, container, blob):
+def azure_block_blob_download(
+        file_path,
+        azure_blob_service_client,
+        container,
+        blob,
+        max_concurrency=4,
+        logging_enable=False):
     """Download a block blob from a I{Microsoft Azure Storage Account} I{Container}.
 
     @param file_path: Local file path
@@ -200,6 +233,10 @@ def azure_block_blob_download(file_path, azure_blob_service_client, container, b
     @type container: azure.storage.blob.ContainerProperties | str
     @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
     @type blob: azure.storage.blob.BlobProperties | str | None
+    @param max_concurrency: Maximum number of network connections
+    @type max_concurrency: int
+    @param logging_enable: Enable logging via the Python C{logger} module
+    @type logging_enable: bool
     @return: C{azure.storage.blob.BlobProperties}
     @rtype: azure.storage.blob.BlobProperties
     """
@@ -215,6 +252,8 @@ def azure_block_blob_download(file_path, azure_blob_service_client, container, b
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
     with open(file=file_path, mode='wb') as file_io:
-        file_io.write(azure_blob_client.download_blob().readall())
+        file_io.write(azure_blob_client.download_blob(
+            max_concurrency=max_concurrency,
+            logging_enable=logging_enable).readall())
 
     return azure_blob_client.get_blob_properties()
