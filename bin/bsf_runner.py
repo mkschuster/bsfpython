@@ -1,7 +1,7 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 #
-# BSF Python wrapper script that runs a Runnable modules.
+# BSF Python wrapper script that runs a Runnable module.
 # The script un-pickles the Runnable object from a file path,
 # loads the specific processing logic from a runnables code module
 # and finally, calls Runnable.run(). Exit codes are defined in the

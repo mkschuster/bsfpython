@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 #
 # BSF Python utility script to find and fix broken symbolic links pointing from the BSF samples to the

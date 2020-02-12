@@ -1,7 +1,7 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 #
-# BSF Python script to extract sequences form Exonerate alignments.
+# BSF Python script to extract sequences from Exonerate alignments.
 #
 #
 # Copyright 2013 - 2019 Michael K. Schuster

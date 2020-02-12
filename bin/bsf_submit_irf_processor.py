@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to process an Illumina Run Folder (IRF) after sequencing and

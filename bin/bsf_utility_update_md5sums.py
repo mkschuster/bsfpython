@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to collect and update MD5 sums.
@@ -152,6 +152,8 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
 
     for file_name in file_name_list:
         if not fnmatch.fnmatch(file_name, name_space.pattern):
+            if name_space.debug > 0:
+                print('Excluding:', file_name)
             continue
 
         with open(file=os.path.join(file_path, file_name), mode='rt') as input_file:
