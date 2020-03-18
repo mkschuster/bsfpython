@@ -213,6 +213,9 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
                 if 'barcode_start' in row_dict:
                     flow_cell_dict[row_dict['lane']]['barcode_start'] = row_dict['barcode_start']
 
+                if 'read_structure' in row_dict:
+                    flow_cell_dict[row_dict['lane']]['read_structure'] = row_dict['read_structure']
+
             barcode_sequence = str()
 
             if 'barcode_sequence_1' in row_dict and row_dict['barcode_sequence_1']:
