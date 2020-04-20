@@ -52,13 +52,13 @@ class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
     @ivar surviving_png: Surviving Portable Network Graphics (PNG) file path
     @type surviving_png: str
     @ivar reads_1p: First Reads paired
-    @type reads_1p: str
+    @type reads_1p: str | None
     @ivar reads_1u: First Reads unpaired
-    @type reads_1u: str
+    @type reads_1u: str | None
     @ivar reads_2p: Second Reads paired
-    @type reads_2p: str
+    @type reads_2p: str | None
     @ivar reads_2u: Second Reads unpaired
-    @type reads_2u: str
+    @type reads_2u: str | None
     """
 
     def __init__(self, prefix):
@@ -74,14 +74,15 @@ class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
         self.output_directory = prefix
         # Automatic GNU Zip-compression of trim log files does not work.
         self.trim_log_tsv = prefix + '_trim_log.tsv'
+        self.trim_log_tsv_gz = prefix + '_trim_log.tsv.gz'
         self.summary_tsv = prefix + '_summary.tsv'  # Defined by the R script.
         self.coverage_png = prefix + '_coverage.png'  # Defined by the R script.
         self.frequency_png = prefix + '_frequency.png'  # Defined by the R script.
         self.surviving_png = prefix + '_surviving.png'  # Defined by the R script.
-        self.reads_1p = ''
-        self.reads_1u = ''
-        self.reads_2p = ''
-        self.reads_2u = ''
+        self.reads_1p = None
+        self.reads_1u = None
+        self.reads_2p = None
+        self.reads_2u = None
 
         return
 
@@ -582,6 +583,17 @@ class Trimmomatic(bsf.analysis.Analysis):
                         else:
                             sub_command.arguments.extend(self.trimming_step_pe_list)
 
+                    # Create a new RunnableStep to compress the trim log file.
+
+                    runnable_step_read_group = bsf.process.RunnableStep(
+                        name='compress_logs',
+                        program='pigz')
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
+
+                    runnable_step_read_group.add_switch_long(key='best')
+                    runnable_step_read_group.add_option_long(key='processes', value=str(stage_summary.threads))
+                    runnable_step_read_group.arguments.append(file_path_read_group.trim_log_tsv)
+
                     # Create a Runnable for the bsf_trimmomatic_summary.R analysis.
 
                     prefix_summary = '_'.join((stage_summary.name, paired_reads_name))
@@ -600,13 +612,13 @@ class Trimmomatic(bsf.analysis.Analysis):
                         name='trimmomatic_summary',
                         program='bsf_trimmomatic_summary.R',
                         obsolete_file_path_list=[
-                            file_path_read_group.trim_log_tsv,
+                            # file_path_read_group.trim_log_tsv_gz,
                         ])
                     runnable_summary.add_runnable_step(runnable_step=runnable_step_summary)
 
                     runnable_step_summary.add_option_long(
-                        key='file_path',
-                        value=file_path_read_group.trim_log_tsv)
+                        key='file-path',
+                        value=file_path_read_group.trim_log_tsv_gz)
 
         # Create a Runnable for pruning the sample annotation sheet.
 
