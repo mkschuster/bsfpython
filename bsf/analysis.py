@@ -1845,7 +1845,7 @@ class Stage(object):
 
         option = 'threads'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.threads = configuration.config_parser.get(section=section, option=option)
+            self.threads = configuration.config_parser.getint(section=section, option=option)
 
         return
 

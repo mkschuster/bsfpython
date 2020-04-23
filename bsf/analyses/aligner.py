@@ -594,7 +594,7 @@ class Aligner(bsf.analysis.Analysis):
 
         option = 'keep_read_group'
         if config_parser.has_option(section=section, option=option):
-            self.keep_read_group = config_parser.get(section=section, option=option)
+            self.keep_read_group = config_parser.getboolean(section=section, option=option)
 
         option = 'skip_mark_duplicates'
         if config_parser.has_option(section=section, option=option):
