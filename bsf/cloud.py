@@ -252,8 +252,8 @@ def azure_block_blob_download(
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
     with open(file=file_path, mode='wb') as file_io:
-        file_io.write(azure_blob_client.download_blob(
+        azure_blob_client.download_blob(
             max_concurrency=max_concurrency,
-            logging_enable=logging_enable).readall())
+            logging_enable=logging_enable).readinto(stream=file_io)
 
     return azure_blob_client.get_blob_properties()
