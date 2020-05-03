@@ -108,6 +108,17 @@ class Kallisto(bsf.analysis.Analysis):
         """
         return '_'.join((cls.get_stage_name_sample(), sample_name))
 
+    @classmethod
+    def get_file_path_sample(cls, sample_name):
+        """Get a C{FilePathSample} object from this or a sub-class.
+
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
+        @return: C{FilePathSample} or sub-class object
+        @rtype: FilePathSample
+        """
+        return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
+
     def __init__(
             self,
             configuration=None,

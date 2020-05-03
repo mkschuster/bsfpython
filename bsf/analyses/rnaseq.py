@@ -33,6 +33,7 @@ import sys
 import warnings
 
 import bsf.analyses.hisat
+import bsf.analyses.kallisto
 import bsf.analyses.star_aligner
 import bsf.analysis
 import bsf.annotation
@@ -4011,11 +4012,14 @@ class DESeq(bsf.analysis.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                file_path_sample = bsf.analyses.star_aligner.StarAligner.get_file_path_sample(sample_name=sample.name)
-
+                file_path_star_aligner_sample = bsf.analyses.star_aligner.StarAligner.get_file_path_sample(
+                    sample_name=sample.name)
+                file_path_kallisto_sample = bsf.analyses.kallisto.Kallisto.get_file_path_sample(
+                    sample_name=sample.name)
                 row_dict = {
-                    'bam_path': file_path_sample.sample_bam,
-                    'bai_path': file_path_sample.sample_bai,
+                    'bam_path': file_path_star_aligner_sample.sample_bam,
+                    'bai_path': file_path_star_aligner_sample.sample_bai,
+                    'ah5_path': file_path_kallisto_sample.abundance_h5,
                 }
                 # If the sample annotation sheet contains a "DESeq sample" variable,
                 # technical replicates need collapsing. Set the original bsf.ngs.Sample.name as
@@ -4361,7 +4365,7 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('</table>\n')
             str_list.append('\n')
 
-            # Link Enrichr and Heatmap reports.
+            # Link Enrichr, Heatmap and Volcano reports.
 
             str_list.append('<h2 id="accessory_reports">Accessory Reports</h2>\n')
             str_list.append('\n')
@@ -4376,6 +4380,7 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('<th class="left">Design</th>\n')
             str_list.append('<th class="left">Enrichr Report</th>\n')
             str_list.append('<th class="left">Heatmap Report</th>\n')
+            str_list.append('<th class="left">Volcano Report</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -4402,6 +4407,17 @@ class DESeq(bsf.analysis.Analysis):
                         heatmap_prefix + '_report_model.html')):
                     str_list.append('<td><a href="' +
                                     '/'.join((heatmap_prefix, heatmap_prefix + '_report_model.html')) +
+                                    '">HTML</a></td>\n')
+                else:
+                    str_list.append('<td></td>\n')
+
+                volcano_prefix = '_'.join((self.prefix, design_name, 'volcano'))
+                if os.path.exists(os.path.join(
+                        self.genome_directory,
+                        volcano_prefix,
+                        volcano_prefix + '_report.html')):
+                    str_list.append('<td><a href="' +
+                                    '/'.join((volcano_prefix, volcano_prefix + '_report.html')) +
                                     '">HTML</a></td>\n')
                 else:
                     str_list.append('<td></td>\n')
