@@ -29,7 +29,7 @@
 import argparse
 import os
 import re
-import xml
+import xml.etree.ElementTree
 
 import bsf.annotation
 import bsf.illumina

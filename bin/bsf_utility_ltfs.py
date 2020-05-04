@@ -291,64 +291,64 @@ class LinearTapeFileSystemCopy(object):
         ltfs_element_tree = xml.etree.ElementTree.ElementTree(element=ltfs_specification)
 
         ltfs_parameters = xml.etree.ElementTree.Element(tag='params')
-        ltfs_specification.append(element=ltfs_parameters)
+        ltfs_specification.append(ltfs_parameters)
 
         if self.total_buffer_size:
             param_total_buffer_size = xml.etree.ElementTree.Element(tag='total-buffer-size')
             param_total_buffer_size.text = self.total_buffer_size
-            ltfs_parameters.append(element=param_total_buffer_size)
+            ltfs_parameters.append(param_total_buffer_size)
 
         if self.buffer_size:
             param_buffer_size = xml.etree.ElementTree.Element(tag='buffer-size')
             param_buffer_size.text = self.buffer_size
-            ltfs_parameters.append(element=param_buffer_size)
+            ltfs_parameters.append(param_buffer_size)
 
         if self.log_level:
             param_log_level = xml.etree.ElementTree.Element(tag='loglevel')
             param_log_level.text = self.log_level
-            ltfs_parameters.append(element=param_log_level)
+            ltfs_parameters.append(param_log_level)
 
         if self.recursive:
             param_recursive = xml.etree.ElementTree.Element(tag='recursive')
             param_recursive.text = 'enable'
-            ltfs_parameters.append(element=param_recursive)
+            ltfs_parameters.append(param_recursive)
 
         if self.sparse:
             param_sparse = xml.etree.ElementTree.Element(tag='sparse')
             param_sparse.text = 'enable'
-            ltfs_parameters.append(element=param_sparse)
+            ltfs_parameters.append(param_sparse)
 
         ltfs_data = xml.etree.ElementTree.Element(tag='data')
-        ltfs_specification.append(element=ltfs_data)
+        ltfs_specification.append(ltfs_data)
 
         for source_path in sorted(self.ltfs_directory_dict):
             ltfs_directory = self.ltfs_directory_dict[source_path]
 
             ltfs_file = xml.etree.ElementTree.Element(tag='file')
-            ltfs_data.append(element=ltfs_file)
+            ltfs_data.append(ltfs_file)
 
             ltfs_file_source_path = xml.etree.ElementTree.Element(tag='srcpath')
             ltfs_file_source_path.text = ltfs_directory.source_path
-            ltfs_file.append(element=ltfs_file_source_path)
+            ltfs_file.append(ltfs_file_source_path)
 
             ltfs_file_destination_path = xml.etree.ElementTree.Element(tag='dstpath')
             if ltfs_directory.target_path:
                 ltfs_file_destination_path.text = ltfs_directory.target_path
             else:
                 ltfs_file_destination_path.text = self.default_target_path
-            ltfs_file.append(element=ltfs_file_destination_path)
+            ltfs_file.append(ltfs_file_destination_path)
 
             if ltfs_directory.source_specification:
                 ltfs_file_source_specification = xml.etree.ElementTree.Element(tag='srcspec')
                 ltfs_file_source_specification.text = ltfs_directory.source_specification
-                ltfs_file.append(element=ltfs_file_source_specification)
+                ltfs_file.append(ltfs_file_source_specification)
 
             ltfs_directory.source_file_path_list.sort()
 
             for source_file_path in ltfs_directory.source_file_path_list:
                 ltfs_source_file = xml.etree.ElementTree.Element(tag='sf')
                 ltfs_source_file.text = source_file_path
-                ltfs_file.append(element=ltfs_source_file)
+                ltfs_file.append(ltfs_source_file)
 
         return ltfs_element_tree
 
