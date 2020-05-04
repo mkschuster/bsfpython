@@ -68,6 +68,7 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
             sub_process=None,
             obsolete_file_path_list=None,
             java_temporary_path=None,
+            java_heap_minimum=None,
             java_heap_maximum=None,
             java_jar_path=None,
             gatk_classpath=None):
@@ -108,6 +109,8 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
         @type obsolete_file_path_list: list[str] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | None
+        @param java_heap_minimum: Java heap minimum size (-Xms option)
+        @type java_heap_minimum: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
         @param java_jar_path: Java archive file path
@@ -132,6 +135,7 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
             sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list,
             java_temporary_path=java_temporary_path,
+            java_heap_minimum=java_heap_minimum,
             java_heap_maximum=java_heap_maximum,
             java_jar_path=java_jar_path)
 

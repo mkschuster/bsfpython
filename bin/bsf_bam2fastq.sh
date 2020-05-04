@@ -94,7 +94,7 @@ if test -f "${read1}.gz" -o -f "${read2}.gz"; then
     echo "BAM or SAM file ${input_file} has already been converted." \
     || bsf_error
 else
-    java -Xmx2g -jar "${picard_jar}" \
+    java -Xmx2G -jar "${picard_jar}" \
         'SamToFastq' \
         INPUT="${input_file}" \
         FASTQ="${read1}" \
