@@ -74,6 +74,7 @@ function process_bed () {
     # Convert via a temporary *.txt file.
 
     # TODO: The score would need a complete re-scaling between 0 and 1000. Set to 0 in the meantime.
+    # TODO: This could be coded in a Executable or Runnable module that could also be run as a script.
 
     grep --extended-regexp --invert-match '^track|^browser' \
         "${directory}/${prefix}.bed" \
@@ -171,5 +172,20 @@ for prefix in "${prefixes[@]}";
 do
     process_wig "${directory}" "${prefix}" "${genome_sizes}";
 done
+
+# Create symbolic links.
+
+function bsf_link {
+  if [[ ! -h "${2}" ]]; then
+    ln -s "${1}" "${2}" || exit 1
+  fi
+
+  return
+}
+
+bsf_link 'accepted_hits.bam' "${directory}/${directory}_accepted_hits.bam"
+bsf_link 'accepted_hits.bam.bai' "${directory}/${directory}_accepted_hits.bam.bai"
+bsf_link 'unmapped.bam' "${directory}/${directory}_unmapped.bam"
+bsf_link 'align_summary.txt' "${directory}/${directory}_align_summary.txt"
 
 echo "All done." || exit 1;

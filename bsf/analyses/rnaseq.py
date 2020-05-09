@@ -1759,14 +1759,21 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_step.arguments.append(self.genome_sizes_path)
             runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
 
-            # Add a symbolic link for the transcripts bigBed file, that includes a sample name prefix.
+            # Add a symbolic link for the skipped.gtf file, which includes a sample name prefix.
+            runnable_step = bsf.process.RunnableStepLink(
+                name='link_skipped_gtf',
+                source_path=file_path_cufflinks.skipped_gtf_link_source,
+                target_path=file_path_cufflinks.skipped_gtf_link_target)
+            runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
+
+            # Add a symbolic link for the transcripts bigBed file, which includes a sample name prefix.
             runnable_step = bsf.process.RunnableStepLink(
                 name='link_transcripts_bb',
                 source_path=file_path_cufflinks.transcripts_bb_link_source,
                 target_path=file_path_cufflinks.transcripts_bb_link_target)
             runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
 
-            # Add a symbolic link for the transcripts GTF file, that includes a sample name prefix.
+            # Add a symbolic link for the transcripts GTF file, which includes a sample name prefix.
             runnable_step = bsf.process.RunnableStepLink(
                 name='link_transcripts_gtf',
                 source_path=file_path_cufflinks.transcripts_gtf_link_source,
@@ -1805,6 +1812,11 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_step.add_option_long(
                 key='genome-version',
                 value=self.genome_version)
+
+            runnable_step = bsf.process.RunnableStep(
+                name='tophat_summary',
+                program='bsf_rnaseq_tophat_summary.R')
+            runnable_process_cufflinks.add_runnable_step(runnable_step=runnable_step)
 
         # The Cuffmerge process generates temporary files in the working directory that
         # have the same name for each comparison. If more than one Cuffmerge process runs at the same time,
