@@ -37,6 +37,7 @@ import bsf.analyses.illumina_to_bam_tools
 import bsf.analysis
 import bsf.annotation
 import bsf.executables.cloud
+import bsf.executables.collection
 import bsf.illumina
 import bsf.ngs
 import bsf.procedure
@@ -3648,7 +3649,7 @@ class SamToFastq(bsf.analysis.Analysis):
         runnable_project = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
-                code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
+                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
             stage=stage_project,
@@ -3657,24 +3658,24 @@ class SamToFastq(bsf.analysis.Analysis):
 
         # Create a new RunnableStep.
 
-        runnable_step = bsf.process.RunnableStep(
-            name='prune_sample_annotation_sheet')
+        runnable_step = bsf.executables.collection.RunnableStepCollectionPruneFastq(
+            name='prune_sample_annotation_sheet',
+            obsolete_file_path_list=[
+                # file_path_project.sas_path_old,
+            ],
+            file_path_old=file_path_project.sas_path_old,
+            file_path_new=file_path_project.sas_path_new,
+            minimum_size=1024,
+            drop_read_1=self.drop_read_1,
+            drop_read_2=self.drop_read_2)
         runnable_project.add_runnable_step(runnable_step=runnable_step)
-
-        runnable_step.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
-        runnable_step.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
-        runnable_step.add_option_long(key='minimum_size', value='1024')
-        if self.drop_read_1:
-            runnable_step.add_option_long(key='drop_read_1', value='True')
-        if self.drop_read_2:
-            runnable_step.add_option_long(key='drop_read_2', value='True')
 
         return
 
     def prune(self):
         """Prune the Analysis by replacing FASTQ files with (empty) status files (*.truncated).
 
-        The status files are recognised by the bsf.runnables.picard_sam_to_fastq_sample_sheet module
+        The status files are recognised by the bsf.executables.collection.RunnableStepCollectionPruneFastq class
         so that Reads and PairedReads objects are kept in the sample annotation sheet.
         @return:
         @rtype:

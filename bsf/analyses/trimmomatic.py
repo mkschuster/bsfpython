@@ -29,6 +29,7 @@ import os
 import sys
 
 import bsf.analysis
+import bsf.executables.collection
 import bsf.ngs
 import bsf.procedure
 import bsf.process
@@ -636,7 +637,7 @@ class Trimmomatic(bsf.analysis.Analysis):
         runnable_project = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
-                code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
+                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
             stage=stage_project,
@@ -645,13 +646,15 @@ class Trimmomatic(bsf.analysis.Analysis):
 
         # Create a new RunnableStep.
 
-        runnable_step_project = bsf.process.RunnableStep(
-            name='prune_sample_annotation_sheet')
+        runnable_step_project = bsf.executables.collection.RunnableStepCollectionPruneFastq(
+            name='prune_sample_annotation_sheet',
+            obsolete_file_path_list=[
+                # file_path_project.sas_path_old,
+            ],
+            file_path_old=file_path_project.sas_path_old,
+            file_path_new=file_path_project.sas_path_new,
+            minimum_size=1024)
         runnable_project.add_runnable_step(runnable_step=runnable_step_project)
-
-        runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
-        runnable_step_project.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
-        runnable_step_project.add_option_long(key='minimum_size', value='1024')
 
         return
 
