@@ -4609,6 +4609,7 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('<tr>\n')
             str_list.append('<th class="left">Design</th>\n')
             str_list.append('<th class="left">Raw Counts</th>\n')
+            str_list.append('<th class="left">Normalised Counts</th>\n')
             str_list.append('<th class="left">VST Blind Counts</th>\n')
             str_list.append('<th class="left">VST Model Counts</th>\n')
             str_list.append('<th class="left">FPKMs</th>\n')
@@ -4632,6 +4633,13 @@ class DESeq(bsf.analysis.Analysis):
                 str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='counts_raw.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(self.get_html_anchor(
+                    prefix=design_prefix,
+                    suffix='counts_normalised.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
@@ -4666,7 +4674,7 @@ class DESeq(bsf.analysis.Analysis):
                 str_list.append('<td>')
                 str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
-                    suffix='annotation.tsv',
+                    suffix='annotation_gene.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
