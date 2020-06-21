@@ -815,16 +815,75 @@ class VariantCallingGATKComparison(object):
             return
 
 
+class VariantCallingGATKCallingIntervals(object):
+    """C{bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals} class representing calling intervals.
+
+    Attributes:
+    @ivar name: Name
+    @type name: str | None
+    @ivar calling_path: Calling intervals file path
+    @type calling_path: str | None
+    """
+
+    @classmethod
+    def from_sample(cls, sample):
+        """Create a C{VariantCallingGATKCallingIntervals} object from a C{bsf.ngs.Sample} object.
+
+        @param sample: C{bsf.ngs.Sample}
+        @type sample: bsf.ngs.Sample
+        @return: C{bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals}
+        @rtype: VariantCallingGATKCallingIntervals
+        """
+        calling_intervals = cls()
+
+        if 'Calling Name' in sample.annotation_dict:
+            calling_name_list = sample.annotation_dict['Calling Name']
+            if len(calling_name_list) > 1:
+                raise Exception('More than one Calling Name annotation per sample is not allowed.\n'
+                                'Sample: {!r} Calling Name list: {!r}'.
+                                format(sample.name, calling_name_list))
+            calling_intervals.name = calling_name_list[0]
+
+        if 'Calling Intervals' in sample.annotation_dict:
+            calling_interval_list = sample.annotation_dict['Calling Intervals']
+            if len(calling_interval_list) > 1:
+                raise Exception('More than one Calling Intervals annotation per sample is not allowed.\n'
+                                'Sample: {!r} Calling Intervals list: {!r}'.
+                                format(sample.name, calling_interval_list))
+            calling_intervals.calling_path = calling_interval_list[0]
+            if calling_intervals.calling_path and not os.path.isabs(calling_intervals.calling_path):
+                calling_intervals.calling_path = bsf.standards.Configuration.get_absolute_path(
+                    file_path=calling_intervals.calling_path,
+                    default_path=bsf.standards.FilePath.get_resource_intervals(absolute=True))
+
+        return calling_intervals
+
+    def __init__(self, name=None, calling_path=None):
+        """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals} object.
+
+        @param name: Name
+        @type name: str | None
+        @param calling_path: Calling intervals file path
+        @type calling_path: str | None
+        @return:
+        @rtype:
+        """
+        self.name = name
+        self.calling_path = calling_path
+
+        return
+
+
 class VariantCallingGATKTargetIntervals(object):
     """C{bsf.analyses.variant_calling.VariantCallingGATKTargetIntervals} class representing target intervals.
 
     Attributes:
     @ivar name: Name
-    @type name: str
-    @ivar probes_path: Probes (baits) interval file path
-    @type probes_path: str
-    @ivar targets_path: Targets interval file path
-    @type targets_path: str
+    @type name: str | None
+    @ivar probes_path: Probe (bait) intervals file path
+    @type probes_path: str | None
+    @ivar targets_path: Target intervals file path
+    @type targets_path: str | None
     """
 
     @classmethod
@@ -876,17 +935,17 @@ class VariantCallingGATKTargetIntervals(object):
         """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATKTargetIntervals} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | None
         @param probes_path: Probes (baits) interval file path
-        @type probes_path: str
+        @type probes_path: str | None
         @param targets_path: Targets interval file path
-        @type targets_path: str
+        @type targets_path: str | None
         @return:
         @rtype:
         """
-        self.name = name  # Can be None.
-        self.probes_path = probes_path  # Can be None.
-        self.targets_path = targets_path  # Can be None.
+        self.name = name
+        self.probes_path = probes_path
+        self.targets_path = targets_path
 
         return
 
@@ -2850,7 +2909,34 @@ class VariantCallingGATK(bsf.analysis.Analysis):
 
             comparison = self._comparison_dict[comparison_key]
 
+            _calling_intervals = VariantCallingGATKCallingIntervals.from_sample(sample=comparison.tumor_sample)
+
             _target_intervals = VariantCallingGATKTargetIntervals.from_sample(sample=comparison.tumor_sample)
+
+            # FIXME: New sample-specific code, which should replace the code below.
+            # For the moment, the HaplotypeCaller is run on the entire interval file without additional
+            # scatter gather. Somatic calling with MuTect2 has scatter gather implemented.
+            #
+            # if _calling_intervals.calling_path:
+            #     # Sample-specific calling intervals are available ...
+            #     _tile_region_somatic_list = bsf.intervals.get_interval_tiles(
+            #         interval_path=_calling_intervals.calling_path,
+            #         tile_number=self.number_of_tiles_somatic)
+            # elif _target_intervals.targets_path:
+            #     # Sample-specific target intervals are available ...
+            #     _tile_region_somatic_list = bsf.intervals.get_interval_tiles(
+            #         interval_path=_target_intervals.targets_path,
+            #         tile_number=self.number_of_tiles_somatic)
+            # elif self.scatter_intervals_path:
+            #     # ACGTmer intervals are available ...
+            #     _tile_region_somatic_list = bsf.intervals.get_interval_tiles(
+            #         interval_path=self.scatter_intervals_path,
+            #         tile_number=self.number_of_tiles_somatic)
+            # else:
+            #     # Only genome intervals are available ...
+            #     _tile_region_somatic_list = bsf.intervals.get_genome_tiles(
+            #         dictionary_path=dictionary_path,  # FIXME: implement globally?
+            #         tile_number=self.number_of_tiles_somatic)
 
             # Scatter
             runnable_scatter = None
@@ -2913,15 +2999,22 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                     for _interval in self.exclude_intervals_list:
                         _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
                 for _interval in self._tile_region_somatic_list[tile_index].interval_list:
-                    # The list of tiles is initialised to an empty tile to trigger at least one process.
-                    # Do not assign an interval in such cases.
-                    if _interval.name:
+                    # The list of tiles is initialised to at least one empty Interval to trigger at least one process.
+                    # Test for a non-empty interval first before testing for more specialised cases.
+                    if _interval:
+                        # For a real genome interval on the tile list ...
                         _runnable_step.add_gatk_option(
                             key='intervals',
                             value=_interval.to_gatk_interval(),
                             override=True)
+                    elif _calling_intervals.calling_path:
+                        # If not running on genome tiles, the MuTect2 analysis could be run on calling intervals,
+                        # preferentially.
+                        _runnable_step.add_gatk_option(key='intervals', value=_calling_intervals.calling_path)
+                        if self.interval_padding is not None:
+                            _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                     elif _target_intervals.targets_path:
-                        # If not running on genome tiles, the MuTect2 analysis is run on the target intervals, only.
+                        # If not running on genome tiles, the MuTect2 analysis could be run on target intervals, only.
                         _runnable_step.add_gatk_option(key='intervals', value=_target_intervals.targets_path)
                         if self.interval_padding is not None:
                             _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
@@ -4150,6 +4243,8 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             # Picard CollectAlignmentSummaryMetrics     (process_sample_picard_collect_alignment_summary_metrics)
             # GATK HaplotypeCaller                      (process_sample_gatk_haplotype_caller)
 
+            calling_intervals = VariantCallingGATKCallingIntervals.from_sample(sample=sample)
+
             target_intervals = VariantCallingGATKTargetIntervals.from_sample(sample=sample)
 
             file_path_process_sample = self.get_file_path_process_sample(sample_name=sample.name)
@@ -4467,7 +4562,12 @@ class VariantCallingGATK(bsf.analysis.Analysis):
 
             runnable_step.add_gatk_option(key='analysis_type', value='HaplotypeCaller')
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
-            if target_intervals.targets_path:
+            if calling_intervals.calling_path:
+                # If calling intervals are available, the Haplotype Caller analysis is preferentially run only on them.
+                runnable_step.add_gatk_option(key='intervals', value=calling_intervals.calling_path)
+                if self.interval_padding is not None:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            elif target_intervals.targets_path:
                 # If target intervals are available, the Haplotype Caller analysis is preferentially run only on them.
                 runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
                 if self.interval_padding is not None:

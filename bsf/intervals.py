@@ -35,6 +35,7 @@ import pysam
 class Interval(object):
     """Intervals with sequence region name, start and end coordinates.
 
+    The C{bsf.intervals.Interval} object reflects Picard-style interval lists and its coordinates are 1-based.
     Attributes:
     @ivar name: Sequence region name
     @type name: str
@@ -59,6 +60,15 @@ class Interval(object):
         self.end = end
 
         return
+
+    def __bool__(self):
+        """Test for truth.
+
+        Since Picard-style interval lists are 1-based, all components need to be defined.
+        @return: True if start and end are defined, False otherwise.
+        @rtype: bool
+        """
+        return bool(self.name) and bool(self.start) and bool(self.end)
 
     def __len__(self):
         """Calculate the length.
@@ -133,10 +143,12 @@ class Container(object):
         return 'Container(sum={:d}, interval_list={!r})'.format(self.sum, self.interval_list)
 
 
-def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, natural=None, packed=None):
-    """Create interval tiles on the basis of a Picard ScatterIntervalsByNs interval list.
+def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, acgt=None, natural=None, packed=None):
+    """Create tiles on the basis of a Picard-style interval list.
 
-    Partition a list into sub-lists whose sums do not exceed a maximum using a First Fit Decreasing algorithm.
+    The Picard ScatterIntervalsByNs interval list is a special case where only ACGTmer intervals need considering.
+
+    Partition a list into sub-lists, which sums do not exceed a maximum using a First Fit Decreasing algorithm.
     @see: https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
     @see: https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm
     @param interval_path: Picard ScatterIntervalsByNs interval list file path
@@ -145,6 +157,8 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
     @type tile_number: int | None
     @param tile_width: Width of tile
     @type tile_width: int | None
+    @param acgt: Picard ScatterIntervalsByNs mode reading just ACGTmer intervals
+    @type acgt: bool | None
     @param natural: Tile on (natural) sequence regions (i.e. SAM @SQ entries)
     @type natural: bool | None
     @param packed: Pack C{Interval} objects into C{Container} objects
@@ -169,13 +183,14 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
             if line_str.startswith('@'):
                 continue
             field_list = line_str.strip().split('\t')
-            if field_list[4] == 'ACGTmer':
-                interval = Interval(name=field_list[0], start=int(field_list[1]), end=int(field_list[2]))
-                interval_list.append(interval)
-                total_length += len(interval)
+            if acgt and field_list[4] != 'ACGTmer':
+                continue
+            interval = Interval(name=field_list[0], start=int(field_list[1]), end=int(field_list[2]))
+            interval_list.append(interval)
+            total_length += len(interval)
 
     if natural:
-        # If neither width nor number was requested, return a Container with all Interval objects.
+        # If neither width nor number was requested, return one Container with all Interval objects.
         container = Container()
         container_list.append(container)
 
@@ -225,7 +240,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
 
 
 def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural=None):
-    """Create genome tiles on the basis of a Picard CreateSequenceDictionary sequence dictionary.
+    """Create tiles on the basis of a Picard CreateSequenceDictionary sequence dictionary.
 
     The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
     Sequence regions can serve as natural tiles, alternatively a number of tiles or a tile width can be
@@ -260,7 +275,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
 
     if natural:
         # The intervals are just the natural sequence regions.
-        # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ SL).
+        # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ LN).
         # 1 2 3 ... 7 8 9
         # start = 1
         # end = 9
@@ -333,7 +348,7 @@ if __name__ == '__main__':
     argument_parser.add_argument(
         '--interval-path',
         dest='interval_path',
-        help='Picard ScatterIntervalsByNs interval list file path',
+        help='Picard interval list file path',
         required=False,
         type=str)
 
@@ -344,6 +359,11 @@ if __name__ == '__main__':
         help='Number of tiles',
         required=False,
         type=int)
+
+    argument_parser.add_argument(
+        '--acgt',
+        action='store_true',
+        help='Consider only ACGTmer intervals defined by Picard ScatterIntervalsByNs')
 
     argument_parser.add_argument(
         '--packed',
@@ -357,6 +377,7 @@ if __name__ == '__main__':
         _container_list = get_interval_tiles(
             interval_path=name_space.interval_path,
             tile_number=name_space.tile_number,
+            acgt=name_space.acgt,
             packed=name_space.packed)
         for _container in _container_list:
             print('  Container(sum={:,})'.format(_container.sum))
