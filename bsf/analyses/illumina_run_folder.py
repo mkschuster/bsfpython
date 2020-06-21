@@ -524,7 +524,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         runnable_pre_process_folder = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_pre_process(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_pre_process_folder = self.set_stage_runnable(
             stage=stage_pre_process_folder,
@@ -611,7 +610,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
                 runnable_base_calls = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane_int)),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.project_directory))
                 executable_base_calls = self.set_stage_runnable(
                     stage=stage_compress_base_calls,
@@ -655,7 +653,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
                 runnable_intensities = self.add_runnable_concurrent(
                     runnable=bsf.procedure.ConcurrentRunnable(
                         name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane_int)),
-                        code_module='bsf.runnables.concurrent',
                         working_directory=self.project_directory))
                 executable_intensities = self.set_stage_runnable(
                     stage=stage_archive_intensities,
@@ -740,7 +737,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         runnable_archive_folder = self.add_runnable_concurrent(
             runnable=bsf.procedure.ConcurrentRunnable(
                 name=self.get_prefix_archive_folder(project_name=self.project_name),
-                code_module='bsf.runnables.concurrent',
                 working_directory=self.project_directory))
         executable_archive_folder = self.set_stage_runnable(
             stage=stage_archive_folder,
@@ -786,7 +782,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         runnable_post_process_folder = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_post_process(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_post_process_folder = self.set_stage_runnable(
             stage=stage_post_process_folder,
@@ -810,7 +805,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         runnable_sav = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_sav(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_sav = self.set_stage_runnable(
             stage=stage_sav,
@@ -857,7 +851,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             runnable_cloud = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_cloud(project_name=self.project_name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
             executable_cloud = self.set_stage_runnable(
                 stage=stage_cloud,
@@ -1197,7 +1190,6 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
         runnable_extract_folder = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='folder'),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_extract_folder = self.set_stage_runnable(
             stage=stage_extract_archive,
@@ -1219,7 +1211,6 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
         runnable_compress_logs = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_compress_logs(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_compress_logs = self.set_stage_runnable(
             stage=stage_compress_logs,
@@ -1249,7 +1240,6 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
         runnable_extract_intensities = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_extract_intensities = self.set_stage_runnable(
             stage=stage_extract_archive,
@@ -1283,7 +1273,6 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
             runnable_extract_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
             self.set_stage_runnable(
                 stage=stage_extract_archive,
@@ -1314,7 +1303,6 @@ class IlluminaRunFolderRestore(bsf.analysis.Analysis):
             runnable_compress_base_calls = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
             executable_compress_base_calls = self.set_stage_runnable(
                 stage=stage_compress_base_calls,

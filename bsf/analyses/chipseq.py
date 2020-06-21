@@ -1108,7 +1108,6 @@ class ChIPSeq(bsf.analysis.Analysis):
                 runnable_alignment = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_alignment(sample_name=sample.name),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         debug=self.debug))
                 self.set_stage_runnable(stage=stage_alignment, runnable=runnable_alignment)
@@ -1215,7 +1214,6 @@ class ChIPSeq(bsf.analysis.Analysis):
                     runnable_peak_calling = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_peak_calling,
-                            code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
                             debug=self.debug))
                     executable_peak_calling = self.set_stage_runnable(
@@ -1346,7 +1344,6 @@ class ChIPSeq(bsf.analysis.Analysis):
                     runnable_peak_calling = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_peak_calling,
-                            code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
                             debug=self.debug))
                     executable_peak_calling = self.set_stage_runnable(
@@ -1639,7 +1636,6 @@ class ChIPSeq(bsf.analysis.Analysis):
                     runnable_diff_bind = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_diff_bind,
-                            code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
                             debug=self.debug))
                     executable_diff_bind = self.set_stage_runnable(

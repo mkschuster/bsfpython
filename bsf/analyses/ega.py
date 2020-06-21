@@ -250,7 +250,6 @@ class EGACryptor(bsf.analysis.Analysis):
                     runnable_read_group = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=self.get_prefix_read_group(read_group_name=paired_reads_name),
-                            code_module='bsf.runnables.generic',
                             working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 

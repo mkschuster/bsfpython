@@ -1395,7 +1395,6 @@ class Tuxedo(bsf.analysis.Analysis):
                 # runnable_run_tophat = self.add_runnable(
                 #         runnable=bsf.procedure.ConsecutiveRunnable(
                 #                 name=self.get_prefix_rnaseq_run_tophat(sample_name=sample.name),
-                #                 code_module='bsf.runnables.generic',
                 #                 working_directory=self.genome_directory,
                 #                 debug=self.debug))
                 # executable_run_tophat = self.set_stage_runnable(
@@ -1521,11 +1520,11 @@ class Tuxedo(bsf.analysis.Analysis):
 
                 prefix_process_tophat = self.get_prefix_process_tophat(sample_name=sample.name)
 
-                runnable_process_tophat = self.add_runnable_consecutive(runnable=bsf.procedure.ConsecutiveRunnable(
-                    name=prefix_process_tophat,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    debug=self.debug))
+                runnable_process_tophat = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
+                        name=prefix_process_tophat,
+                        working_directory=self.genome_directory,
+                        debug=self.debug))
                 executable_process_tophat = self.set_stage_runnable(
                     stage=stage_process_tophat,
                     runnable=runnable_process_tophat)
@@ -1569,7 +1568,6 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_run_cufflinks = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_run_cufflinks,
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     debug=self.debug))
             # Set dependencies for subsequent Runnable or bsf.process.Executable objects.
@@ -1788,7 +1786,6 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_process_cufflinks = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_process_cufflinks,
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     debug=self.debug))
             executable_process_cufflinks = self.set_stage_runnable(
@@ -1858,7 +1855,6 @@ class Tuxedo(bsf.analysis.Analysis):
             runnable_run_cuffmerge = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_run_cuffmerge,
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     debug=self.debug))
             executable_run_cuffmerge = self.set_stage_runnable(
@@ -2067,7 +2063,6 @@ class Tuxedo(bsf.analysis.Analysis):
                             name=self.get_prefix_run_cuffquant(
                                 comparison_name=comparison_name,
                                 sample_name=sample.name),
-                            code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
                             debug=self.debug))
                     executable_run_cuffquant = self.set_stage_runnable(
@@ -2204,7 +2199,6 @@ class Tuxedo(bsf.analysis.Analysis):
                 runnable_run_cuffnorm = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_run_cuffnorm(comparison_name=comparison_name),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         debug=self.debug))
                 executable_run_cuffnorm = self.set_stage_runnable(
@@ -2277,7 +2271,6 @@ class Tuxedo(bsf.analysis.Analysis):
                 runnable_run_cuffdiff = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_run_cuffdiff(comparison_name=comparison_name),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         debug=self.debug))
                 executable_run_cuffdiff = self.set_stage_runnable(
@@ -2403,7 +2396,6 @@ class Tuxedo(bsf.analysis.Analysis):
                 runnable_process_cuffdiff = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_process_cuffdiff,
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         debug=self.debug))
                 executable_process_cuffdiff = self.set_stage_runnable(

@@ -806,7 +806,6 @@ class Aligner(bsf.analysis.Analysis):
                 runnable_align = self.add_runnable_concurrent(
                     runnable=bsf.procedure.ConcurrentRunnable(
                         name=self.get_prefix_align(paired_reads_name=paired_reads_name),
-                        code_module='bsf.runnables.concurrent',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         debug=self.debug))
@@ -940,7 +939,6 @@ class Aligner(bsf.analysis.Analysis):
                 runnable_read_group = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_read_group(read_group_name=bam_file_name),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         debug=self.debug))
@@ -1136,7 +1134,6 @@ class Aligner(bsf.analysis.Analysis):
             runnable_sample = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_sample(sample_name=sample.name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     debug=self.debug))
@@ -1406,7 +1403,6 @@ class Aligner(bsf.analysis.Analysis):
         runnable_summary = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_summary(),
-                code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
                 debug=self.debug))

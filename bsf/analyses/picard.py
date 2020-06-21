@@ -986,7 +986,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
@@ -1224,7 +1223,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         runnable_cell = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
@@ -1674,7 +1672,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             runnable_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
 
             executable_lane = self.set_stage_runnable(
@@ -1779,7 +1776,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 runnable_cloud = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_cloud(project_name=self.project_name, lane=lane_str),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.project_directory))
                 executable_cloud = self.set_stage_runnable(stage=stage_cloud, runnable=runnable_cloud)
                 executable_cloud.dependencies.append(executable_lane.name)
@@ -1807,9 +1803,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         runnable_cell = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
-
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
             runnable=runnable_cell)
@@ -2524,7 +2518,6 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
             runnable_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
@@ -2712,7 +2705,6 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         runnable_cell = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
@@ -2817,7 +2809,6 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                     name=self.get_prefix_lane(
                         project_name=self.project_name,
                         lane=lane_str),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
@@ -3092,7 +3083,6 @@ class DownsampleSam(bsf.analysis.Analysis):
                     runnable_picard_dss = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
-                            code_module='bsf.runnables.generic',
                             working_directory=self.project_directory))
 
                     # Create an Executable for running the Picard SamToFastq Runnable.
@@ -3572,7 +3562,6 @@ class SamToFastq(bsf.analysis.Analysis):
                         runnable_read_group = self.add_runnable_consecutive(
                             runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_read_group,
-                                code_module='bsf.runnables.generic',
                                 working_directory=self.project_directory))
                         self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
@@ -3665,7 +3654,6 @@ class SamToFastq(bsf.analysis.Analysis):
         runnable_project = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
             stage=stage_project,

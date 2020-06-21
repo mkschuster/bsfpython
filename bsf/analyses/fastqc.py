@@ -274,7 +274,6 @@ class FastQC(bsf.analysis.Analysis):
                     runnable_read_group = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
-                            code_module='bsf.runnables.generic',
                             working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 

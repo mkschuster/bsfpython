@@ -2488,7 +2488,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                 runnable_scatter = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_merge_cohort_scatter,
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
@@ -2581,7 +2580,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                         runnable_gather = self.add_runnable_consecutive(
                             runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_merge_cohort_gather,
-                                code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
                                 cache_path_dict=self._cache_path_dict,
@@ -2710,7 +2708,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                 runnable_scatter = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_process_cohort_scatter,
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
@@ -2797,7 +2794,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                         runnable_gather = self.add_runnable_consecutive(
                             runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_process_cohort_gather,
-                                code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
                                 cache_path_dict=self._cache_path_dict,
@@ -2955,7 +2951,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                 runnable_scatter = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_somatic_scatter,
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
@@ -3078,7 +3073,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                         runnable_gather = self.add_runnable_consecutive(
                             runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_somatic_gather,
-                                code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
                                 cache_path_dict=self._cache_path_dict,
@@ -3187,7 +3181,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_annotate = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_annotate,
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -3308,7 +3301,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_annotate = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_annotate,
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -3975,7 +3967,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                 runnable_process_lane = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_process_lane(paired_reads_name=paired_reads_name),
-                        code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
@@ -4254,7 +4245,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_process_sample = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_process_sample(sample_name=sample.name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -4624,7 +4614,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_diagnose_sample = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_diagnose_sample(sample_name=sample.name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -4939,7 +4928,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
         runnable_process_cohort = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_process_cohort(cohort_name=self.cohort_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
                 cache_path_dict=self._cache_path_dict,
@@ -5171,7 +5159,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_split_cohort_snpeff = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_split_cohort_snpeff(sample_name=sample.name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -5248,7 +5235,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_split_cohort_vep = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_split_cohort_vep(sample_name=sample.name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -5322,7 +5308,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
         runnable_summary = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_summary(cohort_name=self.cohort_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
                 cache_path_dict=self._cache_path_dict,
@@ -5364,7 +5349,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_somatic = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_somatic(comparison_name=comparison_name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -5425,7 +5409,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_split_somatic_snpeff = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_split_somatic_snpeff(comparison_name=comparison_name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
@@ -5486,7 +5469,6 @@ class VariantCallingGATK(bsf.analysis.Analysis):
             runnable_split_somatic_vep = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_split_somatic_vep(comparison_name=comparison_name),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,

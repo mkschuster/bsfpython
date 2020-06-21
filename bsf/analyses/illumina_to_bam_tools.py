@@ -962,7 +962,6 @@ class IlluminaToBam(bsf.analysis.Analysis):
             runnable_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
@@ -1156,7 +1155,6 @@ class IlluminaToBam(bsf.analysis.Analysis):
         runnable_cell = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
@@ -1764,7 +1762,6 @@ class BamIndexDecoder(bsf.analysis.Analysis):
             runnable_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
-                    code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
@@ -1998,7 +1995,6 @@ class BamIndexDecoder(bsf.analysis.Analysis):
         runnable_cell = self.add_runnable_consecutive(
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
-                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
 
         executable_cell = self.set_stage_runnable(

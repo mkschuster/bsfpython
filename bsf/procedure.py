@@ -73,6 +73,8 @@ class Runnable(object):
     @type runner_script: str
     @ivar name: Name
     @type name: str
+    @ivar working_directory: Working directory to write C{pickle.Pickler} files
+    @type working_directory: str
     @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
         C{bsf.process.Executable} objects via the C{bsf.procedure.Runnable.runner_script}.
     @type code_module: str
@@ -82,8 +84,6 @@ class Runnable(object):
         Python C{str} (file_path) value data of files that will be copied into the
         C{bsf.procedure.Runnable.cache_directory}
     @type cache_path_dict: dict[str, str]
-    @ivar working_directory: Working directory to write C{pickle.Pickler} files
-    @type working_directory: str | None
     @ivar debug: Debug level
     @type debug: int
     """
@@ -93,8 +93,8 @@ class Runnable(object):
     def __init__(
             self,
             name,
-            code_module,
             working_directory,
+            code_module,
             cache_directory=None,
             cache_path_dict=None,
             debug=0):
@@ -102,17 +102,17 @@ class Runnable(object):
 
         @param name: Name
         @type name: str
+        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
+        @type working_directory: str
         @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
             C{bsf.process.Executable} objects via the C{bsf.procedure.Runnable.runner_script}
         @type code_module: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str
         @param cache_directory: Cache directory
         @type cache_directory: str | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the
             C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str]
+        @type cache_path_dict: dict[str, str] | None
         @param debug: Integer debugging level
         @type debug: int
         @return:
@@ -121,9 +121,9 @@ class Runnable(object):
 
         super(Runnable, self).__init__()
 
-        self.name = name  # Can be None.
-        self.code_module = code_module  # Can be None.
+        self.name = name
         self.working_directory = working_directory
+        self.code_module = code_module
         self.cache_directory = cache_directory
 
         if cache_path_dict is None:
@@ -154,8 +154,8 @@ class Runnable(object):
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
-        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  working_directory: {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
         str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
         str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
@@ -365,7 +365,7 @@ class Runnable(object):
     def runnable_status_file_create(self, success=True):
         """Create an empty status file for a C{bsf.procedure.Runnable}.
 
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
+        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @param success: Successful completion
         @type success: bool
@@ -380,7 +380,7 @@ class Runnable(object):
     def runnable_status_file_remove(self):
         """Remove the status file for a C{bsf.procedure.Runnable}.
 
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
+        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @return:
         @rtype:
@@ -424,7 +424,7 @@ class Runnable(object):
     def runnable_step_status_file_create(self, runnable_step=None, success=True):
         """Create an empty status file for a C{bsf.process.RunnableStep} of a C{bsf.procedure.Runnable}.
 
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
+        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep} | None
         @type runnable_step: bsf.process.RunnableStep
@@ -444,7 +444,7 @@ class Runnable(object):
     def runnable_step_status_file_remove(self, runnable_step):
         """Remove the status file for a C{bsf.process.RunnableStep} of a C{bsf.procedure.Runnable}.
 
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
+        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: bsf.process.RunnableStep | None
@@ -577,8 +577,8 @@ class ConsecutiveRunnable(Runnable):
     def __init__(
             self,
             name,
-            code_module,
             working_directory,
+            code_module='bsf.runnables.consecutive',
             cache_directory=None,
             cache_path_dict=None,
             debug=0,
@@ -587,17 +587,17 @@ class ConsecutiveRunnable(Runnable):
 
         @param name: Name
         @type name: str
+        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
+        @type working_directory: str
         @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
             C{bsf.process.RunnableStep} objects via the C{bsf.procedure.Runnable.runner_script} consecutively
         @type code_module: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str
         @param cache_directory: Cache directory
         @type cache_directory: str | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the
             C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str]
+        @type cache_path_dict: dict[str, str] | None
         @param debug: Integer debugging level
         @type debug: int
         @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
@@ -607,8 +607,8 @@ class ConsecutiveRunnable(Runnable):
         """
         super(ConsecutiveRunnable, self).__init__(
             name=name,
-            code_module=code_module,
             working_directory=working_directory,
+            code_module=code_module,
             cache_directory=cache_directory,
             cache_path_dict=cache_path_dict,
             debug=debug)
@@ -635,8 +635,8 @@ class ConsecutiveRunnable(Runnable):
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
-        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  working_directory: {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
         str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
         str_list.append('{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list))
@@ -692,8 +692,8 @@ class ConcurrentRunnable(Runnable):
     def __init__(
             self,
             name,
-            code_module,
             working_directory,
+            code_module='bsf.runnables.concurrent',
             cache_directory=None,
             cache_path_dict=None,
             debug=0,
@@ -704,11 +704,11 @@ class ConcurrentRunnable(Runnable):
 
         @param name: Name
         @type name: str
+        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
+        @type working_directory: str
         @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
             C{bsf.process.RunnableStep} objects via the C{bsf.procedure.Runnable.runner_script} concurrently
         @type code_module: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str
         @param cache_directory: Cache directory
         @type cache_directory: str | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
@@ -728,8 +728,8 @@ class ConcurrentRunnable(Runnable):
         """
         super(ConcurrentRunnable, self).__init__(
             name=name,
-            code_module=code_module,
             working_directory=working_directory,
+            code_module=code_module,
             cache_directory=cache_directory,
             cache_path_dict=cache_path_dict,
             debug=debug)
@@ -766,8 +766,8 @@ class ConcurrentRunnable(Runnable):
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
-        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  working_directory: {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
         str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
         str_list.append('{}  runnable_step_list_pre: {!r}\n'.format(indent, self.runnable_step_list_pre))

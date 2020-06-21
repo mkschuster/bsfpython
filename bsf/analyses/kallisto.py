@@ -335,11 +335,11 @@ class Kallisto(bsf.analysis.Analysis):
 
             file_path_sample = FilePathSample(prefix=prefix_sample)
 
-            runnable_sample = self.add_runnable_consecutive(runnable=bsf.procedure.ConsecutiveRunnable(
-                name=prefix_sample,
-                code_module='bsf.runnables.generic',
-                working_directory=self.genome_directory,
-                debug=self.debug))
+            runnable_sample = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
+                    name=prefix_sample,
+                    working_directory=self.genome_directory,
+                    debug=self.debug))
             # executable_sample =
             self.set_stage_runnable(
                 stage=stage_sample,

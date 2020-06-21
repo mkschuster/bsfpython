@@ -1237,7 +1237,7 @@ class RunnableStep(Executable):
     def remove_obsolete_file_paths(self):
         """Remove file paths on the C{bsf.process.RunnableStep.obsolete_file_path_list} Python C{list}.
 
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
+        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @return:
         @rtype:
