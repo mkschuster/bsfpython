@@ -834,10 +834,6 @@ def submit(stage, debug=0):
 
         executable_drms.add_option_pair_long(key='export', value='NONE')
 
-        # Get the user environment resembling a login shell.
-
-        executable_drms.add_option_pair_long(key='get-user-env', value='L')
-
         # Parallel environment
 
         if stage.parallel_environment:
