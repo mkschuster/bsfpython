@@ -2408,7 +2408,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
 
-        # Create a Collection and ProcessedRunFolder object to write a SampleAnnotationSheet.
+        # Create a NGS Collection and (default) NGS ProcessedRunFolder object to write a SampleAnnotationSheet.
 
         collection = bsf.ngs.Collection(
             name='Samples',
@@ -2417,7 +2417,6 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
                 file_path_cell.sample_annotation_sheet_csv))
 
         prf = bsf.ngs.ProcessedRunFolder(name=bsf.ngs.ProcessedRunFolder.default_name)
-
         collection.add_processed_run_folder(prf=prf)
 
         cell_dependency_list = list()
@@ -2426,16 +2425,10 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
 
-            # If a list of lanes was defined, ignore lanes not on the list.
-            if self.lane_list and lane_str not in self.lane_list:
-                continue
-
             file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
                 sequences_directory=self.sequences_directory)
-
-            # experiment_samples_directory = os.path.join(experiment_directory, file_path_lane.samples_directory)
 
             # LIBRARY_PARAMS
             ibs_sheet = IlluminaDemultiplexSamSheet(
@@ -2458,10 +2451,10 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
                 # Get or create a (default) NGS Project.
 
-                if bsf.ngs.Sample.default_name in prf.project_dict:
-                    project = prf.project_dict[bsf.ngs.Sample.default_name]
+                if bsf.ngs.Project.default_name in prf.project_dict:
+                    project = prf.project_dict[bsf.ngs.Project.default_name]
                 else:
-                    project = bsf.ngs.Project(name=bsf.ngs.Sample.default_name)
+                    project = bsf.ngs.Project(name=bsf.ngs.Project.default_name)
                     prf.add_project(project=project)
 
                 # Get or create a NGS Sample.
@@ -2541,12 +2534,18 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
                     project_name=self.project_name,
                     lane=lane_str))
 
-            cell_dependency_list.append(executable_lane.name)
+            # If a list of lanes was defined, ignore those lanes not on the list.
+            if self.lane_list and lane_str not in self.lane_list:
+                executable_lane.submit = False
 
             if executable_lane.submit:
-                # Only if this Executable actually gets submitted ...
-                # Write the lane-specific BamIndexDecoderSheet to the internal file path.
+                # Only if this Executable actually gets submitted, because a status file indicating completion
+                # is not available or a list of lanes was defined and this one i snot on it ...
 
+                # Set a dependency for the cell stage.
+                cell_dependency_list.append(executable_lane.name)
+
+                # Write the lane-specific BamIndexDecoderSheet to the internal file path.
                 ibs_sheet.to_file_path()
 
             # Create a samples_directory in the project_directory.
@@ -2565,6 +2564,11 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
                 picard_classpath=self.classpath_picard,
                 picard_command='IlluminaSamDemux')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
+            # Set htsjdk system properties at the level of the JavaVM process.
+            # NOTE: Version 2.18.24-CeMM has a DEFLATER_THREADS option for parallel compression.
+            # runnable_step.add_option_pair(key='-Dsamjdk.use_async_io_read_samtools', value='TRUE')
+            # runnable_step.add_option_pair(key='-Dsamjdk.use_async_io_write_samtools', value='TRUE')
 
             # INPUT Required
             runnable_step.add_picard_option(key='INPUT', value=file_path_lane.archive_bam)
@@ -2657,7 +2661,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            # Move the metrics file into the experiment directory.
+            # Move the metrics file and the plots into the experiment directory.
 
             runnable_step = bsf.process.RunnableStepMove(
                 name='move_metrics_tsv',
@@ -2666,13 +2670,25 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step = bsf.process.RunnableStepMove(
-                name='move_metrics_pdf',
+                name='move_metrics_fraction_pdf',
+                source_path=file_path_lane.metrics_fraction_pdf,
+                target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
+            runnable_step = bsf.process.RunnableStepMove(
+                name='move_metrics_fraction_png',
+                source_path=file_path_lane.metrics_fraction_png,
+                target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
+            runnable_step = bsf.process.RunnableStepMove(
+                name='move_metrics_number_pdf',
                 source_path=file_path_lane.metrics_number_pdf,
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step = bsf.process.RunnableStepMove(
-                name='move_metrics_png',
+                name='move_metrics_number_png',
                 source_path=file_path_lane.metrics_number_png,
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
