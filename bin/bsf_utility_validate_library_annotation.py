@@ -27,12 +27,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import warnings
+from argparse import ArgumentParser
 
-import bsf.analyses.illumina_to_bam_tools
+from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='BSF Python utility script to validate Library Annotation Sheet files.')
 
 argument_parser.add_argument(
@@ -55,7 +55,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-library_annotation_sheet = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
     file_path=name_space.library_path)
 
 if name_space.mode == 'high':

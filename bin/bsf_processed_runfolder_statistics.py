@@ -26,27 +26,27 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
 import re
 import stat
+from argparse import ArgumentParser
 
-import bsf.standards
+from bsf.standards import Configuration, FilePath as StandardsFilePath
 
-parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Collect statistics from a processed run folder after de-multiplexing.')
 
-parser.add_argument(
+argument_parser.add_argument(
     'input',
     help='Processed run folder directory')
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
-prf_path = args.input
+prf_path = name_space.input
 
-prf_path = bsf.standards.Configuration.get_absolute_path(
+prf_path = Configuration.get_absolute_path(
     file_path=prf_path,
-    default_path=bsf.standards.FilePath.get_sequences(absolute=True))
+    default_path=StandardsFilePath.get_sequences(absolute=True))
 
 if not os.path.exists(prf_path):
     raise Exception('Could not find processed run folder directory {!r}'.format(prf_path))

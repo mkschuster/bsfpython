@@ -26,17 +26,17 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import errno
 import os
 import pickle
 import re
 import shutil
 import sys
+from argparse import ArgumentParser
 
-import bsf.connector
-import bsf.process
-import bsf.standards
+from bsf.connector import ConnectorFile
+from bsf.process import Command, Executable, RunnableStep
+from bsf.standards import JavaClassPath
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
@@ -58,11 +58,11 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     path_temporary_sam = os.path.basename(input_path)
     path_temporary_sam = path_temporary_sam.replace('.bam', '.sam')
 
-    executable_samtools = bsf.process.Executable(
+    executable_samtools = Executable(
         name='samtools_view',
         program='samtools',
-        sub_command=bsf.process.Command(program='view'),
-        stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
+        sub_command=Command(program='view'),
+        stdout=ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
     samtools_view = executable_samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -91,14 +91,14 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    executable_java = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
+    executable_java = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     executable_java.add_switch_short(key='d64')
     executable_java.add_switch_short(key='server')
     executable_java.add_switch_short(key='Xmx4G')
 
     picard_process = executable_java.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
-    picard_process.sub_command = bsf.process.Command(program='SamToFastq')
+    picard_process.sub_command = Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=input_path)
@@ -143,7 +143,7 @@ os.environ['LANG'] = 'C'
 
 # Parse the arguments.
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='BSF Runner for running the Tuxedo Tophat application.')
 
 argument_parser.add_argument(
@@ -183,7 +183,7 @@ key = 'classpath_picard'
 if key in pickler_dict and pickler_dict[key]:
     classpath_picard = pickler_dict[key]
 else:
-    classpath_picard = bsf.standards.JavaClassPath.get_picard()
+    classpath_picard = JavaClassPath.get_picard()
 
 # Create a temporary directory.
 
@@ -197,7 +197,7 @@ if not os.path.isdir(path_temporary):
             raise
 
 runnable_step_tophat = pickler_dict['runnable_step']
-assert isinstance(runnable_step_tophat, bsf.process.RunnableStep)
+assert isinstance(runnable_step_tophat, RunnableStep)
 
 if name_space.debug > 1:
     print('Executable before conversion')

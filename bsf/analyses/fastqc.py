@@ -29,15 +29,13 @@ import os
 import sys
 import urllib.parse
 
-import bsf.analysis
-import bsf.annotation
-import bsf.executables
-import bsf.ngs
-import bsf.procedure
-import bsf.process
+from bsf.analysis import Analysis, Stage
+from bsf.ngs import Collection, Sample
+from bsf.procedure import FilePath, ConsecutiveRunnable
+from bsf.process import RunnableStep, RunnableStepMakeDirectory
 
 
-class FilePathFastQCReadGroup(bsf.procedure.FilePath):
+class FilePathFastQCReadGroup(FilePath):
     """The C{bsf.analyses.fastqc.FilePathFastQCReadGroup} models read group-specific FastQC file paths.
 
     Attributes:
@@ -54,8 +52,6 @@ class FilePathFastQCReadGroup(bsf.procedure.FilePath):
         @type prefix: str
         @param file_prefix: File prefix
         @type file_prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathFastQCReadGroup, self).__init__(prefix=prefix)
 
@@ -67,7 +63,7 @@ class FilePathFastQCReadGroup(bsf.procedure.FilePath):
         return
 
 
-class FastQC(bsf.analysis.Analysis):
+class FastQC(Analysis):
     """BSF FastQC-specific Quality Assessment C{bsf.analysis.Analysis} sub-class.
 
     Attributes:
@@ -168,13 +164,11 @@ class FastQC(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of BSF C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
-        @return:
-        @rtype:
+        @type sample_list: list[Sample]
         """
 
         super(FastQC, self).__init__(
@@ -204,8 +198,6 @@ class FastQC(bsf.analysis.Analysis):
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
 
         super(FastQC, self).set_configuration(configuration=configuration, section=section)
@@ -216,9 +208,6 @@ class FastQC(bsf.analysis.Analysis):
 
     def run(self):
         """Run a C{bsf.analyses.fastqc.FastQC} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
 
         # Always check each BSF PairedReads object separately.
@@ -230,8 +219,6 @@ class FastQC(bsf.analysis.Analysis):
             This implementation just adds all C{bsf.ngs.Sample} objects from the
             C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
             C{bsf.analysis.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
             """
 
             self.sample_list.extend(self.collection.get_all_samples())
@@ -272,19 +259,19 @@ class FastQC(bsf.analysis.Analysis):
                     # Create a Runnable and an Executable for running the FastQC analysis.
 
                     runnable_read_group = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=prefix_read_group,
                             working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the FastQC program.
 
-                    runnable_step = bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = RunnableStepMakeDirectory(
                         name='mkdir',
                         directory_path=file_path_read_group.output_directory)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name=prefix_read_group,
                         program='fastqc')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
@@ -308,9 +295,6 @@ class FastQC(bsf.analysis.Analysis):
 
     def report(self):
         """Create a C{bsf.analyses.fastqc.FastQC} report in HTML format.
-
-        @return:
-        @rtype:
         """
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False

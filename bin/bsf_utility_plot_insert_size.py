@@ -25,8 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
+from argparse import ArgumentParser
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -36,23 +36,31 @@ import seaborn as sns
 
 matplotlib.use('Agg')
 
-parser = argparse.ArgumentParser(description="Plot insert sizes from bam files")
-parser.add_argument('--output',
-                    help='Output .png file',
-                    type=str)
-parser.add_argument('--input',
-                    help='Input bam file(s)',
-                    type=str,
-                    nargs='+')
-parser.add_argument('--count',
-                    help='Number of reads to be used creating the plots',
-                    type=int,
-                    default=1000000)
-args = parser.parse_args()
+argument_parser = ArgumentParser(
+    description="Plot insert sizes from bam files")
+
+argument_parser.add_argument(
+    '--output',
+    help='Output .png file',
+    type=str)
+
+argument_parser.add_argument(
+    '--input',
+    help='Input bam file(s)',
+    type=str,
+    nargs='+')
+
+argument_parser.add_argument(
+    '--count',
+    help='Number of reads to be used creating the plots',
+    type=int,
+    default=1000000)
+
+name_space = argument_parser.parse_args()
 
 data_to_plot = []
 sample_names = []
-for i in args.input:
+for i in name_space.input:
     print(i)
     sample_name = os.path.basename(i).replace('.bam', '')
     sample_names.append(sample_name)
@@ -60,7 +68,7 @@ for i in args.input:
     count = 0
     insert_sizes = []
     for read in bam:
-        if count > args.count:
+        if count > name_space.count:
             break
         if read.is_paired and read.is_read1 and read.is_proper_pair and abs(read.template_length) < 1000:
             count += 1
@@ -88,4 +96,4 @@ ax.set(ylim=(1, 1000))
 sns.despine(left=True, bottom=True)
 plt.xticks(rotation=90)
 # Save the figure
-f.savefig(args.output, bbox_inches='tight')
+f.savefig(name_space.output, bbox_inches='tight')

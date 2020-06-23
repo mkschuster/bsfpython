@@ -32,7 +32,7 @@ import Bio.SeqIO
 import Bio.SeqRecord
 import numpy
 
-import bsf.exonerate
+from bsf.exonerate import parse_alignment_file
 
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
 identifier_pattern = re.compile(pattern='^\\w+\\|(\\w+)\\|([^ ]+)')
@@ -57,7 +57,7 @@ seq_io_dict = dict()
 # Second run: Parse each individual position in the alignment, compare to reference and fill in matrix.
 # Evaluate the matrix and ideally visualise the results.
 
-vulgar_list = bsf.exonerate.parse_alignment_file(
+vulgar_list = parse_alignment_file(
     file_path='alignments_{}_pass_hq_2d_sequence_db.txt'.format(sample_name))
 
 # Process the list of VULGAR objects.

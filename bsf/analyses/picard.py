@@ -33,19 +33,20 @@ import weakref
 
 import pysam
 
-import bsf.analyses.illumina_to_bam_tools
-import bsf.analysis
-import bsf.annotation
-import bsf.executables.cloud
-import bsf.executables.collection
-import bsf.illumina
-import bsf.ngs
-import bsf.procedure
-import bsf.process
-import bsf.standards
+from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, LibraryAnnotationSheet
+from bsf.analysis import Analysis, Stage
+from bsf.annotation import AnnotationSheet
+from bsf.executables.cloud import RunnableStepAzureBlockBlobUpload
+from bsf.executables.collection import RunnableStepCollectionPruneFastq
+from bsf.illumina import RunFolder, RunFolderNotComplete
+from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads, Reads
+from bsf.procedure import FilePath, ConsecutiveRunnable
+from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
+    RunnableStepMove, RunnableStepPicard
+from bsf.standards import Configuration, FilePath as StandardsFilePath, JavaClassPath, Operator, VendorQualityFilter
 
 
-class PicardIlluminaRunFolder(bsf.analysis.Analysis):
+class PicardIlluminaRunFolder(Analysis):
     """The C{bsf.analyses.picard.PicardIlluminaRunFolder} class of Picard Analyses acting on Illumina Run Folders.
 
     Attributes:
@@ -68,6 +69,8 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
     @type classpath_picard: str | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
+    @ivar _irf: C{bsf.illumina.RunFolder}
+    @type _irf: RunFolder | None
     """
 
     name = 'Picard PicardIlluminaRunFolder Analysis'
@@ -138,7 +141,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.picard.PicardIlluminaRunFolder} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -158,11 +161,11 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -178,8 +181,6 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         @type classpath_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
-        @return:
-        @rtype:
         """
         super(PicardIlluminaRunFolder, self).__init__(
             configuration=configuration,
@@ -203,7 +204,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         self.force = force
 
         self._irf = None
-        """ @type _irf: bsf.illumina.RunFolder | None """
+        """ @type _irf: RunFolder | None """
 
         return
 
@@ -213,11 +214,9 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(PicardIlluminaRunFolder, self).set_configuration(configuration=configuration, section=section)
 
@@ -251,9 +250,6 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
 
     def run(self):
         """Run the C{bsf.analyses.picard.PicardIlluminaRunFolder} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
         # Define an Illumina Run Folder directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -267,7 +263,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
+            default_path=StandardsFilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -278,7 +274,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise bsf.illumina.RunFolderNotComplete(
+            raise RunFolderNotComplete(
                 'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
 
         # Define an 'Intensities' directory.
@@ -321,7 +317,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
                 'The ' + self.name + " 'basecalls_directory' " + repr(self.basecalls_directory) +
                 ' is not a valid directory.')
 
-        self._irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
+        self._irf = RunFolder.from_file_path(file_path=self.run_directory)
 
         # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
         # Read it from the configuration file or from the
@@ -344,7 +340,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception(
                     'The ' + self.name + " requires a 'classpath_picard' configuration option.")
@@ -356,7 +352,7 @@ class PicardIlluminaRunFolder(bsf.analysis.Analysis):
         return
 
 
-class ExtractIlluminaBarcodesSheet(bsf.annotation.AnnotationSheet):
+class ExtractIlluminaBarcodesSheet(AnnotationSheet):
     """The C{bsf.analyses.picard.ExtractIlluminaBarcodesSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.analysis.Analysis}.
@@ -378,7 +374,7 @@ class ExtractIlluminaBarcodesSheet(bsf.annotation.AnnotationSheet):
     _test_methods = dict()
 
 
-class IlluminaBasecallsToSamSheet(bsf.annotation.AnnotationSheet):
+class IlluminaBasecallsToSamSheet(AnnotationSheet):
     """The C{bsf.analyses.picard.IlluminaBasecallsToSamSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.analysis.Analysis}.
@@ -409,8 +405,6 @@ class IlluminaBasecallsToSamSheet(bsf.annotation.AnnotationSheet):
         @type barcode_length_tuple: (int, int)
         @param unassigned_file_path: File path for unassigned reads
         @type unassigned_file_path: str
-        @return:
-        @rtype:
         """
         # The IlluminaBasecallsToSamSheet needs adjusting ...
         if len(self.row_dicts) == 1 and len(self.row_dicts[0]['BARCODE_1']) == 0 and len(
@@ -442,7 +436,7 @@ class IlluminaBasecallsToSamSheet(bsf.annotation.AnnotationSheet):
         return
 
 
-class FilePathExtractIlluminaCell(bsf.procedure.FilePath):
+class FilePathExtractIlluminaCell(FilePath):
     """The C{bsf.analyses.picard.FilePathExtractIlluminaCell} models flow cell-specific file paths.
 
     Attributes:
@@ -461,8 +455,6 @@ class FilePathExtractIlluminaCell(bsf.procedure.FilePath):
         @type prefix: str
         @param project_name: Project name
         @type project_name: str
-        @return:
-        @rtype:
         """
         super(FilePathExtractIlluminaCell, self).__init__(prefix=prefix)
 
@@ -476,7 +468,7 @@ class FilePathExtractIlluminaCell(bsf.procedure.FilePath):
         return
 
 
-class FilePathExtractIlluminaLane(bsf.procedure.FilePath):
+class FilePathExtractIlluminaLane(FilePath):
     """The C{bsf.analyses.picard.FilePathExtractIlluminaLane} models lane-specific file paths.
 
     Attributes:
@@ -513,8 +505,6 @@ class FilePathExtractIlluminaLane(bsf.procedure.FilePath):
         @type project_name: str
         @param lane: Lane
         @type lane: str
-        @return:
-        @rtype:
         """
         super(FilePathExtractIlluminaLane, self).__init__(prefix=prefix)
 
@@ -628,7 +618,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         """Initialise a C{bsf.analyses.picard.ExtractIlluminaRunFolder} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -648,11 +638,11 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -686,8 +676,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @type lanes: int | None
         @param vendor_quality_filter: Vendor quality filter
         @type vendor_quality_filter: bool | None
-        @return:
-        @rtype:
         """
         super(ExtractIlluminaRunFolder, self).__init__(
             configuration=configuration,
@@ -738,11 +726,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(ExtractIlluminaRunFolder, self).set_configuration(configuration=configuration, section=section)
 
@@ -788,9 +774,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
     def run(self):
         """Run a C{bsf.analyses.picard.ExtractIlluminaRunFolder} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
 
         def run_get_sample_file_name(sample_name):
@@ -798,7 +781,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             @param sample_name:
             @type sample_name: str
-            @return:
+            @return: Sample-specific BAM file name
             @rtype: str
             """
             return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
@@ -809,7 +792,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=bsf.standards.FilePath.get_samples(absolute=True))
+            default_path=StandardsFilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
@@ -825,7 +808,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Get sequencing centre information.
 
         if not self.sequencing_centre:
-            self.sequencing_centre = bsf.standards.Operator.get_sequencing_centre()
+            self.sequencing_centre = Operator.get_sequencing_centre()
             if not self.sequencing_centre:
                 raise Exception(
                     'The ' + self.name + " requires a 'sequencing_centre' configuration option.")
@@ -833,7 +816,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
         if self.vendor_quality_filter is None:
-            self.vendor_quality_filter = bsf.standards.VendorQualityFilter.get_vendor_quality_filter(
+            self.vendor_quality_filter = VendorQualityFilter.get_vendor_quality_filter(
                 flow_cell_type=self._irf.run_parameters.get_flow_cell_type)
 
         # Get the library annotation sheet.
@@ -849,9 +832,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         # Load the LibraryAnnotationSheet and validate.
 
-        library_annotation_sheet = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+        library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
             file_path=self.library_path)
-        """ @type library_annotation_sheet: bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet """
+        """ @type library_annotation_sheet: LibraryAnnotationSheet """
 
         if self.lanes is None:
             validation_messages = library_annotation_sheet.validate(
@@ -881,7 +864,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Create a SampleAnnotationSheet in the project directory and
         # eventually transfer it into the experiment_directory.
 
-        sample_annotation_sheet = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.get_sample_annotation_sheet(
+        sample_annotation_sheet = BamIndexDecoder.get_sample_annotation_sheet(
             file_path=os.path.join(
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
@@ -984,7 +967,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # Create a Runnable and Executable for the lane stage.
 
             runnable_lane = self.add_runnable_consecutive(
-                runnable=bsf.procedure.ConsecutiveRunnable(
+                runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
@@ -995,14 +978,14 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create an output_directory in the project_directory.
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_output_directory',
                 directory_path=file_path_lane.output_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Create a samples_directory in the project_directory.
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_samples_directory',
                 directory_path=file_path_lane.samples_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
@@ -1010,7 +993,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # Create a RunnableStep for Picard ExtractIlluminaBarcodes, only if index (barcode) reads are present.
 
             if barcode_number > 0:
-                runnable_step = bsf.process.RunnableStepPicard(
+                runnable_step = RunnableStepPicard(
                     name='picard_extract_illumina_barcodes',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
@@ -1074,7 +1057,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
                 # Plot the metrics file.
 
-                runnable_step = bsf.process.RunnableStep(
+                runnable_step = RunnableStep(
                     name='plot_metrics',
                     program='bsf_illumina_demultiplex_sam.R')
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
@@ -1085,7 +1068,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create a RunnableStep for Picard IlluminaBasecallsToSam.
 
-            runnable_step = bsf.process.RunnableStepPicard(
+            runnable_step = RunnableStepPicard(
                 name='picard_illumina_basecalls_to_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
@@ -1179,14 +1162,14 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create the experiment directory if it does not exist already.
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_directory',
                 directory_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move the samples directory into the experiment directory.
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_samples_directory',
                 source_path=file_path_lane.samples_directory,
                 target_path=experiment_directory)
@@ -1195,19 +1178,19 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # Move the metrics file into the experiment directory.
 
             if barcode_number > 0:
-                runnable_step = bsf.process.RunnableStepMove(
+                runnable_step = RunnableStepMove(
                     name='move_metrics_tsv',
                     source_path=file_path_lane.metrics_tsv,
                     target_path=experiment_directory)
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                runnable_step = bsf.process.RunnableStepMove(
+                runnable_step = RunnableStepMove(
                     name='move_metrics_pdf',
                     source_path=file_path_lane.metrics_number_pdf,
                     target_path=experiment_directory)
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                runnable_step = bsf.process.RunnableStepMove(
+                runnable_step = RunnableStepMove(
                     name='move_metrics_png',
                     source_path=file_path_lane.metrics_number_png,
                     target_path=experiment_directory)
@@ -1221,7 +1204,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Create a flow-cell specific Runnable.
 
         runnable_cell = self.add_runnable_consecutive(
-            runnable=bsf.procedure.ConsecutiveRunnable(
+            runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
@@ -1232,7 +1215,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Move the SampleAnnotationSheet from the project_directory to the experiment_directory.
 
         if os.path.exists(sample_annotation_sheet.file_path):
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_sample_annotation',
                 source_path=file_path_cell.sample_annotation_sheet_csv,
                 target_path=experiment_directory)
@@ -1240,7 +1223,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         # Change directory and file access permissions.
 
-        runnable_step = bsf.process.RunnableStepChangeMode(
+        runnable_step = RunnableStepChangeMode(
             name='chmod',
             file_path=experiment_directory,
             mode_directory=self.mode_directory,
@@ -1250,7 +1233,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         return
 
 
-class FilePathIlluminaMultiplexSamLane(bsf.procedure.FilePath):
+class FilePathIlluminaMultiplexSamLane(FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaMultiplexSamLane} class models files in a directory.
 
     Attributes:
@@ -1279,8 +1262,6 @@ class FilePathIlluminaMultiplexSamLane(bsf.procedure.FilePath):
         @type lane: str
         @param experiment_directory: Experiment-specific directory
         @type experiment_directory: str
-        @return:
-        @rtype:
         """
         super(FilePathIlluminaMultiplexSamLane, self).__init__(prefix=prefix)
 
@@ -1426,11 +1407,11 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | None
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -1514,11 +1495,9 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(IlluminaMultiplexSam, self).set_configuration(configuration=configuration, section=section)
 
@@ -1564,9 +1543,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
     def run(self):
         """Run this C{bsf.analyses.picard.IlluminaMultiplexSam} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
         # Define an Illumina Run Folder directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -1580,7 +1556,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
+            default_path=StandardsFilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -1591,10 +1567,10 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise bsf.illumina.RunFolderNotComplete(
+            raise RunFolderNotComplete(
                 'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
 
-        irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
+        irf = RunFolder.from_file_path(file_path=self.run_directory)
 
         # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
         # Read it from the configuration file or from the
@@ -1613,7 +1589,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # Get sequencing centre information.
 
         if not self.sequencing_centre:
-            self.sequencing_centre = bsf.standards.Operator.get_sequencing_centre()
+            self.sequencing_centre = Operator.get_sequencing_centre()
             if not self.sequencing_centre:
                 raise Exception('The ' + self.name + "requires a 'sequencing_centre' configuration option.")
 
@@ -1626,7 +1602,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             self.sequences_directory = self.configuration.get_absolute_path(
                 file_path=self.sequences_directory)
         else:
-            self.sequences_directory = bsf.standards.FilePath.get_sequences(absolute=True)
+            self.sequences_directory = StandardsFilePath.get_sequences(absolute=True)
 
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
@@ -1641,14 +1617,14 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # Get the Picard tools Java Archive (JAR) class path directory
 
         if not self.classpath_picard:
-            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
         if self.vendor_quality_filter is None:
-            self.vendor_quality_filter = bsf.standards.VendorQualityFilter.get_vendor_quality_filter(
+            self.vendor_quality_filter = VendorQualityFilter.get_vendor_quality_filter(
                 flow_cell_type=irf.run_parameters.get_flow_cell_type)
 
         # Call the run method of the super class after the project_name has been defined.
@@ -1670,7 +1646,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 experiment_directory=experiment_directory)
 
             runnable_lane = self.add_runnable_consecutive(
-                runnable=bsf.procedure.ConsecutiveRunnable(
+                runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
 
@@ -1691,7 +1667,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
             # Run Picard IlluminaBasecallsToUndemuxSam.
 
-            runnable_step = bsf.process.RunnableStepPicard(
+            runnable_step = RunnableStepPicard(
                 name='picard_illumina_basecalls_to_multiplex_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx24G',
@@ -1749,14 +1725,14 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
             # Create the experiment directory if it does not exist already.
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_directory',
                 directory_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move and rename the final, sorted BAM file.
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_sorted_bam',
                 source_path=file_path_lane.sorted_bam,
                 target_path=file_path_lane.archive_bam)
@@ -1764,7 +1740,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
             # Move and rename the checksum file.
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_sorted_md5',
                 source_path=file_path_lane.sorted_md5,
                 target_path=file_path_lane.archive_md5)
@@ -1774,14 +1750,14 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
             if self.cloud_account and self.cloud_container:
                 runnable_cloud = self.add_runnable_consecutive(
-                    runnable=bsf.procedure.ConsecutiveRunnable(
+                    runnable=ConsecutiveRunnable(
                         name=self.get_prefix_cloud(project_name=self.project_name, lane=lane_str),
                         working_directory=self.project_directory))
                 executable_cloud = self.set_stage_runnable(stage=stage_cloud, runnable=runnable_cloud)
                 executable_cloud.dependencies.append(executable_lane.name)
 
                 # Upload the unaligned BAM file from its archive location.
-                runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
+                runnable_step = RunnableStepAzureBlockBlobUpload(
                     name='blob_upload_bam',
                     account_name=self.cloud_account,
                     container_name=self.cloud_container,
@@ -1790,7 +1766,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
                 # Upload the MD5 checksum file from its archive location.
-                runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
+                runnable_step = RunnableStepAzureBlockBlobUpload(
                     name='blob_upload_md5',
                     account_name=self.cloud_account,
                     container_name=self.cloud_container,
@@ -1801,7 +1777,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
         runnable_cell = self.add_runnable_consecutive(
-            runnable=bsf.procedure.ConsecutiveRunnable(
+            runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
@@ -1809,7 +1785,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             runnable=runnable_cell)
         executable_cell.dependencies.extend(cell_dependency_list)
 
-        runnable_step = bsf.process.RunnableStepChangeMode(
+        runnable_step = RunnableStepChangeMode(
             name='chmod',
             file_path=experiment_directory,
             mode_directory=self.mode_directory,
@@ -1819,7 +1795,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         return
 
 
-class FilePathIlluminaDemultiplexSamCell(bsf.procedure.FilePath):
+class FilePathIlluminaDemultiplexSamCell(FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell} models flow cell-specific file paths.
 
     Attributes:
@@ -1838,8 +1814,6 @@ class FilePathIlluminaDemultiplexSamCell(bsf.procedure.FilePath):
         @type prefix: str
         @param project_name: Project name
         @type project_name: str
-        @return:
-        @rtype:
         """
         super(FilePathIlluminaDemultiplexSamCell, self).__init__(prefix=prefix)
 
@@ -1853,7 +1827,7 @@ class FilePathIlluminaDemultiplexSamCell(bsf.procedure.FilePath):
         return
 
 
-class FilePathIlluminaDemultiplexSamLane(bsf.procedure.FilePath):
+class FilePathIlluminaDemultiplexSamLane(FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane} models lane-specific file paths.
 
     Attributes:
@@ -1894,8 +1868,6 @@ class FilePathIlluminaDemultiplexSamLane(bsf.procedure.FilePath):
         @type lane: str
         @param sequences_directory: BSF sequences directory
         @type sequences_directory: str
-        @return:
-        @rtype:
         """
         super(FilePathIlluminaDemultiplexSamLane, self).__init__(prefix=prefix)
 
@@ -1921,7 +1893,7 @@ class FilePathIlluminaDemultiplexSamLane(bsf.procedure.FilePath):
         return
 
 
-class IlluminaDemultiplexSamSheet(bsf.annotation.AnnotationSheet):
+class IlluminaDemultiplexSamSheet(AnnotationSheet):
     """The C{bsf.analyses.picard.IlluminaDemultiplexSamSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.picard.IlluminaDemultiplexSam} C{bsf.analysis.Analysis}.
@@ -1952,8 +1924,6 @@ class IlluminaDemultiplexSamSheet(bsf.annotation.AnnotationSheet):
         @param barcode_length_tuple: Python C{tuple} of Python C{int} (barcode 1 length) and
             Python C{int} (barcode 2 length) objects
         @type barcode_length_tuple: (int, int)
-        @return:
-        @rtype:
         """
         # Adjust the IlluminaDemultiplexSamSheet and remove any BARCODE_N columns not represented
         # in the barcode length list.
@@ -1969,7 +1939,7 @@ class IlluminaDemultiplexSamSheet(bsf.annotation.AnnotationSheet):
         return
 
 
-class IlluminaDemultiplexSam(bsf.analysis.Analysis):
+class IlluminaDemultiplexSam(Analysis):
     """The C{bsf.analyses.picard.IlluminaDemultiplexSam} class represents the logic to
     decode sequence archive BAM files into sample-specific BAM files via the Picard I{IlluminaSamDemux} tool.
 
@@ -2105,7 +2075,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.picard.IlluminaDemultiplexSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -2125,11 +2095,11 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param library_path: Library annotation file path
         @type library_path: str | None
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -2152,8 +2122,6 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         @type lane_list: list[str]
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
         @type force: bool | None
-        @return:
-        @rtype:
         """
         super(IlluminaDemultiplexSam, self).__init__(
             configuration=configuration,
@@ -2204,11 +2172,9 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(IlluminaDemultiplexSam, self).set_configuration(configuration=configuration, section=section)
 
@@ -2268,8 +2234,6 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         a Picard tools *tab-separated* value (TSV) sample sheet.
         lane, barcode_sequence_1, barcode_sequence_2, sample_name, library_name
         barcode_sequence, barcode_name, library_name, sample_name, description
-        @return:
-        @rtype:
         """
 
         def run_get_sample_file_name(sample_name):
@@ -2277,7 +2241,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
             @param sample_name:
             @type sample_name: str
-            @return:
+            @return: Sample-specific BAM file name
             @rtype: str
             """
             return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
@@ -2302,7 +2266,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         # Illumina Run Folders are kept either in the 'active' or the 'archive' location.
         # Upon re-running of the de-multiplexing stage, the IRF may have been archived already.
 
-        self.run_directory = bsf.illumina.RunFolder.absolute_file_path(name=self.run_directory)
+        self.run_directory = RunFolder.absolute_file_path(name=self.run_directory)
 
         # Check that the Illumina Run Folder exists.
 
@@ -2310,7 +2274,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
             raise Exception('The ' + self.name + " 'run_directory' " + repr(self.run_directory) +
                             ' is not a valid directory.')
 
-        irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
+        irf = RunFolder.from_file_path(file_path=self.run_directory)
 
         if not self.project_name:
             self.project_name = '_'.join((irf.run_parameters.get_experiment_name, irf.run_information.flow_cell))
@@ -2330,11 +2294,11 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
         self.sequences_directory = self.configuration.get_absolute_path(
             file_path=self.sequences_directory,
-            default_path=bsf.standards.FilePath.get_sequences(absolute=True))
+            default_path=StandardsFilePath.get_sequences(absolute=True))
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=bsf.standards.FilePath.get_samples(absolute=True))
+            default_path=StandardsFilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
@@ -2359,7 +2323,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
         # Load the LibraryAnnotationSheet and validate.
 
-        library_annotation_sheet = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+        library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
             file_path=self.library_path)
 
         if self.lanes is None:
@@ -2383,7 +2347,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
@@ -2397,20 +2361,20 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         # Create a SampleAnnotationSheet in the project directory and
         # eventually transfer it into the experiment_directory.
 
-        sample_annotation_sheet = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.get_sample_annotation_sheet(
+        sample_annotation_sheet = BamIndexDecoder.get_sample_annotation_sheet(
             file_path=os.path.join(
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
 
         # Create a NGS Collection and (default) NGS ProcessedRunFolder object to write a SampleAnnotationSheet.
 
-        collection = bsf.ngs.Collection(
+        collection = Collection(
             name='Samples',
             file_path=os.path.join(
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
 
-        prf = bsf.ngs.ProcessedRunFolder(name=bsf.ngs.ProcessedRunFolder.default_name)
+        prf = ProcessedRunFolder(name=ProcessedRunFolder.default_name)
         collection.add_processed_run_folder(prf=prf)
 
         cell_dependency_list = list()
@@ -2445,10 +2409,10 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
                 # Get or create a (default) NGS Project.
 
-                if bsf.ngs.Project.default_name in prf.project_dict:
-                    project = prf.project_dict[bsf.ngs.Project.default_name]
+                if Project.default_name in prf.project_dict:
+                    project = prf.project_dict[Project.default_name]
                 else:
-                    project = bsf.ngs.Project(name=bsf.ngs.Project.default_name)
+                    project = Project(name=Project.default_name)
                     prf.add_project(project=project)
 
                 # Get or create a NGS Sample.
@@ -2456,7 +2420,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
                 if row_dict['sample_name'] in project.sample_dict:
                     sample = project.sample_dict[row_dict['sample_name']]
                 else:
-                    sample = bsf.ngs.Sample(name=row_dict['sample_name'])
+                    sample = Sample(name=row_dict['sample_name'])
                     project.add_sample(sample=sample)
 
                 sample.add_annotation(key='Project Name', value=row_dict['library_name'])
@@ -2464,7 +2428,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
                 # Create one NGS Reads object per row.
 
-                reads_1 = bsf.ngs.Reads(
+                reads_1 = Reads(
                     name='_'.join((self.project_name, lane_str, row_dict['sample_name'])),
                     file_path=os.path.join(
                         os.path.basename(experiment_directory),
@@ -2473,7 +2437,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
                 # Create one NGS PairedReads object per NGS Reads object.
 
-                paired_reads = bsf.ngs.PairedReads(
+                paired_reads = PairedReads(
                     reads_1=reads_1,
                     index_1=row_dict['barcode_sequence_1'],
                     index_2=row_dict['barcode_sequence_2'])
@@ -2516,7 +2480,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
             # Create a Runnable and Executable for the lane stage.
 
             runnable_lane = self.add_runnable_consecutive(
-                runnable=bsf.procedure.ConsecutiveRunnable(
+                runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
@@ -2543,14 +2507,14 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
             # Create a samples_directory in the project_directory.
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_project_lane_samples_directory',
                 directory_path=file_path_lane.samples_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Run Picard IlluminaSamDemux.
 
-            runnable_step = bsf.process.RunnableStepPicard(
+            runnable_step = RunnableStepPicard(
                 name='picard_illumina_demultiplex_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx5G',
@@ -2632,7 +2596,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
             # Plot the metrics file.
 
-            runnable_step = bsf.process.RunnableStep(
+            runnable_step = RunnableStep(
                 name='plot_metrics',
                 program='bsf_illumina_demultiplex_sam.R')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
@@ -2641,14 +2605,14 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
             # Create the experiment directory if it does not exist already.
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_experiment_directory',
                 directory_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move the samples directory into the experiment directory.
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_project_lane_samples_directory',
                 source_path=file_path_lane.samples_directory,
                 target_path=experiment_directory)
@@ -2656,31 +2620,31 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
             # Move the metrics file and the plots into the experiment directory.
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_metrics_tsv',
                 source_path=file_path_lane.metrics_tsv,
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_metrics_fraction_pdf',
                 source_path=file_path_lane.metrics_fraction_pdf,
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_metrics_fraction_png',
                 source_path=file_path_lane.metrics_fraction_png,
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_metrics_number_pdf',
                 source_path=file_path_lane.metrics_number_pdf,
                 target_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_metrics_number_png',
                 source_path=file_path_lane.metrics_number_png,
                 target_path=experiment_directory)
@@ -2703,7 +2667,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         # Create a flow-cell specific Runnable.
 
         runnable_cell = self.add_runnable_consecutive(
-            runnable=bsf.procedure.ConsecutiveRunnable(
+            runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
@@ -2714,7 +2678,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         # Move the SampleAnnotationSheet from the project_directory to the experiment_directory.
 
         if os.path.exists(collection.file_path):
-            runnable_step = bsf.process.RunnableStepMove(
+            runnable_step = RunnableStepMove(
                 name='move_sample_annotation',
                 source_path=file_path_cell.sample_annotation_sheet_csv,
                 target_path=experiment_directory)
@@ -2722,7 +2686,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
 
         # Change directory and file access permissions.
 
-        runnable_step = bsf.process.RunnableStepChangeMode(
+        runnable_step = RunnableStepChangeMode(
             name='chmod',
             file_path=experiment_directory,
             mode_directory=self.mode_directory,
@@ -2732,7 +2696,7 @@ class IlluminaDemultiplexSam(bsf.analysis.Analysis):
         return
 
 
-class FilePathCollectHiSeqXPfFailMetricsLane(bsf.procedure.FilePath):
+class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
     """The C{bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane} models files in a directory.
 
     Attributes:
@@ -2747,8 +2711,6 @@ class FilePathCollectHiSeqXPfFailMetricsLane(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathCollectHiSeqXPfFailMetricsLane, self).__init__(prefix=prefix)
 
@@ -2787,9 +2749,6 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
     def run(self):
         """Run the C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
         super(CollectHiSeqXPfFailMetrics, self).run()
 
@@ -2805,7 +2764,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
             file_path_lane = self.get_file_path_lane(project_name=self.project_name, lane=lane_str)
 
             runnable_lane = self.add_runnable_consecutive(
-                runnable=bsf.procedure.ConsecutiveRunnable(
+                runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(
                         project_name=self.project_name,
                         lane=lane_str),
@@ -2818,7 +2777,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
             cell_dependency_list.append(executable_lane.name)
 
-            runnable_step = bsf.process.RunnableStepPicard(
+            runnable_step = RunnableStepPicard(
                 name='collect_hiseq_x_fail_metrics',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
@@ -2843,7 +2802,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         return
 
 
-class FilePathDownsampleSamReadGroup(bsf.procedure.FilePath):
+class FilePathDownsampleSamReadGroup(FilePath):
     """The C{bsf.analyses.picard.FilePathDownsampleSamReadGroup} models files in a directory.
 
     Attributes:
@@ -2858,8 +2817,6 @@ class FilePathDownsampleSamReadGroup(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathDownsampleSamReadGroup, self).__init__(prefix=prefix)
 
@@ -2869,7 +2826,7 @@ class FilePathDownsampleSamReadGroup(bsf.procedure.FilePath):
         return
 
 
-class DownsampleSam(bsf.analysis.Analysis):
+class DownsampleSam(Analysis):
     """The C{bsf.analyses.picard.DownsampleSam} class represents the logic to run the Picard DownsampleSam analysis.
 
     Attributes:
@@ -2935,7 +2892,7 @@ class DownsampleSam(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.picard.DownsampleSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -2955,15 +2912,13 @@ class DownsampleSam(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | None
-        @return:
-        @rtype:
         """
         super(DownsampleSam, self).__init__(
             configuration=configuration,
@@ -2989,11 +2944,9 @@ class DownsampleSam(bsf.analysis.Analysis):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(DownsampleSam, self).set_configuration(configuration=configuration, section=section)
 
@@ -3010,8 +2963,6 @@ class DownsampleSam(bsf.analysis.Analysis):
 
         This method changes the C{bsf.ngs.Collection} object of this C{bsf.analysis.Analysis}
         to update with FASTQ file paths.
-        @return:
-        @rtype:
         """
 
         def run_read_comparisons():
@@ -3020,8 +2971,6 @@ class DownsampleSam(bsf.analysis.Analysis):
             This implementation just adds all C{bsf.ngs.Sample} objects from the
             C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
             C{bsf.analysis.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
             """
 
             self.sample_list.extend(self.collection.get_all_samples())
@@ -3035,7 +2984,7 @@ class DownsampleSam(bsf.analysis.Analysis):
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception("A 'DownsampleSam' analysis requires a "
                                 "'classpath_picard' configuration option.")
@@ -3081,7 +3030,7 @@ class DownsampleSam(bsf.analysis.Analysis):
                     # Create a Runnable for running the Picard DownsampleSam analysis.
 
                     runnable_picard_dss = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=prefix_read_group,
                             working_directory=self.project_directory))
 
@@ -3091,14 +3040,14 @@ class DownsampleSam(bsf.analysis.Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
-                    # runnable_step = bsf.process.RunnableStepMakeDirectory(
+                    # runnable_step = RunnableStepMakeDirectory(
                     #    name='make_directory',
                     #    directory_path=file_path_read_group.output_directory)
                     # runnable_picard_dss.add_runnable_step(runnable_step=runnable_step)
 
                     # Create a new RunnableStep for the Picard DownsampleSam program.
 
-                    runnable_step = bsf.process.RunnableStepPicard(
+                    runnable_step = RunnableStepPicard(
                         name='picard_downsample_sam',
                         java_temporary_path=runnable_picard_dss.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx2G',
@@ -3151,7 +3100,7 @@ class DownsampleSam(bsf.analysis.Analysis):
         return
 
 
-class FilePathSamToFastqReadGroup(bsf.procedure.FilePath):
+class FilePathSamToFastqReadGroup(FilePath):
     """The C{bsf.analyses.picard.FilePathSamToFastqReadGroup} class models read group-specific Picard SamToFastq files.
 
     Attributes:
@@ -3164,8 +3113,6 @@ class FilePathSamToFastqReadGroup(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathSamToFastqReadGroup, self).__init__(prefix=prefix)
 
@@ -3174,7 +3121,7 @@ class FilePathSamToFastqReadGroup(bsf.procedure.FilePath):
         return
 
 
-class FilePathSamToFastqProject(bsf.procedure.FilePath):
+class FilePathSamToFastqProject(FilePath):
     """The C{bsf.analyses.picard.FilePathSamToFastqProject} class models project-specific Picard SamToFastq files.
 
     Attributes:
@@ -3195,8 +3142,6 @@ class FilePathSamToFastqProject(bsf.procedure.FilePath):
         @type prefix_analysis: str
         @param project_name: Project name
         @type project_name: str
-        @return:
-        @rtype:
         """
         super(FilePathSamToFastqProject, self).__init__(prefix=prefix)
 
@@ -3207,7 +3152,7 @@ class FilePathSamToFastqProject(bsf.procedure.FilePath):
         return
 
 
-class SamToFastq(bsf.analysis.Analysis):
+class SamToFastq(Analysis):
     """The C{bsf.analyses.picard.SamToFastq} class represents the logic to run the Picard SamToFastq analysis.
 
     Attributes:
@@ -3324,7 +3269,7 @@ class SamToFastq(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.picard.SamToFastq} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -3344,11 +3289,11 @@ class SamToFastq(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | None
         @param include_non_pf_reads: Include non-pass filer reads
@@ -3357,8 +3302,6 @@ class SamToFastq(bsf.analysis.Analysis):
         @type drop_read_1: bool | None
         @param drop_read_2: Drop read 2
         @type drop_read_2: bool | None
-        @return:
-        @rtype:
         """
         super(SamToFastq, self).__init__(
             configuration=configuration,
@@ -3387,11 +3330,9 @@ class SamToFastq(bsf.analysis.Analysis):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
 
         super(SamToFastq, self).set_configuration(configuration=configuration, section=section)
@@ -3422,8 +3363,6 @@ class SamToFastq(bsf.analysis.Analysis):
         This implementation just adds all C{bsf.ngs.Sample} objects from the
         C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
         C{bsf.analysis.Analysis.sample_list} instance variable.
-        @return:
-        @rtype:
         """
 
         self.sample_list.extend(self.collection.get_all_samples())
@@ -3435,8 +3374,6 @@ class SamToFastq(bsf.analysis.Analysis):
 
         This method changes the C{bsf.ngs.Collection} object of this C{bsf.analysis.Analysis}
         to update with FASTQ file paths.
-        @return:
-        @rtype:
         """
 
         # Start of the run() method body.
@@ -3446,7 +3383,7 @@ class SamToFastq(bsf.analysis.Analysis):
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
@@ -3511,7 +3448,7 @@ class SamToFastq(bsf.analysis.Analysis):
                                     self.project_directory,
                                     file_path_read_group.output_directory,
                                     platform_unit + '_1.fastq.gz')
-                                paired_reads.reads_2 = bsf.ngs.Reads(
+                                paired_reads.reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         self.project_directory,
@@ -3526,7 +3463,7 @@ class SamToFastq(bsf.analysis.Analysis):
                                 paired_reads.add_annotation(key='BAM File', value=bam_file_path)
                             else:
                                 # For further read groups, create new PairedReads objects.
-                                reads_1 = bsf.ngs.Reads(
+                                reads_1 = Reads(
                                     name=platform_unit + '_1',
                                     file_path=os.path.join(
                                         self.project_directory,
@@ -3536,7 +3473,7 @@ class SamToFastq(bsf.analysis.Analysis):
                                     lane=paired_reads.reads_1.lane,
                                     read='R1',
                                     chunk=paired_reads.reads_1.chunk)
-                                reads_2 = bsf.ngs.Reads(
+                                reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         self.project_directory,
@@ -3546,7 +3483,7 @@ class SamToFastq(bsf.analysis.Analysis):
                                     lane=paired_reads.reads_1.lane,
                                     read='R2',
                                     chunk=paired_reads.reads_1.chunk)
-                                new_paired_reads = bsf.ngs.PairedReads(
+                                new_paired_reads = PairedReads(
                                     reads_1=reads_1,
                                     reads_2=reads_2,
                                     read_group='\\t'.join(read_group_list))
@@ -3560,7 +3497,7 @@ class SamToFastq(bsf.analysis.Analysis):
                         # Create a Runnable for running the Picard SamToFastq analysis.
 
                         runnable_read_group = self.add_runnable_consecutive(
-                            runnable=bsf.procedure.ConsecutiveRunnable(
+                            runnable=ConsecutiveRunnable(
                                 name=prefix_read_group,
                                 working_directory=self.project_directory))
                         self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
@@ -3571,14 +3508,14 @@ class SamToFastq(bsf.analysis.Analysis):
 
                         # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
-                        runnable_step = bsf.process.RunnableStepMakeDirectory(
+                        runnable_step = RunnableStepMakeDirectory(
                             name='mkdir',
                             directory_path=file_path_read_group.output_directory)
                         runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                         # Create a new RunnableStep for the Picard SamToFastq program.
 
-                        runnable_step = bsf.process.RunnableStepPicard(
+                        runnable_step = RunnableStepPicard(
                             name='picard_sam_to_fastq',
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx2G',
@@ -3652,7 +3589,7 @@ class SamToFastq(bsf.analysis.Analysis):
         annotation_sheet.to_file_path()
 
         runnable_project = self.add_runnable_consecutive(
-            runnable=bsf.procedure.ConsecutiveRunnable(
+            runnable=ConsecutiveRunnable(
                 name=prefix_project,
                 working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
@@ -3662,7 +3599,7 @@ class SamToFastq(bsf.analysis.Analysis):
 
         # Create a new RunnableStep.
 
-        runnable_step = bsf.executables.collection.RunnableStepCollectionPruneFastq(
+        runnable_step = RunnableStepCollectionPruneFastq(
             name='prune_sample_annotation_sheet',
             obsolete_file_path_list=[
                 # file_path_project.sas_path_old,
@@ -3681,8 +3618,6 @@ class SamToFastq(bsf.analysis.Analysis):
 
         The status files are recognised by the bsf.executables.collection.RunnableStepCollectionPruneFastq class
         so that Reads and PairedReads objects are kept in the sample annotation sheet.
-        @return:
-        @rtype:
         """
         super(SamToFastq, self).run()
 
@@ -3708,10 +3643,8 @@ class SamToFastq(bsf.analysis.Analysis):
                     def prune_file_path(reads):
                         """Private function to prune files of a Reads object.
 
-                        @param reads: Reads
-                        @type reads: bsf.ngs.Reads
-                        @return:
-                        @rtype:
+                        @param reads: C{bsf.ngs.Reads}
+                        @type reads: Reads
                         """
                         if os.path.isabs(reads.file_path):
                             file_path = reads.file_path

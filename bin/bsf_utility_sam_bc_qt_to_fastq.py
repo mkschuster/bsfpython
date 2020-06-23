@@ -27,13 +27,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import gzip
 import os
 import queue
 import re
 import threading
 import warnings
+from argparse import ArgumentParser
 
 import pysam
 
@@ -45,8 +45,6 @@ def write_gzip_file(task_gzip_file, task_fifo_queue):
     @type task_gzip_file: gzip.GzipFile
     @param task_fifo_queue: C{queue.Queue}
     @type task_fifo_queue: queue.Queue
-    @return:
-    @rtype:
     """
     while True:
         line_str = task_fifo_queue.get()
@@ -61,7 +59,7 @@ os.environ['LANG'] = 'C'
 
 # Parse the arguments.
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='BSF utility to extract index sequences of an unaligned BAM file into a FASTQ file.')
 
 argument_parser.add_argument(

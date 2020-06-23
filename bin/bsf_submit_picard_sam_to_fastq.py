@@ -26,14 +26,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.analyses.picard
-import bsf.standards
+from bsf.analyses.picard import SamToFastq
+from bsf.standards import Configuration
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.picard.SamToFastq.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=SamToFastq.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -50,7 +50,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=bsf.standards.Configuration.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -88,7 +88,7 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --project-name and --sas-file argument.
 
-if name_space.configuration == bsf.standards.Configuration.global_file_path:
+if name_space.configuration == Configuration.global_file_path:
     if name_space.project_name is None:
         raise Exception("argument --project-name is required if --configuration is not set")
     if name_space.sas_file is None:
@@ -96,7 +96,7 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 
 # Create a Picard SamToFastq analysis and run it.
 
-analysis = bsf.analyses.picard.SamToFastq.from_config_file_path(config_path=name_space.configuration)
+analysis = SamToFastq.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug

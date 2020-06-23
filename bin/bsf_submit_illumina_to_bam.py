@@ -26,14 +26,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.analyses.illumina_to_bam_tools
-import bsf.standards
+from bsf.analyses.illumina_to_bam_tools import IlluminaToBam
+from bsf.standards import Configuration
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.illumina_to_bam_tools.IlluminaToBam.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=IlluminaToBam.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -50,7 +50,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=bsf.standards.Configuration.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -70,7 +70,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-analysis = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
+analysis = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

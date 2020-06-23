@@ -26,12 +26,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
+from argparse import ArgumentParser
 
-import bsf.analyses.illumina_to_bam_tools
+from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Count samples per lane based on BamIndexDecoder library annotation files.')
 
 argument_parser.add_argument(
@@ -64,7 +64,7 @@ if not name_space.ascending:
 
 for file_name in file_name_list:
     if file_name[-14:] == '_libraries.csv':
-        sas = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+        sas = LibraryAnnotationSheet.from_file_path(
             file_path=os.path.join(name_space.directory, file_name))
 
         lane_dict = dict()

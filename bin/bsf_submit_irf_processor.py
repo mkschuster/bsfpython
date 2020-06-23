@@ -27,18 +27,18 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import datetime
 import os
 import sys
 import time
+from argparse import ArgumentParser
 
-import bsf.analyses.illumina_to_bam_tools
-import bsf.analyses.picard
-import bsf.illumina
-import bsf.standards
+from bsf.analyses.illumina_to_bam_tools import IlluminaToBam, BamIndexDecoder
+from bsf.analyses.picard import IlluminaMultiplexSam, IlluminaDemultiplexSam
+from bsf.illumina import RunFolder, RunFolderNotComplete
+from bsf.standards import Configuration
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Illumina Run Folder processor driver script.')
 
 argument_parser.add_argument(
@@ -100,7 +100,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=bsf.standards.Configuration.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -172,7 +172,7 @@ name_space = argument_parser.parse_args()
 if name_space.illumina2bam:
     # Create an IlluminaToBam analysis, run and submit it.
 
-    analysis_itb = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(
+    analysis_itb = IlluminaToBam.from_config_file_path(
         config_path=name_space.configuration)
 
     # Set arguments that override the configuration file.
@@ -198,7 +198,7 @@ if name_space.illumina2bam:
             loop_counter += 1
             try:
                 analysis_itb.run()
-            except bsf.illumina.RunFolderNotComplete as exception:
+            except RunFolderNotComplete as exception:
                 print(exception)
             else:
                 print('Illumina Run Folder seems complete.')
@@ -222,7 +222,7 @@ if name_space.illumina2bam:
 
     # Create a BamIndexDecoder analysis, run and submit it.
 
-    analysis_bid = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
+    analysis_bid = BamIndexDecoder.from_config_file_path(
         config_path=name_space.configuration)
 
     # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
@@ -249,7 +249,7 @@ if name_space.illumina2bam:
             raise Exception("Unknown output mode " + name_space.mode)
     else:
         analysis_bid.lanes = \
-            bsf.illumina.RunFolder.from_file_path(
+            RunFolder.from_file_path(
                 file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
 
     if name_space.no_validation:
@@ -286,7 +286,7 @@ if name_space.illumina2bam:
 else:
     # Create an IlluminaMultiplexSam analysis, run and submit it.
 
-    analysis_ims = bsf.analyses.picard.IlluminaMultiplexSam.from_config_file_path(config_path=name_space.configuration)
+    analysis_ims = IlluminaMultiplexSam.from_config_file_path(config_path=name_space.configuration)
 
     # Set arguments that override the configuration file.
 
@@ -309,7 +309,7 @@ else:
             loop_counter += 1
             try:
                 analysis_ims.run()
-            except bsf.illumina.RunFolderNotComplete as exception:
+            except RunFolderNotComplete as exception:
                 print(exception)
             else:
                 print('Illumina Run Folder seems complete.')
@@ -333,7 +333,7 @@ else:
 
     # Create a IlluminaDemultiplexSam analysis, run and submit it.
 
-    analysis_ids = bsf.analyses.picard.IlluminaDemultiplexSam.from_config_file_path(
+    analysis_ids = IlluminaDemultiplexSam.from_config_file_path(
         config_path=name_space.configuration)
 
     # Transfer the project_name and run_directory from the IlluminaMultiplexSam to the
@@ -365,7 +365,7 @@ else:
             raise Exception("Unknown output mode " + name_space.mode)
     else:
         analysis_ids.lanes = \
-            bsf.illumina.RunFolder.from_file_path(
+            RunFolder.from_file_path(
                 file_path=analysis_ims.run_directory).run_information.flow_cell_layout.lane_count
 
     if name_space.no_validation:

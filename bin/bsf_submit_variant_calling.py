@@ -26,13 +26,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.analyses.variant_calling
+from bsf.analyses.variant_calling import VariantCallingGATK
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.variant_calling.VariantCallingGATK.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=VariantCallingGATK.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -56,7 +56,7 @@ name_space = argument_parser.parse_args()
 
 # Create a VariantCallingGATK Analysis and run it.
 
-analysis = bsf.analyses.variant_calling.VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
+analysis = VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug

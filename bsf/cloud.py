@@ -30,7 +30,7 @@ import os
 
 from azure.storage.blob import BlobServiceClient, ContainerProperties, BlobProperties
 
-import bsf.standards
+from bsf.standards import Secrets
 
 
 def get_azure_secrets_dict(account_name):
@@ -41,7 +41,7 @@ def get_azure_secrets_dict(account_name):
     @return: Python C{dict} with I{Microsoft Azure Storage Account} secrets
     @rtype: dict | None
     """
-    file_path = bsf.standards.Secrets.get_azure_file_path()
+    file_path = Secrets.get_azure_file_path()
 
     if file_path and os.path.exists(file_path):
         with open(file=file_path, mode='rt') as io_object:

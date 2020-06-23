@@ -30,10 +30,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import fnmatch
 import os
 import warnings
+from argparse import ArgumentParser
 
 
 def split_md5sum_line(md5sum_str):
@@ -78,8 +78,6 @@ def add_md5_entry(entry_file_name, entry_check_sum, entry_check_mode):
     @type entry_check_sum: str
     @param entry_check_mode: Check mode
     @type entry_check_mode: str
-    @return:
-    @rtype:
     """
     if entry_file_name in md5_dict and md5_dict[entry_file_name][0] != entry_check_sum:
         warnings.warn('Non-matching check sum ' + repr(entry_check_sum) + ' for file name: ' +
@@ -90,7 +88,7 @@ def add_md5_entry(entry_file_name, entry_check_sum, entry_check_mode):
     return
 
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='MD5 sum collection and update script.')
 
 argument_parser.add_argument(

@@ -26,18 +26,17 @@ See https://pachterlab.github.io/kallisto/manual
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import os
 import sys
 import warnings
 
-import bsf.analysis
-import bsf.procedure
-import bsf.process
-import bsf.standards
+from bsf.analysis import Analysis, Stage
+from bsf.procedure import FilePath, ConsecutiveRunnable
+from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
+from bsf.standards import Configuration, FilePath as StandardsFilePath, Transcriptome
 
 
-class FilePathSample(bsf.procedure.FilePath):
+class FilePathSample(FilePath):
     """The C{bsf.analyses.kallisto.FilePathSample} models files in a sample-specific Kallisto directory.
 
     Attributes:
@@ -50,8 +49,6 @@ class FilePathSample(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathSample, self).__init__(prefix=prefix)
 
@@ -63,7 +60,7 @@ class FilePathSample(bsf.procedure.FilePath):
         return
 
 
-class Kallisto(bsf.analysis.Analysis):
+class Kallisto(Analysis):
     """Kallisto C{bsf.analysis.Analysis} sub-class.
 
     Attributes:
@@ -142,7 +139,7 @@ class Kallisto(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.kallisto.Kallisto} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -162,7 +159,7 @@ class Kallisto(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -179,8 +176,6 @@ class Kallisto(bsf.analysis.Analysis):
         @type bias_correction: bool
         @param bootstrap_samples: Number of bootstrap samples
         @type bootstrap_samples: str
-        @return:
-        @rtype:
         """
         super(Kallisto, self).__init__(
             configuration=configuration,
@@ -213,11 +208,9 @@ class Kallisto(bsf.analysis.Analysis):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(Kallisto, self).set_configuration(configuration=configuration, section=section)
 
@@ -251,8 +244,6 @@ class Kallisto(bsf.analysis.Analysis):
 
     def run(self):
         """Run this C{bsf.analyses.rnaseq.Tuxedo} analysis.
-        @return:
-        @rtype:
         """
         def run_read_comparisons():
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
@@ -260,8 +251,6 @@ class Kallisto(bsf.analysis.Analysis):
             This implementation just adds all C{bsf.ngs.Sample} objects from the
             C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
             C{bsf.analysis.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
             """
             self.sample_list.extend(self.collection.get_all_samples())
 
@@ -282,7 +271,7 @@ class Kallisto(bsf.analysis.Analysis):
         # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
         if not self.genome_version:
-            self.genome_version = bsf.standards.Transcriptome.get_genome(
+            self.genome_version = Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
@@ -303,7 +292,7 @@ class Kallisto(bsf.analysis.Analysis):
 
         if not self.transcriptome_index_path:
             self.transcriptome_index_path = os.path.join(
-                bsf.standards.FilePath.get_resource_transcriptome_index(
+                StandardsFilePath.get_resource_transcriptome_index(
                     transcriptome_version=self.transcriptome_version,
                     transcriptome_index='kallisto'),
                 self.transcriptome_version + '.idx')
@@ -336,7 +325,7 @@ class Kallisto(bsf.analysis.Analysis):
             file_path_sample = FilePathSample(prefix=prefix_sample)
 
             runnable_sample = self.add_runnable_consecutive(
-                runnable=bsf.procedure.ConsecutiveRunnable(
+                runnable=ConsecutiveRunnable(
                     name=prefix_sample,
                     working_directory=self.genome_directory,
                     debug=self.debug))
@@ -347,15 +336,15 @@ class Kallisto(bsf.analysis.Analysis):
             # Set dependencies on previous Runnable or bsf.process.Executable objects.
             # executable_sample.dependencies.append(executable_sample.name)
 
-            runnable_step = bsf.process.RunnableStepMakeDirectory(
+            runnable_step = RunnableStepMakeDirectory(
                 name='make_directory',
                 directory_path=file_path_sample.output_directory)
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step = bsf.process.RunnableStep(
+            runnable_step = RunnableStep(
                 name='kallisto',
                 program='kallisto',
-                sub_command=bsf.process.Command(name='quant', program='quant'))
+                sub_command=Command(name='quant', program='quant'))
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
             # Read configuration section [bsf.analyses.kallisto.Kallisto.kallisto]

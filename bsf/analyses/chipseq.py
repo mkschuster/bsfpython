@@ -29,15 +29,14 @@ import os
 import sys
 import warnings
 
-import bsf.analyses.bowtie
-import bsf.analysis
-import bsf.annotation
-import bsf.connector
-import bsf.executables
-import bsf.ngs
-import bsf.procedure
-import bsf.process
-import bsf.standards
+from bsf.analyses.bowtie import Bowtie2
+from bsf.analysis import Analysis, Stage
+from bsf.annotation import AnnotationSheet
+from bsf.connector import ConnectorFile
+from bsf.ngs import Collection, Sample
+from bsf.procedure import FilePath, ConsecutiveRunnable
+from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
+from bsf.standards import Configuration, FilePath as StandardsFilePath, Genome, Transcriptome
 
 
 class ChIPSeqComparison(object):
@@ -53,9 +52,9 @@ class ChIPSeqComparison(object):
     @ivar t_name: Treatment name
     @type t_name: str | None
     @ivar c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-    @type c_samples: list[bsf.ngs.Sample]
+    @type c_samples: list[Sample]
     @ivar t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-    @type t_samples: list[bsf.ngs.Sample]
+    @type t_samples: list[Sample]
     @ivar factor: ChIP factor
     @type factor: str
     @ivar tissue: Tissue
@@ -95,9 +94,9 @@ class ChIPSeqComparison(object):
         @param t_name: Treatment name
         @type t_name: str | None
         @param c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-        @type c_samples: list[bsf.ngs.Sample] | None
+        @type c_samples: list[Sample] | None
         @param t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-        @type t_samples: list[bsf.ngs.Sample] | None
+        @type t_samples: list[Sample] | None
         @param factor: ChIP factor
         @type factor: str | None
         @param tissue: Tissue
@@ -110,8 +109,6 @@ class ChIPSeqComparison(object):
         @type replicate: int | None
         @param diff_bind: Run the DiffBind analysis
         @type diff_bind: bool | None
-        @return:
-        @rtype:
         """
         super(ChIPSeqComparison, self).__init__()
 
@@ -194,7 +191,7 @@ class ChIPSeqComparison(object):
         return ChIPSeq.get_file_path_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
 
-class FilePathAlignment(bsf.procedure.FilePath):
+class FilePathAlignment(FilePath):
     """The C{bsf.analyses.chipseq.FilePathAlignment} models alignment file paths.
 
     Attributes:
@@ -219,8 +216,6 @@ class FilePathAlignment(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathAlignment, self).__init__(prefix=prefix)
 
@@ -238,7 +233,7 @@ class FilePathAlignment(bsf.procedure.FilePath):
         return
 
 
-class FilePathPeakCalling(bsf.procedure.FilePath):
+class FilePathPeakCalling(FilePath):
     """The C{bsf.analyses.chipseq.FilePathPeakCalling} models files in a comparison-specific MACS directory.
 
     Attributes:
@@ -316,8 +311,6 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathPeakCalling, self).__init__(prefix=prefix)
 
@@ -365,14 +358,12 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
         return
 
 
-class FilePathChIPQC(bsf.procedure.FilePath):
+class FilePathChIPQC(FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathChIPQC} object
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathChIPQC, self).__init__(prefix=prefix)
 
@@ -383,14 +374,12 @@ class FilePathChIPQC(bsf.procedure.FilePath):
         return
 
 
-class FilePathDiffBind(bsf.procedure.FilePath):
+class FilePathDiffBind(FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathDiffBind, self).__init__(prefix=prefix)
 
@@ -413,7 +402,7 @@ class FilePathDiffBind(bsf.procedure.FilePath):
         return
 
 
-class FilePathDiffBindContrast(bsf.procedure.FilePath):
+class FilePathDiffBindContrast(FilePath):
     def __init__(self, prefix, group_1, group_2):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
@@ -423,8 +412,6 @@ class FilePathDiffBindContrast(bsf.procedure.FilePath):
         @type group_1: str
         @param group_2: Group 2
         @type group_2: str
-        @return:
-        @rtype:
         """
         super(FilePathDiffBindContrast, self).__init__(prefix=prefix)
 
@@ -448,7 +435,7 @@ class FilePathDiffBindContrast(bsf.procedure.FilePath):
         return
 
 
-class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
+class ChIPSeqDiffBindSheet(AnnotationSheet):
     """ChIP-Seq Bioconductor DiffBind annotation sheet class.
 
     Attributes:
@@ -478,48 +465,45 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
 
     _test_methods = {
         'SampleID': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'Tissue': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'Factor': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'Condition': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'Treatment': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'Replicate': [
-            bsf.annotation.AnnotationSheet.check_numeric,
+            AnnotationSheet.check_numeric,
         ],
         'ControlID': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'PeakCaller': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'PeakFormat': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'ScoreCol': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'LowerBetter': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_alphanumeric,
         ],
         'Counts': [
-            bsf.annotation.AnnotationSheet.check_alphanumeric
+            AnnotationSheet.check_alphanumeric
         ],
     }
 
     def sort(self):
         """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
-
-        @return:
-        @rtype:
         """
         self.row_dicts.sort(
             key=lambda item: '_'.join((
@@ -536,8 +520,6 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
 
         @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
         @type adjust_field_names: bool
-        @return:
-        @rtype:
         """
         # Override the method from the super-class to automatically sort before writing to a file.
 
@@ -547,7 +529,7 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
         return
 
 
-class ChIPSeq(bsf.analysis.Analysis):
+class ChIPSeq(Analysis):
     """The C{bsf.analyses.chipseq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific Analysis.
 
     Attributes:
@@ -761,7 +743,7 @@ class ChIPSeq(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.chipseq.ChIPSeq}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -781,11 +763,11 @@ class ChIPSeq(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
@@ -812,8 +794,6 @@ class ChIPSeq(bsf.analysis.Analysis):
         @type colour_dict: dict[str, str] | None
         @param factor_default: Default factor
         @type factor_default: str
-        @return:
-        @rtype:
         """
         super(ChIPSeq, self).__init__(
             configuration=configuration,
@@ -866,11 +846,9 @@ class ChIPSeq(bsf.analysis.Analysis):
         Instance variables without a configuration option remain unchanged.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(ChIPSeq, self).set_configuration(configuration=configuration, section=section)
 
@@ -945,9 +923,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
     def run(self):
         """Run a C{bsf.analyses.chipseq.ChIPSeq} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
 
         def run_read_comparisons():
@@ -967,10 +942,8 @@ class ChIPSeq(bsf.analysis.Analysis):
                     - Treatment/Control Sample:
                     - Treatment/Control Reads:
                     - Treatment/Control File:
-            @return:
-            @rtype:
             """
-            annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(file_path=self.comparison_path)
+            annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
 
             # Unfortunately, two passes through the comparison sheet are required.
             # In the first one merge all Sample objects that share the name.
@@ -1098,15 +1071,12 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def run_create_alignment_jobs():
             """Create alignment jobs.
-
-            @return:
-            @rtype:
             """
             for sample in self.sample_list:
                 file_path_alignment = self.get_file_path_alignment(sample_name=sample.name)
 
                 runnable_alignment = self.add_runnable_consecutive(
-                    runnable=bsf.procedure.ConsecutiveRunnable(
+                    runnable=ConsecutiveRunnable(
                         name=self.get_prefix_alignment(sample_name=sample.name),
                         working_directory=self.genome_directory,
                         debug=self.debug))
@@ -1115,14 +1085,14 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                 # Add a RunnableStep for the deepTools alignmentSieve tool.
 
-                runnable_step = bsf.process.RunnableStep(
+                runnable_step = RunnableStep(
                     name='alignment_sieve',
                     program='alignmentSieve')
                 runnable_alignment.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_option_long(
                     key='bam',
-                    value=bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name).sample_bam)
+                    value=Bowtie2.get_file_path_sample(sample_name=sample.name).sample_bam)
                 runnable_step.add_option_long(key='outFile', value=file_path_alignment.sample_bam)
                 runnable_step.add_option_long(key='numberOfProcessors', value=str(stage_alignment.threads))
                 runnable_step.add_option_long(key='filterMetrics', value=file_path_alignment.filter_metrics_tsv)
@@ -1130,10 +1100,10 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                 # Index the resulting filtered BAM file.
 
-                runnable_step = bsf.process.RunnableStep(
+                runnable_step = RunnableStep(
                     name='samtools_index',
                     program='samtools',
-                    sub_command=bsf.process.Command(program='index'))
+                    sub_command=Command(program='index'))
                 runnable_alignment.add_runnable_step(runnable_step=runnable_step)
 
                 sub_command = runnable_step.sub_command
@@ -1145,7 +1115,7 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                 # Add a RunnableStep for the deepTools bamCoverage tool.
 
-                runnable_step = bsf.process.RunnableStep(
+                runnable_step = RunnableStep(
                     name='bam_coverage',
                     program='bamCoverage')
                 runnable_alignment.add_runnable_step(runnable_step=runnable_step)
@@ -1166,10 +1136,10 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                 # Capture the bigWig information for Track Hub generation.
 
-                runnable_step = bsf.process.RunnableStep(
+                runnable_step = RunnableStep(
                     name='bigwiginfo',
                     program='bigWigInfo',
-                    stdout=bsf.connector.ConnectorFile(
+                    stdout=ConnectorFile(
                         file_path=file_path_alignment.coverage_bwi_txt,
                         file_mode='wt'))
                 runnable_alignment.add_runnable_step(runnable_step=runnable_step)
@@ -1180,9 +1150,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def run_create_macs1_jobs():
             """Create MACS1 peak caller jobs.
-
-            @return:
-            @rtype:
             """
             chipseq_comparison_key_list = list()
             """ @type chipseq_comparison_key_list: list[str] """
@@ -1212,7 +1179,7 @@ class ChIPSeq(bsf.analysis.Analysis):
                     file_path_peak_calling = FilePathPeakCalling(prefix=prefix_peak_calling)
 
                     runnable_peak_calling = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=prefix_peak_calling,
                             working_directory=self.genome_directory,
                             debug=self.debug))
@@ -1222,17 +1189,17 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep to create the output directory.
 
-                    runnable_step = bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = RunnableStepMakeDirectory(
                         name='make_directory',
                         directory_path=file_path_peak_calling.output_directory)
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Add a RunnableStep for MACS14 call peak.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='macs14_call_peak',
                         program='macs14',
-                        sub_command=bsf.process.Command(program='callpeak'))
+                        sub_command=Command(program='callpeak'))
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Read RunnableStep options from configuration sections:
@@ -1303,7 +1270,7 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep to process MACS14 output.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='process_macs14',
                         program='bsf_chipseq_process_macs14.bash')
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
@@ -1319,9 +1286,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def run_create_macs2_jobs():
             """Create MACS2 peak caller jobs.
-
-            @return:
-            @rtype:
             """
             chipseq_comparison_key_list = list()
             """ @type chipseq_comparison_key_list: list[str] """
@@ -1342,7 +1306,7 @@ class ChIPSeq(bsf.analysis.Analysis):
                     file_path_peak_calling = chipseq_comparison.get_file_path_peak_calling()
 
                     runnable_peak_calling = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=prefix_peak_calling,
                             working_directory=self.genome_directory,
                             debug=self.debug))
@@ -1364,17 +1328,17 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep to create the output directory.
 
-                    runnable_step = bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = RunnableStepMakeDirectory(
                         name='make_directory',
                         directory_path=file_path_peak_calling.output_directory)
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Add a RunnableStep for MACS2 call peak.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='macs2_call_peak',
                         program='macs2',
-                        sub_command=bsf.process.Command(program='callpeak'))
+                        sub_command=Command(program='callpeak'))
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Read RunnableStep options from configuration sections:
@@ -1492,10 +1456,10 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep to compare bedGraph files.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='macs2_bdg_cmp',
                         program='macs2',
-                        sub_command=bsf.process.Command(program='bdgcmp'))
+                        sub_command=Command(program='bdgcmp'))
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Read RunnableStep options from configuration sections:
@@ -1531,7 +1495,7 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep to process MACS2 output.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='process_macs2',
                         program='bsf_chipseq_process_macs2.bash')
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
@@ -1546,9 +1510,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def run_create_diff_bind_jobs():
             """Create Bioconductor DiffBind jobs.
-
-            @return:
-            @rtype:
             """
             # First, organise the ChIPSeqComparison objects by comparison name.
             for comparison_dict in self._comparison_dict.values():
@@ -1634,7 +1595,7 @@ class ChIPSeq(bsf.analysis.Analysis):
                     dbs.to_file_path()
 
                     runnable_diff_bind = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=prefix_diff_bind,
                             working_directory=self.genome_directory,
                             debug=self.debug))
@@ -1645,7 +1606,7 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep for Bioconductor DiffBind.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='diff_bind',
                         program='bsf_chipseq_diffbind.R')
                     runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
@@ -1663,7 +1624,7 @@ class ChIPSeq(bsf.analysis.Analysis):
                     # Add a RunnableStep for Bioconductor ChIPpeakAnno
 
                     if self.transcriptome_gtf_path and self.transcriptome_txdb_path:
-                        runnable_step = bsf.process.RunnableStep(
+                        runnable_step = RunnableStep(
                             name='annotation',
                             program='bsf_chipseq_annotation.R')
                         runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
@@ -1683,7 +1644,7 @@ class ChIPSeq(bsf.analysis.Analysis):
 
                     # Add a RunnableStep for Bioconductor ChIPQC.
 
-                    runnable_step = bsf.process.RunnableStep(
+                    runnable_step = RunnableStep(
                         name='chipqc',
                         program='bsf_chipseq_chipqc.R')
                     runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
@@ -1713,7 +1674,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
         if not self.genome_version:
-            self.genome_version = bsf.standards.Transcriptome.get_genome(
+            self.genome_version = Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
@@ -1742,14 +1703,14 @@ class ChIPSeq(bsf.analysis.Analysis):
                 raise Exception('No suitable comparison annotation file in the current working directory.')
 
         if not self.transcriptome_gtf_path:
-            self.transcriptome_gtf_path = bsf.standards.FilePath.get_resource_transcriptome_gtf(
+            self.transcriptome_gtf_path = StandardsFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none',
                 basic=True,
                 absolute=True)
 
         if not self.transcriptome_txdb_path:
-            self.transcriptome_txdb_path = bsf.standards.FilePath.get_resource_transcriptome_txdb(
+            self.transcriptome_txdb_path = StandardsFilePath.get_resource_transcriptome_txdb(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none',
                 basic=True,
@@ -1767,17 +1728,17 @@ class ChIPSeq(bsf.analysis.Analysis):
             self.factor_default = 'OTHER'
 
         if not self.genome_black_list:
-            self.genome_black_list = bsf.standards.FilePath.get_resource_genome_black_list(
+            self.genome_black_list = StandardsFilePath.get_resource_genome_black_list(
                 genome_version=self.genome_version)
 
         if self.genome_sizes_path:
             self.genome_sizes_path = self.configuration.get_absolute_path(file_path=self.genome_sizes_path)
         else:
-            self.genome_sizes_path = bsf.standards.FilePath.get_resource_genome_fasta_index(
+            self.genome_sizes_path = StandardsFilePath.get_resource_genome_fasta_index(
                 genome_version=self.genome_version)
 
         if not self.genome_effective_size:
-            self.genome_effective_size = bsf.standards.Genome.get_effective_size(genome_version=self.genome_version)
+            self.genome_effective_size = Genome.get_effective_size(genome_version=self.genome_version)
 
         stage_alignment = self.get_stage(name=self.get_stage_name_alignment())
         stage_peak_calling = self.get_stage(name=self.get_stage_name_peak_calling())
@@ -1797,18 +1758,12 @@ class ChIPSeq(bsf.analysis.Analysis):
 
     def report(self):
         """Create a C{bsf.analyses.chipseq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
-
-        @return:
-        @rtype:
         """
 
         # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
         def report_html_1():
             """Private function to create a HTML report for MACS1.
-
-            @return:
-            @rtype:
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -1919,9 +1874,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def report_html_2():
             """Private function to create a HTML report for MACS2.
-
-            @return:
-            @rtype:
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -1947,8 +1899,8 @@ class ChIPSeq(bsf.analysis.Analysis):
 
             str_list.append('<p id="bowtie2_report">\n')
             str_list.append('Please see the ')
-            str_list.append('<a href="' + bsf.analyses.bowtie.Bowtie2.prefix + '_report.html">')
-            str_list.append(self.project_name + ' ' + bsf.analyses.bowtie.Bowtie2.name)
+            str_list.append('<a href="' + Bowtie2.prefix + '_report.html">')
+            str_list.append(self.project_name + ' ' + Bowtie2.name)
             str_list.append('</a> report for quality plots and ')
             str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
             str_list.append('</p>\n')
@@ -2222,7 +2174,7 @@ class ChIPSeq(bsf.analysis.Analysis):
                             UserWarning)
                         continue
 
-                    annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+                    annotation_sheet = AnnotationSheet.from_file_path(
                         file_path=file_path,
                         file_type='excel')
 
@@ -2346,9 +2298,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def report_hub_1():
             """Private function to create a UCSC Track Hub for MACS1.
-
-            @return:
-            @rtype:
             """
 
             str_list = list()
@@ -2497,9 +2446,6 @@ class ChIPSeq(bsf.analysis.Analysis):
 
         def report_hub_2():
             """Private function to create a UCSC Track Hub for MACS2.
-
-            @return:
-            @rtype:
             """
             # Composite tracks need tags and labels for all subGroupN entries that are defined.
 

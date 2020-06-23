@@ -26,13 +26,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
+from argparse import ArgumentParser
 
-import Bio.Seq
+from Bio.Seq import reverse_complement
 
-import bsf.analyses.illumina_to_bam_tools
+from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='BSF Python utility script to reverse complement a Library Annotation Sheet.')
 
 argument_parser.add_argument(
@@ -82,16 +82,16 @@ if name_space.lane_list:
 else:
     lane_list = list()
 
-library_annotation_sheet = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
     file_path=name_space.input_path)
 
 for row_dict in library_annotation_sheet.row_dicts:
     if not lane_list or row_dict['lane'] in lane_list:
         if row_dict['barcode_sequence_1'] and name_space.barcode_1:
-            row_dict['barcode_sequence_1'] = Bio.Seq.reverse_complement(sequence=row_dict['barcode_sequence_1'])
+            row_dict['barcode_sequence_1'] = reverse_complement(sequence=row_dict['barcode_sequence_1'])
 
         if row_dict['barcode_sequence_2'] and name_space.barcode_2:
-            row_dict['barcode_sequence_2'] = Bio.Seq.reverse_complement(sequence=row_dict['barcode_sequence_2'])
+            row_dict['barcode_sequence_2'] = reverse_complement(sequence=row_dict['barcode_sequence_2'])
 
 library_annotation_sheet.file_path = name_space.output_path
 library_annotation_sheet.to_file_path(adjust_field_names=True)

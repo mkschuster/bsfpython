@@ -30,9 +30,8 @@ import os
 import pickle
 import shutil
 
-import bsf.connector
-import bsf.process
-import bsf.standards
+from bsf.process import RunnableStep, get_timestamp
+from bsf.standards import Configuration
 
 
 class FilePath(object):
@@ -52,8 +51,6 @@ class FilePath(object):
 
         @param prefix: File path prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         self.prefix = prefix
 
@@ -115,8 +112,6 @@ class Runnable(object):
         @type cache_path_dict: dict[str, str] | None
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
 
         super(Runnable, self).__init__()
@@ -177,9 +172,6 @@ class Runnable(object):
 
     def to_pickler_path(self):
         """Write this C{bsf.procedure.Runnable} as a Python C{pickle.Pickler} file into the working directory.
-
-        @return:
-        @rtype:
         """
         with open(file=self.pickler_path, mode='wb') as output_file:
             pickler = pickle.Pickler(file=output_file, protocol=pickle.HIGHEST_PROTOCOL)
@@ -227,7 +219,7 @@ class Runnable(object):
                 default_path = self.cache_directory
             else:
                 default_path = self.working_directory
-            return bsf.standards.Configuration.get_absolute_path(
+            return Configuration.get_absolute_path(
                 file_path=directory_name,
                 default_path=default_path)
         else:
@@ -237,8 +229,6 @@ class Runnable(object):
         """Create a cache directory, if it does not exist and populate it from the cache dictionary.
 
         In case of an error during the copy, the entire cache directory is removed before an Exception is re-raised.
-        @return:
-        @rtype:
         """
         if not self.cache_path_dict:
             return
@@ -267,9 +257,6 @@ class Runnable(object):
 
     def cache_directory_remove(self):
         """Remove the cache directory and its contents, if it exists.
-
-        @return:
-        @rtype:
         """
         cache_directory_path = self.cache_directory_path(absolute=True)
 
@@ -314,9 +301,6 @@ class Runnable(object):
 
     def temporary_directory_create(self):
         """Create a temporary directory, if it does not exist.
-
-        @return:
-        @rtype:
         """
         temporary_directory_path = self.temporary_directory_path(absolute=False)
 
@@ -331,9 +315,6 @@ class Runnable(object):
 
     def temporary_directory_remove(self):
         """Remove the temporary directory and its contents, if it exists.
-
-        @return:
-        @rtype:
         """
         temporary_directory_path = self.temporary_directory_path(absolute=False)
 
@@ -369,8 +350,6 @@ class Runnable(object):
 
         @param success: Successful completion
         @type success: bool
-        @return:
-        @rtype:
         """
         status_path = self.runnable_status_file_path(success=success)
         open(file=status_path, mode='wt').close()
@@ -381,9 +360,6 @@ class Runnable(object):
         """Remove the status file for a C{bsf.procedure.Runnable}.
 
         This method is mainly used by C{bsf.runnable.consecutive} and related modules.
-
-        @return:
-        @rtype:
         """
         # Automatically remove both status files, successful or not.
 
@@ -407,7 +383,7 @@ class Runnable(object):
         """Get the status file path for a C{bsf.process.RunnableStep} of a C{bsf.procedure.Runnable}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
+        @type runnable_step: RunnableStep | None
         @param success: Successful completion
         @type success: bool
         @return: Status file path
@@ -427,11 +403,9 @@ class Runnable(object):
         This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep} | None
-        @type runnable_step: bsf.process.RunnableStep
+        @type runnable_step: RunnableStep
         @param success: Successful completion
         @type success: bool
-        @return:
-        @rtype:
         """
         if runnable_step is None:
             return
@@ -447,9 +421,7 @@ class Runnable(object):
         This method is mainly used by C{bsf.runnable.consecutive} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return:
-        @rtype:
+        @type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -476,7 +448,7 @@ class Runnable(object):
         """Run a Python C{list} of C{bsf.process.RunnableStep} objects through a C{bsf.procedure.ConsecutiveRunnable}.
 
         @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list: list[bsf.process.RunnableStep]
+        @type runnable_step_list: list[RunnableStep]
         @return: Exception in case of a RunnableStep failure
         @rtype: Exception | None
         """
@@ -485,7 +457,7 @@ class Runnable(object):
         # previous bsf.process.RunnableStep.
 
         new_runnable_step_list = list()
-        """ @type new_runnable_step_list: list[bsf.process.RunnableStep] """
+        """ @type new_runnable_step_list: list[RunnableStep] """
         for runnable_step in reversed(runnable_step_list):
             new_runnable_step_list.append(runnable_step)
             if os.path.exists(self.runnable_step_status_file_path(
@@ -551,13 +523,13 @@ class Runnable(object):
 
             if child_return_code > 0:
                 return Exception(
-                    bsf.process.get_timestamp() +
+                    get_timestamp() +
                     ' Child process ' + repr(self.name) + ' ' + repr(runnable_step_current.name) +
                     ' failed with return code ' +
                     repr(+child_return_code) + '.')
             elif child_return_code < 0:
                 return Exception(
-                    bsf.process.get_timestamp() +
+                    get_timestamp() +
                     ' Child process ' + repr(self.name) + ' ' + repr(runnable_step_current.name) +
                     ' received signal ' +
                     repr(-child_return_code) + '.')
@@ -571,7 +543,7 @@ class ConsecutiveRunnable(Runnable):
 
     Attributes:
     @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-    @type runnable_step_list: list[bsf.process.RunnableStep]
+    @type runnable_step_list: list[RunnableStep]
     """
 
     def __init__(
@@ -601,9 +573,7 @@ class ConsecutiveRunnable(Runnable):
         @param debug: Integer debugging level
         @type debug: int
         @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list: list[bsf.process.RunnableStep]
-        @return:
-        @rtype:
+        @type runnable_step_list: list[RunnableStep]
         """
         super(ConsecutiveRunnable, self).__init__(
             name=name,
@@ -656,9 +626,7 @@ class ConsecutiveRunnable(Runnable):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return:
-        @rtype:
+        @type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -682,11 +650,11 @@ class ConcurrentRunnable(Runnable):
 
     Attributes:
     @ivar runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
-    @type runnable_step_list_pre: list[bsf.process.RunnableStep] | None
+    @type runnable_step_list_pre: list[RunnableStep] | None
     @ivar runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects
-    @type runnable_step_list_concurrent: list[bsf.process.RunnableStep] | None
+    @type runnable_step_list_concurrent: list[RunnableStep] | None
     @ivar runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
-    @type runnable_step_list_post: list[bsf.process.RunnableStep] | None
+    @type runnable_step_list_post: list[RunnableStep] | None
     """
 
     def __init__(
@@ -718,13 +686,11 @@ class ConcurrentRunnable(Runnable):
         @param debug: Integer debugging level
         @type debug: int
         @param runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
-        @type runnable_step_list_pre: list[bsf.process.RunnableStep] | None
+        @type runnable_step_list_pre: list[RunnableStep] | None
         @param runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list_concurrent: list[bsf.process.RunnableStep] | None
+        @type runnable_step_list_concurrent: list[RunnableStep] | None
         @param runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
-        @type runnable_step_list_post: list[bsf.process.RunnableStep] | None
-        @return:
-        @rtype:
+        @type runnable_step_list_post: list[RunnableStep] | None
         """
         super(ConcurrentRunnable, self).__init__(
             name=name,
@@ -797,9 +763,7 @@ class ConcurrentRunnable(Runnable):
         """Convenience method to add a C{bsf.process.RunnableStep} to the pre-run list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return:
-        @rtype:
+        @type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -812,9 +776,7 @@ class ConcurrentRunnable(Runnable):
         """Convenience method to add a C{bsf.process.RunnableStep} to the post-run list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return:
-        @rtype:
+        @type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -827,9 +789,7 @@ class ConcurrentRunnable(Runnable):
         """Convenience method to facilitate initialising and adding a C{bsf.process.RunnableStep}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return:
-        @rtype:
+        @type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return

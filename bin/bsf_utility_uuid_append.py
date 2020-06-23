@@ -26,10 +26,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import uuid
+from argparse import ArgumentParser
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Append a UUID to a string.')
 
 argument_parser.add_argument(

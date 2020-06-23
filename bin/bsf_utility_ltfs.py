@@ -26,9 +26,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
-import xml.etree.ElementTree
+from argparse import ArgumentParser
+from xml.etree.ElementTree import ElementTree, Element
 
 cartridge_dict = {
     # IBM LTO Ultrium Cartridge Label Specification (Revision 6)
@@ -104,8 +104,6 @@ class LinearTapeFileSystemDirectory(object):
         @type source_specification: str | None
         @param source_file_path_list: Python C{list} of source file paths in the directory
         @type source_file_path_list: list[str] | None
-        @return:
-        @rtype:
         """
         super(LinearTapeFileSystemDirectory, self).__init__()
 
@@ -125,8 +123,6 @@ class LinearTapeFileSystemDirectory(object):
 
         @param source_file_path: Source file path
         @type source_file_path: str
-        @return:
-        @rtype:
         """
         if source_file_path is None:
             return
@@ -206,8 +202,6 @@ class LinearTapeFileSystemCopy(object):
         @param ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
             C{LinearTapeFileSystemDirectory} objects
         @type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory] | None
-        @return:
-        @rtype:
         """
         super(LinearTapeFileSystemCopy, self).__init__()
 
@@ -268,8 +262,6 @@ class LinearTapeFileSystemCopy(object):
 
         @param source_path: Source file path
         @type source_path: str
-        @return:
-        @rtype:
         """
         source_path = os.path.normpath(source_path)
         source_directory = os.path.dirname(source_path)
@@ -283,55 +275,55 @@ class LinearTapeFileSystemCopy(object):
     def get_element_tree(self):
         """Get the C{xml.etree.ElementTree.ElementTree} representation of the C{LinearTapeFileSystemCopy} object.
 
-        @return: XML Element Tree
-        @rtype: xml.etree.ElementTree.ElementTree
+        @return: C{xml.etree.ElementTree.ElementTree}
+        @rtype: ElementTree
         """
-        ltfs_specification = xml.etree.ElementTree.Element(tag='ltfscpspec', attrib={'version': '1.0'})
+        ltfs_specification = Element(tag='ltfscpspec', attrib={'version': '1.0'})
 
-        ltfs_element_tree = xml.etree.ElementTree.ElementTree(element=ltfs_specification)
+        ltfs_element_tree = ElementTree(element=ltfs_specification)
 
-        ltfs_parameters = xml.etree.ElementTree.Element(tag='params')
+        ltfs_parameters = Element(tag='params')
         ltfs_specification.append(ltfs_parameters)
 
         if self.total_buffer_size:
-            param_total_buffer_size = xml.etree.ElementTree.Element(tag='total-buffer-size')
+            param_total_buffer_size = Element(tag='total-buffer-size')
             param_total_buffer_size.text = self.total_buffer_size
             ltfs_parameters.append(param_total_buffer_size)
 
         if self.buffer_size:
-            param_buffer_size = xml.etree.ElementTree.Element(tag='buffer-size')
+            param_buffer_size = Element(tag='buffer-size')
             param_buffer_size.text = self.buffer_size
             ltfs_parameters.append(param_buffer_size)
 
         if self.log_level:
-            param_log_level = xml.etree.ElementTree.Element(tag='loglevel')
+            param_log_level = Element(tag='loglevel')
             param_log_level.text = self.log_level
             ltfs_parameters.append(param_log_level)
 
         if self.recursive:
-            param_recursive = xml.etree.ElementTree.Element(tag='recursive')
+            param_recursive = Element(tag='recursive')
             param_recursive.text = 'enable'
             ltfs_parameters.append(param_recursive)
 
         if self.sparse:
-            param_sparse = xml.etree.ElementTree.Element(tag='sparse')
+            param_sparse = Element(tag='sparse')
             param_sparse.text = 'enable'
             ltfs_parameters.append(param_sparse)
 
-        ltfs_data = xml.etree.ElementTree.Element(tag='data')
+        ltfs_data = Element(tag='data')
         ltfs_specification.append(ltfs_data)
 
         for source_path in sorted(self.ltfs_directory_dict):
             ltfs_directory = self.ltfs_directory_dict[source_path]
 
-            ltfs_file = xml.etree.ElementTree.Element(tag='file')
+            ltfs_file = Element(tag='file')
             ltfs_data.append(ltfs_file)
 
-            ltfs_file_source_path = xml.etree.ElementTree.Element(tag='srcpath')
+            ltfs_file_source_path = Element(tag='srcpath')
             ltfs_file_source_path.text = ltfs_directory.source_path
             ltfs_file.append(ltfs_file_source_path)
 
-            ltfs_file_destination_path = xml.etree.ElementTree.Element(tag='dstpath')
+            ltfs_file_destination_path = Element(tag='dstpath')
             if ltfs_directory.target_path:
                 ltfs_file_destination_path.text = ltfs_directory.target_path
             else:
@@ -339,14 +331,14 @@ class LinearTapeFileSystemCopy(object):
             ltfs_file.append(ltfs_file_destination_path)
 
             if ltfs_directory.source_specification:
-                ltfs_file_source_specification = xml.etree.ElementTree.Element(tag='srcspec')
+                ltfs_file_source_specification = Element(tag='srcspec')
                 ltfs_file_source_specification.text = ltfs_directory.source_specification
                 ltfs_file.append(ltfs_file_source_specification)
 
             ltfs_directory.source_file_path_list.sort()
 
             for source_file_path in ltfs_directory.source_file_path_list:
-                ltfs_source_file = xml.etree.ElementTree.Element(tag='sf')
+                ltfs_source_file = Element(tag='sf')
                 ltfs_source_file.text = source_file_path
                 ltfs_file.append(ltfs_source_file)
 
@@ -357,14 +349,12 @@ class LinearTapeFileSystemCopy(object):
 
         @param file_path: File path
         @type file_path: str
-        @return:
-        @rtype:
         """
         ltfs_element_tree = self.get_element_tree()
         ltfs_element_tree.write(file_or_filename=file_path)
 
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Linear Tape File System Copy tool driver script.')
 
 argument_parser.add_argument(

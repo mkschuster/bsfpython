@@ -29,7 +29,7 @@ Distributed Resource Management System (DRMS) module.
 
 import os
 
-import bsf.connector
+from bsf.connector import ConnectorFile
 
 
 def submit(stage, debug=0):
@@ -42,8 +42,6 @@ def submit(stage, debug=0):
     @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
-    @return:
-    @rtype:
     """
 
     output_list = list()
@@ -60,9 +58,9 @@ def submit(stage, debug=0):
         if not executable.submit:
             output_list.append('# ')
         output_list.append(executable.command_str())
-        if isinstance(executable.stdout, bsf.connector.ConnectorFile):
+        if isinstance(executable.stdout, ConnectorFile):
             output_list.append(' 1>' + executable.stdout.file_path)
-        if isinstance(executable.stderr, bsf.connector.ConnectorFile):
+        if isinstance(executable.stderr, ConnectorFile):
             output_list.append(' 2>' + executable.stderr.file_path)
         output_list.append('\n')
         output_list.append('\n')
@@ -81,8 +79,6 @@ def check_state(stage, debug=0):
     @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
-    @return:
-    @rtype:
     """
 
     if stage:

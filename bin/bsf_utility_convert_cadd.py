@@ -27,22 +27,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
-import subprocess
 import sys
+from argparse import ArgumentParser
+from subprocess import Popen, PIPE
 
-import bsf.connector
-import bsf.process
+from bsf.connector import StandardOutputStream
+from bsf.process import Executable
 
 
 def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
     thread_lock.acquire(True)
     output_file = open(file=output_file_path, mode='wb')
-    output_process = subprocess.Popen(
+    output_process = Popen(
         args=['bgzip'],
         bufsize=-1,
-        stdin=subprocess.PIPE,
+        stdin=PIPE,
         stdout=output_file,
         stderr=None,
         shell=False,
@@ -119,7 +119,7 @@ os.environ['LANG'] = 'C'
 
 # Parse the arguments.
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='BSF utility to convert a Picard sequence dictionary (SAM header) '
                 'into a UCSC chromosome sizes file.')
 
@@ -165,9 +165,9 @@ with open(file=name_space.reference_vcf, mode='rt') as input_file:
 
 # Now the complicated part, the sub process for reading via bgzip.
 
-stdin_executable = bsf.process.Executable(
+stdin_executable = Executable(
     program='bgzip',
-    stdout=bsf.connector.StandardOutputStream(
+    stdout=StandardOutputStream(
         thread_callable=process_stdout,
         thread_kwargs={'output_file_path': name_space.output_path}))
 stdin_executable.add_switch_long(key='decompress')

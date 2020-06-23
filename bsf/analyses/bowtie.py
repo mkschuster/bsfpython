@@ -27,15 +27,15 @@ A package of classes and methods supporting Bowtie alignment analyses.
 #
 import os
 
-import bsf.analyses.aligner
-import bsf.analysis
-import bsf.connector
-import bsf.procedure
-import bsf.process
-import bsf.standards
+from bsf.analyses.aligner import Aligner, FilePathAlign
+from bsf.analysis import Stage
+from bsf.connector import ConnectorFile
+from bsf.procedure import ConcurrentRunnable
+from bsf.process import RunnableStep
+from bsf.standards import FilePath as StandardsFilePath
 
 
-class Bowtie1(bsf.analyses.aligner.Aligner):
+class Bowtie1(Aligner):
     """The C{bsf.analyses.bowtie.Bowtie1} class represents the logic to run the Bowtie1 aligner.
 
     Attributes:
@@ -47,23 +47,21 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         """Add a Bowtie1-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: bsf.procedure.ConcurrentRunnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: bsf.analysis.Stage
+        @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
         @type file_path_2: str | None
-        @return:
-        @rtype:
         """
-        file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
+        file_path_align = FilePathAlign(prefix=runnable_align.name)
 
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='bowtie1',
             program='bowtie',
-            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            stdout=ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.arguments.append(self.genome_index)
@@ -81,9 +79,6 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
 
     def run(self):
         """Run a C{bsf.analyses.bowtie.Bowtie1} analysis.
-
-        @return:
-        @rtype:
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
@@ -105,7 +100,7 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
 
         if not self.genome_index:
             self.genome_index = os.path.join(
-                bsf.standards.FilePath.get_resource_genome_index(
+                StandardsFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='bowtie2'),
                 self.genome_version)
@@ -115,7 +110,7 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         return
 
 
-class Bowtie2(bsf.analyses.aligner.Aligner):
+class Bowtie2(Aligner):
     """The C{bsf.analyses.bowtie.Bowtie2} class represents the logic to run the Bowtie2 aligner.
 
     Attributes:
@@ -127,23 +122,21 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: bsf.procedure.ConcurrentRunnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: bsf.analysis.Stage
+        @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
         @type file_path_2: str | None
-        @return:
-        @rtype:
         """
-        file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
+        file_path_align = FilePathAlign(prefix=runnable_align.name)
 
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='bowtie2',
             program='bowtie2',
-            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            stdout=ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)
@@ -165,9 +158,6 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
 
     def run(self):
         """Run a C{bsf.analyses.bowtie.Bowtie2} analysis.
-
-        @return:
-        @rtype:
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
@@ -189,7 +179,7 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
 
         if not self.genome_index:
             self.genome_index = os.path.join(
-                bsf.standards.FilePath.get_resource_genome_index(
+                StandardsFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='bowtie2'),
                 self.genome_version)

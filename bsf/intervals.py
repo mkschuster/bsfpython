@@ -25,11 +25,11 @@ A package of classes and methods modelling (genome) intervals.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import math
 import os
+from argparse import ArgumentParser
 
-import pysam
+from pysam import AlignmentFile
 
 
 class Interval(object):
@@ -96,16 +96,13 @@ class Container(object):
 
     Attributes:
     @ivar interval_list: Python C{list} of C{Interval} objects
-    @type interval_list: list[bsf.intervals.Interval]
+    @type interval_list: list[Interval]
     @ivar sum: Sum
     @type sum: int
     """
 
     def __init__(self):
         """Initialise a C{bsf.intervals.Container} object.
-
-        @return:
-        @rtype:
         """
         self.interval_list = list()
 
@@ -125,9 +122,7 @@ class Container(object):
         """Append an C{bsf.intervals.Interval} object.
 
         @param interval: C{bsf.intervals.Interval}
-        @type interval: bsf.intervals.Interval
-        @return:
-        @rtype:
+        @type interval: Interval
         """
         self.interval_list.append(interval)
         self.sum += len(interval)
@@ -164,7 +159,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
     @param packed: Pack C{Interval} objects into C{Container} objects
     @type packed: bool | None
     @return: Python C{list} of C{bsf.intervals.Container} objects
-    @rtype: list[bsf.intervals.Container]
+    @rtype: list[Container]
     """
     if not os.path.exists(interval_path):
         raise Exception('Interval file ' + repr(interval_path) + ' does not exists.')
@@ -255,7 +250,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     @param natural: Tile on (natural) sequence regions (i.e. SAM @SQ entries)
     @type natural: bool | None
     @return: Python C{list} of C{bsf.intervals.Container} objects
-    @rtype: list[bsf.intervals.Container]
+    @rtype: list[Container]
     """
     if not os.path.exists(dictionary_path):
         raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
@@ -266,7 +261,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     total_length = 0
     """ @type total_length: int """
 
-    alignment_file = pysam.AlignmentFile(dictionary_path, 'rt')
+    alignment_file = AlignmentFile(dictionary_path, 'rt')
 
     # Summarise sequence lengths to get the total length.
     for sq_entry in alignment_file.header['SQ']:
@@ -335,7 +330,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
 
 
 if __name__ == '__main__':
-    argument_parser = argparse.ArgumentParser(
+    argument_parser = ArgumentParser(
         description='Module driver script.')
 
     argument_parser.add_argument(

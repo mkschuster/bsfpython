@@ -25,7 +25,6 @@ A package of classes and methods supporting Guy Slater's Exonerate alignment too
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import re
 
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
@@ -111,8 +110,6 @@ class VULGAR(object):
         @type score: str | None
         @param triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
         @type triplet_list: list[(str, str, str)] | None
-        @return:
-        @rtype:
         """
 
         super(VULGAR, self).__init__()
@@ -165,10 +162,10 @@ def parse_alignment_file(file_path):
     @param file_path: Alignment file path
     @type file_path: str
     @return: Python C{list} of C{bsf.exonerate.VULGAR} objects
-    @rtype: list[bsf.exonerate.VULGAR]
+    @rtype: list[VULGAR]
     """
     vulgar_list = list()
-    """ @type vulgar_list: list[bsf.exonerate.VULGAR] """
+    """ @type vulgar_list: list[VULGAR] """
 
     with open(file=file_path, mode='rt') as input_file:
         for line_str in input_file:

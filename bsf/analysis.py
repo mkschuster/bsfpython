@@ -38,10 +38,10 @@ import urllib.parse
 import uuid
 import warnings
 
-import bsf.ngs
-import bsf.procedure
-import bsf.process
-import bsf.standards
+from bsf.ngs import Collection, Sample
+from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
+from bsf.process import Command, Executable, RunnableStep
+from bsf.standards import Configuration, FilePath, Operator, Genome, Transcriptome, UCSC, URL
 
 
 class Analysis(object):
@@ -62,7 +62,7 @@ class Analysis(object):
     @cvar ucsc_name_tracks: UCSC Genome Browser Track Hub "tracks" file name
     @type ucsc_name_tracks: str
     @ivar configuration: C{bsf.standards.Configuration}
-    @type configuration: bsf.standards.Configuration
+    @type configuration: Configuration
     @ivar debug: Debug level
     @type debug: int
     @ivar project_name: Project name (arbitrary)
@@ -87,14 +87,14 @@ class Analysis(object):
     @ivar e_mail: e-Mail address for a UCSC Genome Browser Track Hub
     @type e_mail: str | None
     @ivar stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-    @type stage_list: list[bsf.analysis.Stage]
+    @type stage_list: list[Stage]
     @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.procedure.Runnable.name}) key data and
         C{bsf.procedure.Runnable} value data
-    @type runnable_dict: dict[bsf.procedure.Runnable.name, bsf.procedure.Runnable]
+    @type runnable_dict: dict[Runnable.name, Runnable]
     @ivar collection: C{bsf.ngs.Collection}
-    @type collection: bsf.ngs.Collection
+    @type collection: Collection
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-    @type sample_list: list[bsf.ngs.Sample]
+    @type sample_list: list[Sample]
     """
 
     name = 'Analysis'
@@ -117,20 +117,18 @@ class Analysis(object):
         @rtype: Analysis
         """
         return cls.from_configuration(
-            configuration=bsf.standards.Configuration.from_file_path_list(
-                file_path_list=[bsf.standards.Configuration.global_file_path, config_path]))
+            configuration=Configuration.from_file_path_list(
+                file_path_list=[Configuration.global_file_path, config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
         """Create a new C{bsf.analysis.Analysis} from a C{bsf.standards.Configuration}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @return: C{bsf.analysis.Analysis}
         @rtype: Analysis
         """
-        assert isinstance(configuration, bsf.standards.Configuration)
-
         analysis = cls(configuration=configuration)
 
         # A "module.class" configuration section specifies defaults for this Analysis or sub-class
@@ -138,7 +136,7 @@ class Analysis(object):
 
         analysis.set_configuration(
             configuration=analysis.configuration,
-            section=bsf.standards.Configuration.section_from_instance(instance=analysis))
+            section=Configuration.section_from_instance(instance=analysis))
 
         return analysis
 
@@ -163,7 +161,7 @@ class Analysis(object):
         """Initialise a C{bsf.analysis.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration | None
+        @type configuration: Configuration | None
         @param project_name: Project name
         @type project_name: str | None
         @param genome_version: Genome version
@@ -190,23 +188,20 @@ class Analysis(object):
         @param debug: Integer debugging level
         @type debug: int | None
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage] | None
+        @type stage_list: list[Stage] | None
         @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.procedure.Runnable.name}) and
             C{bsf.procedure.Runnable} value data
-        @type runnable_dict: dict[bsf.procedure.Runnable.name, bsf.procedure.Runnable] | None
+        @type runnable_dict: dict[Runnable.name, Runnable] | None
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection | None
+        @type collection: Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample] | None
-        @return:
-        @rtype:
+        @type sample_list: list[Sample] | None
         """
         super(Analysis, self).__init__()
 
         if configuration is None:
-            self.configuration = bsf.standards.Configuration()
+            self.configuration = Configuration()
         else:
-            assert isinstance(configuration, bsf.standards.Configuration)
             self.configuration = configuration
 
         self.project_name = project_name
@@ -232,9 +227,8 @@ class Analysis(object):
             self.runnable_dict = runnable_dict
 
         if collection is None:
-            self.collection = bsf.ngs.Collection()
+            self.collection = Collection()
         else:
-            assert isinstance(collection, bsf.ngs.Collection)
             self.collection = collection
 
         if sample_list is None:
@@ -296,12 +290,10 @@ class Analysis(object):
         already existing C{bsf.analysis.Stage}.
 
         @param stage: C{bsf.analysis.Stage}
-        @type stage: bsf.analysis.Stage
+        @type stage: Stage
         @return: C{bsf.analysis.Stage}
-        @rtype: bsf.analysis.Stage
+        @rtype: Stage
         """
-        assert isinstance(stage, bsf.analysis.Stage)
-
         if stage not in self.stage_list:
             self.stage_list.append(stage)
 
@@ -311,14 +303,12 @@ class Analysis(object):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.Runnable}.
 
         @param runnable: C{bsf.procedure.Runnable}
-        @type runnable: bsf.procedure.Runnable
+        @type runnable: Runnable
         @return: C{bsf.procedure.Runnable}
-        @rtype: bsf.procedure.Runnable
+        @rtype: Runnable
         @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the
             C{bsf.analysis.Analysis.runnable_dict}
         """
-        assert isinstance(runnable, bsf.procedure.Runnable)
-
         if runnable.name in self.runnable_dict:
             raise Exception('A Runnable with name ' + repr(runnable.name) +
                             ' already exists in Analysis ' + repr(self.project_name) + '.')
@@ -331,26 +321,24 @@ class Analysis(object):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable: bsf.procedure.ConcurrentRunnable
+        @type runnable: ConcurrentRunnable
         @return: C{bsf.procedure.ConcurrentRunnable}
-        @rtype: bsf.procedure.ConcurrentRunnable
+        @rtype: ConcurrentRunnable
         @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the
             C{bsf.analysis.Analysis.runnable_dict}
         """
-        assert isinstance(runnable, bsf.procedure.ConcurrentRunnable)
         return self.add_runnable(runnable=runnable)
 
     def add_runnable_consecutive(self, runnable):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.ConsecutiveRunnable}.
 
         @param runnable: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable: bsf.procedure.ConsecutiveRunnable
+        @type runnable: ConsecutiveRunnable
         @return: C{bsf.procedure.ConsecutiveRunnable}
-        @rtype: bsf.procedure.ConsecutiveRunnable
+        @rtype: ConsecutiveRunnable
         @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the
             C{bsf.analysis.Analysis.runnable_dict}
         """
-        assert isinstance(runnable, bsf.procedure.ConsecutiveRunnable)
         return self.add_runnable(runnable=runnable)
 
     def add_sample(self, sample):
@@ -361,12 +349,8 @@ class Analysis(object):
         __cmp__ method, relies on object identity (i.e. address).
 
         @param sample: C{bsf.ngs.Sample}
-        @type sample: bsf.ngs.Sample
-        @return:
-        @rtype:
+        @type sample: Sample
         """
-        assert isinstance(sample, bsf.ngs.Sample)
-
         if sample not in self.sample_list:
             self.sample_list.append(sample)
 
@@ -431,7 +415,7 @@ class Analysis(object):
 
         # A "bsf.analysis.Stage" section specifies defaults for all Stage objects of an Analysis.
 
-        section = bsf.standards.Configuration.section_from_instance(instance=stage)
+        section = Configuration.section_from_instance(instance=stage)
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
@@ -440,7 +424,7 @@ class Analysis(object):
         # A "bsf.analysis.Analysis.Stage" or "bsf.analyses.*.Stage" pseudo-class section specifies
         # Analysis-specific or sub-class-specific options for the Stage, respectively.
 
-        section = '.'.join((bsf.standards.Configuration.section_from_instance(instance=self), 'Stage'))
+        section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage'))
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
@@ -449,7 +433,7 @@ class Analysis(object):
         # A "bsf.analysis.Analysis.Stage.name" or "bsf.analyses.*.Stage.name" section specifies defaults
         # for a particular Stage of an Analysis or sub-class, respectively.
 
-        section = '.'.join((bsf.standards.Configuration.section_from_instance(instance=self), 'Stage', stage.name))
+        section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage', stage.name))
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
@@ -463,16 +447,11 @@ class Analysis(object):
         Instance variables without a configuration option remain unchanged.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
         @raise Exception: The specified section does not exist
-        @return:
-        @rtype:
         """
-        assert isinstance(configuration, bsf.standards.Configuration)
-        assert isinstance(section, str)
-
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
                 'Section ' + repr(section) +
@@ -522,16 +501,12 @@ class Analysis(object):
         """Set default C{bsf.argument.Argument} objects for a C{bsf.process.Command}.
 
         @param command: C{bsf.process.Command}
-        @type command: bsf.process.Command
-        @return:
-        @rtype:
+        @type command: Command
         """
         # TODO: Phase out this method.
         # Once all accessory scripts are converted to Runnable and bsf.process.RunnableStep objects,
         # this method becomes redundant.
-        assert isinstance(command, bsf.process.Command)
-
-        section = bsf.standards.Configuration.section_from_instance(instance=command)
+        section = Configuration.section_from_instance(instance=command)
 
         # For plain bsf.process.Executable objects append the value of the
         # bsf.process.Executable.program to make the configuration section more meaningful.
@@ -553,9 +528,7 @@ class Analysis(object):
         This method reads configuration section(s)
         "Analysis.__class__.__name__"."RunnableStep.name"[."Command.name"]*
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep
-        @return:
-        @rtype:
+        @type runnable_step: RunnableStep
         """
 
         def _set_configuration(command, section):
@@ -564,15 +537,10 @@ class Analysis(object):
             The method sets the default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep},
             as well as for its contained sub C{bsf.process.Command} objects.
             @param command: C{bsf.process.Command}
-            @type command: bsf.process.Command
+            @type command: Command
             @param section: Configuration section
             @type section: str
-            @return:
-            @rtype:
             """
-            assert isinstance(command, bsf.process.Command)
-            assert isinstance(prefix, str)
-
             if command.name:
                 section += '.' + command.name
             else:
@@ -588,11 +556,9 @@ class Analysis(object):
 
             return
 
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
-
         # Initially, the configuration section prefix is based on the Analysis class name and the Analysis Stage.name.
 
-        prefix = bsf.standards.Configuration.section_from_instance(instance=self)
+        prefix = Configuration.section_from_instance(instance=self)
 
         _set_configuration(command=runnable_step, section=prefix)
 
@@ -605,17 +571,14 @@ class Analysis(object):
         C{bsf.process.Executable.submit} will be set to C{False}.
 
         @param stage: C{bsf.analysis.Stage}
-        @type stage: bsf.analysis.Stage
+        @type stage: Stage
         @param runnable: C{bsf.procedure.Runnable}
-        @type runnable: bsf.procedure.Runnable
+        @type runnable: Runnable
         @return: C{bsf.process.Executable}
-        @rtype: bsf.process.Executable
+        @rtype: Executable
         @raise Exception: A C{bsf.procedure.Runnable.name} does not exist in C{bsf.analysis.Analysis.runnable_dict}
         @raise Exception: A C{bsf.analysis.Stage} does not exist in C{bsf.analysis.Analysis.stage_list}
         """
-        assert isinstance(stage, bsf.analysis.Stage)
-        assert isinstance(runnable, bsf.procedure.Runnable)
-
         if stage not in self.stage_list:
             raise Exception('A Stage with name ' + repr(stage.name) +
                             ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
@@ -624,7 +587,7 @@ class Analysis(object):
             raise Exception('A Runnable with name ' + repr(runnable.name) +
                             ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
 
-        executable = bsf.process.Executable(name=runnable.name, program=bsf.procedure.Runnable.runner_script)
+        executable = Executable(name=runnable.name, program=Runnable.runner_script)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the bsf.process.Executable if the status file does not exist already.
@@ -639,8 +602,6 @@ class Analysis(object):
         """Run a C{bsf.analysis.Analysis}.
 
         @raise Exception: An C{bsf.analysis.Analysis.project_name} has not been defined
-        @return:
-        @rtype:
         """
         if self.debug is None:
             self.debug = 0
@@ -659,15 +620,15 @@ class Analysis(object):
 
         self.cache_directory = self.configuration.get_absolute_path(
             file_path=self.cache_directory,
-            default_path=bsf.standards.FilePath.get_cache())
+            default_path=FilePath.get_cache())
 
         self.input_directory = self.configuration.get_absolute_path(
             file_path=self.input_directory,
-            default_path=bsf.standards.FilePath.get_samples(absolute=True))
+            default_path=FilePath.get_samples(absolute=True))
 
         self.output_directory = self.configuration.get_absolute_path(
             file_path=self.output_directory,
-            default_path=bsf.standards.FilePath.get_projects(absolute=True))
+            default_path=FilePath.get_projects(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
@@ -701,7 +662,7 @@ class Analysis(object):
                     raise
 
         if not self.e_mail:
-            self.e_mail = bsf.standards.Operator.get_e_mail()
+            self.e_mail = Operator.get_e_mail()
             if not self.e_mail:
                 raise Exception('A ' + self.name + " requires an 'e_mail' configuration option.")
 
@@ -713,7 +674,7 @@ class Analysis(object):
             # if not os.path.isabs(self.sas_file) and not os.path.exists(self.sas_file):
             #     self.sas_file = os.path.join(self.project_directory, self.sas_file)
 
-            self.collection = bsf.ngs.Collection.from_sas_path(
+            self.collection = Collection.from_sas_path(
                 file_path=self.input_directory,
                 file_type='Automatic',
                 name=self.project_name,
@@ -725,7 +686,7 @@ class Analysis(object):
                 sys.stdout.writelines(self.collection.trace(level=1))
         else:
             # Create an empty bsf.ngs.Collection.
-            self.collection = bsf.ngs.Collection()
+            self.collection = Collection()
 
         return
 
@@ -733,9 +694,6 @@ class Analysis(object):
         """Create a C{bsf.analysis.Analysis} report.
 
         The method must be implemented in a sub-class.
-
-        @return:
-        @rtype:
         """
         warnings.warn(
             "The 'report' method must be implemented in the sub-class.",
@@ -830,7 +788,7 @@ class Analysis(object):
         if genome_version is None:
             return str_list
 
-        species = bsf.standards.Genome.get_species(genome_version=genome_version)
+        species = Genome.get_species(genome_version=genome_version)
         # Without species information, the description is not useful.
         if species is None:
             warnings.warn("No species information for genome version '" + genome_version +
@@ -843,7 +801,7 @@ class Analysis(object):
         str_list.append('genome assembly ')
         str_list.append(genome_version)
 
-        date = bsf.standards.Genome.get_date(genome_version=genome_version)
+        date = Genome.get_date(genome_version=genome_version)
         if date is not None:
             str_list.append(' (' + date + ')')
 
@@ -866,7 +824,7 @@ class Analysis(object):
         if transcriptome_version is None:
             return str_list
 
-        species = bsf.standards.Transcriptome.get_species(transcriptome_version=transcriptome_version)
+        species = Transcriptome.get_species(transcriptome_version=transcriptome_version)
         # Without species information, the description is not useful.
         if species is None:
             warnings.warn("No species information for transcriptome version '" + transcriptome_version +
@@ -879,7 +837,7 @@ class Analysis(object):
         str_list.append('transcriptome ')
         str_list.append(transcriptome_version)
 
-        date = bsf.standards.Transcriptome.get_date(transcriptome_version=transcriptome_version)
+        date = Transcriptome.get_date(transcriptome_version=transcriptome_version)
         if date is not None:
             str_list.append(' (' + date + ')')
 
@@ -940,7 +898,7 @@ class Analysis(object):
         str_list.append('<head>\n')
         str_list.append('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
         str_list.append('<link rel="stylesheet" href="/' +
-                        urllib.parse.quote(string=bsf.standards.URL.get_relative_projects()) +
+                        urllib.parse.quote(string=URL.get_relative_projects()) +
                         '/bsfpython.css" type="text/css" />\n')
         str_list.append('<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n')
         str_list.append('<meta name="DC.Creator" content="' + html.escape(s=creator, quote=True) + '" />\n')
@@ -985,16 +943,16 @@ class Analysis(object):
         @rtype: list[str]
         """
         if not contact:
-            contact = bsf.standards.Operator.get_contact()
+            contact = Operator.get_contact()
 
         if not institution:
-            institution = bsf.standards.Operator.get_institution()
+            institution = Operator.get_institution()
 
         if not url_protocol:
-            url_protocol = bsf.standards.URL.get_protocol()
+            url_protocol = URL.get_protocol()
 
         if not url_host_name:
-            url_host_name = bsf.standards.URL.get_host_name()
+            url_host_name = URL.get_host_name()
 
         if not title:
             title = ' '.join((self.project_name, self.name))
@@ -1145,8 +1103,6 @@ class Analysis(object):
         @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
             defaults to C{bsf.standards.URL.get_host_name()}
         @type url_host_name: str
-        @return:
-        @rtype:
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1173,8 +1129,6 @@ class Analysis(object):
 
         C{bsf.analysis.Analysis.project_directory}
         C{bsf.analysis.Analysis.genome_directory}
-        @return:
-        @rtype:
         @raise Exception: Output (genome) directory does not exist
         """
         if not os.path.isdir(self.genome_directory):
@@ -1210,9 +1164,9 @@ class Analysis(object):
         @raise Exception: Public HTML path does not exist
         """
         if sub_directory is None:
-            sub_directory = bsf.standards.URL.get_relative_projects()
+            sub_directory = URL.get_relative_projects()
 
-        html_path = os.path.join(bsf.standards.FilePath.get_public_html(absolute=True), sub_directory)
+        html_path = os.path.join(FilePath.get_public_html(absolute=True), sub_directory)
 
         # As a safety measure, to prevent creation of rogue directory paths, the html_path directory has to exist.
 
@@ -1317,7 +1271,7 @@ class Analysis(object):
             options_dict = dict()
 
         if 'db' not in options_dict:
-            options_dict['db'] = bsf.standards.Genome.resolve_ucsc_alias(genome_version=self.genome_version)
+            options_dict['db'] = Genome.resolve_ucsc_alias(genome_version=self.genome_version)
 
         # UCSC "browser" configuration dictionary.
 
@@ -1334,12 +1288,12 @@ class Analysis(object):
         # UCSC protocol
 
         if not ucsc_protocol:
-            ucsc_protocol = bsf.standards.UCSC.get_protocol()
+            ucsc_protocol = UCSC.get_protocol()
 
         # UCSC host name
 
         if not ucsc_host_name:
-            ucsc_host_name = bsf.standards.UCSC.get_host_name()
+            ucsc_host_name = UCSC.get_host_name()
 
         # Strip leading colons to support protocol-independent URLs.
         return html.escape(
@@ -1366,7 +1320,7 @@ class Analysis(object):
             # The track hub URL requires the link name, i.e. the link path base name, to be inserted.
             link_name = os.path.basename(link_path.rstrip('/'))
             options_dict['hubUrl'] = '/'.join((
-                bsf.standards.URL.get_absolute_projects(),
+                URL.get_absolute_projects(),
                 link_name,
                 '_'.join((self.prefix, self.ucsc_name_hub))))
 
@@ -1396,8 +1350,6 @@ class Analysis(object):
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
-        @return:
-        @rtype:
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1425,8 +1377,6 @@ class Analysis(object):
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
-        @return:
-        @rtype:
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1465,7 +1415,7 @@ class Analysis(object):
                             genome_version = None
 
         # Resolve an eventual alias for the UCSC genome assembly name in "genome_version/prefix_tracks.txt".
-        genome_version_dict[bsf.standards.Genome.resolve_ucsc_alias(genome_version=self.genome_version)] = \
+        genome_version_dict[Genome.resolve_ucsc_alias(genome_version=self.genome_version)] = \
             '/'.join((self.genome_version, '_'.join((prefix, self.ucsc_name_tracks))))
 
         str_list = list()
@@ -1488,8 +1438,6 @@ class Analysis(object):
         @type content: list[str]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
-        @return:
-        @rtype:
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1512,8 +1460,6 @@ class Analysis(object):
         @type content: list[str]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.analysis.Analysis.prefix}
         @type prefix: str
-        @return:
-        @rtype:
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1526,9 +1472,6 @@ class Analysis(object):
 
     def check_state(self):
         """Check the state of each C{bsf.analysis.Stage}.
-
-        @return:
-        @rtype:
         """
         for stage in self.stage_list:
             stage.check_state(debug=self.debug)
@@ -1543,8 +1486,6 @@ class Analysis(object):
 
         @param name: Only submit C{bsf.process.Executable} objects linked to C{bsf.analysis.Stage.name}
         @type name: str
-        @return:
-        @rtype:
         """
         # Pickle all bsf.procedure.Runnable objects.
 
@@ -1619,7 +1560,7 @@ class Stage(object):
         or alternatively binary programs
     @type is_script: bool
     @ivar executable_list: Python C{list} of C{bsf.process.Executable} objects
-    @type executable_list: list[bsf.process.Executable]
+    @type executable_list: list[Executable]
     """
 
     def __init__(
@@ -1677,9 +1618,7 @@ class Stage(object):
             or alternatively binary programs
         @type is_script: bool
         @param executable_list: Python C{list} of C{bsf.process.Executable} objects
-        @type executable_list: list[bsf.process.Executable]
-        @return:
-        @rtype:
+        @type executable_list: list[Executable]
         """
         super(Stage, self).__init__()
 
@@ -1775,15 +1714,10 @@ class Stage(object):
         Instance variables without a configuration option remain unchanged.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
-        assert isinstance(configuration, bsf.standards.Configuration)
-        assert isinstance(section, str)
-
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
                 'Section ' + repr(section) + ' not defined in Configuration files:\n' +
@@ -1853,12 +1787,10 @@ class Stage(object):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.process.Executable}.
 
         @param executable: C{bsf.process.Executable}
-        @type executable: bsf.process.Executable
+        @type executable: Executable
         @return: C{bsf.process.Executable}
-        @rtype: bsf.process.Executable
+        @rtype: Executable
         """
-        assert isinstance(executable, bsf.process.Executable)
-
         self.executable_list.append(executable)
 
         return executable
@@ -1868,8 +1800,6 @@ class Stage(object):
 
         @param debug: Debug level
         @type debug: int
-        @return:
-        @rtype:
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 
@@ -1883,8 +1813,6 @@ class Stage(object):
 
         @param debug: Debug level
         @type debug: int
-        @return:
-        @rtype:
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 

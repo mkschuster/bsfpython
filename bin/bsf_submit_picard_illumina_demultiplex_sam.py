@@ -26,14 +26,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.analyses.picard
-import bsf.standards
+from bsf.analyses.picard import IlluminaDemultiplexSam
+from bsf.standards import Configuration
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.picard.IlluminaDemultiplexSam.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=IlluminaDemultiplexSam.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -50,7 +50,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=bsf.standards.Configuration.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -101,13 +101,13 @@ name_space = argument_parser.parse_args()
 # --project-name. The --library-path argument can be worked out on the basis
 # of the --project-name.
 
-if name_space.configuration == bsf.standards.Configuration.global_file_path:
+if name_space.configuration == Configuration.global_file_path:
     if name_space.project_name is None and name_space.irf is None:
         raise Exception("argument --project-name or --irf are required if --configuration is not set")
 
 # Create a IlluminaDemultiplexSam analysis, run and submit it.
 
-analysis = bsf.analyses.picard.IlluminaDemultiplexSam.from_config_file_path(config_path=name_space.configuration)
+analysis = IlluminaDemultiplexSam.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

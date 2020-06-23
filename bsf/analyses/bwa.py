@@ -27,15 +27,15 @@ A package of classes and methods supporting Burrows-Wheeler Aligner (BWA) analys
 #
 import os
 
-import bsf.analyses.aligner
-import bsf.analysis
-import bsf.connector
-import bsf.process
-import bsf.standards
+from bsf.analyses.aligner import Aligner, FilePathAlign
+from bsf.analysis import Stage
+from bsf.connector import ConnectorFile
+from bsf.process import Command, RunnableStep
+from bsf.standards import FilePath as StandardsFilePath
 
 
-class MaximalExactMatches(bsf.analyses.aligner.Aligner):
-    """The C{bsf.analyses.bowtie.MaximalExactMatches} class represents the BWA Maximal Exact Matches (MEM) algorithm.
+class MaximalExactMatches(Aligner):
+    """The C{bsf.analyses.bwa.MaximalExactMatches} class represents the BWA Maximal Exact Matches (MEM) algorithm.
 
     Attributes:
     """
@@ -48,22 +48,20 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: bsf.analysis.Stage
+        @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
         @type file_path_2: str | None
-        @return:
-        @rtype:
         """
-        file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
+        file_path_align = FilePathAlign(prefix=runnable_align.name)
 
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='bwa_mem',
             program='bwa',
-            sub_command=bsf.process.Command(name='mem', program='mem'),
-            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            sub_command=Command(name='mem', program='mem'),
+            stdout=ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         sub_command = runnable_step.sub_command
@@ -87,10 +85,7 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.bowtie.Bowtie2} analysis.
-
-        @return:
-        @rtype:
+        """Run a C{bsf.analyses.bwa.MaximalExactMatches} analysis.
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
@@ -110,7 +105,7 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
 
         # BWA requires the genome.fasta file.
         if not self.genome_index:
-            self.genome_index = bsf.standards.FilePath.get_resource_genome_fasta(
+            self.genome_index = StandardsFilePath.get_resource_genome_fasta(
                 genome_version=self.genome_version,
                 genome_index='bwa')
 

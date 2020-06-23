@@ -26,13 +26,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.analyses.chipseq
+from bsf.analyses.chipseq import ChIPSeq
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.chipseq.ChIPSeq.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=ChIPSeq.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -56,7 +56,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF ChIPSeq analysis, run and submit it.
 
-analysis = bsf.analyses.chipseq.ChIPSeq.from_config_file_path(config_path=name_space.configuration)
+analysis = ChIPSeq.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

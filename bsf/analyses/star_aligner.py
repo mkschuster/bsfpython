@@ -30,15 +30,17 @@ Project:  https://github.com/alexdobin/STAR
 #
 import os
 
-import bsf.analyses.aligner
-import bsf.analysis
-import bsf.annotation
-import bsf.connector
-import bsf.process
-import bsf.standards
+from bsf.analyses.aligner import Aligner, \
+    FilePathAlign as AlignerFilePathAlign, \
+    FilePathSummary as AlignerFilePathSummary
+from bsf.analysis import Stage
+from bsf.connector import ConnectorFile
+from bsf.ngs import Collection, Sample
+from bsf.process import RunnableStep
+from bsf.standards import Configuration, FilePath as StandardsFilePath, Transcriptome
 
 
-class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
+class FilePathAlign(AlignerFilePathAlign):
     """The C{bsf.analyses.star_aligner.FilePathAlign} class models file paths at the alignment stage.
 
     Attributes:
@@ -55,8 +57,6 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -70,7 +70,7 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
         return
 
 
-class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
+class FilePathSummary(AlignerFilePathSummary):
     """The C{bsf.analyses.star_aligner.FilePathSummary} class models file paths at the summary stage.
 
     Attributes:
@@ -81,8 +81,6 @@ class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathSummary, self).__init__(prefix=prefix)
 
@@ -112,7 +110,7 @@ class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
         return
 
 
-class StarAligner(bsf.analyses.aligner.Aligner):
+class StarAligner(Aligner):
     """STAR Aligner C{bsf.analyses.aligner.Aligner} sub-class.
 
     Attributes:
@@ -178,7 +176,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         """Initialise a C{bsf.analyses.star_aligner.StarAligner} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -198,10 +196,11 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[Sample]
         @param index_directory: Genome directory with STAR indices
         @type index_directory: str
         @param transcriptome_version: Transcriptome version
@@ -248,11 +247,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(StarAligner, self).set_configuration(configuration=configuration, section=section)
 
@@ -282,23 +279,21 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: bsf.analysis.Stage
+        @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
         @type file_path_2: str | None
-        @return:
-        @rtype:
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
         # Run the STAR Aligner
 
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='STAR',
             program='STAR',
-            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            stdout=ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         self.set_runnable_step_configuration(runnable_step=runnable_step)
@@ -324,7 +319,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         # Run GNU Zip over the rather large splice junction table.
 
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='gzip',
             program='gzip')
         runnable_align.add_runnable_step_post(runnable_step=runnable_step)
@@ -340,11 +335,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @param runnable_summary: C{bsf.procedure.ConsecutiveRunnable}
         @type runnable_summary: bsf.procedure.ConsecutiveRunnable
         @param stage_summary: C{bsf.analysis.Stage}
-        @type stage_summary: bsf.analysis.Stage
-        @return:
-        @rtype:
+        @type stage_summary: Stage
         """
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='star_summary',
             program='bsf_star_aligner_summary.R')
         runnable_summary.add_runnable_step(runnable_step=runnable_step)
@@ -356,8 +349,6 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         Although the STAR aligner can directly count reads according to its splice junction database,
         more than one read group may need aligning so that the count tables had to be combined.
-        @return:
-        @rtype:
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
@@ -372,20 +363,20 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
         if not self.genome_version:
-            self.genome_version = bsf.standards.Transcriptome.get_genome(
+            self.genome_version = Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
             raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
 
         if not self.index_directory:
-            self.index_directory = bsf.standards.FilePath.get_resource_transcriptome_index(
+            self.index_directory = StandardsFilePath.get_resource_transcriptome_index(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='star')
 
         if not self.transcriptome_gtf:
             # FIXME: The transcriptome_gtf is currently not used.
-            self.transcriptome_gtf = bsf.standards.FilePath.get_resource_transcriptome_gtf(
+            self.transcriptome_gtf = StandardsFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none',
                 basic=True,
@@ -405,16 +396,10 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
     def report(self):
         """Create a report.
-
-        @return:
-        @rtype:
         """
 
         def report_html():
             """Private function to create a HTML report.
-
-            @return:
-            @rtype:
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -765,9 +750,6 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         def report_hub():
             """Private function to create a UCSC Track Hub.
-
-            @return:
-            @rtype:
             """
 
             str_list = list()

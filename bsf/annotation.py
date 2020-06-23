@@ -25,10 +25,9 @@ A package of classes and methods modelling Comma-Separated Value (CSV) and Tab-S
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
-import csv
 import re
 import warnings
+from csv import DictReader, DictWriter
 
 
 class AnnotationSheet(object):
@@ -41,6 +40,10 @@ class AnnotationSheet(object):
     C{bsf.annotation.AnnotationSheet} sub-class in code.
 
     Attributes:
+    @cvar _field_names: Python C{list} if field (column) names
+    @type _field_names: list[str]
+    @cvar _test_methods:
+    @type _test_methods: typing.Dict[str, typing.List[typing.Callable]
     @ivar file_path: File path
     @type file_path: str | None
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -50,50 +53,48 @@ class AnnotationSheet(object):
     @ivar field_names: Python C{list} of Python C{str} (field name) objects
     @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{classmethod} value data
-    @type test_methods: dict[str, list[classmethod]]
+        Python C{list} of Python C{typing.Callable} value data
+    @type test_methods: typing.Dict[str, typing.List[typing.Callable]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
     @type row_dicts: list[dict[str, str]]
+    @ivar _csv_reader_file: C{io.TextIO}
+    @type _csv_reader_file: io.TextIO | None
+    @ivar _csv_reader_object: C{csv.DictReader}
+    @type _csv_reader_object: DictReader | None
+    @ivar _csv_writer_file: C{io.TextIO}
+    @type _csv_writer_file: io.TextIO | None
+    @ivar _csv_writer_object: C{csv.DictWriter}
+    @type _csv_writer_object: DictWriter | None
     """
 
     # Regular expression for non-alphanumeric characters
     _regular_expression_non_alpha = re.compile(pattern='\\W')
-    """ @type _regular_expression_non_alpha: re.RegexObject """
 
     # Regular expression for non-numeric characters
     _regular_expression_non_numeric = re.compile(pattern='\\D')
-    """ @type _regular_expression_non_numeric: re.RegexObject """
 
     # Regular expression for non-sequence characters
     _regular_expression_non_sequence = re.compile(pattern='[^ACGTacgt]')
-    """ @type _regular_expression_non_sequence: re.RegexObject """
 
     # Regular expression for non-ambiguous sequence characters
     _regular_expression_non_ambiguous_sequence = re.compile(pattern='[^ACGTacgtWSMKRYwsmkryBDHVbdhvNn]')
-    """ @type _regular_expression_non_ambiguous_sequence: re.RegexObject """
 
     # Regular expression for multiple underscore characters
     _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
-    """ @type _regular_expression_multiple_underscore: re.RegexObject """
 
     # File type (i.e. 'excel' or 'excel-tab' defined in the csv.Dialect class)
     _file_type = 'excel'
-    """ @type _file_type: str """
 
     # Header line exists
     _header_line = True
-    """ @type _header_line: bool """
 
     # Python list of Python str (field name) objects
     _field_names = list()
-    """ @type _field_names: list[str] """
 
     # Python dict of Python str (field name) key data and
-    # Python list of Python classmethod value data
+    # Python list of Python typing.Callable value data
     _test_methods = dict()
-    """ @type _test_methods: dict[str, list[classmethod]] """
-
-    # dict[str, list[classmethod[int, dict[str, str], str]]]
+    """ @type _test_methods: typing.Dict[str, typing.List[typing.Callable] """
 
     # Python dict of (boolean state) Python str objects and Python bool value objects.
     _boolean_states = {
@@ -671,12 +672,10 @@ class AnnotationSheet(object):
         @param field_names: Python C{list} of Python C{str} (field name) objects
         @type field_names: list[str] | None
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
-            Python C{list} of Python C{classmethod} value data
-        @type test_methods: dict[str, list[classmethod]] | None
+            Python C{list} of Python C{typing.Callable} value data
+        @type test_methods: typing.Dict[str, typing.List[typing.Callable]] | None
         @param row_dicts: Python C{list} of Python C{dict} objects
         @type row_dicts: list[dict[str, str]] | None
-        @return:
-        @rtype:
         """
         super(AnnotationSheet, self).__init__()
 
@@ -717,13 +716,13 @@ class AnnotationSheet(object):
         """ @type _csv_reader_file: io.TextIOWrapper | None """
 
         self._csv_reader_object = None
-        """ @type _csv_reader_object: csv.DictReader | None """
+        """ @type _csv_reader_object: DictReader | None """
 
         self._csv_writer_file = None
         """ @type _csv_writer_file: io.TextIOWrapper | None """
 
         self._csv_writer_object = None
-        """ @type _csv_writer_object: csv.DictWriter | None """
+        """ @type _csv_writer_object: DictWriter | None """
 
         return
 
@@ -758,8 +757,6 @@ class AnnotationSheet(object):
     def csv_reader_open(self):
         """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading
         and initialise a Python C{csv.DictReader} object.
-        @return:
-        @rtype:
         """
         if not self.file_path:
             raise Exception('Cannot read an AnnotationSheet without a valid file_name.')
@@ -782,7 +779,7 @@ class AnnotationSheet(object):
         # For Python2.7, the open() function has to use the binary 'b' flag.
         # For Python3, the open() function has to use newline=''.
         self._csv_reader_file = open(file=self.file_path, mode='r', newline='')
-        self._csv_reader_object = csv.DictReader(
+        self._csv_reader_object = DictReader(
             f=self._csv_reader_file,
             fieldnames=csv_field_names,
             dialect=csv_file_type)
@@ -805,9 +802,6 @@ class AnnotationSheet(object):
 
     def csv_reader_close(self):
         """Close a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading.
-
-        @return:
-        @rtype:
         """
         self._csv_reader_object = None
         self._csv_reader_file.close()
@@ -818,9 +812,6 @@ class AnnotationSheet(object):
     def csv_writer_open(self):
         """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for writing,
         initialise a Python C{csv.DictWriter} object and write the header line if one has been defined.
-
-        @return:
-        @rtype:
         """
         if not self.file_path:
             raise Exception('Cannot write an AnnotationSheet without a valid file_name.')
@@ -836,7 +827,7 @@ class AnnotationSheet(object):
         # For Python2.7, the open() function has to use the binary 'b' flag.
         # For Python3, the open() function has to use newline=''.
         self._csv_writer_file = open(file=self.file_path, mode='w', newline='')
-        self._csv_writer_object = csv.DictWriter(
+        self._csv_writer_object = DictWriter(
             f=self._csv_writer_file,
             fieldnames=self.field_names,
             dialect=csv_file_type)
@@ -851,8 +842,6 @@ class AnnotationSheet(object):
 
         @param row_dict: Row Python C{dict}
         @type row_dict: dict[str, str]
-        @return:
-        @rtype:
         """
         self._csv_writer_object.writerow(rowdict=row_dict)
 
@@ -860,9 +849,6 @@ class AnnotationSheet(object):
 
     def csv_writer_close(self):
         """Close a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for writing.
-
-        @return:
-        @rtype:
         """
         self._csv_writer_object = None
         self._csv_writer_file.close()
@@ -893,9 +879,6 @@ class AnnotationSheet(object):
 
         This method has to implemented in the sub-class,
         as it requires information about field-specific sorting.
-
-        @return:
-        @rtype:
         """
         warnings.warn(
             'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
@@ -928,9 +911,6 @@ class AnnotationSheet(object):
 
     def adjust_field_names(self):
         """Adjust the Python C{list} of Python C{str} field names to keys used in Python C{dict} (row) objects.
-
-        @return:
-        @rtype:
         """
         field_names = list()
 
@@ -950,8 +930,6 @@ class AnnotationSheet(object):
 
         @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
         @type adjust_field_names: bool
-        @return:
-        @rtype:
         """
         if adjust_field_names:
             self.adjust_field_names()

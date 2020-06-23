@@ -29,13 +29,13 @@ specific for Illumina sequencing systems.
 import datetime
 import os
 import warnings
-import xml.etree.ElementTree
+from xml.etree.ElementTree import ElementTree
 
-import Bio.Seq
 import dateutil.tz
+from Bio.Seq import Seq
 
-import bsf.annotation
-import bsf.standards
+from bsf.annotation import AnnotationSheet
+from bsf.standards import Configuration, FilePath
 
 
 class Adaptors(object):
@@ -58,8 +58,6 @@ class Adaptors(object):
         @param adaptor_dict: Hierarchy of Python C{dict} objects for class, type (e.g. i7, i5),
             name (e.g. D701, D503) and sequence
         @type adaptor_dict: dict[str, dict[str, dict[str, str]]]
-        @return:
-        @rtype:
         """
         super(Adaptors, self).__init__()
 
@@ -79,7 +77,7 @@ class Adaptors(object):
         @return: C{bsf.illumina.Adaptors}
         @rtype: Adaptors
         """
-        annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+        annotation_sheet = AnnotationSheet.from_file_path(
             file_path=file_path,
             file_type='excel-tab',
             name='Illumina Adaptors')
@@ -148,7 +146,7 @@ class Adaptors(object):
 
                 # Iterate over all adaptor names.
                 for adaptor_name_key in adaptor_name_list:
-                    bio_seq = Bio.Seq.Seq(data=type_dict[adaptor_name_key])
+                    bio_seq = Seq(data=type_dict[adaptor_name_key])
 
                     # Match in forward orientation
                     if sequence == str(bio_seq):
@@ -191,8 +189,6 @@ class RunInformationFlowcellLayout(object):
         @type tile_count: int
         @param tile_list: Python C{list} of Python C{str} tile names
         @type tile_list: list[str]
-        @return:
-        @rtype:
         """
         super(RunInformationFlowcellLayout, self).__init__()
 
@@ -245,8 +241,6 @@ class RunInformationRead(object):
         @type cycles: int
         @param index: Index read
         @type index: bool
-        @return:
-        @rtype:
         """
         super(RunInformationRead, self).__init__()
 
@@ -281,9 +275,9 @@ class RunInformation(object):
     @ivar date: Date in YYMMDD format e.g. 130724
     @type date: str | None
     @ivar flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-    @type flow_cell_layout: bsf.illumina.RunInformationFlowcellLayout | None
+    @type flow_cell_layout: RunInformationFlowcellLayout | None
     @ivar run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
-    @type run_information_read_list: list[bsf.illumina.RunInformationRead]
+    @type run_information_read_list: list[RunInformationRead]
     """
 
     @staticmethod
@@ -324,59 +318,46 @@ class RunInformation(object):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        run_info_tree = xml.etree.ElementTree.ElementTree(file=file_path)
+        run_info_tree = ElementTree(file=file_path)
         run_element = run_info_tree.find(path='Run')
-        """ @type run_element: xml.etree.ElementTree.Element | None """
         if run_element is None:
-            raise Exception('Cannot find the <Run> element in the ElementTree of XML file ' + repr(file_path))
+            raise Exception('Cannot find the <Run> Element in the ElementTree of XML file ' + repr(file_path))
 
         # Parse meta-information about the Illumina run
 
         run_identifier = run_element.get(key='Id')  # e.g. 130724_SN815_0089_BC26JBACXX
-        """ @type run_identifier: str """
         run_number = run_element.get(key='Number')  # e.g. 91
-        """ @type run_number: str """
         run_identifier_component_list = RunInformation.parse_run_identifier(run_identifier=run_identifier)
 
         xml_flow_cell = run_element.find(path='Flowcell')
-        """ @type xml_flow_cell: xml.etree.ElementTree.Element | None """
-        if xml_flow_cell is not None:
-            flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
-            """ @type flow_cell: str """
-        else:
+        if xml_flow_cell is None:
             flow_cell = run_identifier_component_list[4]
+        else:
+            flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
 
         xml_instrument = run_element.find(path='Instrument')
-        """ @type xml_instrument: xml.etree.ElementTree.Element | None """
-        if xml_instrument is not None:
-            instrument = xml_instrument.text  # e.g. SN815
-            """ @type instrument: str """
-        else:
+        if xml_instrument is None:
             instrument = run_identifier_component_list[1]
+        else:
+            instrument = xml_instrument.text  # e.g. SN815
 
         xml_date = run_element.find(path='Date')
-        """ @type xml_date: xml.etree.ElementTree.Element | None """
-        if xml_date is not None:
-            date = xml_date.text  # e.g. 130724
-            """ @type date: str """
-        else:
+        if xml_date is None:
             date = run_identifier_component_list[0]
+        else:
+            date = xml_date.text  # e.g. 130724
 
         xml_second_read = run_element.find(path='SecondRead')
-        """ @type xml_second_read: xml.etree.ElementTree.Element | None """
-        if xml_second_read is not None:
-            second_read = int(xml_second_read.get(key='FirstCycle'))
-        else:
+        if xml_second_read is None:
             second_read = 0
+        else:
+            second_read = int(xml_second_read.get(key='FirstCycle'))
 
         run_information_read_list = list()
-        """ @type run_information_read_list: list[bsf.illumina.RunInformationRead] """
+        """ @type run_information_read_list: list[RunInformationRead] """
         number = 1
 
-        for read_element in run_element.find(path='Reads'):
-            """ @type read_element: xml.etree.ElementTree.Element | None """
-            assert isinstance(read_element, xml.etree.ElementTree.Element)
-
+        for read_element in run_element.find(path='Reads').iter(tag='Read'):
             # <ApplicationName>HiSeq Control Software</ApplicationName>
             # <ApplicationVersion>2.0.12.0</ApplicationVersion>
             # <ApplicationVersion>2.2.58</ApplicationVersion>
@@ -389,10 +370,8 @@ class RunInformation(object):
             #   <Read Number="2" NumCycles="8" IsIndexedRead="Y" />
             #   <Read Number="3" NumCycles="100" IsIndexedRead="N" />
             # </Reads>
-
             if 'NumCycles' in read_element.keys():
                 is_index = read_element.get(key='IsIndexedRead')
-                """ @type is_index: str """
                 if is_index not in ('Y', 'N'):
                     warnings.warn(
                         'Unexpected value <Read IsIndexedRead="' +
@@ -403,7 +382,7 @@ class RunInformation(object):
                 run_information_read_list.append(RunInformationRead(
                     number=int(read_element.get(key='Number')),
                     cycles=int(read_element.get(key='NumCycles')),
-                    index=bool(is_index == 'Y')))
+                    index=is_index == 'Y'))
 
             # <ApplicationName>HiSeq Control Software</ApplicationName>
             # <ApplicationVersion>1.1.37</ApplicationVersion>
@@ -443,12 +422,10 @@ class RunInformation(object):
         # Get the flow cell layout if it exits.
 
         xml_flow_cell_layout = run_info_tree.find(path='Run/FlowcellLayout')
-        """ @type xml_flow_cell_layout: xml.etree.ElementTree.Element | None """
         if xml_flow_cell_layout is not None:
             xml_tiles = run_info_tree.find(path='Run/FlowcellLayout/TileSet/Tiles')
             if xml_tiles is not None:
-                """ @type tile_name_list: list[str] | None """
-                tile_name_list = [xml_tile.text for xml_tile in xml_tiles]
+                tile_name_list = [xml_tile.text for xml_tile in xml_tiles.iter(tag='Tile')]
             else:
                 tile_name_list = None
                 """ @type tile_name_list: list[str] | None """
@@ -503,11 +480,9 @@ class RunInformation(object):
         @param date: Date in YYMMDD format
         @type date: str | None
         @param flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-        @type flow_cell_layout: bsf.illumina.RunInformationFlowcellLayout | None
+        @type flow_cell_layout: RunInformationFlowcellLayout | None
         @param run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
-        @type run_information_read_list: list[bsf.illumina.RunInformationRead]
-        @return:
-        @rtype:
+        @type run_information_read_list: list[RunInformationRead]
         """
         super(RunInformation, self).__init__()
 
@@ -580,7 +555,7 @@ class RunInformation(object):
         @rtype: list[int]
         """
         cycle_number = 1
-        """ @type cycle_number: int """
+
         read_start_list = list()
         """ @type read_start_list: list[int] """
 
@@ -598,7 +573,7 @@ class RunInformation(object):
         @rtype: list[int]
         """
         cycle_number = 1
-        """ @type cycle_number: int """
+
         read_end_list = list()
         """ @type read_end_list: list[int] """
 
@@ -673,7 +648,7 @@ class RunParameters(object):
     @ivar file_path: File path
     @type file_path: str
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: xml.etree.ElementTree.ElementTree | None
+    @type element_tree: ElementTree | None
     """
 
     @classmethod
@@ -690,7 +665,7 @@ class RunParameters(object):
         if not os.path.isfile(file_path):
             file_path = None
 
-        return cls(file_path=file_path, element_tree=xml.etree.ElementTree.ElementTree(file=file_path))
+        return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{bsf.illumina.RunParameters} object.
@@ -698,9 +673,7 @@ class RunParameters(object):
         @param file_path: File path
         @type file_path: str | None
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: xml.etree.ElementTree.ElementTree | None
-        @return:
-        @rtype:
+        @type element_tree: ElementTree | None
         """
         super(RunParameters, self).__init__()
 
@@ -719,7 +692,6 @@ class RunParameters(object):
         """
         for xml_path in xml_paths:
             element = self.element_tree.find(path=xml_path)
-            """ @type element: xml.etree.ElementTree.Element """
             if element is not None:
                 return element.text
         else:
@@ -906,7 +878,7 @@ class XMLConfiguration(object):
     @ivar file_path: File path
     @type file_path: str | None
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: xml.etree.ElementTree.ElementTree | None
+    @type element_tree: ElementTree | None
     """
 
     @classmethod
@@ -925,7 +897,7 @@ class XMLConfiguration(object):
         if not os.path.isfile(file_path):
             file_path = None
 
-        return cls(file_path=file_path, element_tree=xml.etree.ElementTree.ElementTree(file=file_path))
+        return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{bsf.illumina.XMLConfiguration} object.
@@ -933,9 +905,7 @@ class XMLConfiguration(object):
         @param file_path: File path
         @type file_path: str | None
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: xml.etree.ElementTree.ElementTree | None
-        @return:
-        @rtype:
+        @type element_tree: ElementTree | None
         """
         super(XMLConfiguration, self).__init__()
 
@@ -953,7 +923,7 @@ class AnalysisConfiguration(XMLConfiguration):
     @ivar file_path: File path
     @type file_path: str
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: xml.etree.ElementTree.ElementTree
+    @type element_tree: ElementTree
     """
 
     def __init__(self, file_path=None, element_tree=None):
@@ -964,9 +934,7 @@ class AnalysisConfiguration(XMLConfiguration):
         @param file_path: File path
         @type file_path: str
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: xml.etree.ElementTree.ElementTree
-        @return:
-        @rtype:
+        @type element_tree: ElementTree
         """
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
 
@@ -976,17 +944,12 @@ class AnalysisConfiguration(XMLConfiguration):
         if self.element_tree.getroot() is None:
             return
 
-        for lane_element in self.element_tree.find(path='Run/TileSelection'):
-            """ @type lane_element: xml.etree.ElementTree.Element """
-            assert isinstance(lane_element, xml.etree.ElementTree.Element)
+        for lane_element in self.element_tree.find(path='Run/TileSelection').iter(tag='Lane'):
             lane_index = lane_element.get(key='Index')
-            """ @type lane_index: str """
             if lane_index not in self._lane_tile_dict:
                 self._lane_tile_dict[lane_index] = dict()
             lane_dict = self._lane_tile_dict[lane_index]
             for tile_element in lane_element.findall(path='Tile'):
-                """ @type title_element: xml.etree.ElementTree.Element """
-                assert isinstance(tile_element, xml.etree.ElementTree.Element)
                 lane_dict[tile_element.text] = True
 
         return
@@ -1060,8 +1023,14 @@ class RunFolder(object):
     @type run: str | None
     @ivar flow_cell: Flow cell identifier
     @type flow_cell: str | None
-    @ivar run_information: C{bsf.illumina.RunInformation} object
-    @type run_information: bsf.illumina.RunInformation
+    @ivar run_information: C{bsf.illumina.RunInformation}
+    @type run_information: RunInformation
+    @ivar run_parameters: C{bsf.illumina.RunParameters}
+    @type run_parameters: RunParameters
+    @ivar image_analysis: C{bsf.illumina.ImageAnalysis}
+    @type image_analysis: ImageAnalysis
+    @ivar base_call_analysis: C{bsf.illumina.BaseCallAnalysis}
+    @type base_call_analysis: BaseCallAnalysis
     """
 
     rta_dict = {
@@ -1093,16 +1062,16 @@ class RunFolder(object):
         @rtype: str | None
         """
         # Check the Illumina Run Folder directory.
-        file_path = bsf.standards.Configuration.get_absolute_path(
+        file_path = Configuration.get_absolute_path(
             file_path=name,
-            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
+            default_path=FilePath.get_illumina_run(absolute=True))
         if os.path.exists(file_path):
             return file_path
 
         # Check the Illumina Sequence Analysis Viewer directory.
-        file_path = bsf.standards.Configuration.get_absolute_path(
+        file_path = Configuration.get_absolute_path(
             file_path=name,
-            default_path=bsf.standards.FilePath.get_illumina_sav(absolute=True))
+            default_path=FilePath.get_illumina_sav(absolute=True))
         if os.path.exists(file_path):
             return file_path
 
@@ -1183,13 +1152,13 @@ class RunFolder(object):
         @param flow_cell: The position and flow cell identifier
         @type flow_cell: str | None
         @param run_information: C{bsf.illumina.RunInformation}
-        @type run_information: bsf.illumina.RunInformation
+        @type run_information: RunInformation
+        @param run_parameters: C{bsf.illumina.RunParameters}
+        @type run_parameters: RunParameters
         @param image_analysis: C{bsf.illumina.ImageAnalysis}
-        @type image_analysis: bsf.illumina.ImageAnalysis
+        @type image_analysis: ImageAnalysis
         @param base_call_analysis: C{bsf.illumina.BaseCallAnalysis}
-        @type base_call_analysis: bsf.illumina.BaseCallAnalysis
-        @return:
-        @rtype:
+        @type base_call_analysis: BaseCallAnalysis
         """
         super(RunFolder, self).__init__()
 
@@ -1363,9 +1332,6 @@ class RunFolder(object):
         """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/BaseCalls/config.xml}
         configuration file. This method also builds up a Python C{dict} required for method
         C{_is_missing_base_call_tile}.
-
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -1390,8 +1356,6 @@ class RunFolder(object):
 
         Check the I{IRF/Data/Intensities/config.xml} configuration file for missing I{<Tile>} XML elements.
         This method also builds up a Python C{dict} required for method C{_is_missing_image_analysis_tile}.
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -1463,8 +1427,6 @@ class RunFolder(object):
         @type file_name_list: list[str]
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         if debug > 0:
             # print('Processing directory', directory_path)
@@ -1491,8 +1453,6 @@ class RunFolder(object):
         @type file_suffix_list: list[str]
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         if debug > 0:
             # print('Processing directory', directory_path)
@@ -1518,8 +1478,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
         # flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
@@ -1605,8 +1563,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1735,8 +1691,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1844,8 +1798,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2064,8 +2016,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2116,8 +2066,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2353,8 +2301,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2408,8 +2354,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2495,8 +2439,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2664,8 +2606,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2710,8 +2650,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
@@ -2769,8 +2707,6 @@ class RunFolder(object):
         @type directory_path: str
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2929,8 +2865,6 @@ class RunFolder(object):
         Both, missing and additional files are printed to STDOUT.
         @param debug: Integer debugging level
         @type debug: int
-        @return:
-        @rtype:
         """
         rta = self.run_parameters.get_real_time_analysis_version
 

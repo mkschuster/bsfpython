@@ -27,16 +27,17 @@ http://www.ensembl.org/info/genome/variation/predicted_data.html#consequences
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
-import csv
 import warnings
+from argparse import ArgumentParser
+from csv import DictReader
+from subprocess import Popen
 
-import pysam
+from pysam import VariantFile
 
-import bsf.process
+from bsf.process import Command, Executable, RunnableStep
 
 
-class RunnableStepCsqToVep(bsf.process.RunnableStep):
+class RunnableStepCsqToVep(RunnableStep):
     """The C{bsf.executables.vcf.RunnableStepCsqToVep} class expands Ensembl Variant Effect Predictor (VEP)
     CSQ INFO annotation into a set of VEP_* INFO annotation.
 
@@ -84,7 +85,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command | None
+        @type sub_command: Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
         @type stdin: bsf.connector.Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
@@ -93,7 +94,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[bsf.process.Executable.name] | None
+        @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
@@ -103,7 +104,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @param process_name: Process name
         @type process_name: str | None
         @param sub_process: C{subprocess.Popen}
-        @type sub_process: subprocess.Popen | None
+        @type sub_process: Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str] | None
@@ -115,8 +116,6 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @type vcf_path_old: str | None
         @param vcf_path_new: New VCF file path
         @type vcf_path_new: str | None
-        @return:
-        @rtype:
         """
         super(RunnableStepCsqToVep, self).__init__(
             name=name,
@@ -207,7 +206,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         """ @type sequence_ontology_list: list[str] """
 
         with open(file=self.soc_path, mode='rt') as input_file:
-            for row_dict in csv.DictReader(input_file, dialect='excel-tab'):
+            for row_dict in DictReader(input_file, dialect='excel-tab'):
                 """ @type row_dict: dict[str, str] """
                 sequence_ontology_list.append(row_dict['SO term'])
 
@@ -216,13 +215,13 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         """ @type vep_header_dict: dict[str, dict[str, str]] """
 
         with open(file=self.ofc_path, mode='rt') as input_file:
-            for row_dict in csv.DictReader(input_file, dialect='excel-tab'):
+            for row_dict in DictReader(input_file, dialect='excel-tab'):
                 """ @type row_dict: dict[str, str] """
                 # NOTE: Override all types with 'String' to allow multiple values joined by '&' characters.
                 row_dict['Type'] = 'String'
                 vep_header_dict[row_dict['ID']] = row_dict
 
-        vf_old = pysam.VariantFile(self.vcf_path_old, 'r')
+        vf_old = VariantFile(self.vcf_path_old, 'r')
 
         # Copy the header for a new VCF instance.
 
@@ -298,7 +297,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
             # Print the new header.
             for key, vmd in vh_new.info.items():
                 """ @type key: str """
-                """ @type value: pysam.libcbcf.VariantMetadata """
+                """ @type vmd: pysam.libcbcf.VariantMetadata """
                 # print('Key:', repr(key), 'VariantMetadata:', repr(vmd))
                 # print(type(vmd), 'dir:', dir(vmd))
                 print(
@@ -313,7 +312,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
         # Open the new VariantFile for writing.
 
-        vf_new = pysam.VariantFile(self.vcf_path_new, 'w', header=vh_new)
+        vf_new = VariantFile(self.vcf_path_new, 'w', header=vh_new)
 
         # Parse the CSQ INFO field of each VariantRecord.
 
@@ -495,7 +494,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
 
 if __name__ == '__main__':
-    argument_parser = argparse.ArgumentParser(
+    argument_parser = ArgumentParser(
         description='Module driver script.')
 
     argument_parser.add_argument(

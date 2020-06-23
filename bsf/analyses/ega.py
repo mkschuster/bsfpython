@@ -28,12 +28,13 @@ A package of classes and methods supporting the EGA Cryptor tool.
 import os
 import sys
 
-import bsf.analysis
-import bsf.procedure
-import bsf.process
+from bsf.analysis import Analysis, Stage
+from bsf.ngs import Collection, Sample
+from bsf.procedure import FilePath, ConsecutiveRunnable
+from bsf.process import Command, RunnableStepJava, RunnableStepLink, RunnableStepMakeDirectory
 
 
-class FilePathEGACryptorReadGroup(bsf.procedure.FilePath):
+class FilePathEGACryptorReadGroup(FilePath):
     """The C{bsf.analyses.ega.FilePathEGACryptorReadGroup} models read group-specific EGA Cryptor file paths.
 
     Attributes:
@@ -44,8 +45,6 @@ class FilePathEGACryptorReadGroup(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathEGACryptorReadGroup, self).__init__(prefix=prefix)
 
@@ -54,7 +53,7 @@ class FilePathEGACryptorReadGroup(bsf.procedure.FilePath):
         return
 
 
-class EGACryptor(bsf.analysis.Analysis):
+class EGACryptor(Analysis):
     """BSF EGA Cryptor C{bsf.analysis.Analysis} sub-class.
 
     Attributes:
@@ -136,15 +135,13 @@ class EGACryptor(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of BSF C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param classpath_ega_cryptor: EGA Cryptor tool Java Archive (JAR) class path directory
         @type classpath_ega_cryptor: str | None
-        @return:
-        @rtype:
         """
         super(EGACryptor, self).__init__(
             configuration=configuration,
@@ -175,8 +172,6 @@ class EGACryptor(bsf.analysis.Analysis):
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
 
         super(EGACryptor, self).set_configuration(configuration=configuration, section=section)
@@ -193,9 +188,6 @@ class EGACryptor(bsf.analysis.Analysis):
 
     def run(self):
         """Run a C{bsf.analyses.ega.EGACryptor} C{bsf.analysis.Analysis}.
-
-        @return:
-        @rtype:
         """
 
         # Always check each BSF PairedReads object separately.
@@ -207,8 +199,6 @@ class EGACryptor(bsf.analysis.Analysis):
             This implementation just adds all C{bsf.ngs.Sample} objects from the
             C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
             C{bsf.analysis.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
             """
 
             self.sample_list.extend(self.collection.get_all_samples())
@@ -248,14 +238,14 @@ class EGACryptor(bsf.analysis.Analysis):
                     # Create a Runnable and an Executable for running the EGA Cryptor analysis.
 
                     runnable_read_group = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=self.get_prefix_read_group(read_group_name=paired_reads_name),
                             working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the EGA Cryptor program.
 
-                    runnable_step = bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = RunnableStepMakeDirectory(
                         name='mkdir',
                         directory_path=file_path_read_group.output_directory)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
@@ -264,7 +254,7 @@ class EGACryptor(bsf.analysis.Analysis):
                         file_path_read_group.output_directory,
                         os.path.basename(paired_reads.reads_1.file_path))
 
-                    runnable_step = bsf.process.RunnableStepLink(
+                    runnable_step = RunnableStepLink(
                         name='link',
                         source_path=paired_reads.reads_1.file_path,
                         target_path=link_target_path)
@@ -272,7 +262,7 @@ class EGACryptor(bsf.analysis.Analysis):
 
                     # Create a RunnableStep to run the Java-based EGA Cryptor.
 
-                    runnable_step = bsf.process.RunnableStepJava(
+                    runnable_step = RunnableStepJava(
                         name='ega_cryptor',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
@@ -282,15 +272,15 @@ class EGACryptor(bsf.analysis.Analysis):
                     # Use a sequence of sub-Command objects to separate options that have to appear
                     # in a particular order. Sigh!
 
-                    runnable_step.sub_command.sub_command = bsf.process.Command()
+                    runnable_step.sub_command.sub_command = Command()
                     sub_command = runnable_step.sub_command.sub_command
                     sub_command.add_switch_short(key='p')
 
-                    sub_command.sub_command = bsf.process.Command()
+                    sub_command.sub_command = Command()
                     sub_command = sub_command.sub_command
                     sub_command.add_switch_short(key='fm')
 
-                    sub_command.sub_command = bsf.process.Command()
+                    sub_command.sub_command = Command()
                     sub_command = sub_command.sub_command
                     sub_command.add_switch_short(key='file')
 

@@ -25,9 +25,9 @@ A package of classes and methods modelling configuration and default information
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import configparser
 import os
 import stat
+from configparser import ConfigParser
 
 
 class Configuration(object):
@@ -37,13 +37,13 @@ class Configuration(object):
 
     Attributes:
     @cvar global_configuration: Global C{bsf.standards.Configuration}
-    @type global_configuration: bsf.standards.Configuration
+    @type global_configuration: Configuration
     @cvar global_file_path: Global configuration file
     @type global_file_path: str
     @ivar file_path_list: C{bsf.standards.Configuration} file path
     @type file_path_list: list[str]
     @ivar config_parser: Python C{configparser.ConfigParser}
-    @type config_parser: configparser.ConfigParser
+    @type config_parser: ConfigParser
     """
 
     global_configuration = None
@@ -55,7 +55,7 @@ class Configuration(object):
         """Get the global C{bsf.standards.Configuration} and initialise it, if not already done so.
 
         @return: C{bsf.standards.Configuration}
-        @rtype: bsf.standards.Configuration
+        @rtype: Configuration
         """
         if Configuration.global_configuration is None:
             Configuration.global_configuration = Configuration.from_file_path_list(
@@ -126,7 +126,7 @@ class Configuration(object):
         @param file_path_list: Python C{list} of Python C{str} configuration file path objects
         @type file_path_list: list[str]
         @return: C{bsf.standards.Configuration}
-        @rtype: bsf.standards.Configuration
+        @rtype: Configuration
         @raise Exception: Configuration file path does not exist
         """
         # Expand each file_path for user and variable names.
@@ -146,7 +146,7 @@ class Configuration(object):
         # they have to be case sensitive.
         # Hence, override optionxform() with str().
 
-        config_parser = configparser.ConfigParser()
+        config_parser = ConfigParser()
         config_parser.optionxform = str
 
         configuration = cls(file_path_list=file_path_list, config_parser=config_parser)
@@ -165,22 +165,18 @@ class Configuration(object):
         @param file_path_list: Python C{list} of Python C{str} configuration file path objects
         @type file_path_list: list[str]
         @param config_parser: Python C{configparser.ConfigParser}
-        @type config_parser: configparser.ConfigParser
-        @return:
-        @rtype:
+        @type config_parser: ConfigParser
         """
         super(Configuration, self).__init__()
 
         if file_path_list is None:
             self.file_path_list = list()
         else:
-            assert isinstance(file_path_list, list)
             self.file_path_list = file_path_list
 
         if config_parser is None:
-            self.config_parser = configparser.ConfigParser()
+            self.config_parser = ConfigParser()
         else:
-            assert isinstance(config_parser, configparser.ConfigParser)
             self.config_parser = config_parser
 
         self._config_path_list = None
@@ -226,8 +222,10 @@ class Configuration(object):
         """Convert a comma-separated Python C{str} into a Python C{list} of Python C{str} objects.
 
         All elements are stripped and only non-empty elements are appended to the list.
-        @param csv_string:
-        @return:
+        @param csv_string: Python C{str} of comma-separated values
+        @type csv_string: str
+        @return: Python C{list} of stripped Python C{str} values
+        @rtype: list[str]
         """
         return [x.strip() for x in csv_string.split(',') if x.strip()]
 

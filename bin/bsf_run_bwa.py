@@ -26,15 +26,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import errno
 import os
 import pickle
 import shutil
+from argparse import ArgumentParser
 
-import bsf.connector
-import bsf.process
-import bsf.standards
+from bsf.connector import ConnectorFile
+from bsf.process import Command, Executable, RunnableStep
+from bsf.standards import JavaClassPath
 
 # Set the environment consistently.
 
@@ -42,7 +42,8 @@ os.environ['LANG'] = 'C'
 
 # Parse the arguments.
 
-argument_parser = argparse.ArgumentParser(description='BSF Runner for the Burrows Wheeler Aligner (BWA).')
+argument_parser = ArgumentParser(
+    description='BSF Runner for the Burrows Wheeler Aligner (BWA).')
 
 argument_parser.add_argument(
     '--debug',
@@ -81,7 +82,7 @@ key = 'classpath_picard'
 if key in pickler_dict and pickler_dict[key]:
     classpath_picard = pickler_dict[key]
 else:
-    classpath_picard = bsf.standards.JavaClassPath.get_picard()
+    classpath_picard = JavaClassPath.get_picard()
 
 # Create a temporary directory.
 
@@ -111,8 +112,8 @@ sam_header_rg = list()
 # Run BWA to produce an aligned SAM file.
 
 runnable_step_bwa = pickler_dict['runnable_step']
-assert isinstance(runnable_step_bwa, bsf.process.RunnableStep)
-runnable_step_bwa.stdout = bsf.connector.ConnectorFile(file_path=path_aligned_sam, file_mode='wt')
+assert isinstance(runnable_step_bwa, RunnableStep)
+runnable_step_bwa.stdout = ConnectorFile(file_path=path_aligned_sam, file_mode='wt')
 
 # Check if the run_bwa sub-command got a BAM file to align in mem mode.
 # If so, convert it first into FASTQ file(s).
@@ -131,11 +132,11 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
 
     # Propagate SAM header lines @PG and @RG into the final BAM file.
 
-    samtools = bsf.process.Executable(
+    samtools = Executable(
         name='samtools_view',
         program='samtools',
-        sub_command=bsf.process.Command(program='view'),
-        stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
+        sub_command=Command(program='view'),
+        stdout=ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -158,7 +159,7 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
+    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
@@ -166,7 +167,7 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
-    picard_process.sub_command = bsf.process.Command(program='SamToFastq')
+    picard_process.sub_command = Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
     # INPUT Required
@@ -245,7 +246,7 @@ if os.path.exists(path_fastq_2):
 
 # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
 
-java_process = bsf.process.Executable(name='clean_sam', program='java', sub_command=bsf.process.Command())
+java_process = Executable(name='clean_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
@@ -253,7 +254,7 @@ java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
 picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
-picard_process.sub_command = bsf.process.Command(program='CleanSam')
+picard_process.sub_command = Command(program='CleanSam')
 
 clean_sam = picard_process.sub_command
 # INPUT Required
@@ -285,11 +286,11 @@ if child_return_code:
 
 if len(sam_header_pg) or len(sam_header_rg):
 
-    samtools = bsf.process.Executable(
+    samtools = Executable(
         name='samtools_view',
         program='samtools',
-        sub_command=bsf.process.Command(program='view'),
-        stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
+        sub_command=Command(program='view'),
+        stdout=ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -324,7 +325,7 @@ if len(sam_header_pg) or len(sam_header_rg):
 
     # Run Picard ReplaceSamHeader.
 
-    java_process = bsf.process.Executable(name='replace_sam_header', program='java', sub_command=bsf.process.Command())
+    java_process = Executable(name='replace_sam_header', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
@@ -332,7 +333,7 @@ if len(sam_header_pg) or len(sam_header_rg):
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
-    picard_process.sub_command = bsf.process.Command(program='ReplaceSamHeader')
+    picard_process.sub_command = Command(program='ReplaceSamHeader')
 
     replace_sam_header = picard_process.sub_command
     # INPUT Required
@@ -376,7 +377,7 @@ if os.path.exists(path_aligned_sam):
 
 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
 
-java_process = bsf.process.Executable(name='sort_sam', program='java', sub_command=bsf.process.Command())
+java_process = Executable(name='sort_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
@@ -384,7 +385,7 @@ java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
 picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
-picard_process.sub_command = bsf.process.Command(program='SortSam')
+picard_process.sub_command = Command(program='SortSam')
 
 sort_sam = picard_process.sub_command
 # INPUT Required

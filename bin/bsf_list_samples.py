@@ -27,51 +27,62 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
-import csv
 import os
 import re
+from argparse import ArgumentParser
+from csv import DictWriter
 
-import bsf.ngs
-import bsf.standards
+from bsf.ngs import ProcessedRunFolder
+from bsf.standards import Configuration, FilePath as StandardsFilePath
 
-parser = argparse.ArgumentParser(description='List projects and samples.')
+argument_parser = ArgumentParser(description='List projects and samples.')
 
 # Only a --full flag, with out a value.
-parser.add_argument('--full', dest='full', required=False,
-                    help='Full listing with file paths',
-                    nargs='?', const=True, default=False)
+argument_parser.add_argument(
+    '--full',
+    const=True,
+    default=False,
+    dest='full',
+    help='Full listing with file paths',
+    nargs='?',
+    required=False)
 
-parser.add_argument('--input', dest='input_directory', required=True,
-                    help='Input directory')
+argument_parser.add_argument(
+    '--input',
+    dest='input_directory',
+    help='Input directory',
+    required=True)
 
-parser.add_argument('--output', dest='output_file', required=True,
-                    help='Output (CSV) file')
+argument_parser.add_argument(
+    '--output',
+    dest='output_file',
+    help='Output (CSV) file',
+    required=True)
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Open the output file, create a csv.DictWriter and write a header line.
 
 # For Python2.7, the open() function has to use the binary 'b' flag.
 # For Python3, the open() function has to use newline=''.
-csv_file = open(file=args.output_file, mode='w', newline='')
+csv_file = open(file=name_space.output_file, mode='w', newline='')
 
 csv_fields = ['ProcessedRunFolder', 'Project', 'Sample']
 
-if args.full:
+if name_space.full:
     csv_fields.extend(['File1', 'Reads1', 'File2', 'Reads2'])
 
-csv_writer = csv.DictWriter(f=csv_file, fieldnames=csv_fields)
+csv_writer = DictWriter(f=csv_file, fieldnames=csv_fields)
 
 csv_writer.writeheader()
 
 # Assemble the input directory.
 
-input_directory = bsf.standards.Configuration.get_absolute_path(
-    file_path=args.input_directory,
-    default_path=bsf.standards.FilePath.get_sequences(absolute=True))
+input_directory = Configuration.get_absolute_path(
+    file_path=name_space.input_directory,
+    default_path=StandardsFilePath.get_sequences(absolute=True))
 
-prf = bsf.ngs.ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
+prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
 for project_name in sorted(prf.project_dict):
     project = prf.project_dict[project_name]
     for sample_name in sorted(project.sample_dict):
@@ -79,7 +90,7 @@ for project_name in sorted(prf.project_dict):
 
         row_dict = {'ProcessedRunFolder': prf.name, 'Project': project.name, 'Sample': sample.name}
 
-        if args.full:
+        if name_space.full:
             for paired_reads in sample.paired_reads_list:
                 if paired_reads.reads_1 is not None:
                     row_dict['File1'] = paired_reads.reads_1.file_path

@@ -33,6 +33,14 @@ C{bsf.argument.OptionPairShort} (-key=value).
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+__all__ = \
+    'Argument', \
+    'Switch', 'SwitchLong', 'SwitchShort', \
+    'Option', 'OptionLong', 'OptionShort', \
+    'OptionPair', 'OptionPairLong', 'OptionPairShort', \
+    'OptionMulti', 'OptionMultiLong', 'OptionMultiShort', \
+    'OptionMultiPair', 'OptionMultiPairLong', 'OptionMultiPairShort'
+
 
 class Argument(object):
     """The C{bsf.argument.Argument} class represents an argument obeying a I{key} schema.
@@ -88,8 +96,6 @@ class Argument(object):
 
         @param key: Key
         @type key: str
-        @return:
-        @rtype:
         """
         super(Argument, self).__init__()
 
@@ -191,8 +197,6 @@ class Option(Switch):
         @type key: str
         @param value: Value
         @type value: str
-        @return:
-        @rtype:
         """
         super(Option, self).__init__(key=key)
 

@@ -29,14 +29,14 @@ restarting of the C{bsf.procedure.ConsecutiveRunnable} object processing.
 #
 import os
 
+from bsf.procedure import ConsecutiveRunnable
+
 
 def run(runnable):
     """Run the the C{bsf.procedure.ConsecutiveRunnable}.
 
     @param runnable: C{bsf.procedure.ConsecutiveRunnable}
-    @type runnable: bsf.procedure.ConsecutiveRunnable
-    @return:
-    @rtype:
+    @type runnable: ConsecutiveRunnable
     """
 
     # If the ConsecutiveRunnable status file exists, there is nothing to do and

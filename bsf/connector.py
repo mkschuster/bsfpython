@@ -4,7 +4,6 @@
 A package of classes and methods modelling inter-process connectors.
 """
 
-
 #  Copyright 2013 - 2019 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
@@ -27,6 +26,12 @@ A package of classes and methods modelling inter-process connectors.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+from threading import Thread
+
+__all__ = \
+    'Connector', 'ConnectorFile', 'ConnectorPipe', 'ConnectorPipeNamed', \
+    'ConcurrentProcess', 'ElectronicSink', \
+    'StandardStream', 'StandardInputStream', 'StandardOutputStream', 'StandardErrorStream'
 
 
 class Connector(object):
@@ -55,8 +60,6 @@ class ConnectorFile(Connector):
         @type file_path: str
         @param file_mode: File mode
         @type file_mode: str
-        @return:
-        @rtype:
         """
         super(ConnectorFile, self).__init__()
 
@@ -74,9 +77,6 @@ class ConnectorPipe(Connector):
 
     def __init__(self):
         """Initialise a C{ConnectorPipe} object.
-
-        @return:
-        @rtype:
         """
         super(ConnectorPipe, self).__init__()
 
@@ -138,7 +138,7 @@ class StandardStream(Connector):
     @ivar thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
     @type thread_timeout: int
     @ivar thread: C{threading.Thread} object | None
-    @type thread: threading.Thread
+    @type thread: Thread
     """
 
     def __init__(
@@ -162,9 +162,7 @@ class StandardStream(Connector):
         @param thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
         @type thread_timeout: int
         @param thread: C{threading.Thread} object
-        @type thread: threading.Thread | None
-        @return:
-        @rtype:
+        @type thread: Thread | None
         """
         self.file_path = file_path
         self.thread_callable = thread_callable

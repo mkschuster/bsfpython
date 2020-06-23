@@ -26,17 +26,17 @@ Distributed Resource Management System (DRMS) module.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import csv
 import errno
 import math
 import os
 import re
-import threading
 import warnings
+from csv import DictReader
+from threading import Lock
 
-import bsf.connector
-import bsf.database
-import bsf.process
+from bsf.connector import StandardOutputStream
+from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor
+from bsf.process import Executable, get_timestamp
 
 output_directory_name = 'bsfpython_slurm_output'
 database_file_name = 'bsfpython_slurm_jobs.db'
@@ -277,8 +277,6 @@ class ProcessSLURM(object):
         @type allocated_tres: str | None
         @param requested_tres: Requested trackable resources
         @type requested_tres: str | None
-        @return:
-        @rtype:
         """
         super(ProcessSLURM, self).__init__()
 
@@ -330,7 +328,7 @@ class ProcessSLURM(object):
         return
 
 
-class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
+class ProcessSLURMAdaptor(DatabaseAdaptor):
     """C{bsf.drms.slurm.ProcessSLURMAdaptor} class providing database access for the
     C{bsf.drms.slurm.ProcessSLURM} class.
 
@@ -343,9 +341,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         """Initialise a C{bsf.drms.slurm.ProcessSLURMAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: bsf.database.DatabaseConnection
-        @return:
-        @rtype:
+        @type database_connection: DatabaseConnection
         """
 
         super(ProcessSLURMAdaptor, self).__init__(
@@ -496,9 +492,6 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         """Patch the SQL table definition.
 
         Re-synchronise the SQLite table with the current BSF Python table definition.
-
-        @return:
-        @rtype:
         """
         column_dict_old, column_dict_new = self.compare_table_definitions()
 
@@ -609,7 +602,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         @param name: Job name
         @type name: str
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: list[bsf.drms.slurm.ProcessSLURM]
+        @rtype: list[ProcessSLURM]
         """
         return self.select(statement=self.statement_select(where_clause='job_name = ?'), parameters=[name])
 
@@ -619,7 +612,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         @param state: State
         @type state: str | None
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: list[bsf.drms.slurm.ProcessSLURM]
+        @rtype: list[ProcessSLURM]
         """
         parameters = list()
 
@@ -639,7 +632,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         @param negation: Negation i.e. SQL NOT IN
         @type negation: bool
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: list[bsf.drms.slurm.ProcessSLURM]
+        @rtype: list[ProcessSLURM]
         """
         if negation:
             statement = self.statement_select(where_clause='state NOT IN (' + ','.join('?' * len(state_list)) + ')')
@@ -654,7 +647,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
         @param job_id: Job identifier
         @type job_id: str
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: bsf.drms.slurm.ProcessSLURM
+        @rtype: ProcessSLURM
         """
         object_list = self.select(statement=self.statement_select(where_clause='job_id = ?'), parameters=[job_id])
         object_length = len(object_list)
@@ -736,8 +729,6 @@ def submit(stage, debug=0):
     @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
-    @return:
-    @rtype:
     """
 
     def submit_sbatch_stdout(_file_handle, _thread_lock, _debug, _executable):
@@ -750,13 +741,11 @@ def submit(stage, debug=0):
         @param _file_handle: File handle (i.e. pipe)
         @type _file_handle: io.TextIOWrapper
         @param _thread_lock: Thread lock
-        @type _thread_lock: threading.lock
+        @type _thread_lock: Lock
         @param _debug: Debug level
         @type _debug: int
         @param _executable: C{bsf.process.Executable}
-        @type _executable: bsf.process.Executable
-        @return:
-        @rtype:
+        @type _executable: Executable
         """
         for _line in _file_handle:
             if _debug > 0:
@@ -777,8 +766,8 @@ def submit(stage, debug=0):
 
     # Open or create a database.
     file_path = os.path.join(stage.working_directory, database_file_name)
-    database_connection = bsf.database.DatabaseConnection(file_path=file_path)
-    job_submission_adaptor = bsf.database.JobSubmissionAdaptor(database_connection=database_connection)
+    database_connection = DatabaseConnection(file_path=file_path)
+    job_submission_adaptor = JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     # Abort submission if the database file is not writable.
@@ -800,11 +789,11 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     for executable in stage.executable_list:
-        executable_drms = bsf.process.Executable(
+        executable_drms = Executable(
             name=executable.name,
             program='sbatch',
             sub_command=executable,
-            stdout=bsf.connector.StandardOutputStream(
+            stdout=StandardOutputStream(
                 thread_callable=submit_sbatch_stdout,
                 thread_kwargs={'_executable': executable}))
 
@@ -938,7 +927,7 @@ def submit(stage, debug=0):
             job_submission.command = executable.command_str()
             job_submission_adaptor.update(object_instance=job_submission)
         else:
-            job_submission = bsf.database.JobSubmission(
+            job_submission = JobSubmission(
                 executable_id=0,
                 name=executable.name,
                 command=executable.command_str())
@@ -969,8 +958,6 @@ def check_state(stage, debug=0):
     @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
-    @return:
-    @rtype:
     """
 
     def check_state_stdout(_stdout_handle, _thread_lock, _debug, _process_slurm_adaptor, _stdout_path=None):
@@ -979,31 +966,29 @@ def check_state(stage, debug=0):
         @param _stdout_handle: The I{STDOUT} or I{STDERR} file handle
         @type _stdout_handle: io.TextIOWrapper
         @param _thread_lock: Python C{threading.Lock}
-        @type _thread_lock: threading.Lock
+        @type _thread_lock: Lock
         @param _debug: Debug level
         @type _debug: int
         @param _process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
-        @type _process_slurm_adaptor: bsf.drms.slurm.ProcessSLURMAdaptor
+        @type _process_slurm_adaptor: ProcessSLURMAdaptor
         @param _stdout_path: I{STDOUT} file path
         @type _stdout_path: str | None
-        @return:
-        @rtype:
         """
         if _debug > 0:
             _thread_lock.acquire(True)
-            print(bsf.process.get_timestamp(), "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
+            print(get_timestamp(), "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
             _thread_lock.release()
 
         if _stdout_path:
             output_file = open(file=_stdout_path, mode='wt')
             if _debug > 0:
                 _thread_lock.acquire(True)
-                print(bsf.process.get_timestamp(), "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
+                print(get_timestamp(), "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
                 _thread_lock.release()
         else:
             output_file = None
 
-        dict_reader = csv.DictReader(f=_stdout_handle, delimiter='|')
+        dict_reader = DictReader(f=_stdout_handle, delimiter='|')
 
         for row_dict in dict_reader:
             new_process_slurm = ProcessSLURM(
@@ -1067,7 +1052,7 @@ def check_state(stage, debug=0):
 
         if _debug > 0:
             _thread_lock.acquire(True)
-            print(bsf.process.get_timestamp(), "Received EOF on 'STDOUT' pipe.")
+            print(get_timestamp(), "Received EOF on 'STDOUT' pipe.")
             _thread_lock.release()
 
         if output_file:
@@ -1075,7 +1060,7 @@ def check_state(stage, debug=0):
 
             if _debug > 0:
                 _thread_lock.acquire(True)
-                print(bsf.process.get_timestamp(), "Closed 'STDOUT' file " + repr(_stdout_path) + '.')
+                print(get_timestamp(), "Closed 'STDOUT' file " + repr(_stdout_path) + '.')
                 _thread_lock.release()
 
         # Commit changes to the database and explicitly disconnect so that other threads have access.
@@ -1085,7 +1070,7 @@ def check_state(stage, debug=0):
         return
 
     # Open or create a database.
-    database_connection = bsf.database.DatabaseConnection(
+    database_connection = DatabaseConnection(
         file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
@@ -1107,10 +1092,10 @@ def check_state(stage, debug=0):
     if debug > 0:
         print('Number of ProcessSLURM objects to check:', len(process_slurm_list))
 
-    executable_drms = bsf.process.Executable(
+    executable_drms = Executable(
         name='sacct',
         program='sacct',
-        stdout=bsf.connector.StandardOutputStream(
+        stdout=StandardOutputStream(
             thread_callable=check_state_stdout,
             thread_kwargs={'_process_slurm_adaptor': process_slurm_adaptor}))
     executable_drms.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))

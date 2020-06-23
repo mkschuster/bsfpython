@@ -27,13 +27,15 @@ Microsoft Azure Storage Blob Service.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
+from argparse import ArgumentParser
+from subprocess import Popen
 
-import bsf.cloud
-import bsf.process
+from bsf.cloud import get_azure_blob_service_client, azure_block_blob_download, azure_block_blob_upload
+from bsf.connector import Connector
+from bsf.process import Command, Executable, RunnableStep
 
 
-class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
+class RunnableStepAzureBlockBlob(RunnableStep):
     """The C{bsf.executables.cloud.RunnableStepAzureBlockBlob} class supports the
      I{Microsoft Azure Storage Blob Service}.
 
@@ -81,16 +83,16 @@ class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command | None
+        @type sub_command: Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: bsf.connector.Connector | None
+        @type stdin: Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: bsf.connector.Connector | None
+        @type stdout: Connector | None
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: bsf.connector.Connector | None
+        @type stderr: Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[bsf.process.Executable.name] | None
+        @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
@@ -100,7 +102,7 @@ class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
         @param process_name: Process name
         @type process_name: str | None
         @param sub_process: C{subprocess.Popen}
-        @type sub_process: subprocess.Popen | None
+        @type sub_process: Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str] | None
@@ -112,8 +114,6 @@ class RunnableStepAzureBlockBlob(bsf.process.RunnableStep):
         @type source_path: str | None
         @param target_path: Target (blob) file path
         @type target_path: str | None
-        @return:
-        @rtype:
         """
         super(RunnableStepAzureBlockBlob, self).__init__(
             name=name,
@@ -158,9 +158,9 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
         @return: Return 0 on success
         @rtype: int
         """
-        blob_properties = bsf.cloud.azure_block_blob_upload(
+        blob_properties = azure_block_blob_upload(
             file_path=self.source_path,
-            azure_blob_service_client=bsf.cloud.get_azure_blob_service_client(account_name=self.account_name),
+            azure_blob_service_client=get_azure_blob_service_client(account_name=self.account_name),
             container=self.container_name,
             blob=self.target_path)
 
@@ -190,9 +190,9 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
         @return: Return 0 on success
         @rtype: int
         """
-        blob_properties = bsf.cloud.azure_block_blob_download(
+        blob_properties = azure_block_blob_download(
             file_path=self.source_path,
-            azure_blob_service_client=bsf.cloud.get_azure_blob_service_client(account_name=self.account_name),
+            azure_blob_service_client=get_azure_blob_service_client(account_name=self.account_name),
             container=self.container_name,
             blob=self.target_path)
 
@@ -205,7 +205,7 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
 
 
 if __name__ == '__main__':
-    argument_parser = argparse.ArgumentParser(
+    argument_parser = ArgumentParser(
         description='Module driver script.')
 
     argument_parser.add_argument(

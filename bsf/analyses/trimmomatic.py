@@ -28,15 +28,15 @@ A package of classes and methods supporting the Trimmomatic tool.
 import os
 import sys
 
-import bsf.analysis
-import bsf.executables.collection
-import bsf.ngs
-import bsf.procedure
-import bsf.process
-import bsf.standards
+from bsf.analysis import Analysis, Stage
+from bsf.executables.collection import RunnableStepCollectionPruneFastq
+from bsf.ngs import Collection, Sample, PairedReads, Reads
+from bsf.procedure import FilePath, ConsecutiveRunnable
+from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
+from bsf.standards import Configuration, JavaClassPath
 
 
-class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
+class FilePathTrimmomaticReadGroup(FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} models read group-specific Trimmomatic files.
 
     Attributes:
@@ -67,8 +67,6 @@ class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathTrimmomaticReadGroup, self).__init__(prefix=prefix)
 
@@ -88,7 +86,7 @@ class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
         return
 
 
-class FilePathTrimmomaticProject(bsf.procedure.FilePath):
+class FilePathTrimmomaticProject(FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} class models project-specific Trimmomatic files.
 
     Attributes:
@@ -109,8 +107,6 @@ class FilePathTrimmomaticProject(bsf.procedure.FilePath):
         @type prefix_analysis: str
         @param project_name: Project name
         @type project_name: str
-        @return:
-        @rtype:
         """
         super(FilePathTrimmomaticProject, self).__init__(prefix=prefix)
 
@@ -121,7 +117,7 @@ class FilePathTrimmomaticProject(bsf.procedure.FilePath):
         return
 
 
-class Trimmomatic(bsf.analysis.Analysis):
+class Trimmomatic(Analysis):
     """The C{bsf.analyses.trimmomatic.Trimmomatic} class represents the logic to run the Trimmomatic analysis.
 
     Attributes:
@@ -248,7 +244,7 @@ class Trimmomatic(bsf.analysis.Analysis):
         """Initialise a C{bsf.analyses.trimmomatic.Trimmomatic} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -268,11 +264,11 @@ class Trimmomatic(bsf.analysis.Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage]
+        @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param adapter_path: Adapter file path
         @type adapter_path: str | None
         @param trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
@@ -281,8 +277,6 @@ class Trimmomatic(bsf.analysis.Analysis):
         @type trimming_step_se_list: list[str] | None
         @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
         @type classpath_trimmomatic: str | None
-        @return:
-        @rtype:
         """
         super(Trimmomatic, self).__init__(
             configuration=configuration,
@@ -311,11 +305,9 @@ class Trimmomatic(bsf.analysis.Analysis):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(Trimmomatic, self).set_configuration(configuration=configuration, section=section)
 
@@ -350,8 +342,6 @@ class Trimmomatic(bsf.analysis.Analysis):
 
         This method changes the C{bsf.ngs.Collection} object of this C{bsf.analysis.Analysis}
         to update with FASTQ file paths.
-        @return:
-        @rtype:
         """
 
         def run_adjust_illumina_clip_path(trimming_step_list):
@@ -361,8 +351,6 @@ class Trimmomatic(bsf.analysis.Analysis):
             instance variable.
             @param trimming_step_list: Python C{list} of trimming steps.
             @type trimming_step_list: list[str]
-            @return:
-            @rtype:
             """
             for i in range(0, len(trimming_step_list)):
                 if trimming_step_list[i].startswith('ILLUMINACLIP'):
@@ -378,8 +366,6 @@ class Trimmomatic(bsf.analysis.Analysis):
             This implementation just adds all C{bsf.ngs.Sample} objects from the
             C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
             C{bsf.analysis.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
             """
 
             self.sample_list.extend(self.collection.get_all_samples())
@@ -393,7 +379,7 @@ class Trimmomatic(bsf.analysis.Analysis):
         # Get the Trimmomatic tool Java Archive (JAR) class path directory.
 
         if not self.classpath_trimmomatic:
-            self.classpath_trimmomatic = bsf.standards.JavaClassPath.get_trimmomatic()
+            self.classpath_trimmomatic = JavaClassPath.get_trimmomatic()
             if not self.classpath_trimmomatic:
                 raise Exception('A ' + self.name + "requires a 'classpath_trimmomatic' configuration option.")
 
@@ -463,7 +449,7 @@ class Trimmomatic(bsf.analysis.Analysis):
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
 
                     runnable_read_group = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=self.get_prefix_read_group(read_group_name=paired_reads_name),
                             working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
@@ -474,14 +460,14 @@ class Trimmomatic(bsf.analysis.Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
 
-                    runnable_step_read_group = bsf.process.RunnableStepMakeDirectory(
+                    runnable_step_read_group = RunnableStepMakeDirectory(
                         name='mkdir',
                         directory_path=file_path_read_group.output_directory)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     # Create a RunnableStep for the Trimmomatic program.
 
-                    runnable_step_read_group = bsf.process.RunnableStepJava(
+                    runnable_step_read_group = RunnableStepJava(
                         name='trimmomatic',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
@@ -489,9 +475,9 @@ class Trimmomatic(bsf.analysis.Analysis):
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     if paired_reads.reads_2 is None:
-                        runnable_step_read_group.sub_command.sub_command = bsf.process.Command(program='SE')
+                        runnable_step_read_group.sub_command.sub_command = Command(program='SE')
                     else:
-                        runnable_step_read_group.sub_command.sub_command = bsf.process.Command(program='PE')
+                        runnable_step_read_group.sub_command.sub_command = Command(program='PE')
 
                     # Add options to the sub command.
                     sub_command = runnable_step_read_group.sub_command.sub_command
@@ -546,9 +532,9 @@ class Trimmomatic(bsf.analysis.Analysis):
                         # Add unpaired Reads 1 and 2 as separate PairedReads objects to this sample.
 
                         sample.add_paired_reads(
-                            paired_reads=bsf.ngs.PairedReads(
+                            paired_reads=PairedReads(
                                 annotation_dict=paired_reads.annotation_dict,
-                                reads_1=bsf.ngs.Reads(
+                                reads_1=Reads(
                                     name=paired_reads.reads_1.name[:-1] + 'U',
                                     file_path=os.path.join(
                                         self.genome_directory,
@@ -559,9 +545,9 @@ class Trimmomatic(bsf.analysis.Analysis):
                                 read_group=paired_reads.read_group))
 
                         sample.add_paired_reads(
-                            paired_reads=bsf.ngs.PairedReads(
+                            paired_reads=PairedReads(
                                 annotation_dict=paired_reads.annotation_dict,
-                                reads_1=bsf.ngs.Reads(
+                                reads_1=Reads(
                                     name=paired_reads.reads_2.name[:-1] + 'U',
                                     file_path=os.path.join(
                                         self.genome_directory,
@@ -585,7 +571,7 @@ class Trimmomatic(bsf.analysis.Analysis):
 
                     # Create a new RunnableStep to compress the trim log file.
 
-                    runnable_step_read_group = bsf.process.RunnableStep(
+                    runnable_step_read_group = RunnableStep(
                         name='compress_logs',
                         program='pigz')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
@@ -599,7 +585,7 @@ class Trimmomatic(bsf.analysis.Analysis):
                     prefix_summary = '_'.join((stage_summary.name, paired_reads_name))
 
                     runnable_summary = self.add_runnable_consecutive(
-                        runnable=bsf.procedure.ConsecutiveRunnable(
+                        runnable=ConsecutiveRunnable(
                             name=prefix_summary,
                             working_directory=self.project_directory))
                     executable_summary = self.set_stage_runnable(stage=stage_summary, runnable=runnable_summary)
@@ -607,7 +593,7 @@ class Trimmomatic(bsf.analysis.Analysis):
 
                     # Create a new RunnableStep to aggregate the trim log file.
 
-                    runnable_step_summary = bsf.process.RunnableStep(
+                    runnable_step_summary = RunnableStep(
                         name='trimmomatic_summary',
                         program='bsf_trimmomatic_summary.R',
                         obsolete_file_path_list=[
@@ -633,7 +619,7 @@ class Trimmomatic(bsf.analysis.Analysis):
         annotation_sheet.to_file_path()
 
         runnable_project = self.add_runnable_consecutive(
-            runnable=bsf.procedure.ConsecutiveRunnable(
+            runnable=ConsecutiveRunnable(
                 name=prefix_project,
                 working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
@@ -643,7 +629,7 @@ class Trimmomatic(bsf.analysis.Analysis):
 
         # Create a new RunnableStep.
 
-        runnable_step_project = bsf.executables.collection.RunnableStepCollectionPruneFastq(
+        runnable_step_project = RunnableStepCollectionPruneFastq(
             name='prune_sample_annotation_sheet',
             obsolete_file_path_list=[
                 # file_path_project.sas_path_old,
@@ -658,9 +644,6 @@ class Trimmomatic(bsf.analysis.Analysis):
     def report(self):
         """Create a C{bsf.analyses.trimmomatic.Trimmomatic} report in HTML format and a
         UCSC Genome Browser Track Hub.
-
-        @return:
-        @rtype:
         """
 
         # Create a symbolic link containing the project name and a UUID.

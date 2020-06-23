@@ -26,15 +26,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
 import re
-import xml.etree.ElementTree
+from argparse import ArgumentParser
+from xml.etree.ElementTree import ParseError
 
-import bsf.annotation
-import bsf.illumina
+from bsf.annotation import AnnotationSheet
+from bsf.illumina import RunFolder
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='List software version of Illumina Run Folders.')
 
 argument_parser.add_argument(
@@ -71,7 +71,7 @@ if not name_space.ascending:
     file_name_list.reverse()
 
 field_names = ['run_identifier', 'application_name', 'application_version', 'rta_version']
-annotation_sheet = bsf.annotation.AnnotationSheet(
+annotation_sheet = AnnotationSheet(
     file_path=name_space.output_file,
     header=True,
     field_names=field_names)
@@ -97,12 +97,12 @@ for file_name in file_name_list:
     # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
     # that result from a broken FhGFS file system.
     try:
-        irf = bsf.illumina.RunFolder.from_file_path(file_path=file_path)
+        irf = RunFolder.from_file_path(file_path=file_path)
     except IOError as exception:
         if name_space.debug:
             print('\t'.join((file_name, '?', '?', '?')))
         continue
-    except xml.etree.ElementTree.ParseError:
+    except ParseError:
         if name_space.debug:
             print('\t'.join((file_name, '?', '?', '?')))
         continue

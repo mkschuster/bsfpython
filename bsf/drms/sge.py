@@ -30,9 +30,9 @@ import errno
 import os
 import re
 
-import bsf.connector
-import bsf.database
-import bsf.process
+from bsf.connector import StandardOutputStream
+from bsf.database import DatabaseAdaptor, DatabaseConnection
+from bsf.process import Executable
 
 output_directory_name = 'bsfpython_sge_output'
 
@@ -202,8 +202,6 @@ class ProcessSGE(object):
         @type maxvmem: str | None
         @param arid: Advance reservation identifier
         @type arid: str | None
-        @return:
-        @rtype:
         """
         super(ProcessSGE, self).__init__()
 
@@ -239,7 +237,7 @@ class ProcessSGE(object):
         return
 
 
-class ProcessSGEAdaptor(bsf.database.DatabaseAdaptor):
+class ProcessSGEAdaptor(DatabaseAdaptor):
     """C{bsf.drms.sge.ProcessSGEAdaptor} class providing database access for the C{bsf.drms.sge.ProcessSGE} class.
 
     The SQL column names result from the SGE accounting file. See man 5 accounting.
@@ -249,9 +247,7 @@ class ProcessSGEAdaptor(bsf.database.DatabaseAdaptor):
         """Initialise a C{bsf.drms.sge.ProcessSGEAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: bsf.database.DatabaseConnection
-        @return:
-        @rtype:
+        @type database_connection: DatabaseConnection
         """
         super(ProcessSGEAdaptor, self).__init__(
             database_connection=database_connection,
@@ -432,8 +428,6 @@ def submit(stage, debug=0):
     @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
-    @return:
-    @rtype:
     """
 
     def submit_qsub_stdout(_file_handle, _thread_lock, _debug, _executable):
@@ -450,9 +444,7 @@ def submit(stage, debug=0):
         @param _debug: Debug level
         @type _debug: int
         @param _executable: C{bsf.process.Executable}
-        @type _executable: bsf.process.Executable
-        @return:
-        @rtype:
+        @type _executable: Executable
         """
         for _line in _file_handle:
             if _debug > 0:
@@ -483,11 +475,11 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     for executable in stage.executable_list:
-        executable_drms = bsf.process.Executable(
+        executable_drms = Executable(
             name=executable.name,
             program='qsub',
             sub_command=executable,
-            stdout=bsf.connector.StandardOutputStream(
+            stdout=StandardOutputStream(
                 thread_callable=submit_qsub_stdout,
                 thread_kwargs={'_executable': executable}))
 
@@ -633,8 +625,6 @@ def check_state(stage, debug=0):
     @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
-    @return:
-    @rtype:
     """
     if stage:
         pass

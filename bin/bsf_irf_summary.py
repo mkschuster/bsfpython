@@ -26,38 +26,38 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import datetime
 import os
+from argparse import ArgumentParser
 
-import bsf.illumina
+from bsf.illumina import RunFolder
 
-parser = argparse.ArgumentParser(description='Summarise an Illumina Run Folder.')
+argument_parser = ArgumentParser(description='Summarise an Illumina Run Folder.')
 
-parser.add_argument(
+argument_parser.add_argument(
     '--debug',
     default=0,
     help='Debug level',
     required=False,
     type=int)
 
-parser.add_argument(
+argument_parser.add_argument(
     '--check',
     action='store_true',
     help='check for completeness',
     required=False)
 
-parser.add_argument(
+argument_parser.add_argument(
     'file_path',
     help='File path to an Illumina Run Folder')
 
-name_space = parser.parse_args()
+name_space = argument_parser.parse_args()
 
-file_path = bsf.illumina.RunFolder.absolute_file_path(name=name_space.file_path)
+file_path = RunFolder.absolute_file_path(name=name_space.file_path)
 if file_path is None:
     raise Exception("Could not resolve the --file-name value to a valid Illumina Run Folder location.")
 
-irf = bsf.illumina.RunFolder.from_file_path(file_path=file_path)
+irf = RunFolder.from_file_path(file_path=file_path)
 
 if not irf.run_parameters.get_experiment_name:
     raise Exception("No experiment name set in the Illumina Run Folder configuration.")

@@ -28,12 +28,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.procedure
+from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Trace a pickled Runnable.')
 
 argument_parser.add_argument(
@@ -49,17 +49,17 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-runnable = bsf.procedure.Runnable.from_pickler_path(file_path=name_space.pickler_path)
+runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
 
 sys.stdout.writelines(runnable.trace(level=1))
 
-if isinstance(runnable, bsf.procedure.ConsecutiveRunnable):
+if isinstance(runnable, ConsecutiveRunnable):
     for runnable_step in runnable.runnable_step_list:
         if name_space.format == 'list':
             print('\n' + 'RunnableStep command list:', runnable_step.command_list())
         elif name_space.format == 'str':
             print('\n' + 'RunnableStep command str:', runnable_step.command_str())
-elif isinstance(runnable, bsf.procedure.ConcurrentRunnable):
+elif isinstance(runnable, ConcurrentRunnable):
     for runnable_step in runnable.runnable_step_list_pre:
         if name_space.format == 'list':
             print('\n' + 'RunnableStep pre command list:', runnable_step.command_list())

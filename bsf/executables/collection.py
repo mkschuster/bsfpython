@@ -73,15 +73,16 @@ are automatically deleted.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import os
 import sys
+from argparse import ArgumentParser
+from subprocess import Popen
 
-import bsf.ngs
-import bsf.process
+from bsf.ngs import Collection
+from bsf.process import Command, Executable, RunnableStep
 
 
-class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
+class RunnableStepCollectionPruneFastq(RunnableStep):
     """The C{bsf.executables.collection.RunnableStepCollectionPruneFastq} class prunes a sample annotation sheet.
 
     Attributes:
@@ -96,6 +97,7 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
     @ivar drop_read_2: Drop read 2
     @type drop_read_2: bool
     """
+
     def __init__(
             self,
             name,
@@ -130,7 +132,7 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command | None
+        @type sub_command: Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
         @type stdin: bsf.connector.Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
@@ -139,7 +141,7 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[bsf.process.Executable.name] | None
+        @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
@@ -149,7 +151,7 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
         @param process_name: Process name
         @type process_name: str | None
         @param sub_process: C{subprocess.Popen}
-        @type sub_process: subprocess.Popen | None
+        @type sub_process: Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str] | None
@@ -163,8 +165,6 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
         @type drop_read_1: bool
         @param drop_read_2: Drop read 2
         @type drop_read_2: bool
-        @return:
-        @rtype:
         """
         super(RunnableStepCollectionPruneFastq, self).__init__(
             name=name,
@@ -204,7 +204,7 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
             negative values indicate that the child received a signal
         @rtype: int
         """
-        collection = bsf.ngs.Collection.from_sas_path(
+        collection = Collection.from_sas_path(
             file_path='',
             file_type='',
             name='sample_annotation_sheet',
@@ -219,7 +219,6 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
             for project in prf.project_dict.values():
                 for sample in project.sample_dict.values():
                     new_paired_reads_list = list()
-                    """ @type new_paired_reads_list: list[bsf.ngs.PairedReads] """
                     for paired_reads in sample.paired_reads_list:
                         paired_reads_keep = False
                         if paired_reads.reads_1 is not None:
@@ -268,7 +267,7 @@ class RunnableStepCollectionPruneFastq(bsf.process.RunnableStep):
 
 
 if __name__ == '__main__':
-    argument_parser = argparse.ArgumentParser(
+    argument_parser = ArgumentParser(
         description='Module driver script.')
 
     argument_parser.add_argument(

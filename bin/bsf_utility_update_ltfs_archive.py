@@ -31,11 +31,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import fnmatch
 import os
+from argparse import ArgumentParser
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='LTFS archive collection and update script.')
 
 argument_parser.add_argument(

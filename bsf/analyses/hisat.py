@@ -30,13 +30,14 @@ Project:  https://ccb.jhu.edu/software/hisat2/index.shtml
 #
 import os
 
-import bsf.analyses.aligner
-import bsf.connector
-import bsf.process
-import bsf.standards
+from bsf.analyses.aligner import Aligner, FilePathAlign as AlignerFilePathAlign
+from bsf.connector import ConnectorFile
+from bsf.ngs import Collection, Sample
+from bsf.process import RunnableStep
+from bsf.standards import Configuration, FilePath as StandardsFilePath
 
 
-class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
+class FilePathAlign(AlignerFilePathAlign):
     """The C{bsf.analyses.hisat.FilePathAlign} class models file paths at the alignment stage.
 
     Attributes:
@@ -49,8 +50,6 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
 
         @param prefix: Prefix
         @type prefix: str
-        @return:
-        @rtype:
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -59,7 +58,7 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
         return
 
 
-class Hisat2(bsf.analyses.aligner.Aligner):
+class Hisat2(Aligner):
     """The C{bsf.analyses.hisat.Hisat2} class represents the logic to run a (short read) aligner.
 
     Attributes:
@@ -107,7 +106,7 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         """Initialise a C{bsf.analyses.hisat.Hisat2}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str | None
         @param genome_version: Genome version
@@ -129,9 +128,9 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
         @type stage_list: list[bsf.analysis.Stage] | None
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection | None
+        @type collection: Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample] | None
+        @type sample_list: list[Sample] | None
         @param genome_fasta: Genome FASTA file
         @type genome_fasta: str | None
         @param genome_index: Genome index
@@ -142,8 +141,6 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         @type classpath_picard: str | None
         @param rna_strand: mRNA strand (i.e. F, R, FR or RF)
         @type rna_strand: str
-        @return:
-        @rtype:
         """
         super(Hisat2, self).__init__(
             configuration=configuration,
@@ -175,11 +172,9 @@ class Hisat2(bsf.analyses.aligner.Aligner):
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return:
-        @rtype:
         """
         super(Hisat2, self).set_configuration(configuration=configuration, section=section)
 
@@ -203,16 +198,14 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2
         @type file_path_2: str | None
-        @return:
-        @rtype:
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
-        runnable_step = bsf.process.RunnableStep(
+        runnable_step = RunnableStep(
             name='HISAT2',
             program='hisat2',
-            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            stdout=ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         self.set_runnable_step_configuration(runnable_step=runnable_step)
@@ -256,9 +249,6 @@ class Hisat2(bsf.analyses.aligner.Aligner):
 
     def run(self):
         """Run a C{bsf.analyses.hisat.Hisat2} analysis.
-
-        @return:
-        @rtype:
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
@@ -280,7 +270,7 @@ class Hisat2(bsf.analyses.aligner.Aligner):
 
         if not self.genome_index:
             self.genome_index = os.path.join(
-                bsf.standards.FilePath.get_resource_genome_index(
+                StandardsFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='hisat2'),
                 self.genome_version)

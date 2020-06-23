@@ -26,15 +26,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import inspect
 import os
 import re
 import stat
 import sys
+from argparse import ArgumentParser
 
-import bsf.analysis
-import bsf.standards
+from bsf.analysis import Analysis
+from bsf.standards import FilePath as StandardsFilePath
 
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
@@ -47,8 +47,6 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
     @type directory_root: str
     @param directory_path: Directory path
     @type directory_path: str
-    @return:
-    @rtype:
     """
     if not directory_path:
         directory_path = '.'
@@ -79,11 +77,11 @@ def scan_projects(project_name_local):
 
     @param project_name_local: Project name or prefix
     @type project_name_local: str
-    @return:
+    @return: Full project directory name
     @rtype: str | None
     """
 
-    directory_path = os.path.join(bsf.standards.FilePath.get_public_html(absolute=True), 'projects')
+    directory_path = os.path.join(StandardsFilePath.get_public_html(absolute=True), 'projects')
 
     for file_name in os.listdir(directory_path):
         match = re.search(pattern=r'^{}'.format(project_name_local), string=file_name)
@@ -91,7 +89,7 @@ def scan_projects(project_name_local):
             return file_name
 
 
-argument_parser = argparse.ArgumentParser(
+argument_parser = ArgumentParser(
     description='Create index.html documents in BSF public_html/project folders.')
 
 argument_parser.add_argument(
@@ -101,7 +99,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-analysis = bsf.analysis.Analysis(project_name=name_space.project)
+analysis = Analysis(project_name=name_space.project)
 analysis.run()
 
 project_name = name_space.project
@@ -116,7 +114,7 @@ if not os.path.isabs(project_directory):
     # TODO: This does not deal with sub-directories i.e. public_html/projects correctly.
 
     project_directory = os.path.join(
-        bsf.standards.FilePath.get_public_html(absolute=True),
+        StandardsFilePath.get_public_html(absolute=True),
         'projects',
         project_directory)
 
@@ -131,7 +129,7 @@ if not os.path.isabs(project_directory):
             raise Exception('Cannot locate project directory for project {!r}.'.format(name_space.project))
 
         project_directory = os.path.join(
-            bsf.standards.FilePath.get_public_html(absolute=True),
+            StandardsFilePath.get_public_html(absolute=True),
             'projects',
             project_name)
 

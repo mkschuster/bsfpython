@@ -25,7 +25,7 @@ A package that centralises (SQLite) Database access.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import sqlite3
+from sqlite3 import Connection, Cursor, IntegrityError, OperationalError, connect
 
 
 class DatabaseConnection(object):
@@ -34,6 +34,8 @@ class DatabaseConnection(object):
     Attributes:
     @ivar file_path: File path
     @type file_path: str
+    @ivar _connection: C{sqlite3.Connection}
+    @type _connection: Connection | None
     """
 
     def __init__(
@@ -46,8 +48,6 @@ class DatabaseConnection(object):
 
         @param file_path: File path
         @type file_path: str | None
-        @return:
-        @rtype:
         """
         super(DatabaseConnection, self).__init__()
 
@@ -57,15 +57,11 @@ class DatabaseConnection(object):
             self.file_path = file_path
 
         self._connection = None
-        """ @type _connection: sqlite3.Connection | None """
 
         return
 
     def __del__(self):
         """Delete a C{bsf.database.DatabaseConnection} object, which implies closing its C{sqlite3.Connection} first.
-
-        @return:
-        @rtype:
         """
         if self._connection is None:
             return
@@ -76,11 +72,9 @@ class DatabaseConnection(object):
         """Connect a C{bsf.database.DatabaseConnection} by instantiating the underlying C{sqlite3.Connection}.
 
         Just returns if the C{sqlite3.Connection} already exists.
-        @return:
-        @rtype:
         """
         if self._connection is None:
-            self._connection = sqlite3.connect(database=self.file_path)
+            self._connection = connect(database=self.file_path)
 
         return
 
@@ -88,9 +82,6 @@ class DatabaseConnection(object):
         """Disconnect a C{bsf.database.DatabaseConnection} by closing the underlying C{sqlite3.Connection}.
 
         Just returns if the C{sqlite3.Connection} object does not exist, replaces it with C{None} otherwise.
-
-        @return:
-        @rtype:
         """
         if self._connection is not None:
             self._connection.close()
@@ -100,9 +91,6 @@ class DatabaseConnection(object):
 
     def commit(self):
         """Commit changes to the underlying C{sqlite3.Connection}.
-
-        @return:
-        @rtype:
         """
         if self._connection is not None:
             return self._connection.commit()
@@ -115,7 +103,7 @@ class DatabaseConnection(object):
         Creates (connects) the underlying C{sqlite3.Connection} if it does not exist already.
 
         @return: C{sqlite3.Cursor}
-        @rtype: sqlite3.Cursor
+        @rtype: Cursor
         """
         self.connect()
 
@@ -157,8 +145,6 @@ class SQLiteMaster(object):
         @type root_page: int | None
         @param sql_statement: SQLite CREATE TABLE statement
         @type sql_statement: str | None
-        @return:
-        @rtype:
         """
         super(SQLiteMaster, self).__init__()
 
@@ -178,19 +164,15 @@ class SQLiteMasterAdaptor(object):
     the table schema is intrinsic to SQLite so that most methods do not apply.
     Attributes:
     @ivar database_connection: C{bsf.database.DatabaseConnection}
-    @type database_connection: bsf.database.DatabaseConnection
+    @type database_connection: DatabaseConnection
     """
 
     def __init__(self, database_connection):
         """Initialise a C{bsf.database.SQLiteMasterAdaptor} object.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: bsf.database.DatabaseConnection
-        @return:
-        @rtype:
+        @type database_connection: DatabaseConnection
         """
-        assert isinstance(database_connection, DatabaseConnection)
-
         super(SQLiteMasterAdaptor, self).__init__()
 
         self.database_connection = database_connection
@@ -237,10 +219,10 @@ class SQLiteMasterAdaptor(object):
         @param parameters: Python C{list} of Python C{str} (parameter) objects or C{None}
         @type parameters: list[int | float | str | None] | None
         @return: Python C{list} of C{bsf.database.SQLiteMaster} objects
-        @rtype: list[bsf.database.SQLiteMaster]
+        @rtype: list[SQLiteMaster]
         """
         object_list = list()
-        """ @type object_list: list[bsf.database.SQLiteMaster] """
+        """ @type object_list: list[SQLiteMaster] """
 
         cursor = self.database_connection.get_cursor()
 
@@ -260,7 +242,7 @@ class SQLiteMasterAdaptor(object):
         @param sql_object_type: SQL object type
         @type sql_object_type: str
         @return: Python C{list} of C{bsf.database.SQLiteMaster} objects
-        @rtype: list[bsf.database.SQLiteMaster]
+        @rtype: list[SQLiteMaster]
         """
         return self.select(
             statement=self.statement_select(where_clause='type = ?'),
@@ -274,7 +256,7 @@ class SQLiteMasterAdaptor(object):
         @param sql_object_name: SQL object name
         @type sql_object_name: str
         @return: C{bsf.database.SQLiteMaster}
-        @rtype: bsf.database.SQLiteMaster | None
+        @rtype: SQLiteMaster | None
         """
         object_list = self.select(
             statement=self.statement_select(where_clause='type = ? and name = ?'),
@@ -344,16 +326,14 @@ class SQLiteTableInfoAdaptor(object):
 
     Attributes:
     @ivar database_connection: C{bsf.database.DatabaseConnection}
-    @type database_connection: bsf.database.DatabaseConnection
+    @type database_connection: DatabaseConnection
     """
 
     def __init__(self, database_connection):
         """Initialise a C{bsf.database.SQLiteTableInfoAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: bsf.database.DatabaseConnection
-        @return:
-        @rtype:
+        @type database_connection: DatabaseConnection
         """
         assert isinstance(database_connection, DatabaseConnection)
 
@@ -380,10 +360,10 @@ class SQLiteTableInfoAdaptor(object):
         @param table_name: SQLite table name
         @type table_name: str
         @return: Python C{list} of C{bsf.database.SQLiteTableInfo} objects
-        @rtype: list[bsf.database.SQLiteTableInfo]
+        @rtype: list[SQLiteTableInfo]
         """
         object_list = list()
-        """ @type object_list: list[bsf.database.SQLiteTableInfo] """
+        """ @type object_list: list[SQLiteTableInfo] """
 
         cursor = self.database_connection.get_cursor()
 
@@ -402,7 +382,7 @@ class DatabaseAdaptor(object):
 
     Attributes:
     @ivar database_connection: C{bsf.database.DatabaseConnection}
-    @type database_connection: bsf.database.DatabaseConnection
+    @type database_connection: DatabaseConnection
     @ivar table_name: SQL database table name
     @type table_name: str
     @ivar column_definition: Python C{list} of Python C{tuple} objects of
@@ -423,7 +403,7 @@ class DatabaseAdaptor(object):
         """Initialise a C{bsf.database.DatabaseAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: bsf.database.DatabaseConnection
+        @type database_connection: DatabaseConnection
         @param object_type: Object type
         @type object_type: type
         @param table_name: SQL database table name
@@ -434,8 +414,6 @@ class DatabaseAdaptor(object):
         @type column_definition: list[(str, str)]
         @param table_constraint: SQL table constraint expression
         @type table_constraint: list[str] | None
-        @return:
-        @rtype:
         """
         assert isinstance(database_connection, DatabaseConnection)
         assert isinstance(object_type, type)
@@ -548,9 +526,6 @@ class DatabaseAdaptor(object):
 
         This method instantiates the underlying C{sqlite3.Connection} via its C{bsf.database.DatabaseConnection}.
         Just returns if the C{sqlite3.Connection} object already exists.
-
-        @return:
-        @rtype:
         """
         return self.database_connection.connect()
 
@@ -558,9 +533,6 @@ class DatabaseAdaptor(object):
         """Convenience method to explicitly disconnect a C{bsf.database.DatabaseAdaptor}.
 
         This method disconnects the underlying C{sqlite3.Connection} via the C{bsf.database.DatabaseConnection}.
-
-        @return:
-        @rtype:
         """
         return self.database_connection.disconnect()
 
@@ -568,9 +540,6 @@ class DatabaseAdaptor(object):
         """Convenience method to commit changes to a C{bsf.database.DatabaseAdaptor}.
 
         This method commits to the underlying C{sqlite3.Connection} via the C{bsf.database.DatabaseConnection}.
-
-        @return:
-        @rtype:
         """
         return self.database_connection.commit()
 
@@ -581,7 +550,7 @@ class DatabaseAdaptor(object):
         C{bsf.database.DatabaseConnection}.
 
         @return: C{sqlite3.Cursor}
-        @rtype: sqlite3.Cursor
+        @rtype: Cursor
         """
         return self.database_connection.get_cursor()
 
@@ -731,9 +700,6 @@ class DatabaseAdaptor(object):
         Before attempting to execute the SQL I{CREATE TABLE} statement, this method checks in 'sqlite_master',
         whether the table already exists in the SQLite database.
         After calling, the C{bsf.database.DatabaseAdaptor.commit} method has to be called at some stage.
-
-        @return:
-        @rtype:
         """
         sqlite_master_adaptor = SQLiteMasterAdaptor(database_connection=self.database_connection)
 
@@ -813,8 +779,6 @@ class DatabaseAdaptor(object):
 
         @param object_instance: Python C{object} object
         @type object_instance: object
-        @return:
-        @rtype:
         """
         assert isinstance(object_instance, self.object_type)
 
@@ -825,13 +789,13 @@ class DatabaseAdaptor(object):
 
         try:
             self.get_cursor().execute(self.statement_insert(), value_list)
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             print('Encountered sqlite3.IntegrityError for table name ' +
                   self.table_name + 'on the following SQL fields:\n' +
                   'Fields: ' + self._build_column_insert_expression() + '\n' +
                   'Values: ' + repr(value_list))
             raise
-        except sqlite3.OperationalError:
+        except OperationalError:
             print('Encountered sqlite3.OperationalError for table name ' +
                   self.table_name + ' on the following SQL fields:\n' +
                   'Fields: ' + self._build_column_insert_expression() + '\n' +
@@ -851,8 +815,6 @@ class DatabaseAdaptor(object):
 
         @param object_instance: Python C{object} instance
         @type object_instance: object
-        @return:
-        @rtype:
         """
         assert isinstance(object_instance, self.object_type)
         # Get the list of values by using the column definition and reading attributes of the same name
@@ -868,7 +830,7 @@ class DatabaseAdaptor(object):
 
         try:
             self.get_cursor().execute(self.statement_update(), value_list)
-        except sqlite3.IntegrityError:
+        except IntegrityError:
             print('Encountered SQLite3 integrity error.\n',
                   '  SQL statement:', self.statement_update(), '\n',
                   '  Values:', value_list)
@@ -932,8 +894,6 @@ class JobSubmission(object):
         @type name: str | None
         @param command: Command line
         @type command: str | None
-        @return:
-        @rtype:
         """
         super(JobSubmission, self).__init__()
 
@@ -956,9 +916,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
         """Initialise a C{bsf.database.JobSubmissionAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: bsf.database.DatabaseConnection
-        @return:
-        @rtype:
+        @type database_connection: DatabaseConnection
         """
         super(JobSubmissionAdaptor, self).__init__(
             database_connection=database_connection,
@@ -981,7 +939,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
         @param name: Name
         @type name: str
         @return: C{bsf.database.JobSubmission} or C{None}
-        @rtype: bsf.database.JobSubmission | None
+        @rtype: JobSubmission | None
         """
         object_list = self.select(statement=self.statement_select(where_clause='name = ?'), parameters=[name])
         object_length = len(object_list)

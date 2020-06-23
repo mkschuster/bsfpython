@@ -26,14 +26,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
+from argparse import ArgumentParser
 import sys
 
-import bsf.analyses.picard
-import bsf.standards
+from bsf.analyses.picard import CollectHiSeqXPfFailMetrics
+from bsf.standards import Configuration
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.picard.CollectHiSeqXPfFailMetrics.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=CollectHiSeqXPfFailMetrics.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -50,7 +50,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=bsf.standards.Configuration.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -71,13 +71,13 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --irf argument.
 
-if name_space.configuration == bsf.standards.Configuration.global_file_path:
+if name_space.configuration == Configuration.global_file_path:
     if name_space.irf is None:
         raise Exception("argument --irf is required if --configuration is not set")
 
 # Create a CollectHiSeqXPfFailMetrics analysis, run and submit it.
 
-analysis = bsf.analyses.picard.CollectHiSeqXPfFailMetrics.from_config_file_path(config_path=name_space.configuration)
+analysis = CollectHiSeqXPfFailMetrics.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

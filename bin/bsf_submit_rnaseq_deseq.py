@@ -26,13 +26,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import argparse
 import sys
+from argparse import ArgumentParser
 
-import bsf.analyses.rnaseq
+from bsf.analyses.rnaseq import DESeq
 
-argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.rnaseq.DESeq.name + ' driver script.')
+argument_parser = ArgumentParser(
+    description=DESeq.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -56,7 +56,7 @@ name_space = argument_parser.parse_args()
 
 # Create a DESeq Analysis and run it.
 
-analysis = bsf.analyses.rnaseq.DESeq.from_config_file_path(config_path=name_space.configuration)
+analysis = DESeq.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug
