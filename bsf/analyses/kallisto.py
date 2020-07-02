@@ -33,7 +33,7 @@ import warnings
 from bsf.analysis import Analysis, Stage
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
-from bsf.standards import Configuration, FilePath as StandardsFilePath, Transcriptome
+from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
 
 class FilePathSample(FilePath):
@@ -245,6 +245,7 @@ class Kallisto(Analysis):
     def run(self):
         """Run this C{bsf.analyses.rnaseq.Tuxedo} analysis.
         """
+
         def run_read_comparisons():
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
@@ -292,7 +293,7 @@ class Kallisto(Analysis):
 
         if not self.transcriptome_index_path:
             self.transcriptome_index_path = os.path.join(
-                StandardsFilePath.get_resource_transcriptome_index(
+                StandardFilePath.get_resource_transcriptome_index(
                     transcriptome_version=self.transcriptome_version,
                     transcriptome_index='kallisto'),
                 self.transcriptome_version + '.idx')

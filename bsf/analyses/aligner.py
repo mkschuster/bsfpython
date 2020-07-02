@@ -35,7 +35,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.procedure import FilePath, Runnable, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
     RunnableStepCopy, RunnableStepMove, RunnableStep, RunnableStepLink
-from bsf.standards import Configuration, FilePath as StandardsFilePath, JavaClassPath
+from bsf.standards import Configuration, StandardFilePath, JavaClassPath
 
 
 class FilePathAlign(FilePath):
@@ -687,7 +687,7 @@ class Aligner(Analysis):
         if not self.genome_fasta:
             # Set the genome_index to None, to point to the genome directory that contains the
             # Picard sequence dictionary.
-            self.genome_fasta = StandardsFilePath.get_resource_genome_fasta(
+            self.genome_fasta = StandardFilePath.get_resource_genome_fasta(
                 genome_version=self.genome_version,
                 genome_index=None)
 

@@ -36,7 +36,7 @@ from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
-from bsf.standards import Configuration, FilePath as StandardsFilePath, Genome, Transcriptome
+from bsf.standards import Configuration, StandardFilePath, Genome, Transcriptome
 
 
 class ChIPSeqComparison(object):
@@ -1703,14 +1703,14 @@ class ChIPSeq(Analysis):
                 raise Exception('No suitable comparison annotation file in the current working directory.')
 
         if not self.transcriptome_gtf_path:
-            self.transcriptome_gtf_path = StandardsFilePath.get_resource_transcriptome_gtf(
+            self.transcriptome_gtf_path = StandardFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none',
                 basic=True,
                 absolute=True)
 
         if not self.transcriptome_txdb_path:
-            self.transcriptome_txdb_path = StandardsFilePath.get_resource_transcriptome_txdb(
+            self.transcriptome_txdb_path = StandardFilePath.get_resource_transcriptome_txdb(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none',
                 basic=True,
@@ -1728,13 +1728,13 @@ class ChIPSeq(Analysis):
             self.factor_default = 'OTHER'
 
         if not self.genome_black_list:
-            self.genome_black_list = StandardsFilePath.get_resource_genome_black_list(
+            self.genome_black_list = StandardFilePath.get_resource_genome_black_list(
                 genome_version=self.genome_version)
 
         if self.genome_sizes_path:
             self.genome_sizes_path = self.configuration.get_absolute_path(file_path=self.genome_sizes_path)
         else:
-            self.genome_sizes_path = StandardsFilePath.get_resource_genome_fasta_index(
+            self.genome_sizes_path = StandardFilePath.get_resource_genome_fasta_index(
                 genome_version=self.genome_version)
 
         if not self.genome_effective_size:

@@ -33,7 +33,7 @@ from argparse import ArgumentParser
 from csv import DictWriter
 
 from bsf.ngs import ProcessedRunFolder
-from bsf.standards import Configuration, FilePath as StandardsFilePath
+from bsf.standards import Configuration, StandardFilePath
 
 argument_parser = ArgumentParser(description='List projects and samples.')
 
@@ -80,7 +80,7 @@ csv_writer.writeheader()
 
 input_directory = Configuration.get_absolute_path(
     file_path=name_space.input_directory,
-    default_path=StandardsFilePath.get_sequences(absolute=True))
+    default_path=StandardFilePath.get_sequences(absolute=True))
 
 prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
 for project_name in sorted(prf.project_dict):

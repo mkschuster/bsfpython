@@ -35,7 +35,7 @@ from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable, ConcurrentRunnable
 from bsf.process import Command, \
     RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, RunnableStepMove, RunnableStepSleep
-from bsf.standards import Configuration, FilePath as StandardsFilePath
+from bsf.standards import Configuration, StandardFilePath
 
 
 class IlluminaRunFolderArchive(Analysis):
@@ -446,7 +446,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=StandardsFilePath.get_illumina_run(absolute=True))
+            default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         # The Illumina Run Folder name would also be available from the bsf.illumina.RunFolder.get_name property below,
         # but using the file path provides more flexibility outside of the fixed runParameters.xml configuration file.
@@ -824,7 +824,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         sav_path = Configuration.get_absolute_path(
             file_path=run_name + '_sav',
-            default_path=StandardsFilePath.get_illumina_sav(absolute=True))
+            default_path=StandardFilePath.get_illumina_sav(absolute=True))
 
         runnable_step = RunnableStepMove(
             name='move_sav',
@@ -1130,7 +1130,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         self.illumina_directory = self.configuration.get_absolute_path(
             file_path=self.illumina_directory,
-            default_path=StandardsFilePath.get_illumina_run(absolute=True))
+            default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         if not os.path.isdir(self.illumina_directory):
             raise Exception('The directory of Illumina Run Folder directories {!r} does not exist.'.

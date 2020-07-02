@@ -37,7 +37,7 @@ from bsf.ngs import Collection, Sample, SampleAnnotationSheet
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, Executable, RunnableStep, RunnableStepChangeMode, RunnableStepJava, \
     RunnableStepMakeDirectory, RunnableStepLink, RunnableStepMove, RunnableStepPicard
-from bsf.standards import Configuration, FilePath as StandardsFilePath, JavaClassPath, Operator, VendorQualityFilter
+from bsf.standards import Configuration, StandardFilePath, JavaClassPath, Operator, VendorQualityFilter
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
@@ -808,7 +808,7 @@ class IlluminaToBam(Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=StandardsFilePath.get_illumina_run(absolute=True))
+            default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -893,7 +893,7 @@ class IlluminaToBam(Analysis):
             self.sequences_directory = self.configuration.get_absolute_path(
                 file_path=self.sequences_directory)
         else:
-            self.sequences_directory = StandardsFilePath.get_sequences(absolute=True)
+            self.sequences_directory = StandardFilePath.get_sequences(absolute=True)
 
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
@@ -1603,11 +1603,11 @@ class BamIndexDecoder(Analysis):
 
         self.sequences_directory = self.configuration.get_absolute_path(
             file_path=self.sequences_directory,
-            default_path=StandardsFilePath.get_sequences(absolute=True))
+            default_path=StandardFilePath.get_sequences(absolute=True))
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=StandardsFilePath.get_samples(absolute=True))
+            default_path=StandardFilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 

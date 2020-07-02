@@ -43,7 +43,7 @@ from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, Runnable, ConsecutiveRunnable
 from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
-from bsf.standards import Configuration, FilePath as StandardsFilePath, EnsemblVEP, JavaClassPath
+from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaClassPath
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -822,7 +822,7 @@ class VariantCallingGATKCallingIntervals(object):
             if calling_intervals.calling_path and not os.path.isabs(calling_intervals.calling_path):
                 calling_intervals.calling_path = Configuration.get_absolute_path(
                     file_path=calling_intervals.calling_path,
-                    default_path=StandardsFilePath.get_resource_intervals(absolute=True))
+                    default_path=StandardFilePath.get_resource_intervals(absolute=True))
 
         return calling_intervals
 
@@ -881,7 +881,7 @@ class VariantCallingGATKTargetIntervals(object):
             if target_intervals.targets_path and not os.path.isabs(target_intervals.targets_path):
                 target_intervals.targets_path = Configuration.get_absolute_path(
                     file_path=target_intervals.targets_path,
-                    default_path=StandardsFilePath.get_resource_intervals(absolute=True))
+                    default_path=StandardFilePath.get_resource_intervals(absolute=True))
 
         if 'Probe Intervals' in sample.annotation_dict:
             probe_interval_list = sample.annotation_dict['Probe Intervals']
@@ -893,7 +893,7 @@ class VariantCallingGATKTargetIntervals(object):
             if target_intervals.probes_path and not os.path.isabs(target_intervals.probes_path):
                 target_intervals.probes_path = Configuration.get_absolute_path(
                     file_path=target_intervals.probes_path,
-                    default_path=StandardsFilePath.get_resource_intervals(absolute=True))
+                    default_path=StandardFilePath.get_resource_intervals(absolute=True))
 
         return target_intervals
 
@@ -1867,14 +1867,14 @@ class VariantCallingGATK(Analysis):
 
     @property
     def get_gatk_bundle_path(self):
-        """Get the absolute GATK bundle directory C{bsf.standards.FilePath.get_resource_gatk_bundle()} for the set
+        """Get the absolute GATK bundle directory C{bsf.standards.StandardFilePath.get_resource_gatk_bundle()} for the set
         C{bsf.analyses.variant_calling.VariantCallingGATK.gatk_bundle_version} and
         C{bsf.analyses.variant_calling.VariantCallingGATK.genome_version}.
 
         @return: Absolute GATK bundle directory
         @rtype: str
         """
-        return StandardsFilePath.get_resource_gatk_bundle(
+        return StandardFilePath.get_resource_gatk_bundle(
             gatk_bundle_version=self.gatk_bundle_version,
             genome_version=self.genome_version,
             absolute=True)
@@ -3527,7 +3527,7 @@ class VariantCallingGATK(Analysis):
         if not self.vep_plugin_cadd_path:
             self.vep_plugin_cadd_path = EnsemblVEP.get_cadd_path(genome_version=self.genome_version)
         if self.vep_plugin_cadd_path and not os.path.isabs(self.vep_plugin_cadd_path):
-            cadd_resource_path = StandardsFilePath.get_resource_cadd(absolute=True)
+            cadd_resource_path = StandardFilePath.get_resource_cadd(absolute=True)
             if cadd_resource_path:
                 self.vep_plugin_cadd_path = os.path.join(cadd_resource_path, self.vep_plugin_cadd_path)
 
@@ -3575,7 +3575,7 @@ class VariantCallingGATK(Analysis):
             for i, file_path in enumerate(self.accessory_cohort_gvcfs):
                 file_path = self.configuration.get_absolute_path(
                     file_path=file_path,
-                    default_path=StandardsFilePath.get_projects(absolute=True))
+                    default_path=StandardFilePath.get_projects(absolute=True))
                 if os.path.exists(file_path):
                     self.accessory_cohort_gvcfs[i] = file_path
                 else:
@@ -3638,7 +3638,7 @@ class VariantCallingGATK(Analysis):
             for i, file_path in enumerate(self.known_somatic_discovery):
                 file_path = self.configuration.get_absolute_path(
                     file_path=file_path,
-                    default_path=StandardsFilePath.get_resource_cosmic(absolute=True))
+                    default_path=StandardFilePath.get_resource_cosmic(absolute=True))
                 if os.path.exists(file_path):
                     self.known_somatic_discovery[i] = file_path
                 else:
@@ -3700,7 +3700,7 @@ class VariantCallingGATK(Analysis):
         if self.genome_annotation_gtf and not os.path.isabs(self.genome_annotation_gtf):
             self.genome_annotation_gtf = self.configuration.get_absolute_path(
                 file_path=self.genome_annotation_gtf,
-                default_path=StandardsFilePath.get_resource_intervals(absolute=True))
+                default_path=StandardFilePath.get_resource_intervals(absolute=True))
             # TODO: Use the transcriptome directory as the default location.
             # Create a new, genome-specific configuration object in the bsf.standards module.
 

@@ -37,7 +37,7 @@ from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
 from bsf.process import RunnableStep
-from bsf.standards import Configuration, FilePath as StandardsFilePath, Transcriptome
+from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
 
 class FilePathAlign(AlignerFilePathAlign):
@@ -370,13 +370,13 @@ class StarAligner(Aligner):
             raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
 
         if not self.index_directory:
-            self.index_directory = StandardsFilePath.get_resource_transcriptome_index(
+            self.index_directory = StandardFilePath.get_resource_transcriptome_index(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='star')
 
         if not self.transcriptome_gtf:
             # FIXME: The transcriptome_gtf is currently not used.
-            self.transcriptome_gtf = StandardsFilePath.get_resource_transcriptome_gtf(
+            self.transcriptome_gtf = StandardFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none',
                 basic=True,

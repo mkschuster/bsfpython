@@ -34,7 +34,7 @@ from bsf.analyses.aligner import Aligner, FilePathAlign as AlignerFilePathAlign
 from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
 from bsf.process import RunnableStep
-from bsf.standards import Configuration, FilePath as StandardsFilePath
+from bsf.standards import Configuration, StandardFilePath
 
 
 class FilePathAlign(AlignerFilePathAlign):
@@ -270,7 +270,7 @@ class Hisat2(Aligner):
 
         if not self.genome_index:
             self.genome_index = os.path.join(
-                StandardsFilePath.get_resource_genome_index(
+                StandardFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='hisat2'),
                 self.genome_version)

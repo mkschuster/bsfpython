@@ -34,7 +34,7 @@ import sys
 from argparse import ArgumentParser
 
 from bsf.analysis import Analysis
-from bsf.standards import FilePath as StandardsFilePath
+from bsf.standards import StandardFilePath
 
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
@@ -81,7 +81,7 @@ def scan_projects(project_name_local):
     @rtype: str | None
     """
 
-    directory_path = os.path.join(StandardsFilePath.get_public_html(absolute=True), 'projects')
+    directory_path = os.path.join(StandardFilePath.get_public_html(absolute=True), 'projects')
 
     for file_name in os.listdir(directory_path):
         match = re.search(pattern=r'^{}'.format(project_name_local), string=file_name)
@@ -114,7 +114,7 @@ if not os.path.isabs(project_directory):
     # TODO: This does not deal with sub-directories i.e. public_html/projects correctly.
 
     project_directory = os.path.join(
-        StandardsFilePath.get_public_html(absolute=True),
+        StandardFilePath.get_public_html(absolute=True),
         'projects',
         project_directory)
 
@@ -129,7 +129,7 @@ if not os.path.isabs(project_directory):
             raise Exception('Cannot locate project directory for project {!r}.'.format(name_space.project))
 
         project_directory = os.path.join(
-            StandardsFilePath.get_public_html(absolute=True),
+            StandardFilePath.get_public_html(absolute=True),
             'projects',
             project_name)
 

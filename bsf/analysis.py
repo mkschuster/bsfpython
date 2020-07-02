@@ -41,7 +41,7 @@ import warnings
 from bsf.ngs import Collection, Sample
 from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import Command, Executable, RunnableStep
-from bsf.standards import Configuration, FilePath, Operator, Genome, Transcriptome, UCSC, URL
+from bsf.standards import Configuration, StandardFilePath, Operator, Genome, Transcriptome, UCSC, URL
 
 
 class Analysis(object):
@@ -620,15 +620,15 @@ class Analysis(object):
 
         self.cache_directory = self.configuration.get_absolute_path(
             file_path=self.cache_directory,
-            default_path=FilePath.get_cache())
+            default_path=StandardFilePath.get_cache())
 
         self.input_directory = self.configuration.get_absolute_path(
             file_path=self.input_directory,
-            default_path=FilePath.get_samples(absolute=True))
+            default_path=StandardFilePath.get_samples(absolute=True))
 
         self.output_directory = self.configuration.get_absolute_path(
             file_path=self.output_directory,
-            default_path=FilePath.get_projects(absolute=True))
+            default_path=StandardFilePath.get_projects(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
@@ -1166,7 +1166,7 @@ class Analysis(object):
         if sub_directory is None:
             sub_directory = URL.get_relative_projects()
 
-        html_path = os.path.join(FilePath.get_public_html(absolute=True), sub_directory)
+        html_path = os.path.join(StandardFilePath.get_public_html(absolute=True), sub_directory)
 
         # As a safety measure, to prevent creation of rogue directory paths, the html_path directory has to exist.
 

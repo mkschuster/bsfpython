@@ -31,7 +31,7 @@ import re
 import stat
 from argparse import ArgumentParser
 
-from bsf.standards import Configuration, FilePath as StandardsFilePath
+from bsf.standards import Configuration, StandardFilePath
 
 argument_parser = ArgumentParser(
     description='Collect statistics from a processed run folder after de-multiplexing.')
@@ -46,7 +46,7 @@ prf_path = name_space.input
 
 prf_path = Configuration.get_absolute_path(
     file_path=prf_path,
-    default_path=StandardsFilePath.get_sequences(absolute=True))
+    default_path=StandardFilePath.get_sequences(absolute=True))
 
 if not os.path.exists(prf_path):
     raise Exception('Could not find processed run folder directory {!r}'.format(prf_path))

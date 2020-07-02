@@ -43,7 +43,7 @@ from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepCopy, RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove, \
     RunnableStepSetEnvironment
-from bsf.standards import Configuration, FilePath as StandardsFilePath, Index, Transcriptome
+from bsf.standards import Configuration, StandardFilePath, Index, Transcriptome
 
 
 class FilePathTophat(FilePath):
@@ -1213,13 +1213,13 @@ class Tuxedo(Analysis):
 
         if not self.genome_index_path:
             self.genome_index_path = os.path.join(
-                StandardsFilePath.get_resource_genome_index(
+                StandardFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='bowtie2'),
                 self.genome_version)
 
         if not self.genome_fasta_path:
-            self.genome_fasta_path = StandardsFilePath.get_resource_genome_fasta(
+            self.genome_fasta_path = StandardFilePath.get_resource_genome_fasta(
                 genome_version=self.genome_version,
                 genome_index='bowtie2')
 
@@ -1227,7 +1227,7 @@ class Tuxedo(Analysis):
             raise Exception('Genome FASTA file path {!r} does not exists.'.format(self.genome_fasta_path))
 
         if not self.genome_sizes_path:
-            self.genome_sizes_path = StandardsFilePath.get_resource_genome_fasta_index(
+            self.genome_sizes_path = StandardFilePath.get_resource_genome_fasta_index(
                 genome_version=self.genome_version,
                 genome_index='bowtie2')
 
@@ -1241,7 +1241,7 @@ class Tuxedo(Analysis):
             # prepend the default transcriptomes directory.
             self.transcriptome_index_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_index_path,
-                default_path=StandardsFilePath.get_resource_transcriptome(
+                default_path=StandardFilePath.get_resource_transcriptome(
                     transcriptome_version=None,
                     absolute=True))
 
@@ -1276,7 +1276,7 @@ class Tuxedo(Analysis):
             # prepend the default transcriptome directory.
             self.transcriptome_gtf_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_gtf_path,
-                default_path=StandardsFilePath.get_resource_transcriptome(
+                default_path=StandardFilePath.get_resource_transcriptome(
                     transcriptome_version=self.transcriptome_version,
                     absolute=True))
 
@@ -1286,13 +1286,13 @@ class Tuxedo(Analysis):
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index_path = os.path.join(
-                StandardsFilePath.get_resource_transcriptome_index(
+                StandardFilePath.get_resource_transcriptome_index(
                     transcriptome_version=self.transcriptome_version,
                     transcriptome_index='tophat2'),
                 self.transcriptome_version,  # TopHat puts the transcriptome index into a sub directory.
                 self.transcriptome_version)
 
-            self.transcriptome_gtf_path = StandardsFilePath.get_resource_transcriptome_gtf(
+            self.transcriptome_gtf_path = StandardFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='tophat2',
                 basic=False)

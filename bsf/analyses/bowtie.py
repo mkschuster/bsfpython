@@ -32,7 +32,7 @@ from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
 from bsf.procedure import ConcurrentRunnable
 from bsf.process import RunnableStep
-from bsf.standards import FilePath as StandardsFilePath
+from bsf.standards import StandardFilePath
 
 
 class Bowtie1(Aligner):
@@ -100,7 +100,7 @@ class Bowtie1(Aligner):
 
         if not self.genome_index:
             self.genome_index = os.path.join(
-                StandardsFilePath.get_resource_genome_index(
+                StandardFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='bowtie2'),
                 self.genome_version)
@@ -179,7 +179,7 @@ class Bowtie2(Aligner):
 
         if not self.genome_index:
             self.genome_index = os.path.join(
-                StandardsFilePath.get_resource_genome_index(
+                StandardFilePath.get_resource_genome_index(
                     genome_version=self.genome_version,
                     genome_index='bowtie2'),
                 self.genome_version)

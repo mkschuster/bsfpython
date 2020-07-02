@@ -35,7 +35,7 @@ import dateutil.tz
 from Bio.Seq import Seq
 
 from bsf.annotation import AnnotationSheet
-from bsf.standards import Configuration, FilePath
+from bsf.standards import Configuration, StandardFilePath
 
 
 class Adaptors(object):
@@ -1054,8 +1054,8 @@ class RunFolder(object):
     def absolute_file_path(name):
         """Return the absolute file path for an Illumina Run Folder (IRF) name.
 
-        This method first checks for existence in C{bsf.standards.FilePath.get_illumina_run()}, before
-        checking in C{bsf.standards.FilePath.get_illumina_sav()}.
+        This method first checks for existence in C{bsf.standards.StandardFilePath.get_illumina_run()}, before
+        checking in C{bsf.standards.StandardFilePath.get_illumina_sav()}.
         @param name: Illumina Run Folder (IRF) name
         @type name: str
         @return: Absolute file path
@@ -1064,14 +1064,14 @@ class RunFolder(object):
         # Check the Illumina Run Folder directory.
         file_path = Configuration.get_absolute_path(
             file_path=name,
-            default_path=FilePath.get_illumina_run(absolute=True))
+            default_path=StandardFilePath.get_illumina_run(absolute=True))
         if os.path.exists(file_path):
             return file_path
 
         # Check the Illumina Sequence Analysis Viewer directory.
         file_path = Configuration.get_absolute_path(
             file_path=name,
-            default_path=FilePath.get_illumina_sav(absolute=True))
+            default_path=StandardFilePath.get_illumina_sav(absolute=True))
         if os.path.exists(file_path):
             return file_path
 

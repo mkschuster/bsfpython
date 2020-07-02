@@ -43,7 +43,7 @@ from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
     RunnableStepMove, RunnableStepPicard
-from bsf.standards import Configuration, FilePath as StandardsFilePath, JavaClassPath, Operator, VendorQualityFilter
+from bsf.standards import Configuration, StandardFilePath, JavaClassPath, Operator, VendorQualityFilter
 
 
 class PicardIlluminaRunFolder(Analysis):
@@ -263,7 +263,7 @@ class PicardIlluminaRunFolder(Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=StandardsFilePath.get_illumina_run(absolute=True))
+            default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -792,7 +792,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=StandardsFilePath.get_samples(absolute=True))
+            default_path=StandardFilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
@@ -1556,7 +1556,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=StandardsFilePath.get_illumina_run(absolute=True))
+            default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -1602,7 +1602,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             self.sequences_directory = self.configuration.get_absolute_path(
                 file_path=self.sequences_directory)
         else:
-            self.sequences_directory = StandardsFilePath.get_sequences(absolute=True)
+            self.sequences_directory = StandardFilePath.get_sequences(absolute=True)
 
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
@@ -2294,11 +2294,11 @@ class IlluminaDemultiplexSam(Analysis):
 
         self.sequences_directory = self.configuration.get_absolute_path(
             file_path=self.sequences_directory,
-            default_path=StandardsFilePath.get_sequences(absolute=True))
+            default_path=StandardFilePath.get_sequences(absolute=True))
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=StandardsFilePath.get_samples(absolute=True))
+            default_path=StandardFilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 

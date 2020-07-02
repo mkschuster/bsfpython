@@ -814,8 +814,8 @@ class Transcriptome(BaseSectionVersion):
         return cls.get(option='uri', version=transcriptome_version)
 
 
-class FilePath(BaseSection):
-    """The C{bsf.standards.FilePath} class models file path defaults.
+class StandardFilePath(BaseSection):
+    """The C{bsf.standards.StandardFilePath} class models file path defaults.
 
     The defaults are read from the [directories] section of the global configuration file.
     Attributes:

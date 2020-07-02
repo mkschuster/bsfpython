@@ -31,7 +31,7 @@ from bsf.analyses.aligner import Aligner, FilePathAlign
 from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
 from bsf.process import Command, RunnableStep
-from bsf.standards import FilePath as StandardsFilePath
+from bsf.standards import StandardFilePath
 
 
 class MaximalExactMatches(Aligner):
@@ -105,7 +105,7 @@ class MaximalExactMatches(Aligner):
 
         # BWA requires the genome.fasta file.
         if not self.genome_index:
-            self.genome_index = StandardsFilePath.get_resource_genome_fasta(
+            self.genome_index = StandardFilePath.get_resource_genome_fasta(
                 genome_version=self.genome_version,
                 genome_index='bwa')
 
