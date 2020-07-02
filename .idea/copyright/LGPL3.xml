@@ -1,6 +1,5 @@
 <component name="CopyrightManager">
   <copyright>
-    <option name="allowReplaceRegexp" value="2018" />
     <option name="notice" value="Copyright 2013 - &amp;#36;today.year Michael K. Schuster&#10;&#10;Biomedical Sequencing Facility (BSF), part of the genomics core facility&#10;of the Research Center for Molecular Medicine (CeMM) of the&#10;Austrian Academy of Sciences and the Medical University of Vienna (MUW).&#10;&#10;&#10;This file is part of BSF Python.&#10;&#10;BSF Python is free software: you can redistribute it and/or modify&#10;it under the terms of the GNU Lesser General Public License as published by&#10;the Free Software Foundation, either version 3 of the License, or&#10;(at your option) any later version.&#10;&#10;BSF Python is distributed in the hope that it will be useful,&#10;but WITHOUT ANY WARRANTY; without even the implied warranty of&#10;MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the&#10;GNU Lesser General Public License for more details.&#10;&#10;You should have received a copy of the GNU Lesser General Public License&#10;along with BSF Python.  If not, see &lt;http://www.gnu.org/licenses/&gt;.&#10;" />
     <option name="myName" value="LGPL3" />
   </copyright>
