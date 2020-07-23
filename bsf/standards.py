@@ -28,6 +28,42 @@ A package of classes and methods modelling configuration and default information
 import os
 import stat
 from configparser import ConfigParser
+from xml.etree.ElementTree import ElementTree
+
+
+def get_irf_path(name):
+    """Return the absolute file path for an Illumina Run Folder (IRF) name.
+
+    This method first checks for existence in C{bsf.standards.StandardFilePath.get_illumina_run()}, before
+    checking in C{bsf.standards.StandardFilePath.get_illumina_sav()}.
+    @param name: Illumina Run Folder (IRF) name
+    @type name: str
+    @return: Absolute file path
+    @rtype: str | None
+    """
+    # Check the Illumina Run Folder directory.
+    file_path = Configuration.get_absolute_path(
+        file_path=name,
+        default_path=StandardFilePath.get_illumina_run(absolute=True))
+    if os.path.exists(file_path):
+        return file_path
+
+    # Check the Illumina Sequence Analysis Viewer directory.
+    file_path = Configuration.get_absolute_path(
+        file_path=name,
+        default_path=StandardFilePath.get_illumina_sav(absolute=True))
+    if os.path.exists(file_path):
+        return file_path
+
+    # To avoid clashes, Illumina Run Folders get a '_sav' suffix upon archiving,
+    # so the name as such should not exist in the above
+    # Illumina Sequence Analysis Viewer directory.
+    # Now, append the '_sav' suffix customary for SAV folders and check once more.
+    file_path += '_sav'
+    if os.path.exists(file_path):
+        return file_path
+
+    return
 
 
 class Configuration(object):
@@ -1494,3 +1530,112 @@ class Secrets(BaseSection):
         @rtype: str | None
         """
         return cls.get_file_path(option='mysql_file_path')
+
+
+class Central(BaseSection):
+    """The C{bsf.standards.Central} class models the central XML configuration document.
+
+    Attributes:
+    @cvar section: C{configparser.ConfigParser} section
+    @type section: str
+    @cvar element_tree: C{xml.etree.ElementTree.ElementTree}
+    @type element_tree: ElementTree
+    """
+
+    section = 'central'
+    element_tree = None
+
+    @classmethod
+    def get_configuration_xml(cls):
+        """Get the central XML configuration document file path.
+
+        @return: Central XML configuration document file path
+        @rtype: str
+        """
+        file_path = cls.get(option='configuration_xml')
+        file_path = os.path.expanduser(path=file_path)
+        file_path = os.path.expandvars(path=file_path)
+        file_path = os.path.normpath(path=file_path)
+
+        return file_path
+
+    @classmethod
+    def get_element_tree(cls):
+        """Get the central C{xml.etree.ElementTree.ElementTree} class object.
+
+        @return: Central C{xml.etree.ElementTree.ElementTree} class object
+        @rtype: ElementTree
+        """
+        if cls.element_tree is None:
+            cls.element_tree = ElementTree(file=cls.get_configuration_xml())
+
+        return cls.element_tree
+
+
+class CentralIndexDirectories(object):
+    """The C{bsf.standards.CentralIndexDirectories} class models index directory names.
+
+    Attributes:
+    @ivar bowtie1: Bowtie1 index directory name
+    @type bowtie1: str
+    @ivar bowtie2: Bowtie2 index directory name
+    @type bowtie2: str
+    @ivar bwa: BWA index directory name
+    @type bwa: str
+    @ivar hisat2: Hisat2 index directory name
+    @type hisat2: str
+    @ivar kallisto: Kallisto index directory name
+    @type kallisto: str
+    @ivar star: STAR index directory name
+    @type star: str
+    @ivar tophat2: Tophat2 index directory name
+    @type tophat2: str
+    """
+    def __init__(self):
+        """Initialise a C{bsf.standards.CentralIndexDirectories} object.
+
+        """
+        element_tree = Central.get_element_tree()
+
+        self.bowtie1 = element_tree.find(path='IndexDirectories/IndexDirectoryBowtie1').text
+        self.bowtie2 = element_tree.find(path='IndexDirectories/IndexDirectoryBowtie2').text
+        self.bwa = element_tree.find(path='IndexDirectories/IndexDirectoryBWA').text
+        # self.hisat1 = element_tree.find(path='IndexDirectories/IndexDirectoryHisat1').text
+        self.hisat2 = element_tree.find(path='IndexDirectories/IndexDirectoryHisat2').text
+        self.kallisto = element_tree.find(path='IndexDirectories/IndexDirectoryKallisto').text
+        self.star = element_tree.find(path='IndexDirectories/IndexDirectorySTAR').text
+        # self.tophat1 = element_tree.find(path='IndexDirectories/IndexDirectoryTophat1').text
+        self.tophat2 = element_tree.find(path='IndexDirectories/IndexDirectoryTophat2').text
+
+
+class CentralVendorQualityFilters(object):
+    # Python dict of (boolean state) Python str objects and Python bool value objects.
+    _boolean_states = {
+        '1': True, 'yes': True, 'true': True, 'on': True,
+        '0': False, 'no': False, 'false': False, 'off': False
+    }
+
+    @classmethod
+    def str_to_bool(cls, value):
+        """
+
+        @param value: Value
+        @type value: str
+        @return: Boolean
+        @rtype: bool | None
+        """
+        value = value.lower()
+        if value in cls._boolean_states:
+            return cls._boolean_states[value]
+        else:
+            return None
+
+    def __init__(self):
+        self.filter_dict = dict()
+        """ @type filter_dict: dict[str, bool] """
+
+        for element in Central.get_element_tree().find(path='VendorQualityFilters').iter():
+            if element.tag == 'VendorQualityFilters':
+                continue
+
+            self.filter_dict[element.text] = self.str_to_bool(value=element.get('filter'))

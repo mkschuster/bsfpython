@@ -35,7 +35,6 @@ import dateutil.tz
 from Bio.Seq import Seq
 
 from bsf.annotation import AnnotationSheet
-from bsf.standards import Configuration, StandardFilePath
 
 
 class Adaptors(object):
@@ -1049,38 +1048,6 @@ class RunFolder(object):
         'v3.3.3': 'NovaSeq Control Software 1.2.0 (NovaSeq 6000)',
         'v3.4.4': 'NovaSeq Control Software 1.6.0 (NovaSeq 6000)',
     }
-
-    @staticmethod
-    def absolute_file_path(name):
-        """Return the absolute file path for an Illumina Run Folder (IRF) name.
-
-        This method first checks for existence in C{bsf.standards.StandardFilePath.get_illumina_run()}, before
-        checking in C{bsf.standards.StandardFilePath.get_illumina_sav()}.
-        @param name: Illumina Run Folder (IRF) name
-        @type name: str
-        @return: Absolute file path
-        @rtype: str | None
-        """
-        # Check the Illumina Run Folder directory.
-        file_path = Configuration.get_absolute_path(
-            file_path=name,
-            default_path=StandardFilePath.get_illumina_run(absolute=True))
-        if os.path.exists(file_path):
-            return file_path
-
-        # Check the Illumina Sequence Analysis Viewer directory.
-        file_path = Configuration.get_absolute_path(
-            file_path=name,
-            default_path=StandardFilePath.get_illumina_sav(absolute=True))
-        if os.path.exists(file_path):
-            return file_path
-
-        # Append the '_sav' suffix customary for SAV folders.
-        file_path += '_sav'
-        if os.path.exists(file_path):
-            return file_path
-
-        return
 
     @classmethod
     def from_file_path(cls, file_path):

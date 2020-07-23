@@ -43,7 +43,7 @@ from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
     RunnableStepMove, RunnableStepPicard
-from bsf.standards import Configuration, StandardFilePath, JavaClassPath, Operator, VendorQualityFilter
+from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaClassPath, Operator, VendorQualityFilter
 
 
 class PicardIlluminaRunFolder(Analysis):
@@ -1670,7 +1670,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             runnable_step = RunnableStepPicard(
                 name='picard_illumina_basecalls_to_multiplex_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx24G',
+                java_heap_maximum='Xmx32G',
                 picard_classpath=self.classpath_picard,
                 picard_command='IlluminaBasecallsToMultiplexSam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
@@ -2266,7 +2266,7 @@ class IlluminaDemultiplexSam(Analysis):
         # Illumina Run Folders are kept either in the 'active' or the 'archive' location.
         # Upon re-running of the de-multiplexing stage, the IRF may have been archived already.
 
-        self.run_directory = RunFolder.absolute_file_path(name=self.run_directory)
+        self.run_directory = get_irf_path(name=self.run_directory)
 
         # Check that the Illumina Run Folder exists.
 
