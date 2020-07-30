@@ -1964,6 +1964,10 @@ class IlluminaDemultiplexSam(Analysis):
     @type classpath_picard: str | None
     @ivar compression_level: (Zlib) Compression level
     @type compression_level: int | None
+    @ivar deflater_threads: Number of deflater threads
+    @type deflater_threads: int | None
+    @ivar matching_threads: Number of matching threads
+    @type matching_threads: int | None
     @ivar lanes: Number of lanes on the flow cell
     @type lanes: int | None
     @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -2069,6 +2073,8 @@ class IlluminaDemultiplexSam(Analysis):
             mode_file=None,
             classpath_picard=None,
             compression_level=None,
+            deflater_threads=None,
+            matching_threads=None,
             lanes=None,
             lane_list=None,
             force=None):
@@ -2116,6 +2122,10 @@ class IlluminaDemultiplexSam(Analysis):
         @type classpath_picard: str | None
         @param compression_level: (Zlib) Compression level
         @type compression_level: int | None
+        @param deflater_threads: Number of deflater threads
+        @type deflater_threads: int | None
+        @param matching_threads: Number of matching threads
+        @type matching_threads: int | None
         @param lanes: Number of lanes on the flow cell
         @type lanes: int | None
         @param lane_list: Python C{list} of Python C{str} lane number objects to process.
@@ -2149,6 +2159,8 @@ class IlluminaDemultiplexSam(Analysis):
         self.mode_file = mode_file
         self.classpath_picard = classpath_picard
         self.compression_level = compression_level
+        self.deflater_threads = deflater_threads
+        self.matching_threads = matching_threads
         self.lanes = lanes
         self.lane_list = lane_list
         self.force = force
@@ -2211,6 +2223,14 @@ class IlluminaDemultiplexSam(Analysis):
         option = 'compression_level'
         if configuration.config_parser.has_option(section=section, option=option):
             self.compression_level = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'deflater_threads'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.deflater_threads = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'matching_threads'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.matching_threads = configuration.config_parser.getint(section=section, option=option)
 
         option = 'lanes'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -2571,6 +2591,10 @@ class IlluminaDemultiplexSam(Analysis):
             # TAG_PER_MOLECULAR_INDEX [null]
             # CELL_INDEX_TAG [CB]
             # CELL_INDEX_BASE_QUALITY_TAG [CY]
+            # MATCHING_THREADS [1]
+            # NOTE: Only available in version: 2.18.24-CeMM
+            if self.matching_threads:
+                runnable_step.add_picard_option(key='MATCHING_THREADS', value=str(self.matching_threads))
             # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
@@ -2592,7 +2616,8 @@ class IlluminaDemultiplexSam(Analysis):
             # OPTIONS_FILE Required
             # DEFLATER_THREADS [0]
             # NOTE: Only available in version: 2.18.24-CeMM
-            runnable_step.add_picard_option(key='DEFLATER_THREADS', value='16')
+            if self.deflater_threads:
+                runnable_step.add_picard_option(key='DEFLATER_THREADS', value=str(self.deflater_threads))
 
             # Plot the metrics file.
 
