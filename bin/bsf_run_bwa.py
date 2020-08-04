@@ -140,6 +140,7 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
+    samtools_view.add_switch_long(key='no-PG')
     samtools_view.arguments.append(runnable_step_bwa.sub_command.arguments[1])
 
     child_return_code = samtools.run()
@@ -295,6 +296,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
     samtools_view.add_switch_short(key='S')
+    samtools_view.add_switch_long(key='no-PG')
     samtools_view.arguments.append(path_cleaned_sam)
 
     child_return_code = samtools.run()
