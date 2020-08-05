@@ -29,17 +29,15 @@
 #
 
 if [[ -z "${LANG}" ]]; then
-    declare -x LANG='C'
+  declare -x LANG='C'
 else
-    LANG='C'
+  LANG='C'
 fi
 
 if test "$#" -lt '2'; then
-    echo "Error: $(basename "${0}") Too few arguments." 1>&2 \
-    || exit 1
-    echo "Usage: $(basename "${0}") <prefix> <chromosome_sizes>" 1>&2 \
-    || exit 1
-    exit 1
+  echo "Error: $(basename "${0}") Too few arguments." 1>&2 || exit 1
+  echo "Usage: $(basename "${0}") <prefix> <chromosome_sizes>" 1>&2 || exit 1
+  exit 1
 fi
 
 declare prefix="${1}"
@@ -54,12 +52,12 @@ echo "$(date) wigToBigWig: ${prefix}_treat_afterfiting_all.wig.gz" || exit 1
 echo "$(date) wigToBigWig: ${prefix}_treat_afterfiting_all.wig.gz" 1>&2 || exit 1
 
 zgrep --extended-regexp --invert-match '^track|^browser' \
-    "${prefix}_MACS_wiggle/treat/${prefix}_treat_afterfiting_all.wig.gz" \
-    | wigToBigWig -clip \
+  "${prefix}_MACS_wiggle/treat/${prefix}_treat_afterfiting_all.wig.gz" |
+  wigToBigWig -clip \
     stdin \
     "${chromosome_sizes}" \
-    "${prefix}_MACS_wiggle/treat/${prefix}_treat_afterfiting_all.bw" \
-    || exit 1
+    "${prefix}_MACS_wiggle/treat/${prefix}_treat_afterfiting_all.bw"
+[[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
 # NAME_control_afterfiting_all.wig.gz
 
@@ -67,12 +65,12 @@ echo "$(date) wigToBigWig: ${prefix}_control_afterfiting_all.wig.gz" || exit 1
 echo "$(date) wigToBigWig: ${prefix}_control_afterfiting_all.wig.gz" 1>&2 || exit 1
 
 zgrep --extended-regexp --invert-match '^track|^browser' \
-    "${prefix}_MACS_wiggle/control/${prefix}_control_afterfiting_all.wig.gz" \
-    | wigToBigWig -clip \
+  "${prefix}_MACS_wiggle/control/${prefix}_control_afterfiting_all.wig.gz" |
+  wigToBigWig -clip \
     stdin \
     "${chromosome_sizes}" \
-    "${prefix}_MACS_wiggle/control/${prefix}_control_afterfiting_all.bw" \
-    || exit 1
+    "${prefix}_MACS_wiggle/control/${prefix}_control_afterfiting_all.bw"
+[[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
 # The UCSC bedToBigBed utility requires that track lines are stripped out. Sigh!
 
@@ -95,17 +93,12 @@ zgrep --extended-regexp --invert-match '^track|^browser' \
 echo "$(date) bedToBigBed: ${prefix}_peaks.bed" || exit 1
 echo "$(date) bedToBigBed: ${prefix}_peaks.bed" 1>&2 || exit 1
 
-grep --extended-regexp --invert-match '^track|^browser' \
-    "${prefix}_peaks.bed" \
-    | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-    > "${prefix}_peaks.txt" \
-    || exit 1
+grep --extended-regexp --invert-match '^track|^browser' "${prefix}_peaks.bed" |
+  perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
+    >"${prefix}_peaks.txt"
+[[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
-bedToBigBed \
-    "${prefix}_peaks.txt" \
-    "${chromosome_sizes}" \
-    "${prefix}_peaks.bb" \
-    || exit 1
+bedToBigBed "${prefix}_peaks.txt" "${chromosome_sizes}" "${prefix}_peaks.bb" || exit 1
 
 rm "${prefix}_peaks.txt" || exit 1
 
@@ -115,17 +108,13 @@ echo "$(date) bedToBigBed: ${prefix}_summits.bed" || exit 1
 echo "$(date) bedToBigBed: ${prefix}_summits.bed" 1>&2 || exit 1
 
 grep --extended-regexp --invert-match '^track|^browser' \
-    "${prefix}_summits.bed" \
-    | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-    > "${prefix}_summits.txt" \
-    || exit 1
+  "${prefix}_summits.bed" |
+  perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
+    >"${prefix}_summits.txt"
+[[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
-bedToBigBed \
-    "${prefix}_summits.txt" \
-    "${chromosome_sizes}" \
-    "${prefix}_summits.bb" \
-    || exit 1
+bedToBigBed "${prefix}_summits.txt" "${chromosome_sizes}" "${prefix}_summits.bb" || exit 1
 
 rm "${prefix}_summits.txt" || exit 1
 
-exit 0
+echo "All done." || exit 1

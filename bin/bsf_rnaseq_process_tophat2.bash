@@ -28,155 +28,136 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-if [[ -z "${LANG}" ]];
-then
-    declare -x LANG='C';
+if [[ -z "${LANG}" ]]; then
+  declare -x LANG='C'
 else
-    LANG='C';
+  LANG='C'
 fi
 
-if test "$#" -lt '3';
-then
-    echo "Error: $(basename "${0}")  Too few arguments." 1>&2 \
-    || exit 1;
-    echo "Usage: $(basename "${0}")  <directory> <genome_fasta> <genome_sizes>" 1>&2 \
-    || exit 1;
-    exit 1;
+if test "$#" -lt '3'; then
+  echo "Error: $(basename "${0}")  Too few arguments." 1>&2 || exit 1
+  echo "Usage: $(basename "${0}")  <directory> <genome_fasta> <genome_sizes>" 1>&2 || exit 1
+  exit 1
 fi
 
-declare directory="${1}";
-declare genome_fasta="${2}";
-declare genome_sizes="${3}";
+declare directory="${1}"
+declare genome_fasta="${2}"
+declare genome_sizes="${3}"
 
-declare -x TMPDIR="{$directory}";
+declare -x TMPDIR="{$directory}"
 
 # Function to convert UCSC BED to BigBed files.
 
-function process_bed () {
+function process_bed() {
 
-    declare directory="${1}";
-    declare prefix="${2}";
-    declare genome_sizes="${3}";
+  declare directory="${1}"
+  declare prefix="${2}"
+  declare genome_sizes="${3}"
 
-    if [[ -f "${directory}/${prefix}.bb" ]];
-    then
-        return 0;
-    fi
+  if [[ -f "${directory}/${prefix}.bb" ]]; then
+    return 0
+  fi
 
-    # The UCSC bedToBigBed utility requires that track lines are stripped out. Sigh!
+  # The UCSC bedToBigBed utility requires that track lines are stripped out. Sigh!
 
-    # The BED format specification requires that the fifth field
-    # is an integer score between 0 and 1000.
-    # MACS does not seem to know or care about that.
-    # Use a Perl one-liner to correct this.
-    # The bedToBigBed does neither understand a 'stdin' option,
-    # nor is it capable of reading from standard input.
-    # Convert via a temporary *.txt file.
+  # The BED format specification requires that the fifth field
+  # is an integer score between 0 and 1000.
+  # MACS does not seem to know or care about that.
+  # Use a Perl one-liner to correct this.
+  # The bedToBigBed does neither understand a 'stdin' option,
+  # nor is it capable of reading from standard input.
+  # Convert via a temporary *.txt file.
 
-    # TODO: The score would need a complete re-scaling between 0 and 1000. Set to 0 in the meantime.
-    # TODO: This could be coded in a Executable or Runnable module that could also be run as a script.
+  # TODO: The score would need a complete re-scaling between 0 and 1000. Set to 0 in the meantime.
+  # TODO: This could be coded in a Executable or Runnable module that could also be run as a script.
 
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "${directory}/${prefix}.bed" \
-        | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-        > "${directory}/${prefix}.txt" \
-        || exit 1;
+  grep --extended-regexp --invert-match '^track|^browser' "${directory}/${prefix}.bed" |
+    perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
+      >"${directory}/${prefix}.txt"
+    [[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
-    sort -k1,1 -k2,2n "${directory}/${prefix}.txt" \
-        > "${directory}/${prefix}_sorted.txt" \
-        || exit 1;
+  sort -k1,1 -k2,2n "${directory}/${prefix}.txt" >"${directory}/${prefix}_sorted.txt" || exit 1
 
-    bedToBigBed \
-        "${directory}/${prefix}_sorted.txt" \
-        "${genome_sizes}" \
-        "${directory}/${prefix}.bb" \
-        || exit 1;
+  bedToBigBed "${directory}/${prefix}_sorted.txt" "${genome_sizes}" "${directory}/${prefix}.bb" || exit 1
 
-    rm "${directory}/${prefix}.txt" || exit 1;
-    rm "${directory}/${prefix}_sorted.txt" || exit 1;
+  rm "${directory}/${prefix}.txt" || exit 1
+  rm "${directory}/${prefix}_sorted.txt" || exit 1
 
-    return 0;
+  return 0
 
 }
 
-declare -a prefixes;
+declare -a prefixes
 
-prefixes[0]='deletions';
-prefixes[1]='insertions';
-prefixes[2]='junctions';
+prefixes[0]='deletions'
+prefixes[1]='insertions'
+prefixes[2]='junctions'
 
-for prefix in "${prefixes[@]}";
-do
-    process_bed "${directory}" "${prefix}" "${genome_sizes}";
+for prefix in "${prefixes[@]}"; do
+  process_bed "${directory}" "${prefix}" "${genome_sizes}"
 done
 
 # Re-sort the accepted_hits.bam file with the newer samtools.
 samtools sort \
-    -l 9 \
-    -m 2G \
-    -o "${directory}/accepted_hits_sorted.bam" \
-    --reference "${genome_fasta}" \
-    --threads 3 \
-    "${directory}/accepted_hits.bam" \
-    || exit 1;
+  -l 9 \
+  -m 2G \
+  -o "${directory}/accepted_hits_sorted.bam" \
+  --reference "${genome_fasta}" \
+  --threads 3 \
+  "${directory}/accepted_hits.bam" ||
+  exit 1
 
-mv "${directory}/accepted_hits_sorted.bam" "${directory}/accepted_hits.bam" || exit 1;
+mv "${directory}/accepted_hits_sorted.bam" "${directory}/accepted_hits.bam" || exit 1
 
 # Index the sorted BAM file accepted_hits.bam.
 
-samtools index \
-    -@ 3 \
-    "${directory}/accepted_hits.bam" \
-    || exit 1;
+samtools index -@ 3 "${directory}/accepted_hits.bam" || exit 1
 
 # Use RseQC bam.wig.py to create a UCSC Wig file.
 
 # TODO: This should set the --strand rule option.
 
 bam2wig.py \
-    --input-file "${directory}/accepted_hits.bam" \
-    --chromSize "${genome_sizes}" \
-    --out-prefix "${directory}/accepted_hits" \
-    || exit 1;
+  --input-file "${directory}/accepted_hits.bam" \
+  --chromSize "${genome_sizes}" \
+  --out-prefix "${directory}/accepted_hits" ||
+  exit 1
 
-function process_wig {
+function process_wig() {
 
-    declare directory="${1}";
-    declare prefix="${2}";
-    declare genome_sizes="${3}";
+  declare directory="${1}"
+  declare prefix="${2}"
+  declare genome_sizes="${3}"
 
-    if [[ -f "${directory}/accepted_hits${prefix}.wig" ]];
-    then
-        wigToBigWig \
-            -clip \
-            "${directory}/accepted_hits${prefix}.wig" \
-            "${genome_sizes}" \
-            "${directory}/accepted_hits${prefix}.bw" \
-            || exit 1;
+  if [[ -f "${directory}/accepted_hits${prefix}.wig" ]]; then
+    wigToBigWig \
+      -clip \
+      "${directory}/accepted_hits${prefix}.wig" \
+      "${genome_sizes}" \
+      "${directory}/accepted_hits${prefix}.bw" ||
+      exit 1
 
-        rm "${directory}/accepted_hits${prefix}.wig" \
-            || exit 1;
-    fi
+    rm "${directory}/accepted_hits${prefix}.wig" || exit 1
+  fi
 
-    return 0;
+  return 0
 
 }
 
 # Process by RseQC names for unstranded versus stranded data.
 
-prefixes[0]='';
-prefixes[1]='_Forward';
-prefixes[2]='_Reverse';
+prefixes[0]=''
+prefixes[1]='_Forward'
+prefixes[2]='_Reverse'
 
-for prefix in "${prefixes[@]}";
-do
-    process_wig "${directory}" "${prefix}" "${genome_sizes}";
+for prefix in "${prefixes[@]}"; do
+  process_wig "${directory}" "${prefix}" "${genome_sizes}"
 done
 
 # Create symbolic links.
 
-function bsf_link {
-  if [[ ! -h "${2}" ]]; then
+function bsf_link() {
+  if [[ ! -L "${2}" ]]; then
     ln -s "${1}" "${2}" || exit 1
   fi
 
@@ -188,4 +169,4 @@ bsf_link 'accepted_hits.bam.bai' "${directory}/${directory}_accepted_hits.bam.ba
 bsf_link 'unmapped.bam' "${directory}/${directory}_unmapped.bam"
 bsf_link 'align_summary.txt' "${directory}/${directory}_align_summary.txt"
 
-echo "All done." || exit 1;
+echo "All done." || exit 1
