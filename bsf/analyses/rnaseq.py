@@ -34,7 +34,7 @@ import warnings
 
 from bsf.analyses.hisat import Hisat2
 from bsf.analyses.kallisto import Kallisto
-from bsf.analyses.star_aligner import StarAligner
+from bsf.analyses.star import Star
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
 from bsf.connector import ConnectorFile
@@ -1360,7 +1360,7 @@ class Tuxedo(Analysis):
                 run_cufflinks_dependency = Hisat2.get_prefix_sample(
                     sample_name=sample.name)
             elif self.aligner == 'star':
-                run_cufflinks_dependency = StarAligner.get_prefix_sample(
+                run_cufflinks_dependency = Star.get_prefix_sample(
                     sample_name=sample.name)
             else:  # tophat2 is the default case.
                 # Create a Tophat Runnable per Sample.name.
@@ -1644,7 +1644,7 @@ class Tuxedo(Analysis):
                     Hisat2.get_file_path_sample(sample_name=sample.name).sample_bam)
             elif self.aligner == 'star':
                 runnable_step.arguments.append(
-                    StarAligner.get_file_path_sample(sample_name=sample.name).sample_bam)
+                    Star.get_file_path_sample(sample_name=sample.name).sample_bam)
             else:
                 runnable_step.arguments.append(
                     self.get_file_path_run_tophat(sample_name=sample.name).accepted_hits_bam)
@@ -2122,10 +2122,10 @@ class Tuxedo(Analysis):
                                 sample_name=sample.name).sample_bam)
                     elif self.aligner == 'star':
                         runnable_step_cuffquant.arguments.append(
-                            StarAligner.get_file_path_sample(
+                            Star.get_file_path_sample(
                                 sample_name=sample.name).sample_bam)
                         per_group_alignments_list.append(
-                            StarAligner.get_file_path_sample(
+                            Star.get_file_path_sample(
                                 sample_name=sample.name).sample_bam)
                     else:
                         runnable_step_cuffquant.arguments.append(
@@ -2462,14 +2462,14 @@ class Tuxedo(Analysis):
                 str_list.append('</p>\n')
                 str_list.append('\n')
             elif self.aligner == 'star':
-                str_list.append('<p id="star_aligner">')
+                str_list.append('<p id="star">')
                 str_list.append('<a href="https://github.com/alexdobin/STAR">STAR</a> ')
                 str_list.append('aligns RNA-seq reads to a reference genome in order to identify ')
                 str_list.append('exon-exon splice junctions. ')
                 # str_list.append('<br />\n')
                 str_list.append('Please see the ')
-                str_list.append('<a href="' + StarAligner.prefix + '_report.html">')
-                str_list.append(self.project_name + ' ' + StarAligner.name)
+                str_list.append('<a href="' + Star.prefix + '_report.html">')
+                str_list.append(self.project_name + ' ' + Star.name)
                 str_list.append('</a> report for quality plots and ')
                 str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
                 str_list.append('</p>\n')
@@ -2620,7 +2620,7 @@ class Tuxedo(Analysis):
                         file_path_aligner_sample = Hisat2.get_file_path_sample(
                             sample_name=sample.name)
                     elif self.aligner == 'star':
-                        file_path_aligner_sample = StarAligner.get_file_path_sample(
+                        file_path_aligner_sample = Star.get_file_path_sample(
                             sample_name=sample.name)
                     else:
                         raise Exception()
@@ -3978,13 +3978,13 @@ class DESeq(Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                file_path_star_aligner_sample = StarAligner.get_file_path_sample(
+                file_path_star_sample = Star.get_file_path_sample(
                     sample_name=sample.name)
                 file_path_kallisto_sample = Kallisto.get_file_path_sample(
                     sample_name=sample.name)
                 row_dict = {
-                    'bam_path': file_path_star_aligner_sample.sample_bam,
-                    'bai_path': file_path_star_aligner_sample.sample_bai,
+                    'bam_path': file_path_star_sample.sample_bam,
+                    'bai_path': file_path_star_sample.sample_bai,
                     'ah5_path': file_path_kallisto_sample.abundance_h5,
                 }
                 # If the sample annotation sheet contains a "DESeq sample" variable,
@@ -4057,14 +4057,14 @@ class DESeq(Analysis):
             str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
-            str_list.append('<p id="star_aligner">')
+            str_list.append('<p id="star">')
             str_list.append('<a href="https://github.com/alexdobin/STAR">STAR</a> ')
             str_list.append('aligns RNA-seq reads to a reference genome in order to identify ')
             str_list.append('exon-exon splice junctions.\n')
             # str_list.append('<br />\n')
             str_list.append('Please see the ')
-            str_list.append('<a href="' + StarAligner.prefix + '_report.html">')
-            str_list.append(self.project_name + ' ' + StarAligner.name)
+            str_list.append('<a href="' + Star.prefix + '_report.html">')
+            str_list.append(self.project_name + ' ' + Star.name)
             str_list.append('</a> report for quality plots and ')
             str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
             str_list.append('</p>\n')

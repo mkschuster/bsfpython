@@ -711,7 +711,7 @@ class Aligner(Analysis):
         annotation_sheet = AnnotationSheet(
             file_path=os.path.join(self.genome_directory, file_path_summary.read_group_to_sample_tsv),
             file_type='excel-tab',
-            name='star_aligner_read_group',
+            name='star_read_group',
             field_names=['sample', 'read_group'])
 
         runnable_sample_list = list()

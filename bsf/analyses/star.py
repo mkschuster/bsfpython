@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """STAR Analysis module.
 
-A package of classes and methods supporting the spliced Transcripts Alignment
-to a Reference (STAR) aligner by Alexander Dobin.
+A package of classes and methods supporting the Spliced Transcripts Alignment
+to a Reference (STAR) by Alexander Dobin.
 
 Project:  https://github.com/alexdobin/STAR
 """
@@ -41,19 +41,19 @@ from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
 
 class FilePathAlign(AlignerFilePathAlign):
-    """The C{bsf.analyses.star_aligner.FilePathAlign} class models file paths at the alignment stage.
+    """The C{bsf.analyses.star.FilePathAlign} class models file paths at the alignment stage.
 
     Attributes:
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
     @type aligned_sam: str
     @ivar splice_junctions_tsv: Splice junctions tab-separated value (TSV) file path
     @type splice_junctions_tsv: str
-    @ivar star_prefix: STAR Aligner outFileNamePrefix file path
+    @ivar star_prefix: STAR outFileNamePrefix file path
     @type star_prefix: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star_aligner.FilePathAlign} object
+        """Initialise a C{bsf.analyses.star.FilePathAlign} object
 
         @param prefix: Prefix
         @type prefix: str
@@ -71,13 +71,13 @@ class FilePathAlign(AlignerFilePathAlign):
 
 
 class FilePathSummary(AlignerFilePathSummary):
-    """The C{bsf.analyses.star_aligner.FilePathSummary} class models file paths at the summary stage.
+    """The C{bsf.analyses.star.FilePathSummary} class models file paths at the summary stage.
 
     Attributes:
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star_aligner.FilePathSummary} object
+        """Initialise a C{bsf.analyses.star.FilePathSummary} object
 
         @param prefix: Prefix
         @type prefix: str
@@ -110,8 +110,8 @@ class FilePathSummary(AlignerFilePathSummary):
         return
 
 
-class StarAligner(Aligner):
-    """STAR Aligner C{bsf.analyses.aligner.Aligner} sub-class.
+class Star(Aligner):
+    """STAR C{bsf.analyses.aligner.Aligner} sub-class.
 
     Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
@@ -130,8 +130,8 @@ class StarAligner(Aligner):
     @type classpath_picard: str | None
     """
 
-    name = 'STAR Aligner Analysis'
-    prefix = 'star_aligner'
+    name = 'STAR Analysis'
+    prefix = 'star'
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
@@ -173,7 +173,7 @@ class StarAligner(Aligner):
             two_pass_mapping=None,
             skip_mark_duplicates=None,
             classpath_picard=None):
-        """Initialise a C{bsf.analyses.star_aligner.StarAligner} object.
+        """Initialise a C{bsf.analyses.star.Star} object.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: Configuration
@@ -214,7 +214,7 @@ class StarAligner(Aligner):
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | None
         """
-        super(StarAligner, self).__init__(
+        super(Star, self).__init__(
             configuration=configuration,
             project_name=project_name,
             genome_version=genome_version,
@@ -242,7 +242,7 @@ class StarAligner(Aligner):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.star_aligner.StarAligner} object via a section of a
+        """Set instance variables of a C{bsf.analyses.star.Star} object via a section of a
         C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -251,7 +251,7 @@ class StarAligner(Aligner):
         @param section: Configuration file section
         @type section: str
         """
-        super(StarAligner, self).set_configuration(configuration=configuration, section=section)
+        super(Star, self).set_configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
 
@@ -287,7 +287,7 @@ class StarAligner(Aligner):
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
-        # Run the STAR Aligner
+        # Run STAR
 
         runnable_step = RunnableStep(
             name='STAR',
@@ -303,7 +303,7 @@ class StarAligner(Aligner):
         runnable_step.add_option_long(key='outFileNamePrefix', value=file_path_align.star_prefix)
         if self.two_pass_mapping == 'basic':
             runnable_step.add_option_long(key='twopassMode', value='Basic')
-        # NOTE: The STAR aligner command line interface is seriously broken,
+        # NOTE: The STAR command line interface is seriously broken,
         # as the readFilesIn option requires two values.
         # Hence, use class bsf.argument.OptionMultiLong via wrapper Command.add_option_multi_long().
         if file_path_2 is None:
@@ -339,15 +339,15 @@ class StarAligner(Aligner):
         """
         runnable_step = RunnableStep(
             name='star_summary',
-            program='bsf_star_aligner_summary.R')
+            program='bsf_star_summary.R')
         runnable_summary.add_runnable_step(runnable_step=runnable_step)
 
         return
 
     def run(self):
-        """Run this C{bsf.analyses.star_aligner.StarAligner} analysis.
+        """Run this C{bsf.analyses.star.Star} analysis.
 
-        Although the STAR aligner can directly count reads according to its splice junction database,
+        Although STAR can directly count reads according to its splice junction database,
         more than one read group may need aligning so that the count tables had to be combined.
         """
         # Check for the project name already here,
@@ -355,7 +355,7 @@ class StarAligner(Aligner):
         if not self.project_name:
             raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
 
-        # The STAR Aligner requires a transcriptome version.
+        # STAR requires a transcriptome version.
 
         if not self.transcriptome_version:
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
@@ -390,7 +390,7 @@ class StarAligner(Aligner):
             raise ('The ' + self.name + " 'two_pass_mapping' option can only take values " +
                    repr(two_pass_mapping_tuple) + ' not ' + repr(self.two_pass_mapping) + '.')
 
-        super(StarAligner, self).run()
+        super(Star, self).run()
 
         return
 

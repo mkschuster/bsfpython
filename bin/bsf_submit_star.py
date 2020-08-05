@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 #
-# BSF Python script to drive the STAR Aligner analysis.
+# BSF Python script to drive the STAR analysis.
 #
 #
 # Copyright 2013 - 2019 Michael K. Schuster
@@ -29,10 +29,10 @@
 import sys
 from argparse import ArgumentParser
 
-from bsf.analyses.star_aligner import StarAligner
+from bsf.analyses.star import Star
 
 argument_parser = ArgumentParser(
-    description=StarAligner.name + ' driver script.')
+    description=Star.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -54,9 +54,9 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-# Create a StarAligner Analysis and run it.
+# Create a Star Analysis and run it.
 
-analysis = StarAligner.from_config_file_path(config_path=name_space.configuration)
+analysis = Star.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug
