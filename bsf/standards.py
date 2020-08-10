@@ -1221,13 +1221,13 @@ class StandardFilePath(BaseSection):
             file_name)
 
     @classmethod
-    def get_resource_gatk_bundle(cls, gatk_bundle_version=None, genome_version=None, absolute=True):
+    def get_resource_gatk_bundle(cls, genome_version=None, gatk_bundle_version=None, absolute=True):
         """Get the GATK Bundle resource directory path.
 
-        @param gatk_bundle_version: The GATK bundle version
-        @type gatk_bundle_version: str | None
         @param genome_version: The genome version (e.g. b37, ...)
         @type genome_version: str | None
+        @param gatk_bundle_version: The GATK bundle version
+        @type gatk_bundle_version: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: GATK Bundle resource directory path
@@ -1235,11 +1235,11 @@ class StandardFilePath(BaseSection):
         """
         file_path = cls.get(option='gatk_bundle')
 
-        if gatk_bundle_version:
-            file_path = os.path.join(file_path, gatk_bundle_version)
-
         if genome_version:
             file_path = os.path.join(file_path, genome_version)
+
+        if gatk_bundle_version:
+            file_path = os.path.join(file_path, gatk_bundle_version)
 
         return cls._prepend_resource(absolute=absolute, file_path=file_path)
 
