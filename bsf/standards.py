@@ -343,6 +343,28 @@ class BaseSection(object):
         else:
             return
 
+    @classmethod
+    def get_expanded_directory(cls, option=None):
+        """Get configuration information for a directory and expand it.
+
+        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
+        any environment variables i.e. on UNIX ${NAME} or $NAME.
+        @param option: Configuration option
+        @type option: str | None
+        @return: Expanded directory
+        @rtype: str | None
+        """
+        if not cls.section:
+            return
+
+        if not option:
+            return
+
+        if Configuration.get_global_configuration().config_parser.has_option(section=cls.section, option=option):
+            return Configuration.get_global_configuration().get_expanded_directory(section=cls.section, option=option)
+        else:
+            return
+
 
 class BaseSectionVersion(object):
     """The C{bsf.standards.BaseSectionVersion} class is the base class for a global configuration section and version.
@@ -889,7 +911,7 @@ class StandardFilePath(BaseSection):
         @return: Cache directory path
         @rtype: str | None
         """
-        return cls.get(option='cache')
+        return cls.get_expanded_directory(option='cache')
 
     @classmethod
     def get_home(cls):
@@ -898,7 +920,7 @@ class StandardFilePath(BaseSection):
         @return: Home directory path
         @rtype: str | None
         """
-        return cls.get(option='home')
+        return cls.get_expanded_directory(option='home')
 
     @classmethod
     def _prepend_home(cls, absolute=True, file_path=None):
@@ -928,7 +950,7 @@ class StandardFilePath(BaseSection):
         @return: Illumina Run Folder directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='illumina_run'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='illumina_run'))
 
     @classmethod
     def get_illumina_sav(cls, absolute=True):
@@ -939,7 +961,7 @@ class StandardFilePath(BaseSection):
         @return: Illumina Sequence Analysis Viewer directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='illumina_sav'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='illumina_sav'))
 
     @classmethod
     def get_sequences(cls, absolute=True):
@@ -950,7 +972,7 @@ class StandardFilePath(BaseSection):
         @return: Sequences directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='sequences'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='sequences'))
 
     @classmethod
     def get_samples(cls, absolute=True):
@@ -961,7 +983,7 @@ class StandardFilePath(BaseSection):
         @return: Samples directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='samples'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='samples'))
 
     @classmethod
     def get_projects(cls, absolute=True):
@@ -972,7 +994,7 @@ class StandardFilePath(BaseSection):
         @return: Analysis projects directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='projects'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='projects'))
 
     @classmethod
     def get_public_html(cls, absolute=True):
@@ -983,7 +1005,7 @@ class StandardFilePath(BaseSection):
         @return: Web server directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='public_html'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='public_html'))
 
     @classmethod
     def get_resource(cls, absolute=True):
@@ -994,7 +1016,7 @@ class StandardFilePath(BaseSection):
         @return: Resources directory path
         @rtype: str | None
         """
-        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='resources'))
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='resources'))
 
     @classmethod
     def _prepend_resource(cls, absolute=True, file_path=None):
@@ -1026,7 +1048,7 @@ class StandardFilePath(BaseSection):
         @return: Genome directory path
         @rtype: str | None
         """
-        file_path = cls.get(option='genomes')
+        file_path = cls.get_expanded_directory(option='genomes')
 
         if genome_version:
             file_path = os.path.join(file_path, genome_version)
@@ -1134,7 +1156,7 @@ class StandardFilePath(BaseSection):
         @return: Transcriptome resource directory path
         @rtype: str | None
         """
-        file_path = cls.get(option='transcriptomes')
+        file_path = cls.get_expanded_directory(option='transcriptomes')
 
         if transcriptome_version:
             file_path = os.path.join(file_path, transcriptome_version)
@@ -1233,7 +1255,7 @@ class StandardFilePath(BaseSection):
         @return: GATK Bundle resource directory path
         @rtype: str | None
         """
-        file_path = cls.get(option='gatk_bundle')
+        file_path = cls.get_expanded_directory(option='gatk_bundle')
 
         if genome_version:
             file_path = os.path.join(file_path, genome_version)
@@ -1252,7 +1274,7 @@ class StandardFilePath(BaseSection):
         @return: Target Intervals resource directory path
         @rtype: str | None
         """
-        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='intervals'))
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='intervals'))
 
     @classmethod
     def get_resource_cadd(cls, absolute=True):
@@ -1263,7 +1285,7 @@ class StandardFilePath(BaseSection):
         @return: Combined Annotation Dependent Depletion (CADD) resource directory path
         @rtype: str | None
         """
-        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cadd'))
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='cadd'))
 
     @classmethod
     def get_resource_cosmic(cls, absolute=True):
@@ -1274,7 +1296,7 @@ class StandardFilePath(BaseSection):
         @return: Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path
         @rtype: str | None
         """
-        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cosmic'))
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='cosmic'))
 
     @classmethod
     def get_resource_snpeff_data(cls, absolute=True):
@@ -1285,7 +1307,7 @@ class StandardFilePath(BaseSection):
         @return: snpEff Data resource directory path
         @rtype: str | None
         """
-        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='snpeff_data'))
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='snpeff_data'))
 
 
 class Index(BaseSection):
@@ -1517,7 +1539,7 @@ class Secrets(BaseSection):
         @return: File path to configuration file with secrets.
         @rtype: str | None
         """
-        file_path = os.path.normpath(os.path.expandvars(os.path.expanduser(cls.get(option=option))))
+        file_path = cls.get_expanded_directory(option=option)
 
         if not file_path:
             return None
@@ -1612,6 +1634,7 @@ class CentralIndexDirectories(object):
     @ivar tophat2: Tophat2 index directory name
     @type tophat2: str
     """
+
     def __init__(self):
         """Initialise a C{bsf.standards.CentralIndexDirectories} object.
 
