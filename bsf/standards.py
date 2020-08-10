@@ -414,6 +414,27 @@ class BaseSectionVersion(object):
             return
 
 
+class JavaArchive(BaseSection):
+    """The C{bsf.standards.JavaArchive} class models Java archive defaults.
+
+    The defaults are read from the [java_archive] section of the global configuration file.
+    Attributes:
+    @cvar section: C{configparser.ConfigParser} section
+    @type section: str
+    """
+
+    section = 'java_archive'
+
+    @classmethod
+    def get_fgbio(cls):
+        """Get the Fulcrum Genomics (fgbio) Java archive path.
+
+        @return: Fulcrum Genomics (fgbio) Java archive path
+        @rtype: str | None
+        """
+        return cls.get(option='fgbio')
+
+
 class JavaClassPath(BaseSection):
     """The C{bsf.standards.JavaClassPath} class models Java class path defaults.
 

@@ -43,7 +43,7 @@ from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, Runnable, ConsecutiveRunnable
 from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
-from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaClassPath
+from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive, JavaClassPath
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -203,6 +203,12 @@ class FilePathProcessReadGroup(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathProcessReadGroup} models files in a sample-specific directory.
 
     Attributes:
+    @ivar trimmed_bam: Fulcrum Genomics (fgbio) TrimPrimer BAM file path
+    @type trimmed_bam: str
+    @ivar trimmed_bai: Fulcrum Genomics (fgbio) TrimPrimer BAI file path
+    @type trimmed_bai: str
+    @ivar trimmed_md5: Fulcrum Genomics (fgbio) TrimPrimer MD5 check sum file path
+    @type trimmed_md5: str
     @ivar duplicates_marked_bam: Picard Mark Duplicates BAM file path
     @type duplicates_marked_bam: str
     @ivar duplicates_marked_bai: Picard Mark Duplicates BAI file path
@@ -243,6 +249,9 @@ class FilePathProcessReadGroup(FilePath):
         """
         super(FilePathProcessReadGroup, self).__init__(prefix=prefix)
 
+        self.trimmed_bam = prefix + '_trimmed.bam'
+        self.trimmed_bai = prefix + '_trimmed.bai'
+        self.trimmed_md5 = prefix + '_trimmed.bam.md5'
         self.duplicates_marked_bam = prefix + '_duplicates_marked.bam'
         self.duplicates_marked_bai = prefix + '_duplicates_marked.bai'
         self.duplicates_marked_md5 = prefix + '_duplicates_marked.bam.md5'
@@ -783,6 +792,63 @@ class VariantCallingGATKComparison(object):
             return
 
 
+class VariantCallingGATKAmplicons(object):
+    """C{bsf.analyses.variant_calling.VariantCallingGATKAmplicons} class representing amplicons.
+
+    Attributes:
+    @ivar name: Name
+    @type name: str | None
+    @ivar amplicons_path: Amplicons file path
+    @type amplicons_path: str | None
+    """
+
+    @classmethod
+    def from_sample(cls, sample):
+        """Create a C{VariantCallingGATKAmplicons} object from a C{bsf.ngs.Sample} object.
+
+        @param sample: C{bsf.ngs.Sample}
+        @type sample: Sample
+        @return: C{bsf.analyses.variant_calling.VariantCallingGATKAmplicons}
+        @rtype: VariantCallingGATKAmplicons
+        """
+        amplicons = cls()
+
+        if 'Amplicons Name' in sample.annotation_dict:
+            amplicons_name_list = sample.annotation_dict['Amplicons Name']
+            if len(amplicons_name_list) > 1:
+                raise Exception('More than one Amplicons Name annotation per sample is not allowed.\n'
+                                'Sample: {!r} Amplicons Name list: {!r}'.
+                                format(sample.name, amplicons_name_list))
+            amplicons.name = amplicons_name_list[0]
+
+        if 'Amplicons' in sample.annotation_dict:
+            amplicons_path_list = sample.annotation_dict['Amplicons']
+            if len(amplicons_path_list) > 1:
+                raise Exception('More than one Amplicons annotation per sample is not allowed.\n'
+                                'Sample: {!r} Amplicons list: {!r}'.
+                                format(sample.name, amplicons_path_list))
+            amplicons.amplicons_path = amplicons_path_list[0]
+            if amplicons.amplicons_path and not os.path.isabs(amplicons.amplicons_path):
+                amplicons.calling_path = Configuration.get_absolute_path(
+                    file_path=amplicons.calling_path,
+                    default_path=StandardFilePath.get_resource_intervals(absolute=True))
+
+        return amplicons
+
+    def __init__(self, name=None, amplicons_path=None):
+        """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATKAmplicons} object.
+
+        @param name: Name
+        @type name: str | None
+        @param amplicons_path: Calling intervals file path
+        @type amplicons_path: str | None
+        """
+        self.name = name
+        self.amplicons_path = amplicons_path
+
+        return
+
+
 class VariantCallingGATKCallingIntervals(object):
     """C{bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals} class representing calling intervals.
 
@@ -1028,6 +1094,8 @@ class VariantCallingGATK(Analysis):
     @type vep_refseq_alignments_path: str | None
     @ivar vep_plugin_cadd_path: Ensembl Variant Effect Predictor (VEP) CADD file path
     @type vep_plugin_cadd_path: str | None
+    @ivar java_archive_fgbio: Fulcrum Genomics (fgbio) Java archive path
+    @type java_archive_fgbio: str | None
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
     @type classpath_gatk: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1621,6 +1689,7 @@ class VariantCallingGATK(Analysis):
             vep_soc_path=None,
             vep_refseq_alignments_path=None,
             vep_plugin_cadd_path=None,
+            java_archive_fgbio=None,
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None,
@@ -1759,6 +1828,8 @@ class VariantCallingGATK(Analysis):
         @type vep_refseq_alignments_path: str | None
         @param vep_plugin_cadd_path: Ensembl Variant Effect Predictor (VEP) CADD file path
         @type vep_plugin_cadd_path: str | None
+        @param java_archive_fgbio: Fulcrum Genomics (fgbio) Java archive path
+        @type java_archive_fgbio: str | None
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
         @type classpath_gatk: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1844,6 +1915,7 @@ class VariantCallingGATK(Analysis):
         self.vep_refseq_alignments_path = vep_refseq_alignments_path
         self.vep_plugin_cadd_path = vep_plugin_cadd_path
 
+        self.java_archive_fgbio = java_archive_fgbio
         self.classpath_gatk = classpath_gatk
         self.classpath_picard = classpath_picard
         self.classpath_snpeff = classpath_snpeff
@@ -1867,7 +1939,8 @@ class VariantCallingGATK(Analysis):
 
     @property
     def get_gatk_bundle_path(self):
-        """Get the absolute GATK bundle directory C{bsf.standards.StandardFilePath.get_resource_gatk_bundle()} for the set
+        """Get the absolute GATK bundle directory
+        C{bsf.standards.StandardFilePath.get_resource_gatk_bundle()} for the set
         C{bsf.analyses.variant_calling.VariantCallingGATK.gatk_bundle_version} and
         C{bsf.analyses.variant_calling.VariantCallingGATK.genome_version}.
 
@@ -2197,6 +2270,10 @@ class VariantCallingGATK(Analysis):
         option = 'vep_plugin_cadd_path'
         if config_parser.has_option(section=section, option=option):
             self.vep_plugin_cadd_path = config_parser.get(section=section, option=option)
+
+        option = 'java_archive_fgbio'
+        if config_parser.has_option(section=section, option=option):
+            self.java_archive_fgbio = config_parser.get(section=section, option=option)
 
         option = 'classpath_gatk'
         if config_parser.has_option(section=section, option=option):
@@ -3531,6 +3608,11 @@ class VariantCallingGATK(Analysis):
             if cadd_resource_path:
                 self.vep_plugin_cadd_path = os.path.join(cadd_resource_path, self.vep_plugin_cadd_path)
 
+        if not self.java_archive_fgbio:
+            self.java_archive_fgbio = JavaArchive.get_fgbio()
+            if not self.java_archive_fgbio:
+                raise Exception('A ' + self.name + " requires a 'java_archive_fgbio' configuration option.")
+
         if not self.classpath_gatk:
             self.classpath_gatk = JavaClassPath.get_gatk()
             if not self.classpath_gatk:
@@ -3945,21 +4027,68 @@ class VariantCallingGATK(Analysis):
                 else:
                     reference_process_lane = self.bwa_genome_db
 
+                # Run fgbio TrimPrimer if requested.
+
+                amplicons = VariantCallingGATKAmplicons.from_sample(sample=sample)
+                if amplicons.amplicons_path:
+                    runnable_step = RunnableStepJava(
+                        name='trim_primers',
+                        java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
+                        java_heap_maximum='Xmx4G',
+                        java_jar_path=self.java_archive_fgbio)
+                    runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
+
+                    # Use a sequence of sub-Command objects to separate options that have to appear
+                    # in a particular order. Sigh!
+
+                    # Sub-command to separate the fgbio Java archive from general options
+                    runnable_step.sub_command.sub_command = Command()
+                    # async-io [false]
+                    runnable_step.sub_command.sub_command.add_option_pair_long(key='async-io', value='true')
+                    # compression [5]
+                    # runnable_step.sub_command.sub_command.add_option_long(key='compression', value='9')
+                    runnable_step.sub_command.sub_command.add_option_pair_long(
+                        key='tmp-dir',
+                        value=runnable_process_lane.temporary_directory_path(absolute=False))
+                    # log-level [Info]
+                    # sam-validation-stringency []
+
+                    # fgbio 'TrimPrimer' command
+                    runnable_step.sub_command.sub_command.sub_command = Command(program='TrimPrimers')
+                    sub_command = runnable_step.sub_command.sub_command.sub_command
+                    sub_command.add_option_pair_long(
+                        key='input',
+                        value=file_path_alignment.aligned_bam)
+                    sub_command.add_option_pair_long(
+                        key='output',
+                        value=file_path_process_read_group.trimmed_bam)
+                    sub_command.add_option_pair_long(key='primers', value=amplicons.amplicons_path)
+                    sub_command.add_option_pair_long(key='hard-clip', value='true')
+                    sub_command.add_option_pair_long(key='ref', value=reference_process_lane)
+                    # slop [5]
+                    # sort-order [input sort order]
+                    # auto-trim-attributes [false]
+                    # NOTE: This option trims all attributes, even the RG (read group)
+                else:
+                    file_path_process_read_group.trimmed_bam = file_path_alignment.aligned_bam
+                    file_path_process_read_group.trimmed_bai = file_path_alignment.aligned_bai
+                    file_path_process_read_group.trimmed_md5 = file_path_alignment.aligned_md5
+
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
 
                 if self.skip_mark_duplicates:
-                    file_path_process_read_group.duplicates_marked_bam = file_path_alignment.aligned_bam
-                    file_path_process_read_group.duplicates_marked_bai = file_path_alignment.aligned_bai
-                    file_path_process_read_group.duplicates_marked_md5 = file_path_alignment.aligned_md5
+                    file_path_process_read_group.duplicates_marked_bam = file_path_process_read_group.trimmed_bam
+                    file_path_process_read_group.duplicates_marked_bai = file_path_process_read_group.trimmed_bai
+                    file_path_process_read_group.duplicates_marked_md5 = file_path_process_read_group.trimmed_md5
                 else:
                     # Run the Picard MarkDuplicates analysis.
 
                     runnable_step = RunnableStepPicard(
                         name='process_lane_picard_mark_duplicates',
                         obsolete_file_path_list=[
-                            file_path_alignment.aligned_bam,
-                            file_path_alignment.aligned_bai,
-                            file_path_alignment.aligned_md5,
+                            file_path_process_read_group.trimmed_bam,
+                            file_path_process_read_group.trimmed_bai,
+                            file_path_process_read_group.trimmed_md5,
                         ],
                         java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
@@ -3967,7 +4096,7 @@ class VariantCallingGATK(Analysis):
                         picard_command='MarkDuplicates')
                     runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_alignment.aligned_bam)
+                    runnable_step.add_picard_option(key='INPUT', value=file_path_process_read_group.trimmed_bam)
                     runnable_step.add_picard_option(
                         key='OUTPUT',
                         value=file_path_process_read_group.duplicates_marked_bam)
