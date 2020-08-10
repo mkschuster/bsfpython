@@ -1011,7 +1011,7 @@ class Aligner(Analysis):
                     # OUTPUT []
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.sorted_bam)
                     # SORT_ORDER []
-                    runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
+                    runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
