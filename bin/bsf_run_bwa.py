@@ -161,7 +161,6 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     # Now run Picard SamToFastq to convert.
 
     java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
-    java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
     java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
@@ -248,7 +247,6 @@ if os.path.exists(path_fastq_2):
 # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
 
 java_process = Executable(name='clean_sam', program='java', sub_command=Command())
-java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
 java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
@@ -328,7 +326,6 @@ if len(sam_header_pg) or len(sam_header_rg):
     # Run Picard ReplaceSamHeader.
 
     java_process = Executable(name='replace_sam_header', program='java', sub_command=Command())
-    java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
     java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
@@ -380,7 +377,6 @@ if os.path.exists(path_aligned_sam):
 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
 
 java_process = Executable(name='sort_sam', program='java', sub_command=Command())
-java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
 java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)

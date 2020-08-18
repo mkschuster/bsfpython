@@ -1577,8 +1577,6 @@ class RunnableStepJava(RunnableStep):
             self.program = 'java'
 
         # JavaVM options
-        if 'd64' not in self.options:
-            self.add_switch_short(key='d64')
 
         if 'server' not in self.options:
             self.add_switch_short(key='server')

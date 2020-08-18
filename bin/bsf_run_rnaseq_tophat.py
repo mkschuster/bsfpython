@@ -92,7 +92,6 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # Now run Picard SamToFastq to convert.
 
     executable_java = Executable(name='sam_to_fastq', program='java', sub_command=Command())
-    executable_java.add_switch_short(key='d64')
     executable_java.add_switch_short(key='server')
     executable_java.add_switch_short(key='Xmx4G')
 

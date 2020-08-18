@@ -3238,8 +3238,6 @@ class VariantCallingGATK(Analysis):
                 stdout=ConnectorFile(file_path=file_path_annotate.snpeff_vcf, file_mode='wt'))
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
-            _runnable_step.add_switch_short(
-                key='d64')
             _runnable_step.add_option_short(
                 key='jar',
                 value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
