@@ -505,16 +505,26 @@ class FilePathAnnotateSnpEff(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathAnnotateSnpEff} models snpEff-annotated, cohort-specific files.
 
     Attributes:
-    @ivar snpeff_vcf: snpEff VCF file path
-    @type snpeff_vcf: str
-    @ivar snpeff_vcf_bgz: Bgzip-compressed snpEff VCF file path
-    @type snpeff_vcf_bgz: str
-    @ivar snpeff_vcf_tbi: Tabix-indexed snpEff VCF file path
-    @type snpeff_vcf_tbi: str
-    @ivar snpeff_genes: snpEff genes annotation TXT file path
-    @type snpeff_genes: str
-    @ivar snpeff_stats: snpEff statistics HTML file path
-    @type snpeff_stats: str
+    @ivar complete_vcf: Complete snpEff VCF file path
+    @type complete_vcf: str
+    @ivar complete_vcf_bgz: Bgzip-compressed complete snpEff VCF file path
+    @type complete_vcf_bgz: str
+    @ivar complete_vcf_tbi: Tabix-indexed complete snpEff VCF file path
+    @type complete_vcf_tbi: str
+    @ivar complete_genes: Complete snpEff genes annotation TXT file path
+    @type complete_genes: str
+    @ivar complete_stats: Complete snpEff statistics HTML file path
+    @type complete_stats: str
+    @ivar gatk_vcf: GATK-style snpEff VCF file path
+    @type gatk_vcf: str
+    @ivar gatk_vcf_bgz: Bgzip-compressed GATK-style snpEff VCF file path
+    @type gatk_vcf_bgz: str
+    @ivar gatk_vcf_tbi: Tabix-indexed GATK-style snpEff VCF file path
+    @type gatk_vcf_tbi: str
+    @ivar gatk_genes: GATK-style snpEff genes annotation TXT file path
+    @type gatk_genes: str
+    @ivar gatk_stats: GATK-style snpEff statistics HTML file path
+    @type gatk_stats: str
     @ivar annotated_vcf: Annotated VCF file path
     @type annotated_vcf: str
     @ivar annotated_tbi: Annotated TBI file path
@@ -529,11 +539,16 @@ class FilePathAnnotateSnpEff(FilePath):
         """
         super(FilePathAnnotateSnpEff, self).__init__(prefix=prefix)
 
-        self.snpeff_vcf = prefix + '_snpeff.vcf'
-        self.snpeff_vcf_bgz = prefix + '_snpeff.vcf.gz'
-        self.snpeff_vcf_tbi = prefix + '_snpeff.vcf.gz.tbi'
-        self.snpeff_genes = prefix + '_snpeff_summary.genes.txt'
-        self.snpeff_stats = prefix + '_snpeff_summary.html'
+        self.complete_vcf = prefix + '_complete.vcf'
+        self.complete_vcf_bgz = prefix + '_complete.vcf.gz'
+        self.complete_vcf_tbi = prefix + '_complete.vcf.gz.tbi'
+        self.complete_genes = prefix + '_complete_summary.genes.txt'
+        self.complete_stats = prefix + '_complete_summary.html'
+        self.gatk_vcf = prefix + '_gatk.vcf'
+        self.gatk_vcf_bgz = prefix + '_gatk.vcf.gz'
+        self.gatk_vcf_tbi = prefix + '_gatk.vcf.gz.tbi'
+        self.gatk_genes = prefix + '_gatk_summary.genes.txt'
+        self.gatk_stats = prefix + '_gatk_summary.html'
         self.annotated_vcf = prefix + '_annotated.vcf.gz'
         self.annotated_tbi = prefix + '_annotated.vcf.gz.tbi'
 
@@ -3229,45 +3244,76 @@ class VariantCallingGATK(Analysis):
             else:
                 reference_annotate = self.bwa_genome_db
 
-            # Run the snpEff tool for functional variant annotation.
+            # Run the snpEff tool for functional variant annotation in VCF output mode.
 
-            _runnable_step = RunnableStep(
-                name='snpeff',
-                program='java',
-                sub_command=Command(program='eff'),
-                stdout=ConnectorFile(file_path=file_path_annotate.snpeff_vcf, file_mode='wt'))
+            _runnable_step = RunnableStepJava(
+                name='snpeff_complete',
+                stdout=ConnectorFile(file_path=file_path_annotate.complete_vcf, file_mode='wt'),
+                java_temporary_path=runnable_annotate.temporary_directory_path(absolute=False),
+                java_jar_path=os.path.join(self.classpath_snpeff, 'snpEff.jar'),
+                java_heap_maximum='Xmx6G')
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
-            _runnable_step.add_option_short(
-                key='jar',
-                value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
-            _runnable_step.add_switch_short(
-                key='Xmx6G')
-            _runnable_step.add_option_pair(
-                key='-Djava.io.tmpdir',
-                value=runnable_annotate.temporary_directory_path(absolute=False))
-
-            _sub_command = _runnable_step.sub_command
+            # Use a sequence of sub-Command objects to separate options that have to appear
+            # in a particular order. Sigh!
+            _runnable_step.sub_command.sub_command = Command(program='ann')
+            _sub_command = _runnable_step.sub_command.sub_command
             _sub_command.add_switch_short(key='download')
-            _sub_command.add_option_short(key='o', value='gatk')
-            _sub_command.add_option_short(key='stats', value=file_path_annotate.snpeff_stats)
+            _sub_command.add_option_short(key='o', value='vcf')
+            _sub_command.add_option_short(key='stats', value=file_path_annotate.complete_stats)
             _sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
 
             _sub_command.arguments.append(self.snpeff_genome_version)
             _sub_command.arguments.append(vcf_file_path)
 
-            # Automatically compress and index the snpEff VCF file with bgzip and tabix, respectively.
+            # Compress and index the snpEff VCF file with bgzip and tabix, respectively.
 
             _runnable_step = RunnableStep(
-                name='snpeff_bgzip',
+                name='bgzip_complete',
                 program='bgzip',
-                arguments=[file_path_annotate.snpeff_vcf])
+                arguments=[file_path_annotate.complete_vcf])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step = RunnableStep(
-                name='snpeff_tabix',
+                name='tabix_complete',
                 program='tabix',
-                arguments=[file_path_annotate.snpeff_vcf_bgz])
+                arguments=[file_path_annotate.complete_vcf_bgz])
+            runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
+
+            # Run the snpEff tool for functional variant annotation in GATK output mode.
+
+            _runnable_step = RunnableStepJava(
+                name='snpeff_gatk',
+                stdout=ConnectorFile(file_path=file_path_annotate.gatk_vcf, file_mode='wt'),
+                java_temporary_path=runnable_annotate.temporary_directory_path(absolute=False),
+                java_jar_path=os.path.join(self.classpath_snpeff, 'snpEff.jar'),
+                java_heap_maximum='Xmx6G')
+            runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
+
+            # Use a sequence of sub-Command objects to separate options that have to appear
+            # in a particular order. Sigh!
+            _runnable_step.sub_command.sub_command = Command(program='ann')
+            _sub_command = _runnable_step.sub_command.sub_command
+            _sub_command.add_switch_short(key='download')
+            _sub_command.add_option_short(key='o', value='gatk')
+            _sub_command.add_option_short(key='stats', value=file_path_annotate.gatk_stats)
+            _sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
+
+            _sub_command.arguments.append(self.snpeff_genome_version)
+            _sub_command.arguments.append(vcf_file_path)
+
+            # Compress and index the snpEff VCF file with bgzip and tabix, respectively.
+
+            _runnable_step = RunnableStep(
+                name='bgzip_gatk',
+                program='bgzip',
+                arguments=[file_path_annotate.gatk_vcf])
+            runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
+
+            _runnable_step = RunnableStep(
+                name='tabix_gatk',
+                program='tabix',
+                arguments=[file_path_annotate.gatk_vcf_bgz])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step.add_option_long(key='preset', value='vcf')
@@ -3303,7 +3349,7 @@ class VariantCallingGATK(Analysis):
             # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
             # _runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
             _runnable_step.add_gatk_option(key='annotation', value='SnpEff')
-            _runnable_step.add_gatk_option(key='snpEffFile', value=file_path_annotate.snpeff_vcf_bgz)
+            _runnable_step.add_gatk_option(key='snpEffFile', value=file_path_annotate.gatk_vcf_bgz)
             _runnable_step.add_gatk_option(key='out', value=file_path_annotate.annotated_vcf)
 
             return runnable_annotate
@@ -6087,12 +6133,12 @@ class VariantCallingGATK(Analysis):
             str_list.append('<tr>\n')
             str_list.append('<td class="left">' + self.cohort_name + '</td>\n')
             str_list.append('<td class="left">')
-            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.snpeff_stats + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.gatk_stats + '">')
             str_list.append('snpEff Summary Statistics')
             str_list.append('</a>')
             str_list.append('</td>\n')
             str_list.append('<td class="left">')
-            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.snpeff_genes + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.gatk_genes + '">')
             str_list.append('snpEff Summary Genes')
             str_list.append('</a>')
             str_list.append('</td>\n')
@@ -6102,10 +6148,10 @@ class VariantCallingGATK(Analysis):
             str_list.append('<td class="left">' + self.cohort_name + '</td>\n')
             str_list.append('<td class="left">')
             str_list.append('snpEff-annotated multi-sample ')
-            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.snpeff_vcf_bgz + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.gatk_vcf_bgz + '">')
             str_list.append('<abbr title="Variant Calling Format">VCF</abbr>')
             str_list.append('</a> and ')
-            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.snpeff_vcf_tbi + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_snpeff.gatk_vcf_tbi + '">')
             str_list.append('<abbr title="Tabix Index">TBI</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
@@ -6220,10 +6266,10 @@ class VariantCallingGATK(Analysis):
 
                     # Summary Statistics
                     str_list.append('<td class="center">')
-                    str_list.append('<a href="' + file_path_annotate_somatic_snpeff.snpeff_stats + '">')
+                    str_list.append('<a href="' + file_path_annotate_somatic_snpeff.gatk_stats + '">')
                     str_list.append('<abbr title="Hyper Text Markup Language">HTML</abbr>')
                     str_list.append('</a>&nbsp;')
-                    str_list.append('<a href="' + file_path_annotate_somatic_snpeff.snpeff_genes + '">')
+                    str_list.append('<a href="' + file_path_annotate_somatic_snpeff.gatk_genes + '">')
                     str_list.append('<abbr title="Text">TXT</abbr>')
                     str_list.append('</a><br />')
                     str_list.append('<a href="' + file_path_annotate_somatic_vep.statistics + '">')
