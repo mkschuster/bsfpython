@@ -544,28 +544,28 @@ class FilePathAnnotateVEP(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathAnnotateVEP} models Ensembl VEP-annotated, cohort-specific files.
 
     Attributes:
-    @ivar vep_statistics: Ensembl VEP statistics HTML file path
-    @type vep_statistics: str
-    @ivar vep_complete_raw_vcf: Ensembl VEP complete raw VCF file path
-    @type vep_complete_raw_vcf: str
-    @ivar vep_complete_raw_vcf_bgz: Ensembl VEP complete, raw Bgzip-compressed VCF file path
-    @type vep_complete_raw_vcf_bgz: str
-    @ivar vep_complete_raw_vcf_tbi: Ensembl VEP complete, raw Tabix-indexed TBI file path
-    @type vep_complete_raw_vcf_tbi: str
-    @ivar vep_filtered_raw_vcf: Ensembl VEP filtered, raw VCF file path
-    @type vep_filtered_raw_vcf: str
-    @ivar vep_filtered_raw_vcf_bgz: Ensembl VEP filtered, raw Bgzip-compressed VCF file path
-    @type vep_filtered_raw_vcf_bgz: str
-    @ivar vep_filtered_raw_vcf_tbi: Ensembl VEP filtered, raw Tabix-indexed TBI file path
-    @type vep_filtered_raw_vcf_tbi: str
-    @ivar vep_complete_vcf_bgz: Ensembl VEP complete VCF file path
-    @type vep_complete_vcf_bgz: str
-    @ivar vep_complete_vcf_tbi: Ensembl VEP complete TBI file path
-    @type vep_complete_vcf_tbi: str
-    @ivar vep_filtered_vcf_bgz: Ensembl VEP filtered VCF file path
-    @type vep_filtered_vcf_bgz: str
-    @ivar vep_filtered_vcf_tbi: Ensembl VEP filtered TBI file path
-    @type vep_filtered_vcf_tbi: str
+    @ivar statistics: Ensembl VEP statistics HTML file path
+    @type statistics: str
+    @ivar complete_raw_vcf: Ensembl VEP complete raw VCF file path
+    @type complete_raw_vcf: str
+    @ivar complete_raw_vcf_bgz: Ensembl VEP complete, raw Bgzip-compressed VCF file path
+    @type complete_raw_vcf_bgz: str
+    @ivar complete_raw_vcf_tbi: Ensembl VEP complete, raw Tabix-indexed TBI file path
+    @type complete_raw_vcf_tbi: str
+    @ivar filtered_raw_vcf: Ensembl VEP filtered, raw VCF file path
+    @type filtered_raw_vcf: str
+    @ivar filtered_raw_vcf_bgz: Ensembl VEP filtered, raw Bgzip-compressed VCF file path
+    @type filtered_raw_vcf_bgz: str
+    @ivar filtered_raw_vcf_tbi: Ensembl VEP filtered, raw Tabix-indexed TBI file path
+    @type filtered_raw_vcf_tbi: str
+    @ivar complete_vcf_bgz: Ensembl VEP complete VCF file path
+    @type complete_vcf_bgz: str
+    @ivar complete_vcf_tbi: Ensembl VEP complete TBI file path
+    @type complete_vcf_tbi: str
+    @ivar filtered_vcf_bgz: Ensembl VEP filtered VCF file path
+    @type filtered_vcf_bgz: str
+    @ivar filtered_vcf_tbi: Ensembl VEP filtered TBI file path
+    @type filtered_vcf_tbi: str
     """
 
     def __init__(self, prefix):
@@ -576,21 +576,21 @@ class FilePathAnnotateVEP(FilePath):
         """
         super(FilePathAnnotateVEP, self).__init__(prefix=prefix)
 
-        self.vep_statistics = prefix + '_vep_statistics.html'
+        self.statistics = prefix + '_statistics.html'
         # Complete VEP set raw
-        self.vep_complete_raw_vcf = prefix + '_vep_complete_raw.vcf'
-        self.vep_complete_raw_vcf_bgz = prefix + '_vep_complete_raw.vcf.gz'
-        self.vep_complete_raw_vcf_tbi = prefix + '_vep_complete_raw.vcf.gz.tbi'
+        self.complete_raw_vcf = prefix + '_complete_raw.vcf'
+        self.complete_raw_vcf_bgz = prefix + '_complete_raw.vcf.gz'
+        self.complete_raw_vcf_tbi = prefix + '_complete_raw.vcf.gz.tbi'
         # Filtered VEP set raw
-        self.vep_filtered_raw_vcf = prefix + '_vep_filtered_raw.vcf'
-        self.vep_filtered_raw_vcf_bgz = prefix + '_vep_filtered_raw.vcf.gz'
-        self.vep_filtered_raw_vcf_tbi = prefix + '_vep_filtered_raw.vcf.gz.tbi'
+        self.filtered_raw_vcf = prefix + '_filtered_raw.vcf'
+        self.filtered_raw_vcf_bgz = prefix + '_filtered_raw.vcf.gz'
+        self.filtered_raw_vcf_tbi = prefix + '_filtered_raw.vcf.gz.tbi'
         # Complete VEP set VCF.Filter-converted
-        self.vep_complete_vcf_bgz = prefix + '_vep_complete.vcf.gz'
-        self.vep_complete_vcf_tbi = prefix + '_vep_complete.vcf.gz.tbi'
+        self.complete_vcf_bgz = prefix + '_complete.vcf.gz'
+        self.complete_vcf_tbi = prefix + '_complete.vcf.gz.tbi'
         # Filtered VEP set VCF.Filter-converted
-        self.vep_filtered_vcf_bgz = prefix + '_vep_filtered.vcf.gz'
-        self.vep_filtered_vcf_tbi = prefix + '_vep_filtered.vcf.gz.tbi'
+        self.filtered_vcf_bgz = prefix + '_filtered.vcf.gz'
+        self.filtered_vcf_tbi = prefix + '_filtered.vcf.gz.tbi'
 
         return
 
@@ -3367,9 +3367,9 @@ class VariantCallingGATK(Analysis):
             _sub_command.add_option_long(key='assembly', value=self.vep_assembly)
             _sub_command.add_option_long(key='input_file', value=vcf_file_path)
             _sub_command.add_option_long(key='format', value='vcf')  # Input file format
-            _sub_command.add_option_long(key='output_file', value=file_path_annotate.vep_complete_raw_vcf)
+            _sub_command.add_option_long(key='output_file', value=file_path_annotate.complete_raw_vcf)
             _sub_command.add_switch_long(key='force_overwrite')
-            _sub_command.add_option_long(key='stats_file', value=file_path_annotate.vep_statistics)
+            _sub_command.add_option_long(key='stats_file', value=file_path_annotate.statistics)
             # Cache options
             _sub_command.add_switch_long(key='cache')
             _sub_command.add_switch_long(key='offline')  # VEP e91 option
@@ -3418,13 +3418,13 @@ class VariantCallingGATK(Analysis):
             _runnable_step = RunnableStep(
                 name='ensembl_vep_bgzip',
                 program='bgzip',
-                arguments=[file_path_annotate.vep_complete_raw_vcf])
+                arguments=[file_path_annotate.complete_raw_vcf])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step = RunnableStep(
                 name='ensembl_vep_tabix',
                 program='tabix',
-                arguments=[file_path_annotate.vep_complete_raw_vcf_bgz])
+                arguments=[file_path_annotate.complete_raw_vcf_bgz])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step.add_option_long(key='preset', value='vcf')
@@ -3445,9 +3445,9 @@ class VariantCallingGATK(Analysis):
             # self.set_runnable_step_configuration(runnable_step=_runnable_step)
             _runnable_step.arguments.append(os.path.join(self.vep_source, 'filter_vep'))
             _sub_command = _runnable_step.sub_command
-            _sub_command.add_option_long(key='input_file', value=file_path_annotate.vep_complete_raw_vcf_bgz)
+            _sub_command.add_option_long(key='input_file', value=file_path_annotate.complete_raw_vcf_bgz)
             _sub_command.add_option_long(key='format', value='vcf')
-            _sub_command.add_option_long(key='output_file', value=file_path_annotate.vep_filtered_raw_vcf)
+            _sub_command.add_option_long(key='output_file', value=file_path_annotate.filtered_raw_vcf)
             _sub_command.add_switch_long(key='only_matched')
             _sub_command.add_option_long(key='filter', value='Consequence ne upstream_gene_variant', override=True)
             _sub_command.add_option_long(key='filter', value='Consequence ne downstream_gene_variant', override=True)
@@ -3459,13 +3459,13 @@ class VariantCallingGATK(Analysis):
             _runnable_step = RunnableStep(
                 name='ensembl_filter_bgzip',
                 program='bgzip',
-                arguments=[file_path_annotate.vep_filtered_raw_vcf])
+                arguments=[file_path_annotate.filtered_raw_vcf])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step = RunnableStep(
                 name='ensembl_filter_tabix',
                 program='tabix',
-                arguments=[file_path_annotate.vep_filtered_raw_vcf_bgz])
+                arguments=[file_path_annotate.filtered_raw_vcf_bgz])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step.add_option_long(key='preset', value='vcf')
@@ -3480,22 +3480,22 @@ class VariantCallingGATK(Analysis):
                 name='ensembl_complete_csq_to_vep',
                 soc_path=self.vep_soc_path,
                 ofc_path=self.vep_ofc_path,
-                vcf_path_old=file_path_annotate.vep_complete_raw_vcf_bgz,
-                vcf_path_new=file_path_annotate.vep_complete_vcf_bgz)
+                vcf_path_old=file_path_annotate.complete_raw_vcf_bgz,
+                vcf_path_new=file_path_annotate.complete_vcf_bgz)
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step = RunnableStepCsqToVep(
                 name='ensembl_filtered_csq_to_vep',
                 soc_path=self.vep_soc_path,
                 ofc_path=self.vep_ofc_path,
-                vcf_path_old=file_path_annotate.vep_filtered_raw_vcf_bgz,
-                vcf_path_new=file_path_annotate.vep_filtered_vcf_bgz)
+                vcf_path_old=file_path_annotate.filtered_raw_vcf_bgz,
+                vcf_path_new=file_path_annotate.filtered_vcf_bgz)
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step = RunnableStep(
                 name='ensembl_complete_csq_to_vep_tabix',
                 program='tabix',
-                arguments=[file_path_annotate.vep_complete_vcf_bgz])
+                arguments=[file_path_annotate.complete_vcf_bgz])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step.add_option_long(key='preset', value='vcf')
@@ -3503,7 +3503,7 @@ class VariantCallingGATK(Analysis):
             _runnable_step = RunnableStep(
                 name='ensembl_filtered_csq_to_vep_tabix',
                 program='tabix',
-                arguments=[file_path_annotate.vep_filtered_vcf_bgz])
+                arguments=[file_path_annotate.filtered_vcf_bgz])
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step.add_option_long(key='preset', value='vcf')
@@ -5349,7 +5349,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_vep)
-            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_cohort_vep.vep_complete_vcf_bgz)
+            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_cohort_vep.complete_vcf_bgz)
             runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_vep.sample_vcf)
             runnable_step.add_gatk_option(key='sample_name', value=sample.name)
             runnable_step.add_gatk_switch(key='excludeNonVariants')
@@ -5583,7 +5583,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_vep)
-            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_vep.vep_complete_vcf_bgz)
+            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_vep.complete_vcf_bgz)
             runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_vep.comparison_tsv)
             runnable_step.add_gatk_switch(key='showFiltered')
             # Set of fixed VCF fields.
@@ -6133,7 +6133,7 @@ class VariantCallingGATK(Analysis):
             str_list.append('<tr>\n')
             str_list.append('<td class="left">' + self.cohort_name + '</td>\n')
             str_list.append('<td class="left">')
-            str_list.append('<a href="' + file_path_annotate_cohort_vep.vep_statistics + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_vep.statistics + '">')
             str_list.append('Ensembl Variant Effect Predictor Summary Statistics')
             str_list.append('</a>')
             str_list.append('</td>\n')
@@ -6145,10 +6145,10 @@ class VariantCallingGATK(Analysis):
             str_list.append('<td class="left">' + self.cohort_name + '</td>\n')
             str_list.append('<td class="left">')
             str_list.append('Ensembl VEP-annotated multi-sample ')
-            str_list.append('<a href="' + file_path_annotate_cohort_vep.vep_complete_vcf_bgz + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_vep.complete_vcf_bgz + '">')
             str_list.append('<abbr title="Variant Calling Format">VCF</abbr>')
             str_list.append('</a> and ')
-            str_list.append('<a href="' + file_path_annotate_cohort_vep.vep_complete_vcf_tbi + '">')
+            str_list.append('<a href="' + file_path_annotate_cohort_vep.complete_vcf_tbi + '">')
             str_list.append('<abbr title="Tabix Index">TBI</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
@@ -6207,10 +6207,10 @@ class VariantCallingGATK(Analysis):
                     str_list.append('<a href="' + file_path_split_somatic_snpeff.comparison_tsv + '">')
                     str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                     str_list.append('</a><br />')
-                    str_list.append('<a href="' + file_path_annotate_somatic_vep.vep_complete_vcf_bgz + '">')
+                    str_list.append('<a href="' + file_path_annotate_somatic_vep.complete_vcf_bgz + '">')
                     str_list.append('<strong><abbr title="Variant Calling Format">VCF</abbr></strong>')
                     str_list.append('</a>&nbsp;')
-                    str_list.append('<a href="' + file_path_annotate_somatic_vep.vep_complete_vcf_tbi + '">')
+                    str_list.append('<a href="' + file_path_annotate_somatic_vep.complete_vcf_tbi + '">')
                     str_list.append('<abbr title="Tabix Index">TBI</abbr>')
                     str_list.append('</a>&nbsp;')
                     str_list.append('<a href="' + file_path_split_somatic_vep.comparison_tsv + '">')
@@ -6226,7 +6226,7 @@ class VariantCallingGATK(Analysis):
                     str_list.append('<a href="' + file_path_annotate_somatic_snpeff.snpeff_genes + '">')
                     str_list.append('<abbr title="Text">TXT</abbr>')
                     str_list.append('</a><br />')
-                    str_list.append('<a href="' + file_path_annotate_somatic_vep.vep_statistics + '">')
+                    str_list.append('<a href="' + file_path_annotate_somatic_vep.statistics + '">')
                     str_list.append('<strong><abbr title="Hyper Text Markup Language">HTML</abbr></strong>')
                     str_list.append('</a>')
                     str_list.append('</td>\n')
