@@ -301,6 +301,7 @@ class Star(Aligner):
         runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
         runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
         runnable_step.add_option_long(key='outFileNamePrefix', value=file_path_align.star_prefix)
+        runnable_step.add_option_multi_long(key='outSAMunmapped', value='Within KeepPairs')
         if self.two_pass_mapping == 'basic':
             runnable_step.add_option_long(key='twopassMode', value='Basic')
         # NOTE: The STAR command line interface is seriously broken,
