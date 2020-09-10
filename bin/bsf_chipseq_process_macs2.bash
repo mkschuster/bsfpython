@@ -152,7 +152,7 @@ EOF
 declare -a suffixes=('peaks' 'summits' 'narrow_peaks')
 
 for suffix in "${suffixes[@]}"; do
-  if [[ -f "${prefix}/${prefix}_${suffix}.bed" && ! -s "${prefix}/${prefix}_${suffix}.bb" ]]; then
+  if [[ -s "${prefix}/${prefix}_${suffix}.bed" && ! -s "${prefix}/${prefix}_${suffix}.bb" ]]; then
     echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" || exit 1
 
     # The UCSC bedToBigBed utility requires that track lines are stripped out. Sigh!
