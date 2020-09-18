@@ -1178,11 +1178,11 @@ class StandardFilePath(BaseSection):
         """
         file_path = cls.get(option='gatk_bundle')
 
-        if gatk_bundle_version:
-            file_path = os.path.join(file_path, gatk_bundle_version)
-
         if genome_version:
             file_path = os.path.join(file_path, genome_version)
+
+        if gatk_bundle_version:
+            file_path = os.path.join(file_path, gatk_bundle_version)
 
         return cls._prepend_resource(absolute=absolute, file_path=file_path)
 
