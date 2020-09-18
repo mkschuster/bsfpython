@@ -31,6 +31,7 @@ import os
 import pickle
 import sys
 import warnings
+import json
 from subprocess import Popen
 
 from bsf.analysis import Analysis, Stage
@@ -3878,9 +3879,16 @@ class VariantCallingGATK(Analysis):
                 pickler_path = os.path.join(
                     self.genome_directory,
                     stage_align_lane.name + '_' + paired_reads_name + '.pkl')
+                json_path = os.path.join(
+                    self.genome_directory,
+                    stage_align_lane.name + '_' + paired_reads_name + '.json')
+
                 with open(file=pickler_path, mode='wb') as pickler_file:
                     pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
                     pickler.dump(pickler_dict_align_lane)
+                    
+                with open(file=json_path, mode='w') as json_fh:
+                    json_fh.write(json.dumps(pickler_dict_align_lane, indent=4, sort_keys=True))
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
