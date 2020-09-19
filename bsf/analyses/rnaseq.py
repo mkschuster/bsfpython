@@ -3716,6 +3716,28 @@ class DESeq(Analysis):
         """
         return '_'.join((cls.prefix, 'results'))
 
+    @classmethod
+    def get_prefix_analysis(cls, design_name):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param design_name: Design name
+        @type design_name: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_analysis(), design_name))
+
+    @classmethod
+    def get_prefix_results(cls, design_name):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param design_name: Design name
+        @type design_name: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_results(), design_name))
+
     def __init__(
             self,
             configuration=None,
@@ -3910,16 +3932,22 @@ class DESeq(Analysis):
 
         if self.contrast_path:
             self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
-            if not os.path.exists(self.contrast_path):
-                raise Exception('Contrast annotation file ' + repr(self.contrast_path) + ' does not exist.')
         else:
             self.contrast_path = self.get_annotation_file(
                 prefix_list=[DESeq.prefix, Tuxedo.prefix],
                 suffix='contrasts.csv')
-            if not self.contrast_path:
-                raise Exception('No suitable contrast annotation file in the current working directory.')
 
         super(DESeq, self).run()
+
+        # Get the transcriptome_gtf_path
+
+        if not self.transcriptome_gtf_path:
+            self.transcriptome_gtf_path = StandardFilePath.get_resource_transcriptome_gtf(
+                transcriptome_version=self.transcriptome_version,
+                transcriptome_index='none')
+
+        stage_analysis = self.get_stage(name=self.get_stage_name_analysis())
+        stage_results = self.get_stage(name=self.get_stage_name_results())
 
         # For DESeq, all samples need adding to the Analysis regardless.
         for sample in self.collection.get_all_samples():
@@ -3934,10 +3962,13 @@ class DESeq(Analysis):
 
         # Read the contrasts file.
 
-        contrast_sheet = AnnotationSheet.from_file_path(
-            file_path=self.contrast_path,
-            file_type='excel',
-            name='DESeq Contrast Table')
+        if self.contrast_path:
+            contrast_sheet = AnnotationSheet.from_file_path(
+                file_path=self.contrast_path,
+                file_type='excel',
+                name='DESeq Contrast Table')
+        else:
+            contrast_sheet = None
 
         # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
         for design_row_dict in design_sheet.row_dicts:
@@ -4010,9 +4041,75 @@ class DESeq(Analysis):
             design_sheet.file_type = 'excel-tab'
             design_sheet.to_file_path()
 
-            contrast_sheet.file_path = os.path.join(comparison_directory, prefix + '_contrasts.tsv')
-            contrast_sheet.file_type = 'excel-tab'
-            contrast_sheet.to_file_path()
+            has_contrasts = False
+            if self.contrast_path:
+                # Write the full contrast sheet into the design-specific directory.
+                contrast_sheet.file_path = os.path.join(comparison_directory, prefix + '_contrasts.tsv')
+                contrast_sheet.file_type = 'excel-tab'
+                contrast_sheet.to_file_path()
+
+                # Search for design-specific contrasts upon which the results stage can be submitted.
+                for contrast_row_dict in contrast_sheet.row_dicts:
+                    if 'Design' in contrast_row_dict and contrast_row_dict['Design'] == design_name:
+                        has_contrasts = True
+                        break
+
+            runnable_analysis = self.add_runnable_consecutive(
+                runnable=ConsecutiveRunnable(
+                    name=self.get_prefix_analysis(design_name=design_name),
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    debug=self.debug))
+            self.set_stage_runnable(
+                stage=stage_analysis,
+                runnable=runnable_analysis)
+
+            runnable_step = RunnableStep(
+                name='analysis',
+                program='bsf_rnaseq_deseq_analysis.R')
+            runnable_analysis.add_runnable_step(runnable_step=runnable_step)
+
+            runnable_step.add_option_long(key='design-name', value=design_name)
+            runnable_step.add_option_long(key='gtf-reference', value=self.transcriptome_gtf_path)
+            runnable_step.add_option_long(key='genome-version', value=self.genome_version)
+            runnable_step.add_option_long(key='threads', value=str(stage_analysis.threads))
+                                                                                                                                           
+            # Run the results stage, if a contrast annotation sheet is already available and has design-specific rows.
+            if has_contrasts:
+                runnable_results = self.add_runnable_consecutive(
+                    runnable=ConsecutiveRunnable(
+                        name=self.get_prefix_results(design_name=design_name),
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        debug=self.debug))
+                executable_results = self.set_stage_runnable(
+                    stage=stage_results,
+                    runnable=runnable_results)
+                executable_results.dependencies.append(runnable_analysis.name)
+                # FIXME: Do not create the Runnable at all or do not submit the corresponding Executable.
+                # executable_results.submit = has_contrasts
+
+                runnable_step = RunnableStep(
+                    name='results',
+                    program='bsf_rnaseq_deseq_results.R')
+                runnable_results.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step.add_option_long(key='design-name', value=design_name)
+                runnable_step.add_option_long(key='threads', value=str(stage_results.threads))
+
+                runnable_step = RunnableStep(
+                    name='enrichr',
+                    program='bsf_rnaseq_deseq_enrichr.R')
+                runnable_results.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step.add_option_long(key='design-name', value=design_name)
+
+                runnable_step = RunnableStep(
+                    name='heatmap',
+                    program='bsf_rnaseq_deseq_heatmap.R')
+                runnable_results.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step.add_option_long(key='design-name', value=design_name)
 
         return
 
