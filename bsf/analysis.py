@@ -558,9 +558,7 @@ class Analysis(object):
 
         # Initially, the configuration section prefix is based on the Analysis class name and the Analysis Stage.name.
 
-        prefix = Configuration.section_from_instance(instance=self)
-
-        _set_configuration(command=runnable_step, section=prefix)
+        _set_configuration(command=runnable_step, section=self.configuration.section_from_instance(instance=self))
 
         return
 
@@ -897,14 +895,26 @@ class Analysis(object):
         str_list.append('<html xmlns="http://www.w3.org/1999/xhtml">\n')
         str_list.append('<head>\n')
         str_list.append('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
-        str_list.append('<link rel="stylesheet" href="/' +
-                        urllib.parse.quote(string=URL.get_relative_projects()) +
-                        '/bsfpython.css" type="text/css" />\n')
+        # str_list.append('<link rel="stylesheet" href="/' +
+        #                 urllib.parse.quote(string=URL.get_relative_projects()) +
+        #                 '/bsfpython.css" type="text/css" />\n')
         str_list.append('<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n')
         str_list.append('<meta name="DC.Creator" content="' + html.escape(s=creator, quote=True) + '" />\n')
         str_list.append('<meta name="DC.Date" content="' + datetime.datetime.now().isoformat() + '" />\n')
         str_list.append('<meta name="DC.Source" content="' + html.escape(s=source, quote=True) + '" />\n')
         str_list.append('<meta name="DC.Title" content="' + html.escape(s=title, quote=True) + '" />\n')
+        str_list.append('<style type="text/css">\n')
+        str_list.append('  .left    { text-align: left; }\n')
+        str_list.append('  .right   { text-align: right; }\n')
+        str_list.append('  .center  { text-align: center; }\n')
+        str_list.append('  .justify { text-align: justify; }\n')
+        str_list.append('  .start   { text-align: start; }\n')
+        str_list.append('  .end     { text-align: end; }\n')
+        str_list.append('  body { font-family: sans-serif; }\n')
+        str_list.append('  h1 { color: #40B9D4; }\n')
+        str_list.append('  a { color: #40B9D4; text-decoration: none; }\n')
+        str_list.append('  a:hover, a:focus { color: #2a6496; text-decoration: underline; }\n')
+        str_list.append('</style>\n')
         str_list.append('<title>' + html.escape(s=title, quote=True) + '</title>\n')
         str_list.append('</head>\n')
         str_list.append('\n')
