@@ -585,8 +585,17 @@ class Analysis(object):
             raise Exception('A Runnable with name ' + repr(runnable.name) +
                             ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
 
-        executable = Executable(name=runnable.name, program=Runnable.runner_script)
-        executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
+        if stage.template_script:
+            if os.path.isabs(stage.template_script):
+                template_script = stage.template_script
+            else:
+                template_script = os.path.join(StandardFilePath.get_template_scripts(), stage.template_script)
+
+            executable = Executable(name=runnable.name, program=template_script)
+            executable.arguments.append(runnable.pickler_path)
+        else:
+            executable = Executable(name=runnable.name, program=Runnable.runner_script)
+            executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the bsf.process.Executable if the status file does not exist already.
         if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=True)):
@@ -1591,6 +1600,7 @@ class Stage(object):
             threads=1,
             hold=None,
             is_script=False,
+            template_script=None,
             executable_list=None):
         """Initialise a C{bsf.analysis.Stage}.
 
@@ -1627,6 +1637,8 @@ class Stage(object):
         @param is_script: C{bsf.process.Executable} objects represent shell scripts,
             or alternatively binary programs
         @type is_script: bool
+        @param template_script: Template script for submission.
+        @type template_script: str
         @param executable_list: Python C{list} of C{bsf.process.Executable} objects
         @type executable_list: list[Executable]
         """
@@ -1673,6 +1685,8 @@ class Stage(object):
             assert isinstance(is_script, bool)
             self.is_script = is_script
 
+        self.template_script = template_script
+
         if executable_list is None:
             self.executable_list = list()
         else:
@@ -1710,6 +1724,7 @@ class Stage(object):
         str_list.append('{}  threads:              {!r}\n'.format(indent, self.threads))
         str_list.append('{}  hold:                 {!r}\n'.format(indent, self.hold))
         str_list.append('{}  is_script:            {!r}\n'.format(indent, self.is_script))
+        str_list.append('{}  template_script:      {!r}\n'.format(indent, self.template_script))
 
         str_list.append('{}  executable_list:\n'.format(indent))
 
@@ -1790,6 +1805,10 @@ class Stage(object):
         option = 'threads'
         if configuration.config_parser.has_option(section=section, option=option):
             self.threads = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'template_script'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.template_script = configuration.config_parser.get(section=section, option=option)
 
         return
 
