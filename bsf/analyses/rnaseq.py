@@ -3685,12 +3685,8 @@ class DESeq(Analysis):
     @type comparison_path: str | None
     @ivar contrast_path: Contrast file path
     @type contrast_path: str | None
-    @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | None
     @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
     @type transcriptome_gtf_path: str | None
-    @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     """
@@ -3755,9 +3751,7 @@ class DESeq(Analysis):
             replicate_grouping=False,
             comparison_path=None,
             contrast_path=None,
-            genome_fasta_path=None,
             transcriptome_gtf_path=None,
-            transcriptome_index_path=None,
             transcriptome_version=None):
         """Initialise a C{bsf.analyses.rnaseq.DESeq} object.
 
@@ -3793,14 +3787,10 @@ class DESeq(Analysis):
         @type comparison_path: str | None
         @param contrast_path: Contrast file path
         @type contrast_path: str | None
-        @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | None
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
         @type transcriptome_gtf_path: str | None
-        @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | None
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str | None
         """
 
         super(DESeq, self).__init__(
@@ -3822,9 +3812,7 @@ class DESeq(Analysis):
         self.replicate_grouping = replicate_grouping
         self.comparison_path = comparison_path
         self.contrast_path = contrast_path
-        self.genome_fasta_path = genome_fasta_path
         self.transcriptome_gtf_path = transcriptome_gtf_path
-        self.transcriptome_index_path = transcriptome_index_path
         self.transcriptome_version = transcriptome_version
 
         return
@@ -3856,17 +3844,9 @@ class DESeq(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.contrast_path = configuration.config_parser.get(section=section, option=option)
 
-        option = 'genome_fasta'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
-
         option = 'transcriptome_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
-
-        option = 'transcriptome_index'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
