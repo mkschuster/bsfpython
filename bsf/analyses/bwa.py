@@ -109,6 +109,6 @@ class MaximalExactMatches(Aligner):
                 genome_version=self.genome_version,
                 genome_index='bwa')
 
-            super(MaximalExactMatches, self).run()
+        super(MaximalExactMatches, self).run()
 
         return
