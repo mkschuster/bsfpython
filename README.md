@@ -27,7 +27,7 @@ cluster compute node via the common `bsf_runner.py` script.
 General settings for the BSF Python library are configured via a `${HOME}/.bsfpython.ini` file
 in the user's home directory. This file is site-specific and its information allows for automatic
 discovery of raw (e.g. Illumina run folders) and pre-processed (e.g. de-multiplexed lanes and samples)
-NGS data. A template file (`bsf_init_template.txt`) can be found in the doc sub-directory. The template,
+NGS data. A template file [`template_bsfpython.ini`](doc/template_bsfpython.ini) can be found in the doc sub-directory. The template,
 which documents the configuration options and provides, as far as possible, sensible default settings,
 needs copying to `${HOME}/.bsfpython.ini` before editing accordingly.
 
@@ -71,8 +71,11 @@ are then defined by means of the MACS2 peak caller.
 
 In the context of the ChIPSeq analysis, BSF Paired Reads objects of BSF Sample objects are aligned as a pool.
 
+### RNAseq DESeq
 
-### RNASeq
+Please see the [RNAseq DESeq](doc/analysis_rnaseq_deseq.md) document.
+
+### RNASeq Tuxedo
 
 The RNA-Seq pipeline is based on the Tuxedo suite. NGS reads are aligned with
 [Tophat2](http://ccb.jhu.edu/software/tophat/index.shtml) an aligner that
@@ -104,7 +107,7 @@ the merged assemblies on the basis of the BAM alignments produced by Tophat2.
 
 ## Licence
 
-Copyright 2013 - 2019 Michael K. Schuster
+Copyright 2013 - 2020 Michael K. Schuster
 
 [Biomedical Sequencing Facility](http://www.biomedical-sequencing.at/) (BSF),
 part of the joint
