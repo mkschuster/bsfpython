@@ -3,8 +3,8 @@
 #
 # BSF Python script to collect and update MD5 sums.
 #
-# A directory tree (directory-path) is scanned for files matching a wildcard pattern
-# (--pattern), by default *.md5 and updated into an existing (--file-path) md5sum file.
+# A directory tree (directory-path) is scanned for files matching a regular expression pattern
+# (--pattern), by default \\.md5 and updated into an existing (--file-path) md5sum file.
 # Picard-style MD5 file that only contain the MD5 digest are reformatted to obey the md5sum format.
 #
 #
@@ -30,8 +30,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import fnmatch
 import os
+import re
 import warnings
 from argparse import ArgumentParser
 
@@ -98,8 +98,8 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--pattern',
-    default='*.md5',
-    help='wildcard pattern (glob) [*.md5]',
+    default='\\.md5',
+    help='Regular expression pattern [\\.md5]',
     type=str)
 
 argument_parser.add_argument(
@@ -117,6 +117,8 @@ argument_parser.add_argument(
     type=int)
 
 name_space = argument_parser.parse_args()
+
+re_pattern = re.compile(pattern=name_space.pattern)
 
 # Read the initial MD5 sum file that needs updating.
 
@@ -149,7 +151,7 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
         print()
 
     for file_name in file_name_list:
-        if not fnmatch.fnmatch(file_name, name_space.pattern):
+        if re.search(pattern=re_pattern, string=file_name) is None:
             if name_space.debug > 0:
                 print('Excluding:', file_name)
             continue
