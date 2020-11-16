@@ -1597,6 +1597,7 @@ class Stage(object):
             time_limit=None,
             parallel_environment=None,
             queue=None,
+            reservation=None,
             threads=1,
             hold=None,
             is_script=False,
@@ -1630,6 +1631,8 @@ class Stage(object):
         @type parallel_environment: str | None
         @param queue: Queue
         @type queue: str | None
+        @param reservation: Reservation
+        @type reservation: str | None
         @param threads: Number of threads
         @type threads: int
         @param hold: Hold on job scheduling
@@ -1669,6 +1672,7 @@ class Stage(object):
         self.time_limit = time_limit
         self.parallel_environment = parallel_environment
         self.queue = queue
+        self.reservation = reservation
 
         if threads is None:
             self.threads = 1
@@ -1721,6 +1725,7 @@ class Stage(object):
         str_list.append('{}  time_limit:           {!r}\n'.format(indent, self.time_limit))
         str_list.append('{}  queue:                {!r}\n'.format(indent, self.queue))
         str_list.append('{}  parallel_environment: {!r}\n'.format(indent, self.parallel_environment))
+        str_list.append('{}  reservation:          {!r}\n'.format(indent, self.reservation))
         str_list.append('{}  threads:              {!r}\n'.format(indent, self.threads))
         str_list.append('{}  hold:                 {!r}\n'.format(indent, self.hold))
         str_list.append('{}  is_script:            {!r}\n'.format(indent, self.is_script))
@@ -1801,6 +1806,10 @@ class Stage(object):
         option = 'queue'
         if configuration.config_parser.has_option(section=section, option=option):
             self.queue = configuration.config_parser.get(section=section, option=option)
+
+        option = 'reservation'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.reservation = configuration.config_parser.get(section=section, option=option)
 
         option = 'threads'
         if configuration.config_parser.has_option(section=section, option=option):

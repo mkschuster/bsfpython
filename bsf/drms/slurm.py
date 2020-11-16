@@ -831,12 +831,15 @@ def submit(stage, debug=0):
             executable_drms.add_option_pair_long(key='cpus-per-task', value=str(stage.threads))
 
         executable_drms.add_switch_long(key='requeue')
-        executable_drms.add_switch_long(key='share')
+        executable_drms.add_switch_long(key='oversubscribe')
 
         # Queue name
 
         if stage.queue:
             executable_drms.add_option_pair_long(key='partition', value=stage.queue)
+
+        if stage.reservation:
+            executable_drms.add_option_pair_long(key='reservation', value=stage.reservation)
 
         # Working directory, standard output and standard error streams.
 
