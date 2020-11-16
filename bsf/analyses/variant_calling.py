@@ -3389,7 +3389,7 @@ class VariantCallingGATK(Analysis):
             # reference_annotate = runnable_annotate.get_absolute_cache_file_path(
             #     file_path=self.bwa_genome_db)
 
-            # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate.vep_complete_vcf_tbi)):
+            # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate.complete_vcf_tbi)):
             # Run the Ensembl Variant Effect Predictor script.
 
             _runnable_step = RunnableStep(
@@ -5821,9 +5821,10 @@ class VariantCallingGATK(Analysis):
                 for attribute, extension in (
                         ('annotated_vcf', '_annotated.vcf.gz'),
                         ('annotated_tbi', '_annotated.vcf.gz.tbi'),
-                        ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
-                        ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
-                        ('snpeff_stats', '_snpeff_summary.html')):
+                        ('complete_vcf_bgz', '_snpeff.vcf.gz'),
+                        ('complete_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                        ('complete_genes', '_snpeff_summary.genes.txt'),
+                        ('complete_stats', '_snpeff_summary.html')):
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_cohort_snpeff, attribute)),
@@ -5831,8 +5832,8 @@ class VariantCallingGATK(Analysis):
                         target_path=os.path.join(directory_results_by_cohort, self.cohort_name + extension))
 
                 for attribute, extension in (
-                        ('vep_complete_vcf_bgz', '_vep.vcf.gz'),
-                        ('vep_complete_vcf_tbi', '_vep.vcf.gz.tbi')):
+                        ('complete_vcf_bgz', '_vep.vcf.gz'),
+                        ('complete_vcf_tbi', '_vep.vcf.gz.tbi')):
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_cohort_vep, attribute)),
@@ -5857,10 +5858,10 @@ class VariantCallingGATK(Analysis):
                     comparison_name=comparison_name)
 
                 for attribute, extension in (
-                        ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
-                        ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
-                        ('snpeff_genes', '_snpeff_summary.genes.txt'),
-                        ('snpeff_stats', '_snpeff_summary.html'),
+                        ('complete_vcf_bgz', '_snpeff.vcf.gz'),
+                        ('complete_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                        ('complete_genes', '_snpeff_summary.genes.txt'),
+                        ('complete_stats', '_snpeff_summary.html'),
                         ('annotated_vcf', '_annotated.vcf.gz'),
                         ('annotated_tbi', '_annotated.vcf.gz.tbi')):
                     report_create_symbolic_link(
@@ -5884,8 +5885,8 @@ class VariantCallingGATK(Analysis):
                     comparison_name=comparison_name)
 
                 for attribute, extension in (
-                        ('vep_complete_vcf_bgz', '_vep.vcf.gz'),
-                        ('vep_complete_vcf_tbi', '_vep.vcf.gz.tbi')):
+                        ('complete_vcf_bgz', '_vep.vcf.gz'),
+                        ('complete_vcf_tbi', '_vep.vcf.gz.tbi')):
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_somatic_vep, attribute)),
