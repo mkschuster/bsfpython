@@ -34,7 +34,7 @@ from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
 from bsf.procedure import FilePath, Runnable, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
-    RunnableStepCopy, RunnableStepMove, RunnableStep, RunnableStepLink
+    RunnableStepMove, RunnableStep, RunnableStepLink
 from bsf.standards import Configuration, StandardFilePath, JavaClassPath
 
 
@@ -52,16 +52,8 @@ class FilePathAlign(FilePath):
     @type aligned_sam: str
     @ivar cleaned_bam: Cleaned sequence alignment map (SAM) file path
     @type cleaned_bam: str
-    @ivar aligned_bai: Aligned binary alignment map index (BAI) file path
-    @type aligned_bai: str
     @ivar aligned_bam: Aligned binary alignment map (BAM) file path
     @type aligned_bam: str
-    @ivar aligned_md5: Aligned binary alignment map (BAM) file path
-    @type aligned_md5: str
-    @ivar aligned_bai_link_source: Symbolic link source of the aligned binary alignment map index (BAI) file path
-    @type aligned_bai_link_source: str
-    @ivar aligned_bai_link_target: Symbolic link target of the aligned binary alignment map index (BAI) file path
-    @type aligned_bai_link_target: str
     """
 
     def __init__(self, prefix):
@@ -78,15 +70,8 @@ class FilePathAlign(FilePath):
         self.stdout_txt = os.path.join(prefix, prefix + '_stdout.txt')
 
         self.aligned_sam = os.path.join(prefix, prefix + '_aligned.sam')
-
         self.cleaned_bam = os.path.join(prefix, prefix + '_cleaned.bam')
-
-        self.aligned_bai = os.path.join(prefix, prefix + '_aligned.bai')
         self.aligned_bam = os.path.join(prefix, prefix + '_aligned.bam')
-        self.aligned_md5 = os.path.join(prefix, prefix + '_aligned.bam.md5')
-
-        self.aligned_bai_link_source = prefix + '_aligned.bai'
-        self.aligned_bai_link_target = os.path.join(prefix, prefix + '_aligned.bam.bai')
 
         return
 
@@ -97,31 +82,19 @@ class FilePathReadGroup(FilePath):
     Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
-    @ivar merged_bai: Merged binary alignment map index (BAI) file path
-    @type merged_bai: str
     @ivar merged_bam: Merged binary alignment map (BAM) file path
     @type merged_bam: str
-    @ivar merged_md5: Merged binary alignment map (BAM) file path
-    @type merged_md5: str
-    @ivar merged_bai_link_source: Symbolic link source of the merged binary alignment map index (BAI) file path
-    @type merged_bai_link_source: str
-    @ivar merged_bai_link_target: Symbolic link target of the merged binary alignment map index (BAI) file path
-    @type merged_bai_link_target: str
     @ivar sorted_bai: Sorted binary alignment map index (BAI) file path
     @type sorted_bai: str
     @ivar sorted_bam: Sorted binary alignment map (BAM) file path
     @type sorted_bam: str
     @ivar sorted_md5: Sorted binary alignment map (BAM) file path
     @type sorted_md5: str
-    @ivar sorted_bai_link_source: Symbolic link source of the sorted binary alignment map index (BAI) file path
-    @type sorted_bai_link_source: str
-    @ivar sorted_bai_link_target: Symbolic link target of the sorted binary alignment map index (BAI) file path
-    @type sorted_bai_link_target: str
-    @ivar read_group_bai: Read group binary alignment map index (BAI) file path
+    @ivar read_group_bai: Read group binary alignment map index (BAI) file path alias
     @type read_group_bai: str
-    @ivar read_group_bam: Read group binary alignment map (BAM) file path
+    @ivar read_group_bam: Read group binary alignment map (BAM) file path alias
     @type read_group_bam: str
-    @ivar read_group_md5: Read group binary alignment map (BAM) file path
+    @ivar read_group_md5: Read group binary alignment map (BAM) file path alias
     @type read_group_md5: str
     """
 
@@ -135,19 +108,11 @@ class FilePathReadGroup(FilePath):
 
         self.output_directory = prefix
 
-        self.merged_bai = os.path.join(prefix, prefix + '_merged.bai')
         self.merged_bam = os.path.join(prefix, prefix + '_merged.bam')
-        self.merged_md5 = os.path.join(prefix, prefix + '_merged.bam.md5')
-
-        self.merged_bai_link_source = prefix + '_merged.bai'
-        self.merged_bai_link_target = os.path.join(prefix, prefix + '_merged.bam.bai')
 
         self.sorted_bai = os.path.join(prefix, prefix + '.bai')
         self.sorted_bam = os.path.join(prefix, prefix + '.bam')
         self.sorted_md5 = os.path.join(prefix, prefix + '.bam.md5')
-
-        self.sorted_bai_link_source = prefix + '.bai'
-        self.sorted_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
 
         self.read_group_bai = self.sorted_bai
         self.read_group_bam = self.sorted_bam
@@ -162,31 +127,29 @@ class FilePathSample(FilePath):
     Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
-    @ivar merged_bai: Merged binary alignment map index (BAI) file path
-    @type merged_bai: str
     @ivar merged_bam: Merged binary alignment map (BAM) file path
     @type merged_bam: str
-    @ivar merged_md5: Merged binary alignment map (BAM) file path
-    @type merged_md5: str
-    @ivar duplicate_bai: Duplicate-marked binary alignment map index (BAI) file path
-    @type duplicate_bai: str
     @ivar duplicate_bam: Duplicate-marked binary alignment map (BAM) file path
     @type duplicate_bam: str
-    @ivar duplicate_md5: Duplicate-marked binary alignment map (BAM) file path
-    @type duplicate_md5: str
-    @ivar duplicate_bai_link_source: Symbolic link source of the binary alignment map index (BAI) file path
-    @type duplicate_bai_link_source: str
-    @ivar duplicate_bai_link_target: Symbolic link target of the binary alignment map index (BAI) file path
-    @type duplicate_bai_link_target: str
     @ivar duplicate_metrics_tsv: Picard Duplicate Metrics TSV file path
     @type duplicate_metrics_tsv: str
+    @ivar sorted_bai: Duplicate-marked binary alignment map index (BAI) file path
+    @type sorted_bai: str
+    @ivar sorted_bam: Duplicate-marked binary alignment map (BAM) file path
+    @type sorted_bam: str
+    @ivar sorted_md5: Duplicate-marked binary alignment map (BAM) file path
+    @type sorted_md5: str
+    @ivar sorted_bai_link_source: Symbolic link source of the binary alignment map index (BAI) file path
+    @type sorted_bai_link_source: str
+    @ivar sorted_bai_link_target: Symbolic link target of the binary alignment map index (BAI) file path
+    @type sorted_bai_link_target: str
     @ivar alignment_summary_metrics_tsv: Picard Alignment Summary Metrics file path
     @type alignment_summary_metrics_tsv: str
-    @ivar sample_bai: Sample binary alignment map index (BAI) file path
+    @ivar sample_bai: Sample binary alignment map index (BAI) file path alias
     @type sample_bai: str
-    @ivar sample_bam: Sample binary alignment map (BAM) file path
+    @ivar sample_bam: Sample binary alignment map (BAM) file path alias
     @type sample_bam: str
-    @ivar sample_md5: Sample binary alignment map (BAM) file path
+    @ivar sample_md5: Sample binary alignment map (BAM) file path alias
     @type sample_md5: str
     """
 
@@ -200,26 +163,26 @@ class FilePathSample(FilePath):
 
         self.output_directory = prefix
 
-        self.merged_bai = os.path.join(prefix, prefix + '_merged.bai')
         self.merged_bam = os.path.join(prefix, prefix + '_merged.bam')
-        self.merged_md5 = os.path.join(prefix, prefix + '_merged.bam.md5')
 
-        # For the final files, just end in the suffix.
-        self.duplicate_bai = os.path.join(prefix, prefix + '.bai')
-        self.duplicate_bam = os.path.join(prefix, prefix + '.bam')
-        self.duplicate_md5 = os.path.join(prefix, prefix + '.bam.md5')
-
-        self.duplicate_bai_link_source = prefix + '.bai'
-        self.duplicate_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
+        self.duplicate_bam = os.path.join(prefix, prefix + '_duplicate.bam')
 
         self.duplicate_metrics_tsv = os.path.join(prefix, prefix + '_duplicate_metrics.tsv')
+
+        # For the final files, just end in the suffix.
+        self.sorted_bai = os.path.join(prefix, prefix + '.bai')
+        self.sorted_bam = os.path.join(prefix, prefix + '.bam')
+        self.sorted_md5 = os.path.join(prefix, prefix + '.bam.md5')
+
+        self.sorted_bai_link_source = prefix + '.bai'
+        self.sorted_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
 
         self.alignment_summary_metrics_tsv = os.path.join(prefix, '_'.join((prefix, 'alignment_summary_metrics.tsv')))
 
         # Create aliases for user friendliness.
-        self.sample_bam = self.duplicate_bam
-        self.sample_bai = self.duplicate_bai
-        self.sample_md5 = self.duplicate_md5
+        self.sample_bam = self.sorted_bam
+        self.sample_bai = self.sorted_bai
+        self.sample_md5 = self.sorted_md5
 
         return
 
@@ -343,8 +306,6 @@ class Aligner(Analysis):
     @type genome_fasta: str | None
     @ivar genome_index: Genome index
     @type genome_index: str | None
-    @ivar keep_read_group: Keep the Read Group-level BAM files
-    @type keep_read_group: bool | None
     @ivar skip_mark_duplicates: Skip Picard MarkDuplicates
     @type skip_mark_duplicates: bool | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -490,7 +451,6 @@ class Aligner(Analysis):
             sample_list=None,
             genome_fasta=None,
             genome_index=None,
-            keep_read_group=None,
             skip_mark_duplicates=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.aligner.Aligner}.
@@ -525,8 +485,6 @@ class Aligner(Analysis):
         @type genome_fasta: str | None
         @param genome_index: Genome index
         @type genome_index: str | None
-        @param keep_read_group: Keep the Read Group-level BAM files
-        @type keep_read_group: bool | None
         @param skip_mark_duplicates: Skip Picard MarkDuplicates
         @type skip_mark_duplicates: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -550,7 +508,6 @@ class Aligner(Analysis):
 
         self.genome_fasta = genome_fasta
         self.genome_index = genome_index
-        self.keep_read_group = keep_read_group
         self.skip_mark_duplicates = skip_mark_duplicates
         self.classpath_picard = classpath_picard
 
@@ -579,10 +536,6 @@ class Aligner(Analysis):
         option = 'genome_index'
         if config_parser.has_option(section=section, option=option):
             self.genome_index = config_parser.get(section=section, option=option)
-
-        option = 'keep_read_group'
-        if config_parser.has_option(section=section, option=option):
-            self.keep_read_group = config_parser.getboolean(section=section, option=option)
 
         option = 'skip_mark_duplicates'
         if config_parser.has_option(section=section, option=option):
@@ -814,6 +767,7 @@ class Aligner(Analysis):
                 # Start the programs in reverse order so that they do not block while opening their named pipe(s).
 
                 # Run Picard SortSam to convert the cleaned BAM file into a query name-sorted BAM file.
+                # Not every aligner may return reads in the order of the unaligned BAM (FASTQ) files.
 
                 runnable_step = RunnableStepPicard(
                     name='picard_sort_sam',
@@ -937,16 +891,17 @@ class Aligner(Analysis):
                 runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                 if len(runnable_align_list) == 1:
+                    # If the read group consists of a single ReadPair, just rename the aligned BAM file.
                     runnable_align = runnable_align_list[0]
                     # NOTE: Since the Runnable.name already contains the prefix, FilePathAlign() has to be used.
                     file_path_align = FilePathAlign(prefix=runnable_align.name)
-                    # For a single ReadPair, just rename the files.
                     runnable_step = RunnableStepMove(
-                        name='move_bam',
+                        name='move_aligned_bam',
                         source_path=file_path_align.aligned_bam,
                         target_path=file_path_read_group.merged_bam)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
                 else:
+                    # For more than one ReadPair per read group, use Picard MergeSamFiles in query name order.
                     runnable_step = RunnableStepPicard(
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
@@ -955,7 +910,7 @@ class Aligner(Analysis):
                         picard_command='MergeSamFiles')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
-                    # INPUT []
+                    # INPUT Required
                     for runnable_align in runnable_align_list:
                         # NOTE: Since the Runnable.name already contains the prefix, FilePathAlign() has to be used.
                         file_path_align = FilePathAlign(prefix=runnable_align.name)
@@ -964,7 +919,7 @@ class Aligner(Analysis):
                             value=file_path_align.aligned_bam,
                             override=True)
                         runnable_step.obsolete_file_path_list.append(file_path_align.aligned_bam)
-                    # OUTPUT []
+                    # OUTPUT Required
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.merged_bam)
                     # SORT_ORDER [coordinate]
                     runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
@@ -992,49 +947,9 @@ class Aligner(Analysis):
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
 
-                if bam_file_path is None:
-                    # Without an unaligned BAM file, run Picard SortSam by coordinate.
-
-                    runnable_step = RunnableStepPicard(
-                        name='picard_sort_sam',
-                        obsolete_file_path_list=[
-                            file_path_read_group.merged_bam,
-                        ],
-                        java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx4G',
-                        java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                        picard_command='SortSam')
-                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
-
-                    # INPUT []
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.merged_bam)
-                    # OUTPUT []
-                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.sorted_bam)
-                    # SORT_ORDER []
-                    runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
-                    # TMP_DIR [null]
-                    runnable_step.add_picard_option(
-                        key='TMP_DIR',
-                        value=runnable_read_group.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                    # MAX_RECORDS_IN_RAM [500000]
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                    # CREATE_INDEX [false]
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                    # CREATE_MD5_FILE [false]
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                    # REFERENCE_SEQUENCE [null]
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                    # USE_JDK_DEFLATER [false]
-                    # USE_JDK_INFLATER [false]
-                else:
-                    # Run Picard MergeBamAlignment to annotate the merged aligned with the unaligned BAM file.
-
+                if bam_file_path:
+                    # If an unaligned BAM file is available, run Picard MergeBamAlignment to annotate the merged
+                    # aligned BAM with information from the unaligned BAM file.
                     runnable_step = RunnableStepPicard(
                         name='picard_merge_bam_alignment',
                         obsolete_file_path_list=[
@@ -1072,6 +987,7 @@ class Aligner(Analysis):
                     # EXPECTED_ORIENTATIONS [null]
                     # ALIGNER_PROPER_PAIR_FLAGS [false]
                     # SORT_ORDER [coordinate]
+                    runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
                     # PRIMARY_ALIGNMENT_STRATEGY [BestMapq]
                     # CLIP_OVERLAPPING_READS [true]
                     # INCLUDE_SECONDARY_ALIGNMENTS [true]
@@ -1089,18 +1005,22 @@ class Aligner(Analysis):
                     # QUIET [false]
                     # VALIDATION_STRINGENCY [STRICT]
                     # COMPRESSION_LEVEL [5]
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
                     # MAX_RECORDS_IN_RAM [500000]
                     runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
                     # CREATE_INDEX [false]
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
                     # CREATE_MD5_FILE [false]
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                     # REFERENCE_SEQUENCE [null]
                     runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.genome_fasta)
                     # GA4GH_CLIENT_SECRETS [client_secrets.json]
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
+                else:
+                    # If an unaligned BAM file is not available, simply rename the BAM file.
+                    runnable_step = RunnableStepMove(
+                        name='move_merged_bam',
+                        source_path=file_path_read_group.merged_bam,
+                        target_path=file_path_read_group.sorted_bam)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
             ###########################
             # Sample Processing Stage #
@@ -1132,130 +1052,69 @@ class Aligner(Analysis):
                 directory_path=file_path_sample.output_directory)
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
-            if len(runnable_read_group_list) == 1:
-                runnable_read_group = runnable_read_group_list[0]
-                # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
-                file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
-                if self.keep_read_group:
-                    # For a single ReadPair, just copy the files.
-                    runnable_step = RunnableStepCopy(
-                        name='copy_bai',
-                        source_path=file_path_read_group.sorted_bai,
-                        target_path=file_path_sample.merged_bai)
-                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
-
-                    runnable_step = RunnableStepCopy(
-                        name='copy_bam',
-                        source_path=file_path_read_group.sorted_bam,
-                        target_path=file_path_sample.merged_bam)
-                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
-
-                    runnable_step = RunnableStepCopy(
-                        name='copy_md5',
-                        source_path=file_path_read_group.sorted_md5,
-                        target_path=file_path_sample.merged_md5)
-                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
-                else:
-                    # For a single ReadPair, just rename the files.
-                    runnable_step = RunnableStepMove(
-                        name='move_bai',
-                        source_path=file_path_read_group.sorted_bai,
-                        target_path=file_path_sample.merged_bai)
-                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
-
+            if self.skip_mark_duplicates:
+                # If duplicates should *not* be marked, run Picard MergeSamFile to simply merge all
+                # read group BAM files into one sample BAM file or just rename a single read group BAM file.
+                if len(runnable_read_group_list) == 1:
+                    # For a single ReadPair, just copy or move the file.
+                    runnable_read_group = runnable_read_group_list[0]
+                    # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
+                    file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                     runnable_step = RunnableStepMove(
                         name='move_bam',
                         source_path=file_path_read_group.sorted_bam,
-                        target_path=file_path_sample.merged_bam)
+                        target_path=file_path_sample.duplicate_bam)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
+                else:
+                    # If duplicates should *not* be marked, run Picard MergeSamFile to simply merge all
+                    # read group BAM files.
+                    runnable_step = RunnableStepPicard(
+                        name='picard_merge_sam_files',
+                        java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
+                        java_heap_maximum='Xmx4G',
+                        picard_classpath=self.classpath_picard,
+                        picard_command='MergeSamFiles')
                     runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
-                    runnable_step = RunnableStepMove(
-                        name='move_md5',
-                        source_path=file_path_read_group.sorted_md5,
-                        target_path=file_path_sample.merged_md5)
-                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
-            else:
-                # Run Picard MergeSamFiles on each BAM file.
-
-                runnable_step = RunnableStepPicard(
-                    name='picard_merge_sam_files',
-                    java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx4G',
-                    picard_classpath=self.classpath_picard,
-                    picard_command='MergeSamFiles')
-                runnable_sample.add_runnable_step(runnable_step=runnable_step)
-
-                # INPUT []
-                for runnable_read_group in runnable_read_group_list:
-                    # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
-                    file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
-                    if not self.keep_read_group:
-                        runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bai)
+                    # INPUT Required
+                    for runnable_read_group in runnable_read_group_list:
+                        # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
+                        file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
+                        runnable_step.add_picard_option(
+                            key='INPUT',
+                            value=file_path_read_group.sorted_bam,
+                            override=True)
                         runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
-                        runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_md5)
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.sorted_bam, override=True)
-
-                # OUTPUT []
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.merged_bam)
-                # SORT_ORDER [coordinate]
-                # ASSUME_SORTED [false]
-                # MERGE_SEQUENCE_DICTIONARIES [false]
-                # USE_THREADING [false]
-                runnable_step.add_picard_option(key='USE_THREADING', value='true')
-                # COMMENT [null]
-                # INTERVALS [null]
-                # TMP_DIR [null]
-                runnable_step.add_picard_option(
-                    key='TMP_DIR',
-                    value=runnable_sample.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                if self.skip_mark_duplicates:
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                # MAX_RECORDS_IN_RAM [500000]
-                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                # CREATE_INDEX [false]
-                if self.skip_mark_duplicates:
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                # CREATE_MD5_FILE [false]
-                if self.skip_mark_duplicates:
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                # USE_JDK_DEFLATER [false]
-                # USE_JDK_INFLATER [false]
-
-            # Run Picard MarkDuplicates
-
-            if self.skip_mark_duplicates:
-                runnable_step = RunnableStepMove(
-                    name='move_bai',
-                    source_path=file_path_sample.merged_bai,
-                    target_path=file_path_sample.duplicate_bai)
-                runnable_sample.add_runnable_step(runnable_step=runnable_step)
-
-                runnable_step = RunnableStepMove(
-                    name='move_bam',
-                    source_path=file_path_sample.merged_bam,
-                    target_path=file_path_sample.duplicate_bam)
-                runnable_sample.add_runnable_step(runnable_step=runnable_step)
-
-                runnable_step = RunnableStepMove(
-                    name='move_md5',
-                    source_path=file_path_sample.merged_md5,
-                    target_path=file_path_sample.duplicate_md5)
-                runnable_sample.add_runnable_step(runnable_step=runnable_step)
+                    # OUTPUT Required
+                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.duplicate_bam)
+                    # SORT_ORDER [coordinate]
+                    # ASSUME_SORTED [false]
+                    # MERGE_SEQUENCE_DICTIONARIES [false]
+                    # USE_THREADING [false]
+                    runnable_step.add_picard_option(key='USE_THREADING', value='true')
+                    # COMMENT [null]
+                    # INTERVALS [null]
+                    # TMP_DIR [null]
+                    runnable_step.add_picard_option(
+                        key='TMP_DIR',
+                        value=runnable_sample.temporary_directory_path(absolute=False))
+                    # VERBOSITY [INFO]
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                    # QUIET [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # COMPRESSION_LEVEL [5]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # REFERENCE_SEQUENCE [null]
+                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                    # USE_JDK_DEFLATER [false]
+                    # USE_JDK_INFLATER [false]
             else:
+                # If duplicates should be marked, run Picard MarkDuplicates on all read group BAM files.
                 runnable_step = RunnableStepPicard(
                     name='picard_mark_duplicates',
-                    obsolete_file_path_list=[
-                        file_path_sample.merged_bai,
-                        file_path_sample.merged_bam,
-                        file_path_sample.merged_md5,
-                    ],
                     java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     picard_classpath=self.classpath_picard,
@@ -1272,7 +1131,11 @@ class Aligner(Analysis):
                 # REMOVE_SEQUENCING_DUPLICATES [false]
                 # TAGGING_POLICY [DontTag]
                 # INPUT Required
-                runnable_step.add_picard_option(key='INPUT', value=file_path_sample.merged_bam)
+                for runnable_read_group in runnable_read_group_list:
+                    # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
+                    file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
+                    runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.sorted_bam, override=True)
+                    runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
                 # OUTPUT Required
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.duplicate_bam)
                 # METRICS_FILE Required
@@ -1299,24 +1162,61 @@ class Aligner(Analysis):
                 # QUIET [false]
                 # VALIDATION_STRINGENCY [STRICT]
                 # COMPRESSION_LEVEL [5]
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
                 # MAX_RECORDS_IN_RAM [500000]
                 runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
                 # CREATE_INDEX [false]
-                runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
                 # CREATE_MD5_FILE [false]
-                runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                 # REFERENCE_SEQUENCE [null]
                 # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
                 # USE_JDK_INFLATER [false]
 
+            # Finally, run Picard SortSam by coordinate.
+
+            runnable_step = RunnableStepPicard(
+                name='picard_sort_sam',
+                obsolete_file_path_list=[
+                    file_path_sample.duplicate_bam,
+                ],
+                java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
+                java_heap_maximum='Xmx4G',
+                java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                picard_command='SortSam')
+            runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+            # INPUT []
+            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.duplicate_bam)
+            # OUTPUT []
+            runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.sorted_bam)
+            # SORT_ORDER []
+            runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
+            # TMP_DIR [null]
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_sample.temporary_directory_path(absolute=False))
+            # VERBOSITY [INFO]
+            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+            # QUIET [false]
+            # VALIDATION_STRINGENCY [STRICT]
+            # COMPRESSION_LEVEL [5]
+            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+            # MAX_RECORDS_IN_RAM [500000]
+            runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+            # CREATE_INDEX [false]
+            runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+            # CREATE_MD5_FILE [false]
+            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+            # REFERENCE_SEQUENCE [null]
+            # GA4GH_CLIENT_SECRETS [client_secrets.json]
+            # USE_JDK_DEFLATER [false]
+            # USE_JDK_INFLATER [false]
+
             # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
 
             runnable_step = RunnableStepLink(
                 name='link',
-                source_path=file_path_sample.duplicate_bai_link_source,
-                target_path=file_path_sample.duplicate_bai_link_target)
+                source_path=file_path_sample.sorted_bai_link_source,
+                target_path=file_path_sample.sorted_bai_link_target)
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
             # Run the Picard CollectAlignmentSummaryMetrics analysis.
@@ -1346,7 +1246,7 @@ class Aligner(Analysis):
             runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
             # IS_BISULFITE_SEQUENCED [false]
             # INPUT []
-            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.duplicate_bam)
+            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.sorted_bam)
             # OUTPUT []
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.alignment_summary_metrics_tsv)
             # ASSUME_SORTED [true]
