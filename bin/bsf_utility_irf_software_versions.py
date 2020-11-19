@@ -70,7 +70,15 @@ file_name_list.sort()
 if not name_space.ascending:
     file_name_list.reverse()
 
-field_names = ['run_identifier', 'application_name', 'application_version', 'rta_version']
+field_names = [
+    'experiment',
+    'experiment_name',
+    'run_identifier',
+    'application_name',
+    'application_version',
+    'rta_version',
+    'picard_read_structure',
+]
 annotation_sheet = AnnotationSheet(
     file_path=name_space.output_file,
     header=True,
@@ -109,10 +117,14 @@ for file_name in file_name_list:
 
     root_node = irf.run_parameters.element_tree.getroot()
     annotation_sheet.row_dicts.append({
+        'experiment': irf.run_parameters.get_experiment_name,
+        'experiment_name': '_'.join((irf.run_parameters.get_experiment_name,
+                                     irf.run_parameters.get_flow_cell_barcode)),
         'run_identifier': irf.run_parameters.get_run_identifier,
         'application_name': irf.run_parameters.get_application_name,
         'application_version': irf.run_parameters.get_application_version,
         'rta_version': irf.run_parameters.get_real_time_analysis_version,
+        'picard_read_structure': irf.run_information.get_picard_read_structure,
     })
 
 annotation_sheet.to_file_path()
