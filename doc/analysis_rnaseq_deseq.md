@@ -1,14 +1,14 @@
 # RNA-seq DESeq2 Analysis
 
-The RNA-seq analysis requires a distinct set of configuration files. A __project-specific configuration file in INI format__ defines the project name, the reference genome assembly, the reference transcriptome annotation and additional analysis parameters specific to the entire project. A __sample annotation sheet in comma-separated value (CSV) format__ provides sample names, file locations, as well as meta data annotation that is required for the differential expression modelling. A __design annotation sheet in CSV format__ can specify one or more generalised linear models (GLMs) for the differential expression modelling. Aside the full model formula, reduced model formulas for likelihood ratio testing (LRT) need specifying. Optionally, the order of factor levels can also be specified so that base-levels such as controls can serve as the intercept and thus as a sensible reference. The design annotation sheet also allows encoding of variable annotation for principal component analysis (PCA), multi-dimensional scaling (MDS) and heatmap plots. Finally, a __contrasts annotation sheet in CSV format__ specifies the contrasts that are to be extracted from the GLM in a design-specific manner. The contrasts annotation sheet can usually only be generated after the main analysis has run, since DESEq2 result names, especially once they involve interaction terms, can be quite unpredictable.
+The RNA-seq analysis requires a distinct set of configuration files. A __project-specific configuration file__ in INI format defines the project name, the reference genome assembly, the reference transcriptome annotation and additional analysis parameters specific to the entire project. A __sample annotation sheet__ in comma-separated value (CSV) format provides sample names, file locations, as well as meta data annotation that is required for the differential expression modelling. A __design annotation sheet__ in CSV format can specify one or more generalised linear models (GLMs) for the differential expression modelling. Aside the full model formula, reduced model formulas for likelihood ratio testing (LRT) need specifying. Optionally, the order of factor levels can also be specified so that base-levels such as controls can serve as the intercept and thus as a sensible reference. The design annotation sheet also allows encoding of variable annotation for principal component analysis (PCA), multi-dimensional scaling (MDS) and heatmap plots. Finally, a __contrasts annotation sheet__ in CSV format specifies the contrasts that are to be extracted from the GLM in a design-specific manner. The contrasts annotation sheet can usually only be generated after the main analysis has run, since DESeq2 result names, especially once they involve interaction terms, can be quite unpredictable.
 
 ## User-specific Configuration File
 
-A __user-specific configuration file__ in INI format specifies analysis configuration options that are specific to both, the user and the site. While the configuration itself is quite comprehensive, an annotated [template](template_bsfpython.ini) is available and should be adjusted and stored under `$HOME/.bsfpython.ini`.
+A __user-specific configuration file__ in INI format specifies analysis configuration options that are specific to both, the user and the laboratory. While the configuration itself is quite comprehensive, an annotated [template](template_bsfpython.ini) is available and should be adjusted and stored under `$HOME/.bsfpython.ini`.
 
 ## Project-specific Configuration File
 
-The __project-specific configuration file__ in INI format can hold one or more analysis-specific configuration sections. Thereby, the concatenation of Python module and class name serves as the INI section header. A particular analysis will only read the configuration section matching its own class name. Further, analysis-specific configuration options that remain constant between projects, but are specific to the user or the laboratory can be put into a `bsf.analyses.star.Star` section of the user-specific configuration INI file. For an RNA-seq analysis, two configuration sections are mandatory.
+The __project-specific configuration file__ in INI format can hold one or more analysis-specific configuration sections. Thereby, the concatenation of Python module and class name serves as the configuration section header. A particular analysis will only read the configuration section matching its own class name. Further, analysis-specific configuration options that remain constant between projects, but are specific to the user or the laboratory, can be put under the same section names into the user-specific configuration file. For an RNA-seq DESeq analysis, two configuration sections are mandatory.
 
 The `bsf.analyses.star.Star` section requires a minimum of a project name and the reference transcriptome version that should be used for the alignment. The reference transcriptome refers to a directory under the default genomes directory path that is configured in the __user-specific configuration file__ and also implies a reference genome assembly.  An annotated [template](template_star_aligner_config.ini) is available.
 
@@ -16,16 +16,16 @@ The `bsf.analyses.rnaseq.DESeq` section also requires a minimum of project name 
 
 ## Sample Annotation Sheet
 
-A __sample annotation sheet__ in comma-separated value (CSV) format provides sample names, NGS files and meta data annotation that is important for the differential expression modelling. The table requires some fixed variables and permits some additional project-specific ones. The file format is similar to the sample annotation sheet written by the `bsf.analyes.picard.IlluminaDemultiplexSam` analysis into the sample archive folder after demultiplexing. Therefore, most of the information can be copied from one or more sample annotation sheets from the demultiplexing stage.
+A __sample annotation sheet__ in comma-separated value (CSV) format provides sample names, NGS files and meta data annotation that is important for the differential expression modelling. The table requires some fixed variables and permits some additional project-specific ones. The file format is similar to the sample annotation sheet written by the `bsf.analyses.picard.IlluminaDemultiplexSam` analysis into the sample archive folder after demultiplexing. Therefore, most of the information can be copied from one or more sample annotation sheets from the demultiplexing stage.
 
-The sample annotation sheet file name should obey the schema `<project identifier>_<genome assembly>_rnaseq_samples.csv` to allow for automatic configuration file discovery.
+The sample annotation sheet file name should obey the schema `<project_name>_<genome_version>_rnaseq_samples.csv` to allow for automatic configuration file discovery.
 
 ### Variables
 
 - `ProcessedRunFolder Name`
 - `Project Name` The library name this sample was a part of.
 - `Project Size` The library mean fragment size determined by (automated) gel electrophoresis.
-- `Sample Group` A sample group this sample should be part of. Please note that this variable is used by the `bsf.analylses.rnaseq.Tuxedo`, but not the `bsf.analyses.rnaseq.DESeq` analysis.
+- `Sample Group` A sample group this sample should be part of. Please note that this variable is used by the `bsf.analyses.rnaseq.Tuxedo`, but not the `bsf.analyses.rnaseq.DESeq` analysis.
 - `Sample Name` A (meaningful) sample name.
 - `PairedReads Exclude` for excluding particular `PairedReads` objects, equivalent to read groups in BAM files from a high-level analysis.
   - `FALSE`to include a particular PairedReads object
@@ -93,10 +93,10 @@ A __contrasts annotation sheet__ in comma-separated value (CSV) format specifies
 The following configuration files should obey a naming schema to allow for automatic discovery in the configuration file directory from which the analysis gets submitted. Since project names are used in directory and file names, Perl word characters (i.e. `[0-9A-Za-z_]+`) would be particularly safe to use on most operating and file systems.
 
 - Project-specific Configuration File
-  - `<project identifier>_<genome assembly>_rnaseq_config.ini`
+  - `<project_name>_<genome_version>_rnaseq_config.ini`
 - Sample Annotation Sheet
-  - `<project identifier>_<genome assembly>_rnaseq_samples.csv`
+  - `<project_name>_<genome_version>_rnaseq_samples.csv`
 - Design Annotation Sheet
-  - `<project identifier>_<genome assembly>_rnaseq_designs.csv`
+  - `<project_name>_<genome_version>_rnaseq_designs.csv`
 - Contrast Annotation Sheet
-  - `<project identifier>_<genome assembly>_rnaseq_contrasts.csv`
+  - `<project_name>_<genome_version>_rnaseq_contrasts.csv`
