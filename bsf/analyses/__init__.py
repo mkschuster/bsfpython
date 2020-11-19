@@ -32,7 +32,7 @@ import sys
 from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
 from bsf.process import Executable
-from bsf.standards import Configuration, JavaClassPath
+from bsf.standards import Configuration, JavaArchive
 
 
 class RunBamToFastq(Analysis):
@@ -187,8 +187,7 @@ class RunBamToFastq(Analysis):
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=executable_read_group)
                             executable_read_group.arguments.append(paired_reads.reads_1.file_path)
-                            executable_read_group.arguments.append(
-                                os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
+                            executable_read_group.arguments.append(JavaArchive.get_picard())
                             executable_read_group.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
                     if paired_reads.reads_2 is not None:
@@ -204,8 +203,7 @@ class RunBamToFastq(Analysis):
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=executable_read_group)
                             executable_read_group.arguments.append(paired_reads.reads_2.file_path)
-                            executable_read_group.arguments.append(
-                                os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
+                            executable_read_group.arguments.append(JavaArchive.get_picard())
                             executable_read_group.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
         return

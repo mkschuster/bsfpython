@@ -437,7 +437,7 @@ class BaseSectionVersion(object):
 
 
 class JavaArchive(BaseSection):
-    """The C{bsf.standards.JavaArchive} class models Java archive defaults.
+    """The C{bsf.standards.JavaArchive} class models Java Archive (JAR) defaults.
 
     The defaults are read from the [java_archive] section of the global configuration file.
     Attributes:
@@ -449,77 +449,77 @@ class JavaArchive(BaseSection):
 
     @classmethod
     def get_fgbio(cls):
-        """Get the Fulcrum Genomics (fgbio) Java archive path.
+        """Get the Fulcrum Genomics (fgbio) Java Archive (JAR) file path.
 
-        @return: Fulcrum Genomics (fgbio) Java archive path
+        @return: Fulcrum Genomics (fgbio) Java Archive (JAR) file path
         @rtype: str | None
         """
         return cls.get(option='fgbio')
 
-
-class JavaClassPath(BaseSection):
-    """The C{bsf.standards.JavaClassPath} class models Java class path defaults.
-
-    The defaults are read from the [classpath] section of the global configuration file.
-    Attributes:
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
-    """
-    section = 'classpath'
-
     @classmethod
     def get_gatk(cls):
-        """Get the GATK Java class path.
+        """Get the GATK Java Archive (JAR) file path.
 
-        @return: GATK Java class path
+        @return: GATK Java Archive (JAR) file path
         @rtype: str | None
         """
         return cls.get(option='gatk')
 
     @classmethod
-    def get_illumina2bam(cls):
-        """Get the Illumina2bam tools Java class path.
-
-        @return: Illumina2bam tools Java class path
-        @rtype: str | None
-        """
-        return cls.get(option='illumina2bam')
-
-    @classmethod
     def get_picard(cls):
-        """Get the Picard tools Java class path.
+        """Get the Picard Java Archive (JAR) file path.
 
-        @return: Picard tools Java class path
+        @return: Picard Java Archive (JAR) file path
         @rtype: str | None
         """
         return cls.get(option='picard')
 
     @classmethod
     def get_snpeff(cls):
-        """Get the snpEff Java class path.
+        """Get the snpEff Java Archive (JAR) file path.
 
-        @return: snpEff Java class path
+        @return: snpEff Java Archive (JAR) file path
         @rtype: str | None
         """
         return cls.get(option='snpeff')
 
     @classmethod
     def get_trimmomatic(cls):
-        """Get the Trimmomatic Java class path.
+        """Get the Trimmomatic Java Archive (JAR) file path.
 
-        @return: Trimmomatic Java class path
+        @return: Trimmomatic Java Archive (JAR) file path
         @rtype: str | None
         """
         return cls.get(option='trimmomatic')
 
     @classmethod
     def get_vcf_filter(cls):
-        """Get the VCF.Filter Java class path.
+        """Get the VCF.Filter Java Archive (JAR) file path.
 
-        @return: VCF.Filter Java class path
+        @return: VCF.Filter Java Archive (JAR) file path
         @rtype: str | None
         """
         return cls.get(option='vcf_filter')
+
+
+class JavaClassPath(BaseSection):
+    """The C{bsf.standards.JavaClassPath} class models Java Class Path directory defaults.
+
+    The defaults are read from the [java_classpath] section of the global configuration file.
+    Attributes:
+    @cvar section: C{configparser.ConfigParser} section
+    @type section: str
+    """
+    section = 'java_classpath'
+
+    @classmethod
+    def get_illumina2bam(cls):
+        """Get the Illumina2bam tools Java Class Path directory.
+
+        @return: Illumina2bam tools Java Class Path directory
+        @rtype: str | None
+        """
+        return cls.get(option='illumina2bam')
 
 
 class EnsemblVEP(BaseSectionVersion):

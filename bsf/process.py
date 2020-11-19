@@ -1547,7 +1547,7 @@ class RunnableStepJava(RunnableStep):
         @type java_heap_minimum: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
-        @param java_jar_path: Java archive file path
+        @param java_jar_path: Java Archive (JAR) file path
         @type java_jar_path: str | None
         """
 
@@ -1630,7 +1630,6 @@ class RunnableStepPicard(RunnableStepJava):
             java_heap_minimum=None,
             java_heap_maximum=None,
             java_jar_path=None,
-            picard_classpath=None,
             picard_command=None):
         """Initialise a C{bsf.process.RunnableStepPicard}.
 
@@ -1673,10 +1672,8 @@ class RunnableStepPicard(RunnableStepJava):
         @type java_heap_minimum: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
-        @param java_jar_path: Java archive file path
+        @param java_jar_path: Java Archive (JAR) file path
         @type java_jar_path: str | None
-        @param picard_classpath: Picard class path
-        @type picard_classpath: str | None
         @param picard_command: Picard command
         @type picard_command: str | None
         """
@@ -1700,10 +1697,6 @@ class RunnableStepPicard(RunnableStepJava):
             java_heap_minimum=java_heap_minimum,
             java_heap_maximum=java_heap_maximum,
             java_jar_path=java_jar_path)
-
-        # Set the Picard classpath and the Picard Java archive.
-        if 'jar' not in self.sub_command.options:
-            self.sub_command.add_option_short(key='jar', value=os.path.join(picard_classpath, 'picard.jar'))
 
         # The Picard algorithm is then another sub-command.
         if self.sub_command.sub_command is None:

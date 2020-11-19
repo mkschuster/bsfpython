@@ -34,7 +34,7 @@ from argparse import ArgumentParser
 
 from bsf.connector import ConnectorFile
 from bsf.process import Command, Executable, RunnableStep
-from bsf.standards import JavaClassPath
+from bsf.standards import JavaArchive
 
 # Set the environment consistently.
 
@@ -78,11 +78,11 @@ if key in pickler_dict and pickler_dict[key]:
 else:
     raise Exception('The pickler dict in the pickler file needs to contain key {!r}.'.format(key))
 
-key = 'classpath_picard'
+key = 'java_archive_picard'
 if key in pickler_dict and pickler_dict[key]:
-    classpath_picard = pickler_dict[key]
+    java_archive_picard = pickler_dict[key]
 else:
-    classpath_picard = JavaClassPath.get_picard()
+    java_archive_picard = JavaArchive.get_picard()
 
 # Create a temporary directory.
 
@@ -166,7 +166,7 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
     picard_process = java_process.sub_command
-    picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+    picard_process.add_option_short(key='jar', value=java_archive_picard)
     picard_process.sub_command = Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
@@ -252,7 +252,7 @@ java_process.add_switch_short(key='Xmx4G')
 java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
-picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+picard_process.add_option_short(key='jar', value=java_archive_picard)
 picard_process.sub_command = Command(program='CleanSam')
 
 clean_sam = picard_process.sub_command
@@ -331,7 +331,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
     picard_process = java_process.sub_command
-    picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+    picard_process.add_option_short(key='jar', value=java_archive_picard)
     picard_process.sub_command = Command(program='ReplaceSamHeader')
 
     replace_sam_header = picard_process.sub_command
@@ -382,7 +382,7 @@ java_process.add_switch_short(key='Xmx4G')
 java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
-picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+picard_process.add_option_short(key='jar', value=java_archive_picard)
 picard_process.sub_command = Command(program='SortSam')
 
 sort_sam = picard_process.sub_command

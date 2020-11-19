@@ -33,7 +33,7 @@ from bsf.executables.collection import RunnableStepCollectionPruneFastq
 from bsf.ngs import Collection, Sample, PairedReads, Reads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
-from bsf.standards import Configuration, JavaClassPath
+from bsf.standards import Configuration, JavaArchive
 
 
 class FilePathTrimmomaticReadGroup(FilePath):
@@ -132,8 +132,8 @@ class Trimmomatic(Analysis):
     @type trimming_step_pe_list: list[str] | None
     @ivar trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
     @type trimming_step_se_list: list[str] | None
-    @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
-    @type classpath_trimmomatic: str | None
+    @ivar java_archive_trimmomatic: Trimmomatic tool Java Archive (JAR) file path
+    @type java_archive_trimmomatic: str | None
     """
 
     name = 'Trimmomatic Analysis'
@@ -240,7 +240,7 @@ class Trimmomatic(Analysis):
             adapter_path=None,
             trimming_step_pe_list=None,
             trimming_step_se_list=None,
-            classpath_trimmomatic=None):
+            java_archive_trimmomatic=None):
         """Initialise a C{bsf.analyses.trimmomatic.Trimmomatic} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -275,8 +275,8 @@ class Trimmomatic(Analysis):
         @type trimming_step_pe_list: list[str] | None
         @param trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
         @type trimming_step_se_list: list[str] | None
-        @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
-        @type classpath_trimmomatic: str | None
+        @param java_archive_trimmomatic: Trimmomatic tool Java Archive (JAR) file path
+        @type java_archive_trimmomatic: str | None
         """
         super(Trimmomatic, self).__init__(
             configuration=configuration,
@@ -295,7 +295,7 @@ class Trimmomatic(Analysis):
         self.adapter_path = adapter_path
         self.trimming_step_pe_list = trimming_step_pe_list
         self.trimming_step_se_list = trimming_step_se_list
-        self.classpath_trimmomatic = classpath_trimmomatic
+        self.java_archive_trimmomatic = java_archive_trimmomatic
 
         return
 
@@ -329,11 +329,11 @@ class Trimmomatic(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.trimming_step_se_list = configuration.get_list_from_csv(section=section, option=option)
 
-        # Get the Trimmomatic tool Java Archive (JAR) class path directory.
+        # Get the Trimmomatic tool Java Archive (JAR) file path.
 
-        option = 'classpath_trimmomatic'
+        option = 'java_archive_trimmomatic'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_trimmomatic = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_trimmomatic = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -376,15 +376,15 @@ class Trimmomatic(Analysis):
 
         super(Trimmomatic, self).run()
 
-        # Get the Trimmomatic tool Java Archive (JAR) class path directory.
+        # Get the Trimmomatic tool Java Archive (JAR) file path.
 
-        if not self.classpath_trimmomatic:
-            self.classpath_trimmomatic = JavaClassPath.get_trimmomatic()
-            if not self.classpath_trimmomatic:
-                raise Exception('A ' + self.name + "requires a 'classpath_trimmomatic' configuration option.")
+        if not self.java_archive_trimmomatic:
+            self.java_archive_trimmomatic = JavaArchive.get_trimmomatic()
+            if not self.java_archive_trimmomatic:
+                raise Exception('A ' + self.name + "requires a 'java_archive_trimmomatic' configuration option.")
 
         if not (self.adapter_path and os.path.isabs(self.adapter_path)):
-            self.adapter_path = os.path.join(os.path.dirname(self.classpath_trimmomatic), 'adapters')
+            self.adapter_path = os.path.join(os.path.dirname(self.java_archive_trimmomatic), 'adapters')
 
         if self.trimming_step_pe_list is None:
             raise Exception('A ' + self.name + " requires a 'trimming_steps_pe' configuration option.")
@@ -471,7 +471,7 @@ class Trimmomatic(Analysis):
                         name='trimmomatic',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
-                        java_jar_path=self.classpath_trimmomatic)
+                        java_jar_path=self.java_archive_trimmomatic)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     if paired_reads.reads_2 is None:

@@ -6,7 +6,7 @@
 #
 # Usage: bsf_bam2fastq.sh input_file sam_to_fastq_jar [output_directory]
 #   input_file:        The path to the BAM or SAM file to be converted
-#   sam_to_fastq_jar:  File path to Java Archive (JAR) file (SamToFastq.jar)
+#   sam_to_fastq_jar:  File path to Java Archive (JAR) (SamToFastq.jar)
 #   output_directory:  The directory in which to place the FASTQ files.
 #                      Defaults to the directory name of the input_file parameter.
 #

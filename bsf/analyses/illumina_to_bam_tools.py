@@ -37,7 +37,7 @@ from bsf.ngs import Collection, Sample, SampleAnnotationSheet
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, Executable, RunnableStep, RunnableStepChangeMode, RunnableStepJava, \
     RunnableStepMakeDirectory, RunnableStepLink, RunnableStepMove, RunnableStepPicard
-from bsf.standards import Configuration, StandardFilePath, JavaClassPath, Operator, VendorQualityFilter
+from bsf.standards import Configuration, StandardFilePath, JavaArchive, JavaClassPath, Operator, VendorQualityFilter
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
@@ -324,12 +324,10 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
     C{bsf.process.RunnableStepJava} specific to IlluminaToBam tools.
 
     IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
-    Java Archive (JAR) file
+    Java Archive (JAR) file.
 
     Attributes:
-    @ivar java_jar_path: Java archive file path
-    @type java_jar_path: str | None
-    @ivar itb_classpath: IlluminaToBam class path
+    @ivar itb_classpath: IlluminaToBam Java Class Path directory
     @type itb_classpath: str | None
     @ivar itb_command: IlluminaToBam command
     @type itb_command: str | None
@@ -394,9 +392,9 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         @type java_temporary_path: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
-        @param java_jar_path: Java archive file path
+        @param java_jar_path: Java Archive (JAR) file path
         @type java_jar_path: str | None
-        @param itb_classpath: IlluminaToBam class path
+        @param itb_classpath: IlluminaToBam Java Class Path directory
         @type itb_classpath: str | None
         @param itb_command: IlluminaToBam command
         @type itb_command: str | None
@@ -421,7 +419,7 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
             java_heap_maximum=java_heap_maximum,
             java_jar_path=java_jar_path)
 
-        # Set the IlluminaToBam classpath and the IlluminaToBam Java archive.
+        # Set the IlluminaToBam Java Class Path and the command-specific IlluminaToBam Java Archive (JAR) file path.
         if 'jar' not in self.sub_command.options:
             self.sub_command.add_option_short(key='jar', value=os.path.join(itb_classpath, itb_command + '.jar'))
 
@@ -518,10 +516,10 @@ class IlluminaToBam(Analysis):
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_file: str | None
-    @ivar classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-    @type classpath_illumina2bam: str | None
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
+    @type java_classpath_illumina2bam: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     @ivar vendor_quality_filter: Vendor quality filter
     @type vendor_quality_filter: bool
     @ivar force: Force processing of incomplete Illumina Run Folders
@@ -615,8 +613,8 @@ class IlluminaToBam(Analysis):
             sequences_directory=None,
             mode_directory=None,
             mode_file=None,
-            classpath_illumina2bam=None,
-            classpath_picard=None,
+            java_classpath_illumina2bam=None,
+            java_archive_picard=None,
             vendor_quality_filter=None,
             force=False):
         """Initialise a C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} object.
@@ -668,10 +666,10 @@ class IlluminaToBam(Analysis):
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_file: str | None
-        @param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-        @type classpath_illumina2bam: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
+        @type java_classpath_illumina2bam: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param vendor_quality_filter: Vendor quality filter
         @type vendor_quality_filter: bool | None
         @param force: Force processing of incomplete Illumina Run Folders
@@ -702,8 +700,8 @@ class IlluminaToBam(Analysis):
         self.sequences_directory = sequences_directory
         self.mode_directory = mode_directory
         self.mode_file = mode_file
-        self.classpath_illumina2bam = classpath_illumina2bam
-        self.classpath_picard = classpath_picard
+        self.java_classpath_illumina2bam = java_classpath_illumina2bam
+        self.java_archive_picard = java_archive_picard
         self.vendor_quality_filter = vendor_quality_filter
         self.force = force
 
@@ -770,13 +768,13 @@ class IlluminaToBam(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_file = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_illumina2bam'
+        option = 'java_classpath_illumina2bam'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_illumina2bam = configuration.config_parser.get(section=section, option=option)
+            self.java_classpath_illumina2bam = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         option = 'force'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -905,21 +903,21 @@ class IlluminaToBam(Analysis):
 
         experiment_directory = self.get_experiment_directory
 
-        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
+        # Get the Illumina2Bam tools Java Class Path directory.
 
-        if not self.classpath_illumina2bam:
-            self.classpath_illumina2bam = JavaClassPath.get_illumina2bam()
-            if not self.classpath_illumina2bam:
+        if not self.java_classpath_illumina2bam:
+            self.java_classpath_illumina2bam = JavaClassPath.get_illumina2bam()
+            if not self.java_classpath_illumina2bam:
                 raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'classpath_illumina2bam' configuration option.")
+                                "'java_classpath_illumina2bam' configuration option.")
 
-        # Get the Picard tools Java Archive (JAR) class path directory
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
                 raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                                "'java_archive_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -990,7 +988,7 @@ class IlluminaToBam(Analysis):
                 name='illumina_to_bam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum=java_heap_maximum,
-                itb_classpath=self.classpath_illumina2bam,
+                itb_classpath=self.java_classpath_illumina2bam,
                 itb_command='Illumina2bam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -1090,7 +1088,7 @@ class IlluminaToBam(Analysis):
                     ],
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx18G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='SortSam')
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -1279,10 +1277,10 @@ class BamIndexDecoder(Analysis):
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_file: str | None
-    @ivar classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-    @type classpath_illumina2bam: str | None
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
+    @type java_classpath_illumina2bam: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     @ivar lanes: Number of lanes on the flow cell
     @type lanes: int | None
     @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -1419,8 +1417,8 @@ class BamIndexDecoder(Analysis):
             samples_directory=None,
             mode_directory=None,
             mode_file=None,
-            classpath_illumina2bam=None,
-            classpath_picard=None,
+            java_classpath_illumina2bam=None,
+            java_archive_picard=None,
             lanes=8,
             force=False):
         """Initialise a C{BamIndexDecoder} object.
@@ -1463,10 +1461,10 @@ class BamIndexDecoder(Analysis):
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_file: str | None
-        @param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-        @type classpath_illumina2bam: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
+        @type java_classpath_illumina2bam: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param lanes: Number of lanes on the flow cell
         @type lanes: int | None
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -1494,8 +1492,8 @@ class BamIndexDecoder(Analysis):
         self.samples_directory = samples_directory
         self.mode_directory = mode_directory
         self.mode_file = mode_file
-        self.classpath_illumina2bam = classpath_illumina2bam
-        self.classpath_picard = classpath_picard
+        self.java_classpath_illumina2bam = java_classpath_illumina2bam
+        self.java_archive_picard = java_archive_picard
         self.lanes = lanes
         self.force = force
 
@@ -1550,13 +1548,13 @@ class BamIndexDecoder(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_file = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_illumina2bam'
+        option = 'java_classpath_illumina2bam'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_illumina2bam = configuration.config_parser.get(section=section, option=option)
+            self.java_classpath_illumina2bam = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         option = 'lanes'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1644,21 +1642,21 @@ class BamIndexDecoder(Analysis):
                 raise Exception('Validation of library annotation sheet {!r}:\n{}'.
                                 format(self.library_path, validation_messages))
 
-        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
+        # Get the Illumina2Bam tools Java Class Path directory.
 
-        if not self.classpath_illumina2bam:
-            self.classpath_illumina2bam = JavaClassPath.get_illumina2bam()
-            if not self.classpath_illumina2bam:
+        if not self.java_classpath_illumina2bam:
+            self.java_classpath_illumina2bam = JavaClassPath.get_illumina2bam()
+            if not self.java_classpath_illumina2bam:
                 raise Exception("An 'BamIndexDecoder' analysis requires a "
-                                "'classpath_illumina2bam' configuration option.")
+                                "'java_classpath_illumina2bam' configuration option.")
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
                 raise Exception("An 'BamIndexDecoder' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                                "'java_archive_picard' configuration option.")
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
@@ -1775,7 +1773,7 @@ class BamIndexDecoder(Analysis):
                     name='bam_index_decoder',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
-                    itb_classpath=self.classpath_illumina2bam,
+                    itb_classpath=self.java_classpath_illumina2bam,
                     itb_command='BamIndexDecoder')
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -1885,7 +1883,7 @@ class BamIndexDecoder(Analysis):
                     ],
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='CollectAlignmentSummaryMetrics')
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 

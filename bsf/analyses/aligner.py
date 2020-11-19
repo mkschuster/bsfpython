@@ -35,7 +35,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.procedure import FilePath, Runnable, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
     RunnableStepMove, RunnableStep, RunnableStepLink
-from bsf.standards import Configuration, StandardFilePath, JavaClassPath
+from bsf.standards import Configuration, StandardFilePath, JavaArchive
 
 
 class FilePathAlign(FilePath):
@@ -308,8 +308,8 @@ class Aligner(Analysis):
     @type genome_index: str | None
     @ivar skip_mark_duplicates: Skip Picard MarkDuplicates
     @type skip_mark_duplicates: bool | None
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     """
 
     name = 'Aligner Analysis'
@@ -452,7 +452,7 @@ class Aligner(Analysis):
             genome_fasta=None,
             genome_index=None,
             skip_mark_duplicates=None,
-            classpath_picard=None):
+            java_archive_picard=None):
         """Initialise a C{bsf.analyses.aligner.Aligner}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -487,8 +487,8 @@ class Aligner(Analysis):
         @type genome_index: str | None
         @param skip_mark_duplicates: Skip Picard MarkDuplicates
         @type skip_mark_duplicates: bool | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         """
         super(Aligner, self).__init__(
             configuration=configuration,
@@ -509,7 +509,7 @@ class Aligner(Analysis):
         self.genome_fasta = genome_fasta
         self.genome_index = genome_index
         self.skip_mark_duplicates = skip_mark_duplicates
-        self.classpath_picard = classpath_picard
+        self.java_archive_picard = java_archive_picard
 
         return
 
@@ -541,9 +541,9 @@ class Aligner(Analysis):
         if config_parser.has_option(section=section, option=option):
             self.skip_mark_duplicates = config_parser.getboolean(section=section, option=option)
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -644,10 +644,10 @@ class Aligner(Analysis):
                 genome_version=self.genome_version,
                 genome_index=None)
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
-                raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
+                raise Exception('A ' + self.name + " requires a 'java_archive_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -776,7 +776,7 @@ class Aligner(Analysis):
                     ],
                     java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
-                    java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                    java_jar_path=self.java_archive_picard,
                     picard_command='SortSam')
                 runnable_align.add_runnable_step(runnable_step=runnable_step)
 
@@ -814,7 +814,7 @@ class Aligner(Analysis):
                     ],
                     java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
-                    java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                    java_jar_path=self.java_archive_picard,
                     picard_command='CleanSam')
                 runnable_align.add_runnable_step(runnable_step=runnable_step)
 
@@ -906,7 +906,7 @@ class Aligner(Analysis):
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
-                        picard_classpath=self.classpath_picard,
+                        java_jar_path=self.java_archive_picard,
                         picard_command='MergeSamFiles')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
@@ -957,7 +957,7 @@ class Aligner(Analysis):
                         ],
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx12G',
-                        java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                        java_jar_path=self.java_archive_picard,
                         picard_command='MergeBamAlignment')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
@@ -1072,7 +1072,7 @@ class Aligner(Analysis):
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
-                        picard_classpath=self.classpath_picard,
+                        java_jar_path=self.java_archive_picard,
                         picard_command='MergeSamFiles')
                     runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -1117,7 +1117,7 @@ class Aligner(Analysis):
                     name='picard_mark_duplicates',
                     java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='MarkDuplicates')
                 runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -1180,7 +1180,7 @@ class Aligner(Analysis):
                 ],
                 java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                java_jar_path=self.java_archive_picard,
                 picard_command='SortSam')
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -1225,7 +1225,7 @@ class Aligner(Analysis):
                 name='picard_collect_alignment_summary_metrics',
                 java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                picard_classpath=self.classpath_picard,
+                java_jar_path=self.java_archive_picard,
                 picard_command='CollectAlignmentSummaryMetrics')
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 

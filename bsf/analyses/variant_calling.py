@@ -43,7 +43,7 @@ from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, Runnable, ConsecutiveRunnable
 from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
-from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive, JavaClassPath
+from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -72,8 +72,7 @@ class RunnableStepGATK(RunnableStepJava):
             java_temporary_path=None,
             java_heap_minimum=None,
             java_heap_maximum=None,
-            java_jar_path=None,
-            gatk_classpath=None):
+            java_jar_path=None):
         """Initialise a C{bsf.analyses.variant_calling.RunnableStepGATK}.
 
         @param name: Name
@@ -115,7 +114,7 @@ class RunnableStepGATK(RunnableStepJava):
         @type java_heap_minimum: str | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
         @type java_heap_maximum: str | None
-        @param java_jar_path: Java archive file path
+        @param java_jar_path: Java Archive (JAR) file path
         @type java_jar_path: str | None
         """
         super(RunnableStepGATK, self).__init__(
@@ -138,10 +137,6 @@ class RunnableStepGATK(RunnableStepJava):
             java_heap_minimum=java_heap_minimum,
             java_heap_maximum=java_heap_maximum,
             java_jar_path=java_jar_path)
-
-        # Set the GATK classpath and the GATK Java archive.
-        if 'jar' not in self.sub_command.options:
-            self.sub_command.add_option_short(key='jar', value=os.path.join(gatk_classpath, 'GenomeAnalysisTK.jar'))
 
         # The GATK algorithm is then another empty sub-command.
         if self.sub_command.sub_command is None:
@@ -1111,14 +1106,14 @@ class VariantCallingGATK(Analysis):
     @type vep_plugin_cadd_path: str | None
     @ivar java_archive_fgbio: Fulcrum Genomics (fgbio) Java archive path
     @type java_archive_fgbio: str | None
-    @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
-    @type classpath_gatk: str | None
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
-    @ivar classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
-    @type classpath_snpeff: str | None
-    @ivar classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
-    @type classpath_vcf_filter: str | None
+    @ivar java_archive_gatk: Genome Analysis Tool Kit Java Archive (JAR) file path
+    @type java_archive_gatk: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
+    @ivar java_archive_snpeff: snpEff tool Java Archive (JAR) file path
+    @type java_archive_snpeff: str | None
+    @ivar java_archive_vcf_filter: VCF.Filter tool Java Archive (JAR) file path
+    @type java_archive_vcf_filter: str | None
     @ivar _tile_region_cohort_list: Python C{list} of C{bsf.interval.Container} objects
     @type _tile_region_cohort_list: list[Container] | None
     @ivar _tile_region_somatic_list: Python C{list} of C{bsf.interval.Container} objects
@@ -1705,10 +1700,10 @@ class VariantCallingGATK(Analysis):
             vep_refseq_alignments_path=None,
             vep_plugin_cadd_path=None,
             java_archive_fgbio=None,
-            classpath_gatk=None,
-            classpath_picard=None,
-            classpath_snpeff=None,
-            classpath_vcf_filter=None):
+            java_archive_gatk=None,
+            java_archive_picard=None,
+            java_archive_snpeff=None,
+            java_archive_vcf_filter=None):
         """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATK}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -1845,14 +1840,14 @@ class VariantCallingGATK(Analysis):
         @type vep_plugin_cadd_path: str | None
         @param java_archive_fgbio: Fulcrum Genomics (fgbio) Java archive path
         @type java_archive_fgbio: str | None
-        @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
-        @type classpath_gatk: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
-        @param classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
-        @type classpath_snpeff: str | None
-        @param classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
-        @type classpath_vcf_filter: str | None
+        @param java_archive_gatk: Genome Analysis Tool Kit Java Archive (JAR) file path
+        @type java_archive_gatk: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
+        @param java_archive_snpeff: snpEff tool Java Archive (JAR) file path
+        @type java_archive_snpeff: str | None
+        @param java_archive_vcf_filter: VCF.Filter tool Java Archive (JAR) file path
+        @type java_archive_vcf_filter: str | None
         """
 
         super(VariantCallingGATK, self).__init__(
@@ -1931,10 +1926,10 @@ class VariantCallingGATK(Analysis):
         self.vep_plugin_cadd_path = vep_plugin_cadd_path
 
         self.java_archive_fgbio = java_archive_fgbio
-        self.classpath_gatk = classpath_gatk
-        self.classpath_picard = classpath_picard
-        self.classpath_snpeff = classpath_snpeff
-        self.classpath_vcf_filter = classpath_vcf_filter
+        self.java_archive_gatk = java_archive_gatk
+        self.java_archive_picard = java_archive_picard
+        self.java_archive_snpeff = java_archive_snpeff
+        self.java_archive_vcf_filter = java_archive_vcf_filter
 
         self._comparison_dict = dict()
         """ @type _comparison_dict: dict[str, VariantCallingGATKComparison] """
@@ -2290,21 +2285,21 @@ class VariantCallingGATK(Analysis):
         if config_parser.has_option(section=section, option=option):
             self.java_archive_fgbio = config_parser.get(section=section, option=option)
 
-        option = 'classpath_gatk'
+        option = 'java_archive_gatk'
         if config_parser.has_option(section=section, option=option):
-            self.classpath_gatk = config_parser.get(section=section, option=option)
+            self.java_archive_gatk = config_parser.get(section=section, option=option)
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if config_parser.has_option(section=section, option=option):
-            self.classpath_picard = config_parser.get(section=section, option=option)
+            self.java_archive_picard = config_parser.get(section=section, option=option)
 
-        option = 'classpath_snpeff'
+        option = 'java_archive_snpeff'
         if config_parser.has_option(section=section, option=option):
-            self.classpath_snpeff = config_parser.get(section=section, option=option)
+            self.java_archive_snpeff = config_parser.get(section=section, option=option)
 
-        option = 'classpath_vcf_filter'
+        option = 'java_archive_vcf_filter'
         if config_parser.has_option(section=section, option=option):
-            self.classpath_vcf_filter = config_parser.get(section=section, option=option)
+            self.java_archive_vcf_filter = config_parser.get(section=section, option=option)
 
         return
 
@@ -2572,7 +2567,7 @@ class VariantCallingGATK(Analysis):
                     name='merge_cohort_gatk_combine_gvcfs',
                     java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_scatter.add_runnable_step(runnable_step=_runnable_step)
 
                 _runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
@@ -2662,9 +2657,7 @@ class VariantCallingGATK(Analysis):
                             java_heap_maximum='Xmx4G')
                         runnable_gather.add_runnable_step(runnable_step=_runnable_step)
 
-                        _runnable_step.add_option_short(
-                            key='classpath',
-                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        _runnable_step.add_option_short(key='classpath', value=self.java_archive_gatk)
                         _sub_command = _runnable_step.sub_command
                         # Add the 'reference' not 'reference_sequence' option.
                         _sub_command.add_option_long(key='reference', value=reference_gather)
@@ -2788,7 +2781,7 @@ class VariantCallingGATK(Analysis):
                     name='process_cohort_gatk_genotype_gvcfs_scatter',
                     java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx12G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_scatter.add_runnable_step(runnable_step=_runnable_step)
 
                 _runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
@@ -2876,9 +2869,7 @@ class VariantCallingGATK(Analysis):
                             java_heap_maximum='Xmx4G')
                         runnable_gather.add_runnable_step(runnable_step=_runnable_step)
 
-                        _runnable_step.add_option_short(
-                            key='classpath',
-                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        _runnable_step.add_option_short(key='classpath', value=self.java_archive_gatk)
                         _sub_command = _runnable_step.sub_command
                         # Add the 'reference' not 'reference_sequence' option.
                         _sub_command.add_option_long(key='reference', value=reference_gather)
@@ -3036,7 +3027,7 @@ class VariantCallingGATK(Analysis):
                     name='somatic_gatk_mutect2_scatter',
                     java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_scatter.add_runnable_step(runnable_step=_runnable_step)
 
                 _runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
@@ -3155,9 +3146,7 @@ class VariantCallingGATK(Analysis):
                             java_heap_maximum='Xmx4G')
                         runnable_gather.add_runnable_step(runnable_step=_runnable_step)
 
-                        _runnable_step.add_option_short(
-                            key='classpath',
-                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        _runnable_step.add_option_short(key='classpath', value=self.java_archive_gatk)
                         _sub_command = _runnable_step.sub_command
                         # Add the 'reference' not 'reference_sequence' option.
                         _sub_command.add_option_long(key='reference', value=reference_gather)
@@ -3250,7 +3239,7 @@ class VariantCallingGATK(Analysis):
                 name='snpeff_complete',
                 stdout=ConnectorFile(file_path=file_path_annotate.complete_vcf, file_mode='wt'),
                 java_temporary_path=runnable_annotate.temporary_directory_path(absolute=False),
-                java_jar_path=os.path.join(self.classpath_snpeff, 'snpEff.jar'),
+                java_jar_path=self.java_archive_snpeff,
                 java_heap_maximum='Xmx6G')
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
@@ -3261,7 +3250,9 @@ class VariantCallingGATK(Analysis):
             _sub_command.add_switch_short(key='download')
             _sub_command.add_option_short(key='o', value='vcf')
             _sub_command.add_option_short(key='stats', value=file_path_annotate.complete_stats)
-            _sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
+            _sub_command.add_option_short(
+                key='config',
+                value=os.path.join(os.path.dirname(self.java_archive_snpeff), 'snpEff.config'))
 
             _sub_command.arguments.append(self.snpeff_genome_version)
             _sub_command.arguments.append(vcf_file_path)
@@ -3286,7 +3277,7 @@ class VariantCallingGATK(Analysis):
                 name='snpeff_gatk',
                 stdout=ConnectorFile(file_path=file_path_annotate.gatk_vcf, file_mode='wt'),
                 java_temporary_path=runnable_annotate.temporary_directory_path(absolute=False),
-                java_jar_path=os.path.join(self.classpath_snpeff, 'snpEff.jar'),
+                java_jar_path=self.java_archive_snpeff,
                 java_heap_maximum='Xmx6G')
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
@@ -3297,7 +3288,9 @@ class VariantCallingGATK(Analysis):
             _sub_command.add_switch_short(key='download')
             _sub_command.add_option_short(key='o', value='gatk')
             _sub_command.add_option_short(key='stats', value=file_path_annotate.gatk_stats)
-            _sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
+            _sub_command.add_option_short(
+                key='config',
+                value=os.path.join(os.path.dirname(self.java_archive_snpeff), 'snpEff.config'))
 
             _sub_command.arguments.append(self.snpeff_genome_version)
             _sub_command.arguments.append(vcf_file_path)
@@ -3324,7 +3317,7 @@ class VariantCallingGATK(Analysis):
                 name='gatk_variant_annotator',
                 java_temporary_path=runnable_annotate.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_annotate.add_runnable_step(runnable_step=_runnable_step)
 
             _runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
@@ -3657,25 +3650,25 @@ class VariantCallingGATK(Analysis):
             if not self.java_archive_fgbio:
                 raise Exception('A ' + self.name + " requires a 'java_archive_fgbio' configuration option.")
 
-        if not self.classpath_gatk:
-            self.classpath_gatk = JavaClassPath.get_gatk()
-            if not self.classpath_gatk:
-                raise Exception('A ' + self.name + " requires a 'classpath_gatk' configuration option.")
+        if not self.java_archive_gatk:
+            self.java_archive_gatk = JavaArchive.get_gatk()
+            if not self.java_archive_gatk:
+                raise Exception('A ' + self.name + " requires a 'java_archive_gatk' configuration option.")
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
-                raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
+                raise Exception('A ' + self.name + " requires a 'java_archive_picard' configuration option.")
 
-        if not self.classpath_snpeff:
-            self.classpath_snpeff = JavaClassPath.get_snpeff()
-            if not self.classpath_snpeff:
-                raise Exception('A ' + self.name + " requires a 'classpath_snpeff' configuration option.")
+        if not self.java_archive_snpeff:
+            self.java_archive_snpeff = JavaArchive.get_snpeff()
+            if not self.java_archive_snpeff:
+                raise Exception('A ' + self.name + " requires a 'java_archive_snpeff' configuration option.")
 
-        if not self.classpath_vcf_filter:
-            self.classpath_vcf_filter = JavaClassPath.get_vcf_filter()
-            if not self.classpath_vcf_filter:
-                raise Exception('A ' + self.name + " requires a 'classpath_vcf_filter' configuration option.")
+        if not self.java_archive_vcf_filter:
+            self.java_archive_vcf_filter = JavaArchive.get_vcf_filter()
+            if not self.java_archive_vcf_filter:
+                raise Exception('A ' + self.name + " requires a 'java_archive_vcf_filter' configuration option.")
 
         # Check for absolute paths and adjust if required before checking for existence.
 
@@ -3996,8 +3989,8 @@ class VariantCallingGATK(Analysis):
                 pickler_dict_align_lane = {
                     'prefix': stage_align_lane.name,
                     'replicate_key': paired_reads_name,
-                    'classpath_gatk': self.classpath_gatk,
-                    'classpath_picard': self.classpath_picard,
+                    'java_archive_gatk': self.java_archive_gatk,
+                    'java_archive_picard': self.java_archive_picard,
                     'runnable_step': runnable_step,
                 }
 
@@ -4136,7 +4129,7 @@ class VariantCallingGATK(Analysis):
                         ],
                         java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
-                        picard_classpath=self.classpath_picard,
+                        java_jar_path=self.java_archive_picard,
                         picard_command='MarkDuplicates')
                     runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -4191,7 +4184,7 @@ class VariantCallingGATK(Analysis):
                         name='process_lane_gatk_realigner_target_creator',
                         java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk)
+                        java_jar_path=self.java_archive_gatk)
                     runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
@@ -4218,7 +4211,7 @@ class VariantCallingGATK(Analysis):
                         ],
                         java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk)
+                        java_jar_path=self.java_archive_gatk)
                     runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
@@ -4246,7 +4239,7 @@ class VariantCallingGATK(Analysis):
                     name='process_lane_gatk_base_recalibrator_pre',
                     java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_gatk_option(key='analysis_type', value='BaseRecalibrator')
@@ -4263,7 +4256,7 @@ class VariantCallingGATK(Analysis):
                     name='process_lane_gatk_base_recalibrator_post',
                     java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_gatk_option(key='analysis_type', value='BaseRecalibrator')
@@ -4281,7 +4274,7 @@ class VariantCallingGATK(Analysis):
                     name='process_lane_gatk_analyze_covariates',
                     java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_gatk_option(key='analysis_type', value='AnalyzeCovariates')
@@ -4308,7 +4301,7 @@ class VariantCallingGATK(Analysis):
                     ],
                     java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_gatk_option(key='analysis_type', value='PrintReads')
@@ -4326,7 +4319,7 @@ class VariantCallingGATK(Analysis):
                     name='process_lane_picard_collect_alignment_summary_metrics',
                     java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='CollectAlignmentSummaryMetrics')
                 runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -4443,7 +4436,7 @@ class VariantCallingGATK(Analysis):
                     name='process_sample_picard_merge_sam_files',
                     java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='MergeSamFiles')
                 runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -4514,7 +4507,7 @@ class VariantCallingGATK(Analysis):
                         ],
                         java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
-                        picard_classpath=self.classpath_picard,
+                        java_jar_path=self.java_archive_picard,
                         picard_command='MarkDuplicates')
                     runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -4586,7 +4579,7 @@ class VariantCallingGATK(Analysis):
                         name='process_sample_gatk_realigner_target_creator',
                         java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk)
+                        java_jar_path=self.java_archive_gatk)
                     runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
@@ -4611,7 +4604,7 @@ class VariantCallingGATK(Analysis):
                         ],
                         java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk)
+                        java_jar_path=self.java_archive_gatk)
                     runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
@@ -4649,7 +4642,7 @@ class VariantCallingGATK(Analysis):
                 name='process_sample_picard_collect_alignment_summary_metrics',
                 java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx6G',
-                picard_classpath=self.classpath_picard,
+                java_jar_path=self.java_archive_picard,
                 picard_command='CollectAlignmentSummaryMetrics')
             runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -4679,7 +4672,7 @@ class VariantCallingGATK(Analysis):
                 name='process_sample_gatk_haplotype_caller',
                 java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx8G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='HaplotypeCaller')
@@ -4771,7 +4764,7 @@ class VariantCallingGATK(Analysis):
                 name='diagnose_sample_gatk_callable_loci',
                 java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx6G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_diagnose_sample.add_runnable_step(runnable_step=runnable_step)
 
             # Read RunnableStep options from configuration sections:
@@ -4861,7 +4854,7 @@ class VariantCallingGATK(Analysis):
                     name='diagnose_sample_gatk_diagnose_target',
                     java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx8G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_diagnose_sample.add_runnable_step(runnable_step=runnable_step)
 
                 # Read RunnableStep options from configuration sections:
@@ -4892,7 +4885,7 @@ class VariantCallingGATK(Analysis):
                     name='diagnose_sample_gatk_qualify_missing_intervals',
                     java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx8G',
-                    gatk_classpath=self.classpath_gatk)
+                    java_jar_path=self.java_archive_gatk)
                 runnable_diagnose_sample.add_runnable_step(runnable_step=runnable_step)
 
                 # Read RunnableStep options from configuration sections:
@@ -4925,7 +4918,7 @@ class VariantCallingGATK(Analysis):
                     name='diagnose_sample_picard_collect_hybrid_selection_metrics',
                     java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx12G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='CollectHsMetrics')
                 runnable_diagnose_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -5090,7 +5083,7 @@ class VariantCallingGATK(Analysis):
                 name='process_cohort_gatk_variant_recalibrator_snp',
                 java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx8G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_process_cohort.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantRecalibrator')
@@ -5125,7 +5118,7 @@ class VariantCallingGATK(Analysis):
                 name='process_cohort_gatk_apply_recalibration_snp',
                 java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_process_cohort.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='ApplyRecalibration')
@@ -5154,7 +5147,7 @@ class VariantCallingGATK(Analysis):
                 name='process_cohort_gatk_variant_recalibrator_indel',
                 java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx8G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_process_cohort.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantRecalibrator')
@@ -5189,7 +5182,7 @@ class VariantCallingGATK(Analysis):
                 name='process_cohort_gatk_apply_recalibration_indel',
                 java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_process_cohort.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='ApplyRecalibration')
@@ -5213,7 +5206,7 @@ class VariantCallingGATK(Analysis):
                 name='process_cohort_gatk_select_variants_cohort',
                 java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_process_cohort.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
@@ -5314,7 +5307,7 @@ class VariantCallingGATK(Analysis):
                 name='split_cohort_snpeff_gatk_select_variants_snpeff',
                 java_temporary_path=runnable_split_cohort_snpeff.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_split_cohort_snpeff.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
@@ -5330,7 +5323,7 @@ class VariantCallingGATK(Analysis):
                 name='split_cohort_snpeff_gatk_variants_to_table_snpeff',
                 java_temporary_path=runnable_split_cohort_snpeff.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_split_cohort_snpeff.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
@@ -5390,7 +5383,7 @@ class VariantCallingGATK(Analysis):
                 name='split_cohort_vep_gatk_select_variants_vep',
                 java_temporary_path=runnable_split_cohort_vep.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_split_cohort_vep.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
@@ -5406,7 +5399,7 @@ class VariantCallingGATK(Analysis):
                 name='split_cohort_vep_gatk_variants_to_table_vep',
                 java_temporary_path=runnable_split_cohort_vep.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_split_cohort_vep.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
@@ -5564,7 +5557,7 @@ class VariantCallingGATK(Analysis):
                 name='somatic_gatk_variants_to_table',
                 java_temporary_path=runnable_split_somatic_snpeff.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_split_somatic_snpeff.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
@@ -5624,7 +5617,7 @@ class VariantCallingGATK(Analysis):
                 name='somatic_gatk_variants_to_table',
                 java_temporary_path=runnable_split_somatic_vep.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                gatk_classpath=self.classpath_gatk)
+                java_jar_path=self.java_archive_gatk)
             runnable_split_somatic_vep.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')

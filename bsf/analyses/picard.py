@@ -43,7 +43,7 @@ from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
     RunnableStepMove, RunnableStepPicard
-from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaClassPath, Operator, VendorQualityFilter
+from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaArchive, Operator, VendorQualityFilter
 
 
 class PicardIlluminaRunFolder(Analysis):
@@ -65,8 +65,8 @@ class PicardIlluminaRunFolder(Analysis):
     @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str | None
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     @ivar _irf: C{bsf.illumina.RunFolder}
@@ -136,7 +136,7 @@ class PicardIlluminaRunFolder(Analysis):
             intensity_directory=None,
             basecalls_directory=None,
             experiment_name=None,
-            classpath_picard=None,
+            java_archive_picard=None,
             force=False):
         """Initialise a C{bsf.analyses.picard.PicardIlluminaRunFolder} object.
 
@@ -177,8 +177,8 @@ class PicardIlluminaRunFolder(Analysis):
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         """
@@ -200,7 +200,7 @@ class PicardIlluminaRunFolder(Analysis):
         self.intensity_directory = intensity_directory
         self.basecalls_directory = basecalls_directory
         self.experiment_name = experiment_name
-        self.classpath_picard = classpath_picard
+        self.java_archive_picard = java_archive_picard
         self.force = force
 
         self._irf = None
@@ -238,9 +238,9 @@ class PicardIlluminaRunFolder(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.experiment_name = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         option = 'force'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -337,13 +337,13 @@ class PicardIlluminaRunFolder(Analysis):
         if not self.project_name:
             self.project_name = '_'.join((self.experiment_name, self._irf.run_information.flow_cell))
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
                 raise Exception(
-                    'The ' + self.name + " requires a 'classpath_picard' configuration option.")
+                    'The ' + self.name + " requires a 'java_archive_picard' configuration option.")
 
         # Call the run method of the super class after the project_name has been defined.
 
@@ -604,7 +604,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             intensity_directory=None,
             basecalls_directory=None,
             experiment_name=None,
-            classpath_picard=None,
+            java_archive_picard=None,
             force=False,
             library_path=None,
             samples_directory=None,
@@ -654,8 +654,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @param samples_directory: BSF samples directory
@@ -694,7 +694,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             intensity_directory=intensity_directory,
             basecalls_directory=basecalls_directory,
             experiment_name=experiment_name,
-            classpath_picard=classpath_picard,
+            java_archive_picard=java_archive_picard,
             force=force)
 
         self.samples_directory = samples_directory
@@ -997,7 +997,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     name='picard_extract_illumina_barcodes',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
-                    picard_classpath=self.classpath_picard,
+                    java_jar_path=self.java_archive_picard,
                     picard_command='ExtractIlluminaBarcodes')
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -1072,7 +1072,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 name='picard_illumina_basecalls_to_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx2G',
-                picard_classpath=self.classpath_picard,
+                java_jar_path=self.java_archive_picard,
                 picard_command='IlluminaBasecallsToSam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -1373,7 +1373,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             intensity_directory=None,
             basecalls_directory=None,
             experiment_name=None,
-            classpath_picard=None,
+            java_archive_picard=None,
             force=False,
             sequencing_centre=None,
             sequences_directory=None,
@@ -1423,8 +1423,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @param sequencing_centre: Sequencing centre
@@ -1463,7 +1463,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             intensity_directory=intensity_directory,
             basecalls_directory=basecalls_directory,
             experiment_name=experiment_name,
-            classpath_picard=classpath_picard,
+            java_archive_picard=java_archive_picard,
             force=force)
 
         self.sequencing_centre = sequencing_centre
@@ -1614,12 +1614,12 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         experiment_directory = self.get_experiment_directory
 
-        # Get the Picard tools Java Archive (JAR) class path directory
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
-                raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
+                raise Exception('The ' + self.name + " requires a 'java_archive_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -1671,7 +1671,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 name='picard_illumina_basecalls_to_multiplex_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx32G',
-                picard_classpath=self.classpath_picard,
+                java_jar_path=self.java_archive_picard,
                 picard_command='IlluminaBasecallsToMultiplexSam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -1960,8 +1960,8 @@ class IlluminaDemultiplexSam(Analysis):
     @type mode_directory: str | None
     @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
     @type mode_file: str | None
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     @ivar compression_level: (Zlib) Compression level
     @type compression_level: int | None
     @ivar deflater_threads: Number of deflater threads
@@ -2071,7 +2071,7 @@ class IlluminaDemultiplexSam(Analysis):
             samples_directory=None,
             mode_directory=None,
             mode_file=None,
-            classpath_picard=None,
+            java_archive_picard=None,
             compression_level=None,
             deflater_threads=None,
             matching_threads=None,
@@ -2118,8 +2118,8 @@ class IlluminaDemultiplexSam(Analysis):
         @type mode_directory: str | None
         @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         @type mode_file: str | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param compression_level: (Zlib) Compression level
         @type compression_level: int | None
         @param deflater_threads: Number of deflater threads
@@ -2157,7 +2157,7 @@ class IlluminaDemultiplexSam(Analysis):
         self.samples_directory = samples_directory
         self.mode_directory = mode_directory
         self.mode_file = mode_file
-        self.classpath_picard = classpath_picard
+        self.java_archive_picard = java_archive_picard
         self.compression_level = compression_level
         self.deflater_threads = deflater_threads
         self.matching_threads = matching_threads
@@ -2216,9 +2216,9 @@ class IlluminaDemultiplexSam(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_file = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         option = 'compression_level'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -2364,12 +2364,12 @@ class IlluminaDemultiplexSam(Analysis):
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
-                raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
+                raise Exception('The ' + self.name + " requires a 'java_archive_picard' configuration option.")
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
@@ -2538,7 +2538,7 @@ class IlluminaDemultiplexSam(Analysis):
                 name='picard_illumina_demultiplex_sam',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx5G',
-                picard_classpath=self.classpath_picard,
+                java_jar_path=self.java_archive_picard,
                 picard_command='IlluminaSamDemux')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -2806,7 +2806,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                 name='collect_hiseq_x_fail_metrics',
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx4G',
-                picard_classpath=self.classpath_picard,
+                java_jar_path=self.java_archive_picard,
                 picard_command='CollectHiSeqXPfFailMetrics')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
@@ -2860,8 +2860,8 @@ class DownsampleSam(Analysis):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     """
 
     name = 'Picard DownsampleSam Analysis'
@@ -2913,7 +2913,7 @@ class DownsampleSam(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            classpath_picard=None):
+            java_archive_picard=None):
         """Initialise a C{bsf.analyses.picard.DownsampleSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -2942,8 +2942,8 @@ class DownsampleSam(Analysis):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         """
         super(DownsampleSam, self).__init__(
             configuration=configuration,
@@ -2959,7 +2959,7 @@ class DownsampleSam(Analysis):
             collection=collection,
             sample_list=sample_list)
 
-        self.classpath_picard = classpath_picard
+        self.java_archive_picard = java_archive_picard
 
         return
 
@@ -2977,9 +2977,9 @@ class DownsampleSam(Analysis):
 
         # Sub-class specific ...
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -3006,13 +3006,13 @@ class DownsampleSam(Analysis):
 
         super(DownsampleSam, self).run()
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
                 raise Exception("A 'DownsampleSam' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                                "'java_archive_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -3076,7 +3076,7 @@ class DownsampleSam(Analysis):
                         name='picard_downsample_sam',
                         java_temporary_path=runnable_picard_dss.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx2G',
-                        picard_classpath=self.classpath_picard,
+                        java_jar_path=self.java_archive_picard,
                         picard_command='DownsampleSam')
                     runnable_picard_dss.add_runnable_step(runnable_step=runnable_step)
 
@@ -3189,8 +3189,8 @@ class SamToFastq(Analysis):
     @type stage_name_read_group: str
     @cvar stage_name_project: C{bsf.analysis.Stage.name} for project-specific C{bsf.procedure.Runnable} objects
     @type stage_name_project: str
-    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | None
+    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
+    @type java_archive_picard: str | None
     @ivar include_non_pf_reads: Include non-pass filer reads
     @type include_non_pf_reads: bool | None
     @ivar drop_read_1: Drop read 1
@@ -3287,7 +3287,7 @@ class SamToFastq(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            classpath_picard=None,
+            java_archive_picard=None,
             include_non_pf_reads=None,
             drop_read_1=None,
             drop_read_2=None):
@@ -3319,8 +3319,8 @@ class SamToFastq(Analysis):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param include_non_pf_reads: Include non-pass filer reads
         @type include_non_pf_reads: bool | None
         @param drop_read_1: Drop read 1
@@ -3342,7 +3342,7 @@ class SamToFastq(Analysis):
             collection=collection,
             sample_list=sample_list)
 
-        self.classpath_picard = classpath_picard
+        self.java_archive_picard = java_archive_picard
         self.include_non_pass_filter_reads = include_non_pf_reads
         self.drop_read_1 = drop_read_1
         self.drop_read_2 = drop_read_2
@@ -3364,9 +3364,9 @@ class SamToFastq(Analysis):
 
         # Sub-class specific ...
 
-        option = 'classpath_picard'
+        option = 'java_archive_picard'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_picard = configuration.config_parser.get(section=section, option=option)
 
         option = 'include_non_pass_filter_reads'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3405,12 +3405,12 @@ class SamToFastq(Analysis):
 
         super(SamToFastq, self).run()
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
+        # Get the Picard tools Java Archive (JAR) file path.
 
-        if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
-            if not self.classpath_picard:
-                raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
+        if not self.java_archive_picard:
+            self.java_archive_picard = JavaArchive.get_picard()
+            if not self.java_archive_picard:
+                raise Exception('The ' + self.name + " requires a 'java_archive_picard' configuration option.")
 
         self._read_comparisons()
 
@@ -3544,7 +3544,7 @@ class SamToFastq(Analysis):
                             name='picard_sam_to_fastq',
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx2G',
-                            picard_classpath=self.classpath_picard,
+                            java_jar_path=self.java_archive_picard,
                             picard_command='SamToFastq')
                         runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 

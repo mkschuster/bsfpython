@@ -111,7 +111,7 @@ class EGACryptor(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            classpath_ega_cryptor=None):
+            java_archive_ega_cryptor=None):
         """Initialise a C{bsf.analyses.ega.EGACryptor}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -140,8 +140,8 @@ class EGACryptor(Analysis):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param classpath_ega_cryptor: EGA Cryptor tool Java Archive (JAR) class path directory
-        @type classpath_ega_cryptor: str | None
+        @param java_archive_ega_cryptor: EGA Cryptor tool Java Archive (JAR) file path
+        @type java_archive_ega_cryptor: str | None
         """
         super(EGACryptor, self).__init__(
             configuration=configuration,
@@ -159,7 +159,7 @@ class EGACryptor(Analysis):
 
         # Sub-class specific ...
 
-        self.classpath_ega_cryptor = classpath_ega_cryptor
+        self.java_archive_ega_cryptor = java_archive_ega_cryptor
 
         return
 
@@ -173,23 +173,21 @@ class EGACryptor(Analysis):
         @param section: Configuration file section
         @type section: str
         """
-
         super(EGACryptor, self).set_configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
 
-        # Get the EGA Cryptor tool Java Archive (JAR) class path directory.
+        # Get the EGA Cryptor tool Java Archive (JAR) file path.
 
-        option = 'classpath_ega_cryptor'
+        option = 'java_archive_ega_cryptor'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_ega_cryptor = configuration.config_parser.get(section=section, option=option)
+            self.java_archive_ega_cryptor = configuration.config_parser.get(section=section, option=option)
 
         return
 
     def run(self):
         """Run a C{bsf.analyses.ega.EGACryptor} C{bsf.analysis.Analysis}.
         """
-
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False
 
@@ -211,8 +209,8 @@ class EGACryptor(Analysis):
 
         run_read_comparisons()
 
-        if not self.classpath_ega_cryptor:
-            raise Exception('A ' + self.name + " analysis requires a 'classpath_ega_cryptor' configuration option.")
+        if not self.java_archive_ega_cryptor:
+            raise Exception('A ' + self.name + " analysis requires a 'java_archive_ega_cryptor' configuration option.")
 
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 
@@ -266,7 +264,7 @@ class EGACryptor(Analysis):
                         name='ega_cryptor',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
-                        java_jar_path=self.classpath_ega_cryptor)
+                        java_jar_path=self.java_archive_ega_cryptor)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                     # Use a sequence of sub-Command objects to separate options that have to appear

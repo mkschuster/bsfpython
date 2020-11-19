@@ -101,7 +101,7 @@ class Hisat2(Aligner):
             genome_fasta=None,
             genome_index=None,
             skip_mark_duplicates=None,
-            classpath_picard=None,
+            java_archive_picard=None,
             rna_strand=None):
         """Initialise a C{bsf.analyses.hisat.Hisat2}.
 
@@ -137,8 +137,8 @@ class Hisat2(Aligner):
         @type genome_index: str | None
         @param skip_mark_duplicates: Mark duplicates
         @type skip_mark_duplicates: bool | None
-        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | None
+        @param java_archive_picard: Picard tools Java Archive (JAR) file path
+        @type java_archive_picard: str | None
         @param rna_strand: mRNA strand (i.e. F, R, FR or RF)
         @type rna_strand: str
         """
@@ -158,7 +158,7 @@ class Hisat2(Aligner):
             genome_fasta=genome_fasta,
             genome_index=genome_index,
             skip_mark_duplicates=skip_mark_duplicates,
-            classpath_picard=classpath_picard)
+            java_archive_picard=java_archive_picard)
 
         # Sub-class specific ...
 
