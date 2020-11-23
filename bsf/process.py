@@ -1587,6 +1587,9 @@ class RunnableStepJava(RunnableStep):
         if java_heap_maximum and java_heap_maximum not in self.options:
             self.add_switch_short(key=java_heap_maximum)
 
+        if 'XX:+UseG1GC' not in self.options:
+            self.add_switch_short(key='XX:+UseG1GC')
+
         if java_temporary_path and '-Djava.io.tmpdir' not in self.options:
             self.add_option_pair(key='-Djava.io.tmpdir', value=java_temporary_path)
 
