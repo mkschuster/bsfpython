@@ -4040,9 +4040,12 @@ class DESeq(Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     debug=self.debug))
-            self.set_stage_runnable(
+            executable_analysis = self.set_stage_runnable(
                 stage=stage_analysis,
                 runnable=runnable_analysis)
+            # Do not submit the Executable, if the design was excluded.
+            if design_sheet.get_boolean(row_dict=design_row_dict, key='exclude'):
+                executable_analysis.submit = False
 
             runnable_step = RunnableStep(
                 name='analysis',
@@ -4066,8 +4069,9 @@ class DESeq(Analysis):
                     stage=stage_results,
                     runnable=runnable_results)
                 executable_results.dependencies.append(runnable_analysis.name)
-                # FIXME: Do not create the Runnable at all or do not submit the corresponding Executable.
-                # executable_results.submit = has_contrasts
+                # Do not submit the Executable, if the design was excluded.
+                if design_sheet.get_boolean(row_dict=design_row_dict, key='exclude'):
+                    executable_results.submit = False
 
                 runnable_step = RunnableStep(
                     name='results',
