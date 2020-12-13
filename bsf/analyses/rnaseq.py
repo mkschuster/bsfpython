@@ -133,9 +133,9 @@ class FilePathCufflinks(FilePath):
     @type fpkm_tracking_isoforms_tsv: str
     @ivar skipped_gtf: Cufflinks skipped regions GTF file
     @type skipped_gtf: str
-    @ivar skipped_gtf_link_source: Cufflinks skipped regions GTF symbolic links source
+    @ivar skipped_gtf_link_source: Cufflinks skipped regions GTF symbolic link source
     @type skipped_gtf_link_source: str
-    @ivar skipped_gtf_link_target: Cufflinks skipped regions GTF symbolic links target
+    @ivar skipped_gtf_link_target: Cufflinks skipped regions GTF symbolic link target
     @type skipped_gtf_link_target: str
     @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
     @type temporary_big_gene_prediction: str
@@ -155,9 +155,9 @@ class FilePathCufflinks(FilePath):
     @type transcripts_bb_link_target: str
     @ivar transcripts_gtf: Cufflinks transcript assembly GTF file
     @type transcripts_gtf: str
-    @ivar transcripts_gtf_link_source: Cufflinks transcript assembly GTF symbolic links source
+    @ivar transcripts_gtf_link_source: Cufflinks transcript assembly GTF symbolic link source
     @type transcripts_gtf_link_source: str
-    @ivar transcripts_gtf_link_target: Cufflinks transcript assembly GTF symbolic links target
+    @ivar transcripts_gtf_link_target: Cufflinks transcript assembly GTF symbolic link target
     @type transcripts_gtf_link_target: str
     """
 
@@ -206,9 +206,9 @@ class FilePathCuffmerge(FilePath):
     @type merged_bb_link_target: str
     @ivar merged_gtf: Cuffmerge merged GTF file
     @type merged_gtf: str
-    @ivar merged_gtf_link_source: Cuffmerge transcript assembly GTF symbolic links source
+    @ivar merged_gtf_link_source: Cuffmerge transcript assembly GTF symbolic link source
     @type merged_gtf_link_source: str
-    @ivar merged_gtf_link_target: Cuffmerge transcript assembly GTF symbolic links target
+    @ivar merged_gtf_link_target: Cuffmerge transcript assembly GTF symbolic link target
     @type merged_gtf_link_target: str
     @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
     @type temporary_gene_prediction: str
@@ -1416,10 +1416,10 @@ class Tuxedo(Analysis):
                         key='mate-inner-dist',
                         value=str(mate_inner_dist))
                 # TODO: Move the ConfigParser code.
-                if config_parser.has_option(section=config_section, option='mate-std-dev'):
+                if config_parser.has_option(section=config_section, option='insert_std_dev'):
                     runnable_step.add_option_long(
                         key='mate-std-dev',
-                        value=config_parser.getint(section=config_section, option='mate-std-dev'))
+                        value=config_parser.getint(section=config_section, option='insert_std_dev'))
                 if self.library_type:
                     runnable_step.add_option_long(
                         key='library-type',
