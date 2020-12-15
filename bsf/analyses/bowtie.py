@@ -114,9 +114,37 @@ class Bowtie2(Aligner):
     """The C{bsf.analyses.bowtie.Bowtie2} class represents the logic to run the Bowtie2 aligner.
 
     Attributes:
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @type prefix: str
+    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
+        that should be retained by Picard MergeBamAlignment
+    @type sam_attributes_to_retain_list: list[str]
     """
     name = 'Bowtie2 Analysis'
     prefix = 'bowtie2'
+
+    sam_attributes_to_retain_list = [
+        # http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#sam-output
+
+        # XS:i:<N> Alignment score for the best-scoring alignment found other than the alignment reported.
+        'XS',
+        # YS:i:<N> Alignment score for opposite mate in the paired-end alignment.
+        'YS',
+        # XN:i:<N> The number of ambiguous bases in the reference covering this alignment.
+        'XN',
+        # XM:i:<N> The number of mismatches in the alignment.
+        'XM',
+        # XO:i:<N> The number of gap opens, for both read and reference gaps, in the alignment.
+        'XO',
+        # XG:i:<N> The number of gap extensions, for both read and reference gaps, in the alignment.
+        'XG',
+        # YF:Z:<S> String indicating reason why the read was filtered out.
+        'YF',
+        # YT:Z:<S> Value of UU indicates the read was not part of a pair.
+        'YT',
+    ]
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
         """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.

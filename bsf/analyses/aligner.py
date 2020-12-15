@@ -302,6 +302,9 @@ class Aligner(Analysis):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
+    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
+        that should be retained by Picard MergeBamAlignment
+    @type sam_attributes_to_retain_list: list[str]
     @ivar genome_fasta: Genome FASTA file
     @type genome_fasta: str | None
     @ivar genome_index: Genome index
@@ -314,6 +317,8 @@ class Aligner(Analysis):
 
     name = 'Aligner Analysis'
     prefix = 'aligner'
+
+    sam_attributes_to_retain_list = []
 
     @classmethod
     def get_stage_name_align(cls):
@@ -979,6 +984,8 @@ class Aligner(Analysis):
                     # MAX_INSERTIONS_OR_DELETIONS [1]
                     runnable_step.add_picard_option(key='MAX_INSERTIONS_OR_DELETIONS', value='-1')
                     # ATTRIBUTES_TO_RETAIN [null]
+                    for sam_attribute in self.sam_attributes_to_retain_list:
+                        runnable_step.add_picard_option(key='ATTRIBUTES_TO_RETAIN', value=sam_attribute, override=True)
                     # ATTRIBUTES_TO_REMOVE [null]
                     # ATTRIBUTES_TO_REVERSE [OQ, U2]
                     # ATTRIBUTES_TO_REVERSE_COMPLEMENT [E2, SQ]

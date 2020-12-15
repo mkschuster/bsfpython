@@ -118,6 +118,9 @@ class Star(Aligner):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
+    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
+        that should be retained by Picard MergeBamAlignment
+    @type sam_attributes_to_retain_list: list[str]
     @ivar index_directory: Genome directory with STAR indices
     @type index_directory: str | None
     @ivar transcriptome_version: Transcriptome version
@@ -132,6 +135,13 @@ class Star(Aligner):
 
     name = 'STAR Analysis'
     prefix = 'star'
+
+    sam_attributes_to_retain_list = [
+        # The nM SAM tag indicates the number of mismatches (excluding Ns) per read pair.
+        'nM',
+        # The uT SAM tag indicates the reason for not mapping a read.
+        'uT',
+    ]
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):

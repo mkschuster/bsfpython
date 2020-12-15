@@ -66,12 +66,51 @@ class Hisat2(Aligner):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
+    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
+        that should be retained by Picard MergeBamAlignment
+    @type sam_attributes_to_retain_list: list[str]
     @cvar rna_strand: mRNA strand (i.e. F, R, FR or RF)
     @type rna_strand: str
     """
 
     name = 'HISAT2 Analysis'
     prefix = 'hisat2'
+
+    sam_attributes_to_retain_list = [
+        # http://daehwankimlab.github.io/hisat2/manual/
+
+        # ZS:i:<N> : Alignment score for the best-scoring alignment found other than the alignment reported.
+        'ZS',
+
+        # YS:i:<N> : Alignment score for opposite mate in the paired-end alignment.
+        'YS',
+
+        # XN:i:<N> : The number of ambiguous bases in the reference covering this alignment.
+        'XN',
+
+        # XM:i:<N> : The number of mismatches in the alignment.
+        'XM',
+
+        # XO:i:<N> : The number of gap opens, for both read and reference gaps, in the alignment.
+        'XO',
+
+        # XG:i:<N> : The number of gap extensions, for both read and reference gaps, in the alignment.
+        'XG',
+
+        # YF:Z:<S> : String indicating reason why the read was filtered out.
+        'YF',
+
+        # YT:Z:<S> : Value of UU indicates the read was not part of a pair.
+        'YT',
+
+        # XS:A:<A> : Values of + and - indicate the read is mapped to transcripts on sense and anti-sense strands,
+        # respectively.
+        'XS',
+
+        # Zs:Z:<S> : When the alignment of a read involves SNPs that are in the index,
+        # this option is used to indicate where exactly the read involves the SNPs.
+        'Zs',
+    ]
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):

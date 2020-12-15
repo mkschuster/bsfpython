@@ -38,9 +38,41 @@ class MaximalExactMatches(Aligner):
     """The C{bsf.analyses.bwa.MaximalExactMatches} class represents the BWA Maximal Exact Matches (MEM) algorithm.
 
     Attributes:
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @type prefix: str
+    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
+        that should be retained by Picard MergeBamAlignment
+    @type sam_attributes_to_retain_list: list[str]
     """
     name = 'BWA Maximal Exact Matches Analysis'
     prefix = 'bwa_mem'
+
+    sam_attributes_to_retain_list = [
+        # Number of best hits
+        'X0',
+        # Number of suboptimal hits found by BWA
+        'X1',
+        # Number of ambiguous bases in the reference
+        'XN',
+        # Number of mismatches in the alignment
+        'XM',
+        # Number of gap opens
+        'XO',
+        # Number of gap extensions
+        'XG',
+        # Type: Unique/Repeat/N/Mate-sw
+        'XT',
+        # Alternative hits; format: (chr,pos,CIGAR,NM;)*
+        'XA',
+        # Suboptimal alignment score
+        'XS',
+        # Support from forward / reverse alignment
+        'XF',
+        # Number of supporting seeds
+        'XE',
+    ]
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
         """Add a BWA MEM-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
