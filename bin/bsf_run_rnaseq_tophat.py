@@ -94,6 +94,11 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     executable_java = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     executable_java.add_switch_short(key='server')
     executable_java.add_switch_short(key='Xmx4G')
+    executable_java.add_switch_short(key='XX:+UseG1GC')
+    executable_java.add_option_pair_short(key='XX:ActiveProcessorCount', value='8')
+    executable_java.add_option_pair_short(key='XX:CICompilerCount', value='2')
+    executable_java.add_option_pair_short(key='XX:ParallelGCThreads', value='8')
+    executable_java.add_option_pair_short(key='Djava.io.tmpdir', value=path_temporary)
 
     picard_process = executable_java.sub_command
     picard_process.add_option_short(key='jar', value=java_archive_picard)

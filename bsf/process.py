@@ -1590,8 +1590,17 @@ class RunnableStepJava(RunnableStep):
         if 'XX:+UseG1GC' not in self.options:
             self.add_switch_short(key='XX:+UseG1GC')
 
-        if java_temporary_path and '-Djava.io.tmpdir' not in self.options:
-            self.add_option_pair(key='-Djava.io.tmpdir', value=java_temporary_path)
+        if 'XX:ActiveProcessorCount' not in self.options:
+            self.add_option_pair_short(key='XX:ActiveProcessorCount', value='8')
+
+        if 'XX:CICompilerCount' not in self.options:
+            self.add_option_pair_short(key='XX:CICompilerCount', value='2')
+
+        if 'XX:ParallelGCThreads' not in self.options:
+            self.add_option_pair_short(key='XX:ParallelGCThreads', value='8')
+
+        if java_temporary_path and 'Djava.io.tmpdir' not in self.options:
+            self.add_option_pair_short(key='Djava.io.tmpdir', value=java_temporary_path)
 
         if self.sub_command is None:
             # The Picard command line interface is a bit broken, as the -jar option needs to come last,

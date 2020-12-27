@@ -163,7 +163,11 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
-    java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
+    java_process.add_switch_short(key='XX:+UseG1GC')
+    java_process.add_option_pair_short(key='XX:ActiveProcessorCount', value='8')
+    java_process.add_option_pair_short(key='XX:CICompilerCount', value='2')
+    java_process.add_option_pair_short(key='XX:ParallelGCThreads', value='8')
+    java_process.add_option_pair_short(key='Djava.io.tmpdir', value=path_temporary)
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=java_archive_picard)
@@ -249,7 +253,11 @@ if os.path.exists(path_fastq_2):
 java_process = Executable(name='clean_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
-java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
+java_process.add_switch_short(key='XX:+UseG1GC')
+java_process.add_option_pair_short(key='XX:ActiveProcessorCount', value='8')
+java_process.add_option_pair_short(key='XX:CICompilerCount', value='2')
+java_process.add_option_pair_short(key='XX:ParallelGCThreads', value='8')
+java_process.add_option_pair_short(key='Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
 picard_process.add_option_short(key='jar', value=java_archive_picard)
@@ -328,7 +336,11 @@ if len(sam_header_pg) or len(sam_header_rg):
     java_process = Executable(name='replace_sam_header', program='java', sub_command=Command())
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
-    java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
+    java_process.add_switch_short(key='XX:+UseG1GC')
+    java_process.add_option_pair_short(key='XX:ActiveProcessorCount', value='8')
+    java_process.add_option_pair_short(key='XX:CICompilerCount', value='2')
+    java_process.add_option_pair_short(key='XX:ParallelGCThreads', value='8')
+    java_process.add_option_pair_short(key='Djava.io.tmpdir', value=path_temporary)
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=java_archive_picard)
@@ -379,7 +391,11 @@ if os.path.exists(path_aligned_sam):
 java_process = Executable(name='sort_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
-java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
+java_process.add_switch_short(key='XX:+UseG1GC')
+java_process.add_option_pair_short(key='XX:ActiveProcessorCount', value='8')
+java_process.add_option_pair_short(key='XX:CICompilerCount', value='2')
+java_process.add_option_pair_short(key='XX:ParallelGCThreads', value='8')
+java_process.add_option_pair_short(key='Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
 picard_process.add_option_short(key='jar', value=java_archive_picard)

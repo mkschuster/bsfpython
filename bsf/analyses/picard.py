@@ -2544,8 +2544,8 @@ class IlluminaDemultiplexSam(Analysis):
 
             # Set htsjdk system properties at the level of the JavaVM process.
             # NOTE: Version 2.18.24-CeMM has a DEFLATER_THREADS option for parallel compression.
-            # runnable_step.add_option_pair(key='-Dsamjdk.use_async_io_read_samtools', value='TRUE')
-            # runnable_step.add_option_pair(key='-Dsamjdk.use_async_io_write_samtools', value='TRUE')
+            # runnable_step.add_option_pair_short(key='Dsamjdk.use_async_io_read_samtools', value='TRUE')
+            # runnable_step.add_option_pair_short(key='Dsamjdk.use_async_io_write_samtools', value='TRUE')
 
             # INPUT Required
             runnable_step.add_picard_option(key='INPUT', value=file_path_lane.archive_bam)
