@@ -404,10 +404,10 @@ class Tuxedo(Analysis):
     @type genome_sizes_path: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
-    @ivar transcriptome_index: Transcriptome index directory path
-    @type transcriptome_index: str | None
     @ivar transcriptome_gtf: Transcriptome annotation GTF file path
     @type transcriptome_gtf: str | None
+    @ivar transcriptome_index: Transcriptome index directory path
+    @type transcriptome_index: str | None
     @ivar insert_size: Insert size
     @type insert_size: int | None
     @ivar insert_size_sd: Insert size standard deviation
@@ -786,8 +786,8 @@ class Tuxedo(Analysis):
             genome_index_path=None,
             genome_sizes_path=None,
             transcriptome_version=None,
-            transcriptome_index=None,
             transcriptome_gtf=None,
+            transcriptome_index=None,
             insert_size=None,
             insert_size_sd=None,
             read_length=None,
@@ -838,10 +838,10 @@ class Tuxedo(Analysis):
         @type genome_sizes_path: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
-        @param transcriptome_index: Transcriptome index directory path
-        @type transcriptome_index: str | None
         @param transcriptome_gtf: Transcriptome annotation GTF file path
         @type transcriptome_gtf: str | None
+        @param transcriptome_index: Transcriptome index directory path
+        @type transcriptome_index: str | None
         @param insert_size: Insert size
         @type insert_size: int | None
         @param insert_size_sd: Insert size standard deviation
@@ -886,8 +886,8 @@ class Tuxedo(Analysis):
         self.genome_index_path = genome_index_path
         self.genome_sizes_path = genome_sizes_path
         self.transcriptome_version = transcriptome_version
-        self.transcriptome_index = transcriptome_index
         self.transcriptome_gtf = transcriptome_gtf
+        self.transcriptome_index = transcriptome_index
         self.insert_size = insert_size
         self.insert_size_sd = insert_size_sd
         self.read_length = read_length
@@ -942,13 +942,13 @@ class Tuxedo(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
 
-        option = 'transcriptome_index'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
-
         option = 'transcriptome_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_index'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
 
         option = 'insert_size'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3694,16 +3694,14 @@ class DESeq(Analysis):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-    @type replicate_grouping: bool
+    @ivar transcriptome_version: Transcriptome version
+    @type transcriptome_version: str | None
+    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
+    @type transcriptome_gtf: str | None
     @ivar comparison_path: Comparison file path
     @type comparison_path: str | None
     @ivar contrast_path: Contrast file path
     @type contrast_path: str | None
-    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
-    @type transcriptome_gtf: str | None
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
     """
 
     name = 'DESeq RNA-seq Analysis'
@@ -3763,11 +3761,10 @@ class DESeq(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            replicate_grouping=False,
-            comparison_path=None,
-            contrast_path=None,
+            transcriptome_version=None,
             transcriptome_gtf=None,
-            transcriptome_version=None):
+            comparison_path=None,
+            contrast_path=None):
         """Initialise a C{bsf.analyses.rnaseq.DESeq} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -3796,16 +3793,14 @@ class DESeq(Analysis):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-        @type replicate_grouping: bool
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str | None
+        @param transcriptome_gtf: Transcriptome annotation GTF file path
+        @type transcriptome_gtf: str | None
         @param comparison_path: Comparison file path
         @type comparison_path: str | None
         @param contrast_path: Contrast file path
         @type contrast_path: str | None
-        @param transcriptome_gtf: Transcriptome annotation GTF file path
-        @type transcriptome_gtf: str | None
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
         """
 
         super(DESeq, self).__init__(
@@ -3824,11 +3819,10 @@ class DESeq(Analysis):
 
         # Sub-class specific ...
 
-        self.replicate_grouping = replicate_grouping
+        self.transcriptome_version = transcriptome_version
+        self.transcriptome_gtf = transcriptome_gtf
         self.comparison_path = comparison_path
         self.contrast_path = contrast_path
-        self.transcriptome_gtf = transcriptome_gtf
-        self.transcriptome_version = transcriptome_version
 
         return
 
@@ -3847,9 +3841,13 @@ class DESeq(Analysis):
 
         # Sub-class specific ...
 
-        option = 'replicate_grouping'
+        option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.replicate_grouping = configuration.config_parser.getboolean(section=section, option=option)
+            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_gtf'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
 
         option = 'cmp_file'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3858,14 +3856,6 @@ class DESeq(Analysis):
         option = 'ctr_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.contrast_path = configuration.config_parser.get(section=section, option=option)
-
-        option = 'transcriptome_gtf'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
-
-        option = 'transcriptome_version'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -3996,9 +3986,7 @@ class DESeq(Analysis):
                     print(self, 'Sample name:', sample.name)
                     sys.stdout.writelines(sample.trace(level=1))
 
-                paired_reads_dict = sample.get_all_paired_reads(
-                    replicate_grouping=self.replicate_grouping,
-                    exclude=True)
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 
                 if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.

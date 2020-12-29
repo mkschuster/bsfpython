@@ -121,12 +121,12 @@ class Star(Aligner):
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment
     @type sam_attributes_to_retain_list: list[str]
-    @ivar transcriptome_index: Transcriptome index directory path
-    @type transcriptome_index: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     @ivar transcriptome_gtf: Transcriptome annotation GTF file path
     @type transcriptome_gtf: str | None
+    @ivar transcriptome_index: Transcriptome index directory path
+    @type transcriptome_index: str | None
     @ivar two_pass_mapping: Basic two-pass mapping
     @type two_pass_mapping: str | None
     @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
@@ -177,9 +177,9 @@ class Star(Aligner):
             stage_list=None,
             collection=None,
             sample_list=None,
-            transcriptome_index=None,
             transcriptome_version=None,
             transcriptome_gtf=None,
+            transcriptome_index=None,
             two_pass_mapping=None,
             skip_mark_duplicates=None,
             java_archive_picard=None):
@@ -211,12 +211,12 @@ class Star(Aligner):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param transcriptome_index: Transcriptome index directory path
-        @type transcriptome_index: str
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_gtf: Transcriptome annotation GTF file path
         @type transcriptome_gtf: str | None
+        @param transcriptome_index: Transcriptome index directory path
+        @type transcriptome_index: str
         @param two_pass_mapping: Basic two-pass mapping
         @type two_pass_mapping: str | None
         @param skip_mark_duplicates: Mark duplicates
@@ -244,9 +244,9 @@ class Star(Aligner):
 
         # Sub-class specific ...
 
-        self.transcriptome_index = transcriptome_index
         self.transcriptome_version = transcriptome_version
         self.transcriptome_gtf = transcriptome_gtf
+        self.transcriptome_index = transcriptome_index
         self.two_pass_mapping = two_pass_mapping
 
         return
@@ -265,10 +265,6 @@ class Star(Aligner):
 
         # Sub-class specific ...
 
-        option = 'transcriptome_index'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
-
         option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
@@ -276,6 +272,10 @@ class Star(Aligner):
         option = 'transcriptome_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_index'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
 
         option = 'two_pass_mapping'
         if configuration.config_parser.has_option(section=section, option=option):
