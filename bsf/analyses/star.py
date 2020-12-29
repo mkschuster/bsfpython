@@ -121,11 +121,11 @@ class Star(Aligner):
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment
     @type sam_attributes_to_retain_list: list[str]
-    @ivar index_directory: Genome directory with STAR indices
-    @type index_directory: str | None
+    @ivar transcriptome_index: Transcriptome index directory path
+    @type transcriptome_index: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
-    @ivar transcriptome_gtf: GTF file path of transcriptome annotation
+    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
     @type transcriptome_gtf: str | None
     @ivar two_pass_mapping: Basic two-pass mapping
     @type two_pass_mapping: str | None
@@ -177,7 +177,7 @@ class Star(Aligner):
             stage_list=None,
             collection=None,
             sample_list=None,
-            index_directory=None,
+            transcriptome_index=None,
             transcriptome_version=None,
             transcriptome_gtf=None,
             two_pass_mapping=None,
@@ -211,11 +211,11 @@ class Star(Aligner):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param index_directory: Genome directory with STAR indices
-        @type index_directory: str
+        @param transcriptome_index: Transcriptome index directory path
+        @type transcriptome_index: str
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
-        @param transcriptome_gtf: GTF file path of transcriptome annotation
+        @param transcriptome_gtf: Transcriptome annotation GTF file path
         @type transcriptome_gtf: str | None
         @param two_pass_mapping: Basic two-pass mapping
         @type two_pass_mapping: str | None
@@ -244,7 +244,7 @@ class Star(Aligner):
 
         # Sub-class specific ...
 
-        self.index_directory = index_directory
+        self.transcriptome_index = transcriptome_index
         self.transcriptome_version = transcriptome_version
         self.transcriptome_gtf = transcriptome_gtf
         self.two_pass_mapping = two_pass_mapping
@@ -265,9 +265,9 @@ class Star(Aligner):
 
         # Sub-class specific ...
 
-        option = 'index_directory'
+        option = 'transcriptome_index'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.index_directory = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -309,7 +309,7 @@ class Star(Aligner):
         self.set_runnable_step_configuration(runnable_step=runnable_step)
 
         runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
-        runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
+        runnable_step.add_option_long(key='genomeDir', value=self.transcriptome_index)
         runnable_step.add_option_long(key='outFileNamePrefix', value=file_path_align.star_prefix)
         runnable_step.add_option_multi_long(key='outSAMunmapped', value='Within KeepPairs')
         if self.two_pass_mapping == 'basic':
@@ -380,8 +380,8 @@ class Star(Aligner):
         if not self.genome_version:
             raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
 
-        if not self.index_directory:
-            self.index_directory = StandardFilePath.get_resource_transcriptome_index(
+        if not self.transcriptome_index:
+            self.transcriptome_index = StandardFilePath.get_resource_transcriptome_index(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='star')
 

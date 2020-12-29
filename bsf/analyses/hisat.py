@@ -34,7 +34,7 @@ from bsf.analyses.aligner import Aligner, FilePathAlign as AlignerFilePathAlign
 from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
 from bsf.process import RunnableStep
-from bsf.standards import Configuration, StandardFilePath
+from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
 
 class FilePathAlign(AlignerFilePathAlign):
@@ -69,8 +69,16 @@ class Hisat2(Aligner):
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment
     @type sam_attributes_to_retain_list: list[str]
+    @ivar transcriptome_version: Transcriptome version
+    @type transcriptome_version: str | None
+    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
+    @type transcriptome_gtf: str | None
+    @ivar transcriptome_index: Transcriptome index directory path
+    @type transcriptome_index: str
     @cvar rna_strand: mRNA strand (i.e. F, R, FR or RF)
     @type rna_strand: str
+    @ivar threads_number: Number of threads
+    @type threads_number: int | None
     """
 
     name = 'HISAT2 Analysis'
@@ -139,9 +147,13 @@ class Hisat2(Aligner):
             sample_list=None,
             genome_fasta=None,
             genome_index=None,
+            transcriptome_version=None,
+            transcriptome_gtf=None,
+            transcriptome_index=None,
             skip_mark_duplicates=None,
             java_archive_picard=None,
-            rna_strand=None):
+            rna_strand=None,
+            threads_number=None):
         """Initialise a C{bsf.analyses.hisat.Hisat2}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -174,12 +186,20 @@ class Hisat2(Aligner):
         @type genome_fasta: str | None
         @param genome_index: Genome index
         @type genome_index: str | None
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str | None
+        @param transcriptome_gtf: Transcriptome annotation GTF file path
+        @type transcriptome_gtf: str | None
+        @param transcriptome_index: Transcriptome index directory path
+        @type transcriptome_index: str
         @param skip_mark_duplicates: Mark duplicates
         @type skip_mark_duplicates: bool | None
         @param java_archive_picard: Picard tools Java Archive (JAR) file path
         @type java_archive_picard: str | None
         @param rna_strand: mRNA strand (i.e. F, R, FR or RF)
         @type rna_strand: str
+        @param threads_number: Number of threads
+        @type threads_number: int | None
         """
         super(Hisat2, self).__init__(
             configuration=configuration,
@@ -201,7 +221,12 @@ class Hisat2(Aligner):
 
         # Sub-class specific ...
 
+        self.transcriptome_version = transcriptome_version
+        self.transcriptome_gtf = transcriptome_gtf
+        self.transcriptome_index = transcriptome_index
+
         self.rna_strand = rna_strand
+        self.threads_number = threads_number
 
         return
 
@@ -219,9 +244,25 @@ class Hisat2(Aligner):
 
         # Sub-class specific ...
 
+        option = 'transcriptome_version'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_gtf'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_index'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
+
         option = 'rna_strand'
         if configuration.config_parser.has_option(section=section, option=option):
             self.rna_strand = configuration.config_parser.get(section=section, option=option)
+
+        option = 'threads_number'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.threads_number = configuration.config_parser.getint(section=section, option=option)
 
         return
 
@@ -250,7 +291,12 @@ class Hisat2(Aligner):
         self.set_runnable_step_configuration(runnable_step=runnable_step)
 
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)
-        runnable_step.add_option_short(key='x', value=self.genome_index)
+
+        if self.transcriptome_index:
+            runnable_step.add_option_short(key='x', value=self.transcriptome_index)
+        else:
+            runnable_step.add_option_short(key='x', value=self.genome_index)
+
         runnable_step.add_option_long(key='threads', value=str(stage_align.threads))
 
         if file_path_1 and not file_path_2:
@@ -294,28 +340,37 @@ class Hisat2(Aligner):
         if not self.project_name:
             raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
 
-        # Get the sample annotation sheet.
+        # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
-        if self.sas_file:
-            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
-        else:
-            self.sas_file = self.get_annotation_file(prefix_list=[Hisat2.prefix], suffix='samples.csv')
-            if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+        if not self.genome_version:
+            self.genome_version = Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
+
+        if not self.genome_version:
+            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
 
         # The Hisat2 genome index is quite peculiar as it has to be the index file path without file extensions.
 
-        if not self.genome_index:
-            self.genome_index = os.path.join(
-                StandardFilePath.get_resource_genome_index(
-                    genome_version=self.genome_version,
-                    genome_index='hisat2'),
-                self.genome_version)
+        if self.transcriptome_version:
+            if not self.transcriptome_index:
+                self.transcriptome_index = os.path.join(
+                    StandardFilePath.get_resource_transcriptome_index(
+                        transcriptome_version=self.transcriptome_version,
+                        transcriptome_index='hisat2'),
+                    self.transcriptome_version)
+        else:
+            if not self.genome_index:
+                self.genome_index = os.path.join(
+                    StandardFilePath.get_resource_genome_index(
+                        genome_version=self.genome_version,
+                        genome_index='hisat2'),
+                    self.genome_version)
 
         if self.rna_strand and self.rna_strand not in ('F', 'R', 'FR', 'RF'):
             raise Exception("The 'rna_strand' configuration option has to be 'F', 'R', 'FR', 'RF' or ''.")
+
+        if not self.threads_number:
+            self.threads_number = 1
 
         super(Hisat2, self).run()
 

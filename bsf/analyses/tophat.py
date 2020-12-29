@@ -108,9 +108,9 @@ class Tophat2(Aligner):
     @type library_type: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
-    @ivar transcriptome_gtf: GTF file path of transcriptome annotation
+    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
     @type transcriptome_gtf: str | None
-    @ivar transcriptome_index: Tophat2 transcriptome indices
+    @ivar transcriptome_index: Transcriptome index directory path
     @type transcriptome_index: str
     @ivar threads_number: Number of threads
     @type threads_number: int | None
@@ -217,9 +217,9 @@ class Tophat2(Aligner):
         @type library_type: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
-        @param transcriptome_gtf: GTF file path of transcriptome annotation
+        @param transcriptome_gtf: Transcriptome annotation GTF file path
         @type transcriptome_gtf: str | None
-        @param transcriptome_index: Tophat2 transcriptome indices
+        @param transcriptome_index: Transcriptome index directory path
         @type transcriptome_index: str
         @param threads_number: Number of threads
         @type threads_number: int | None
@@ -384,11 +384,12 @@ class Tophat2(Aligner):
             runnable_step.arguments.append(file_path_2)
 
         # Link the align_summary_txt file.
-        runnable_align.add_runnable_step(
-            runnable_step=RunnableStepLink(
-                name='link_align_summary_txt',
-                source_path=file_path_align.align_summary_txt_link_source,
-                target_path=file_path_align.align_summary_txt_link_target))
+
+        runnable_step = RunnableStepLink(
+            name='link_align_summary_txt',
+            source_path=file_path_align.align_summary_txt_link_source,
+            target_path=file_path_align.align_summary_txt_link_target)
+        runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         return
 
@@ -444,7 +445,7 @@ class Tophat2(Aligner):
                 raise Exception('Reference transcriptome index directory {!r} does not exist.'.
                                 format(self.transcriptome_index))
 
-            transcriptome_version = os.path.basename(self.transcriptome_index)
+            transcriptome_prefix = os.path.basename(self.transcriptome_index)
 
             # Does an indices_for_TopHat directory exist?
             transcriptome_index = os.path.join(
@@ -461,7 +462,7 @@ class Tophat2(Aligner):
 
             self.transcriptome_gtf = os.path.join(
                 self.transcriptome_index,
-                '.'.join((transcriptome_version, 'gtf')))
+                '.'.join((transcriptome_prefix, 'gtf')))
 
             if not os.path.exists(self.transcriptome_gtf):
                 raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
@@ -500,18 +501,6 @@ class Tophat2(Aligner):
             raise Exception('Reference transcriptome GTF file not defined.\n' +
                             'A ' + self.name + " requires a 'transcriptome_index' or 'transcriptome_gtf' " +
                             "configuration option.")
-
-        # if not self.transcriptome_index:
-        #     self.transcriptome_index = StandardFilePath.get_resource_transcriptome_index(
-        #         transcriptome_version=self.transcriptome_version,
-        #         transcriptome_index='tophat2')
-        #
-        # if not self.transcriptome_gtf:
-        #     self.transcriptome_gtf = StandardFilePath.get_resource_transcriptome_gtf(
-        #         transcriptome_version=self.transcriptome_version,
-        #         transcriptome_index='none',
-        #         basic=True,
-        #         absolute=True)
 
         if not self.threads_number:
             self.threads_number = 1

@@ -404,10 +404,16 @@ class Tuxedo(Analysis):
     @type genome_sizes_path: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
-    @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | None
-    @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | None
+    @ivar transcriptome_index: Transcriptome index directory path
+    @type transcriptome_index: str | None
+    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
+    @type transcriptome_gtf: str | None
+    @ivar insert_size: Insert size
+    @type insert_size: int | None
+    @ivar insert_size_sd: Insert size standard deviation
+    @type insert_size_sd: int | None
+    @ivar read_length: Read length
+    @type read_length: int | None
     @ivar mask_gtf_path: GTF file path to mask transcripts
     @type mask_gtf_path: str | None
     @ivar multi_read_correction: Apply multi-read correction
@@ -780,8 +786,11 @@ class Tuxedo(Analysis):
             genome_index_path=None,
             genome_sizes_path=None,
             transcriptome_version=None,
-            transcriptome_index_path=None,
-            transcriptome_gtf_path=None,
+            transcriptome_index=None,
+            transcriptome_gtf=None,
+            insert_size=None,
+            insert_size_sd=None,
+            read_length=None,
             mask_gtf_path=None,
             multi_read_correction=None,
             library_type=None,
@@ -829,10 +838,16 @@ class Tuxedo(Analysis):
         @type genome_sizes_path: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
-        @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | None
-        @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | None
+        @param transcriptome_index: Transcriptome index directory path
+        @type transcriptome_index: str | None
+        @param transcriptome_gtf: Transcriptome annotation GTF file path
+        @type transcriptome_gtf: str | None
+        @param insert_size: Insert size
+        @type insert_size: int | None
+        @param insert_size_sd: Insert size standard deviation
+        @type insert_size_sd: int | None
+        @param read_length: Read length
+        @type read_length: int | None
         @param mask_gtf_path: GTF file path to mask transcripts
         @type mask_gtf_path: str | None
         @param multi_read_correction: Apply multi-read correction
@@ -871,8 +886,11 @@ class Tuxedo(Analysis):
         self.genome_index_path = genome_index_path
         self.genome_sizes_path = genome_sizes_path
         self.transcriptome_version = transcriptome_version
-        self.transcriptome_index_path = transcriptome_index_path
-        self.transcriptome_gtf_path = transcriptome_gtf_path
+        self.transcriptome_index = transcriptome_index
+        self.transcriptome_gtf = transcriptome_gtf
+        self.insert_size = insert_size
+        self.insert_size_sd = insert_size_sd
+        self.read_length = read_length
         self.mask_gtf_path = mask_gtf_path
         self.multi_read_correction = multi_read_correction
         self.library_type = library_type
@@ -926,11 +944,23 @@ class Tuxedo(Analysis):
 
         option = 'transcriptome_index'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_index = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
+
+        option = 'insert_size'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.insert_size = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'insert_std_dev'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.insert_size_sd = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'read_length'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.read_length = configuration.config_parser.getint(section=section, option=option)
 
         option = 'mask_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1236,27 +1266,27 @@ class Tuxedo(Analysis):
 
         # Define a reference transcriptome index directory or a GTF file path.
 
-        if self.transcriptome_index_path:
-            # Check if the transcriptome_index_path is absolute and if not,
+        if self.transcriptome_index:
+            # Check if the transcriptome_index is absolute and if not,
             # prepend the default transcriptomes directory.
-            self.transcriptome_index_path = self.configuration.get_absolute_path(
-                file_path=self.transcriptome_index_path,
+            self.transcriptome_index = self.configuration.get_absolute_path(
+                file_path=self.transcriptome_index,
                 default_path=StandardFilePath.get_resource_transcriptome(
                     transcriptome_version=None,
                     absolute=True))
 
-            if not os.path.isdir(self.transcriptome_index_path):
+            if not os.path.isdir(self.transcriptome_index):
                 raise Exception('Reference transcriptome index directory {!r} does not exist.'.
-                                format(self.transcriptome_index_path))
+                                format(self.transcriptome_index))
 
-            transcriptome_index = os.path.basename(self.transcriptome_index_path)
+            transcriptome_prefix = os.path.basename(self.transcriptome_index)
 
             # Does an indices_for_TopHat directory exist?
-            transcriptome_index_path = os.path.join(
-                self.transcriptome_index_path,
+            transcriptome_index = os.path.join(
+                self.transcriptome_index,
                 Index.get(option='tophat2'))
-            if os.path.isdir(transcriptome_index_path):
-                self.transcriptome_index_path = transcriptome_index_path
+            if os.path.isdir(transcriptome_index):
+                self.transcriptome_index = transcriptome_index
 
             # Finally, set the transcriptome GTF file path.
             # The tophat --transcript-index process puts a GFF file into the index directory
@@ -1264,44 +1294,44 @@ class Tuxedo(Analysis):
             # process cuffdiff script work.
             # For the moment, use the symbolic link in the indices_for_TopHat directory.
 
-            self.transcriptome_gtf_path = os.path.join(
-                self.transcriptome_index_path,
-                '.'.join((transcriptome_index, 'gtf')))
+            self.transcriptome_gtf = os.path.join(
+                self.transcriptome_index,
+                '.'.join((transcriptome_prefix, 'gtf')))
 
-            if not os.path.exists(self.transcriptome_gtf_path):
+            if not os.path.exists(self.transcriptome_gtf):
                 raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
-                                format(self.transcriptome_gtf_path))
-        elif self.transcriptome_gtf_path:
-            # Check if transcriptome_gtf_path is absolute and if not,
+                                format(self.transcriptome_gtf))
+        elif self.transcriptome_gtf:
+            # Check if transcriptome_gtf is absolute and if not,
             # prepend the default transcriptome directory.
-            self.transcriptome_gtf_path = self.configuration.get_absolute_path(
-                file_path=self.transcriptome_gtf_path,
+            self.transcriptome_gtf = self.configuration.get_absolute_path(
+                file_path=self.transcriptome_gtf,
                 default_path=StandardFilePath.get_resource_transcriptome(
                     transcriptome_version=self.transcriptome_version,
                     absolute=True))
 
-            if not os.path.exists(self.transcriptome_gtf_path):
+            if not os.path.exists(self.transcriptome_gtf):
                 raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
-                                format(self.transcriptome_gtf_path))
+                                format(self.transcriptome_gtf))
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
-            self.transcriptome_index_path = os.path.join(
+            self.transcriptome_index = os.path.join(
                 StandardFilePath.get_resource_transcriptome_index(
                     transcriptome_version=self.transcriptome_version,
                     transcriptome_index='tophat2'),
-                self.transcriptome_version,  # TopHat puts the transcriptome index into a sub directory.
-                self.transcriptome_version)
+                self.transcriptome_version,  # Tophat puts the transcriptome index into a sub directory.
+                self.transcriptome_version)  # Tophat uses a transcriptome prefix to lookup index files.
 
-            self.transcriptome_gtf_path = StandardFilePath.get_resource_transcriptome_gtf(
+            self.transcriptome_gtf = StandardFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='tophat2',
                 basic=False)
 
-            if not os.path.exists(self.transcriptome_gtf_path):
+            if not os.path.exists(self.transcriptome_gtf):
                 raise Exception('Reference transcriptome GTF file path {!r} does not exist.'.
-                                format(self.transcriptome_gtf_path))
+                                format(self.transcriptome_gtf))
 
-        if not self.transcriptome_gtf_path:
+        if not self.transcriptome_gtf:
             raise Exception('Reference transcriptome GTF file not defined.\n' +
                             'A ' + self.name + " requires a 'transcriptome_index' or 'transcriptome_gtf' " +
                             "configuration option.")
@@ -1322,10 +1352,6 @@ class Tuxedo(Analysis):
                                 'Supported aligners: ' + repr(aligner_tuple))
 
         # Read configuration options.
-
-        # TODO: Move the ConfigParser code.
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
 
         stage_run_tophat = self.get_stage(name=self.get_stage_name_run_tophat())
         stage_process_tophat = self.get_stage(name=self.get_stage_name_process_tophat())
@@ -1392,43 +1418,32 @@ class Tuxedo(Analysis):
 
                 # Set tophat options.
 
-                runnable_step.add_option_long(
-                    key='GTF',
-                    value=self.transcriptome_gtf_path)
-                if self.transcriptome_index_path:
-                    runnable_step.add_option_long(
-                        key='transcriptome-index',
-                        value=self.transcriptome_index_path)
-                runnable_step.add_option_long(
-                    key='output-dir',
-                    value=file_path_run_tophat.output_directory)
-                runnable_step.add_option_long(
-                    key='num-threads',
-                    value=str(stage_run_tophat.threads))
+                runnable_step.add_option_long(key='GTF', value=self.transcriptome_gtf)
+
+                if self.transcriptome_index:
+                    runnable_step.add_option_long(key='transcriptome-index', value=self.transcriptome_index)
+
+                runnable_step.add_option_long(key='output-dir', value=file_path_run_tophat.output_directory)
+
+                runnable_step.add_option_long(key='num-threads', value=str(stage_run_tophat.threads))
+
                 # TODO: These really are properties of the Reads, PairedReads or Sample objects
                 # rather than an Analysis.
-                # TODO: Move the ConfigParser code.
-                if config_parser.has_option(section=config_section, option='insert_size'):
-                    insert_size = config_parser.getint(section=config_section, option='insert_size')
-                    read_length = config_parser.getint(section=config_section, option='read_length')
-                    mate_inner_dist = insert_size - 2 * read_length
+                if self.insert_size and self.read_length:
                     runnable_step.add_option_long(
                         key='mate-inner-dist',
-                        value=str(mate_inner_dist))
-                # TODO: Move the ConfigParser code.
-                if config_parser.has_option(section=config_section, option='insert_std_dev'):
-                    runnable_step.add_option_long(
-                        key='mate-std-dev',
-                        value=config_parser.getint(section=config_section, option='insert_std_dev'))
+                        value=str(self.insert_size - 2 * self.read_length))
+
+                if self.insert_size_sd:
+                    runnable_step.add_option_long(key='mate-std-dev', value=str(self.insert_size_sd))
+
                 if self.library_type:
-                    runnable_step.add_option_long(
-                        key='library-type',
-                        value=self.library_type)
+                    runnable_step.add_option_long(key='library-type', value=self.library_type)
+
                 # The TopHat coverage search finds additional 'GT-AG' introns, but is only recommended for
                 # short reads (< 45 bp) and small read numbers (<= 10 M).
                 # TODO: This option should possibly become configurable per sample.
                 runnable_step.add_switch_long(key='no-coverage-search')
-                # TODO: Set -rg-* options to back fill the read group from Illumina2bam.
 
                 # Set rnaseq_tophat arguments.
 
@@ -1581,12 +1596,12 @@ class Tuxedo(Analysis):
                 # --GTF-guide use reference transcript annotation to guide assembly [NULL]
                 runnable_step.add_option_long(
                     key='GTF-guide',
-                    value=self.transcriptome_gtf_path)
+                    value=self.transcriptome_gtf)
             else:
                 # --GTF quantify against reference transcript annotations [NULL]
                 runnable_step.add_option_long(
                     key='GTF',
-                    value=self.transcriptome_gtf_path)
+                    value=self.transcriptome_gtf)
             # --mask-file ignore all alignments within transcripts in this file
             if self.mask_gtf_path:
                 runnable_step.add_option_long(
@@ -1784,7 +1799,7 @@ class Tuxedo(Analysis):
 
             runnable_step.add_option_long(
                 key='gtf-reference',
-                value=self.transcriptome_gtf_path)
+                value=self.transcriptome_gtf)
             runnable_step.add_option_long(
                 key='genome-version',
                 value=self.genome_version)
@@ -1861,7 +1876,7 @@ class Tuxedo(Analysis):
                 # --ref-gtf An optional "reference" annotation GTF [NULL]
                 runnable_step_cuffmerge.add_option_long(
                     key='ref-gtf',
-                    value=self.transcriptome_gtf_path)
+                    value=self.transcriptome_gtf)
                 # --ref-sequence <seq_dir>/<seq_fasta> Genomic DNA sequences for the reference
                 runnable_step_cuffmerge.add_option_long(
                     key='ref-sequence',
@@ -1889,7 +1904,7 @@ class Tuxedo(Analysis):
 
                 runnable_step = RunnableStepCopy(
                     name='copy',
-                    source_path=self.transcriptome_gtf_path,
+                    source_path=self.transcriptome_gtf,
                     target_path=file_path_cuffmerge.merged_gtf)
                 runnable_run_cuffmerge.add_runnable_step(runnable_step=runnable_step)
 
@@ -1906,7 +1921,7 @@ class Tuxedo(Analysis):
                 runnable_step.add_switch_short(key='C')  # include 'contained' transcripts
                 runnable_step.add_switch_short(key='G')  # generic GFF input fields, i.e. not a Cufflinks GTF
                 runnable_step.add_option_short(key='o', value=file_path_cuffmerge.cuffcompare_prefix)
-                runnable_step.add_option_short(key='r', value=self.transcriptome_gtf_path)  # reference GTF
+                runnable_step.add_option_short(key='r', value=self.transcriptome_gtf)  # reference GTF
                 runnable_step.add_option_short(key='s', value=self.genome_fasta_path)  # reference sequence
                 runnable_step.arguments.append(file_path_cuffmerge.merged_gtf)
 
@@ -2399,7 +2414,7 @@ class Tuxedo(Analysis):
                     value=file_path_cuffmerge.merged_gtf)
                 runnable_step_process_cuffdiff.add_option_long(
                     key='gtf-reference',
-                    value=self.transcriptome_gtf_path)
+                    value=self.transcriptome_gtf)
                 runnable_step_process_cuffdiff.add_option_long(
                     key='genome-version',
                     value=self.genome_version)
@@ -3685,8 +3700,8 @@ class DESeq(Analysis):
     @type comparison_path: str | None
     @ivar contrast_path: Contrast file path
     @type contrast_path: str | None
-    @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | None
+    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
+    @type transcriptome_gtf: str | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     """
@@ -3751,7 +3766,7 @@ class DESeq(Analysis):
             replicate_grouping=False,
             comparison_path=None,
             contrast_path=None,
-            transcriptome_gtf_path=None,
+            transcriptome_gtf=None,
             transcriptome_version=None):
         """Initialise a C{bsf.analyses.rnaseq.DESeq} object.
 
@@ -3787,8 +3802,8 @@ class DESeq(Analysis):
         @type comparison_path: str | None
         @param contrast_path: Contrast file path
         @type contrast_path: str | None
-        @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | None
+        @param transcriptome_gtf: Transcriptome annotation GTF file path
+        @type transcriptome_gtf: str | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         """
@@ -3812,7 +3827,7 @@ class DESeq(Analysis):
         self.replicate_grouping = replicate_grouping
         self.comparison_path = comparison_path
         self.contrast_path = contrast_path
-        self.transcriptome_gtf_path = transcriptome_gtf_path
+        self.transcriptome_gtf = transcriptome_gtf
         self.transcriptome_version = transcriptome_version
 
         return
@@ -3846,7 +3861,7 @@ class DESeq(Analysis):
 
         option = 'transcriptome_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3919,10 +3934,10 @@ class DESeq(Analysis):
 
         super(DESeq, self).run()
 
-        # Get the transcriptome_gtf_path
+        # Get the transcriptome GTF file.
 
-        if not self.transcriptome_gtf_path:
-            self.transcriptome_gtf_path = StandardFilePath.get_resource_transcriptome_gtf(
+        if not self.transcriptome_gtf:
+            self.transcriptome_gtf = StandardFilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
                 transcriptome_index='none')
 
@@ -4053,7 +4068,7 @@ class DESeq(Analysis):
             runnable_analysis.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_option_long(key='design-name', value=design_name)
-            runnable_step.add_option_long(key='gtf-reference', value=self.transcriptome_gtf_path)
+            runnable_step.add_option_long(key='gtf-reference', value=self.transcriptome_gtf)
             runnable_step.add_option_long(key='genome-version', value=self.genome_version)
             runnable_step.add_option_long(key='threads', value=str(stage_analysis.threads))
                                                                                                                                            
