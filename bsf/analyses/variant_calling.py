@@ -2566,7 +2566,7 @@ class VariantCallingGATK(Analysis):
                 _runnable_step = RunnableStepGATK(
                     name='merge_cohort_gatk_combine_gvcfs',
                     java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx4G',
+                    java_heap_maximum='Xmx8G',
                     java_jar_path=self.java_archive_gatk)
                 runnable_scatter.add_runnable_step(runnable_step=_runnable_step)
 
@@ -4777,9 +4777,16 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='CallableLoci')
             # Optional Inputs
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
-            if target_intervals.targets_path:
+            if calling_intervals.calling_path:
+                # If calling intervals are available, the Callable Loci analysis is preferentially run only on them.
+                runnable_step.add_gatk_option(key='intervals', value=calling_intervals.calling_path)
+                if self.interval_padding is not None:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            elif target_intervals.targets_path:
                 # If target intervals are available, the Callable Loci analysis is run only on them.
                 runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
+                if self.interval_padding is not None:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             elif self.exclude_intervals_list:  # not None and not empty
                 # If target intervals are not available, decoy sequences etc. can be excluded
                 # from the genome-wide Callable Loci analysis.
