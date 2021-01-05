@@ -232,8 +232,6 @@ class FilePathProcessReadGroup(FilePath):
     @type recalibrated_bai: str
     @ivar recalibrated_md5: Recalibrated BAM MD5 check sum file path
     @type recalibrated_md5: str
-    @ivar alignment_summary_metrics: Picard Collect Alignment Summary metrics file path
-    @type alignment_summary_metrics: str
     """
 
     def __init__(self, prefix):
@@ -261,7 +259,6 @@ class FilePathProcessReadGroup(FilePath):
         self.recalibrated_bam = prefix + '_recalibrated.bam'
         self.recalibrated_bai = prefix + '_recalibrated.bai'
         self.recalibrated_md5 = prefix + '_recalibrated.bam.md5'
-        self.alignment_summary_metrics = prefix + '_alignment_summary_metrics.tsv'
 
         return
 
@@ -999,6 +996,8 @@ class VariantCallingGATK(Analysis):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
+    @cvar variants_to_table: Run I{GATK VariantsToTable} to convert VCF to TSV files
+    @type variants_to_table: bool
     @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool | None
     @ivar bwa_genome_db: Genome sequence file path with BWA index
@@ -1096,7 +1095,7 @@ class VariantCallingGATK(Analysis):
     @type vep_sql_host: str | None
     @ivar vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
     @type vep_sql_port: str | None
-    @ivar vep_ofc_path: Ensembl Variant Effect Predictor (VEP) output fileds configuration (TSV) file path
+    @ivar vep_ofc_path: Ensembl Variant Effect Predictor (VEP) output fields configuration (TSV) file path
     @type vep_ofc_path: str | None
     @ivar vep_soc_path: Ensembl Variant Effect Predictor (VEP) Sequence Ontology term (TSV) configuration file path
     @type vep_soc_path: str | None
@@ -1122,6 +1121,7 @@ class VariantCallingGATK(Analysis):
 
     name = 'Variant Calling Analysis'
     prefix = 'variant_calling'
+    variants_to_table = False
 
     @classmethod
     def get_stage_name_align_lane(cls):
@@ -1830,7 +1830,7 @@ class VariantCallingGATK(Analysis):
         @type vep_sql_host: str | None
         @param vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
         @type vep_sql_port: str | None
-        @param vep_ofc_path: Ensembl Variant Effect Predictor (VEP) output fileds configuration (TSV) file path
+        @param vep_ofc_path: Ensembl Variant Effect Predictor (VEP) output fields configuration (TSV) file path
         @type vep_ofc_path: str | None
         @param vep_soc_path: Ensembl Variant Effect Predictor (VEP) Sequence Ontology term (TSV) configuration file path
         @type vep_soc_path: str | None
@@ -4313,40 +4313,6 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='BQSR', value=file_path_process_read_group.recalibration_table_pre)
                 runnable_step.add_gatk_option(key='out', value=file_path_process_read_group.recalibrated_bam)
 
-                # Run the Picard CollectAlignmentSummaryMetrics analysis.
-
-                runnable_step = RunnableStepPicard(
-                    name='process_lane_picard_collect_alignment_summary_metrics',
-                    java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx6G',
-                    java_jar_path=self.java_archive_picard,
-                    picard_command='CollectAlignmentSummaryMetrics')
-                runnable_process_lane.add_runnable_step(runnable_step=runnable_step)
-
-                runnable_step.add_picard_option(
-                    key='INPUT',
-                    value=file_path_process_read_group.recalibrated_bam)
-                runnable_step.add_picard_option(
-                    key='OUTPUT',
-                    value=file_path_process_read_group.alignment_summary_metrics)
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS', override=True)
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE', override=True)
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY', override=True)
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
-                runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
-                runnable_step.add_picard_option(
-                    key='TMP_DIR',
-                    value=runnable_process_lane.temporary_directory_path(absolute=False))
-                # VERBOSITY defaults to 'INFO'.
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET defaults to 'false'.
-                # VALIDATION_STRINGENCY defaults to 'STRICT'.
-                # COMPRESSION_LEVEL defaults to '5'.
-                # MAX_RECORDS_IN_RAM defaults to '500000'.
-                # CREATE_INDEX defaults to 'false'.
-                # CREATE_MD5_FILE defaults to 'false'.
-                # OPTIONS_FILE
-
             ###############################
             # Step 3: Process per sample. #
             ###############################
@@ -4413,13 +4379,6 @@ class VariantCallingGATK(Analysis):
                     name='process_sample_move_recalibrated_md5',
                     source_path=file_path_process_read_group.recalibrated_md5,
                     target_path=file_path_process_sample.realigned_md5)
-                runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
-
-                # Link the Picard Alignment Summary Metrics.
-                runnable_step = RunnableStepLink(
-                    name='process_sample_link_alignment_metrics',
-                    source_path=file_path_process_read_group.alignment_summary_metrics,
-                    target_path=file_path_process_sample.alignment_summary_metrics)
                 runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
                 # Link the Picard Duplicate Metrics if it has been created.
@@ -5326,39 +5285,40 @@ class VariantCallingGATK(Analysis):
 
             # Run the GATK VariantsToTable analysis.
 
-            runnable_step = RunnableStepGATK(
-                name='split_cohort_snpeff_gatk_variants_to_table_snpeff',
-                java_temporary_path=runnable_split_cohort_snpeff.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx2G',
-                java_jar_path=self.java_archive_gatk)
-            runnable_split_cohort_snpeff.add_runnable_step(runnable_step=runnable_step)
+            if self.variants_to_table:
+                runnable_step = RunnableStepGATK(
+                    name='split_cohort_snpeff_gatk_variants_to_table_snpeff',
+                    java_temporary_path=runnable_split_cohort_snpeff.temporary_directory_path(absolute=False),
+                    java_heap_maximum='Xmx2G',
+                    java_jar_path=self.java_archive_gatk)
+                runnable_split_cohort_snpeff.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_snpeff)
-            runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_snpeff.sample_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_snpeff.sample_tsv)
-            runnable_step.add_gatk_switch(key='showFiltered')
-            # Set of fixed VCF fields.
-            for field_name in variants_to_table_fields['fixed']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK Haplotype Caller-specific INFO fields.
-            for field_name in variants_to_table_fields['haplotype_caller']['info']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK Haplotype Caller-specific genotype fields.
-            for field_name in variants_to_table_fields['haplotype_caller']['format']:
-                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
-            # Set of snpEff-specific INFO fields.
-            for field_name in variants_to_table_fields['snpeff']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Automatically add all fields defined for the Variant Annotator resources, above.
-            if self.annotation_resources_dict:  # not None and not empty
-                for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.items():
-                    if file_path and annotation_list:
-                        for annotation in annotation_list:
-                            runnable_step.add_gatk_option(
-                                key='fields',
-                                value='.'.join((resource_name, annotation)),
-                                override=True)
+                runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+                runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_snpeff)
+                runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_snpeff.sample_vcf)
+                runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_snpeff.sample_tsv)
+                runnable_step.add_gatk_switch(key='showFiltered')
+                # Set of fixed VCF fields.
+                for field_name in variants_to_table_fields['fixed']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK Haplotype Caller-specific INFO fields.
+                for field_name in variants_to_table_fields['haplotype_caller']['info']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK Haplotype Caller-specific genotype fields.
+                for field_name in variants_to_table_fields['haplotype_caller']['format']:
+                    runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+                # Set of snpEff-specific INFO fields.
+                for field_name in variants_to_table_fields['snpeff']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Automatically add all fields defined for the Variant Annotator resources, above.
+                if self.annotation_resources_dict:  # not None and not empty
+                    for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.items():
+                        if file_path and annotation_list:
+                            for annotation in annotation_list:
+                                runnable_step.add_gatk_option(
+                                    key='fields',
+                                    value='.'.join((resource_name, annotation)),
+                                    override=True)
 
             # Split the Ensembl Variant Effect Predictor-annotated multi-sample VCF file.
 
@@ -5402,30 +5362,31 @@ class VariantCallingGATK(Analysis):
 
             # Run the GATK VariantsToTable analysis.
 
-            runnable_step = RunnableStepGATK(
-                name='split_cohort_vep_gatk_variants_to_table_vep',
-                java_temporary_path=runnable_split_cohort_vep.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx2G',
-                java_jar_path=self.java_archive_gatk)
-            runnable_split_cohort_vep.add_runnable_step(runnable_step=runnable_step)
+            if self.variants_to_table:
+                runnable_step = RunnableStepGATK(
+                    name='split_cohort_vep_gatk_variants_to_table_vep',
+                    java_temporary_path=runnable_split_cohort_vep.temporary_directory_path(absolute=False),
+                    java_heap_maximum='Xmx2G',
+                    java_jar_path=self.java_archive_gatk)
+                runnable_split_cohort_vep.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_vep)
-            runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_vep.sample_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_vep.sample_tsv)
-            runnable_step.add_gatk_switch(key='showFiltered')
-            # Set of fixed VCF fields.
-            for field_name in variants_to_table_fields['fixed']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK Haplotype Caller-specific INFO fields.
-            for field_name in variants_to_table_fields['haplotype_caller']['info']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK Haplotype Caller-specific genotype fields.
-            for field_name in variants_to_table_fields['haplotype_caller']['format']:
-                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
-            # Set of Ensembl VEP-specific INFO fields.
-            for field_name in variants_to_table_fields['vep']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+                runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_vep)
+                runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_vep.sample_vcf)
+                runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_vep.sample_tsv)
+                runnable_step.add_gatk_switch(key='showFiltered')
+                # Set of fixed VCF fields.
+                for field_name in variants_to_table_fields['fixed']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK Haplotype Caller-specific INFO fields.
+                for field_name in variants_to_table_fields['haplotype_caller']['info']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK Haplotype Caller-specific genotype fields.
+                for field_name in variants_to_table_fields['haplotype_caller']['format']:
+                    runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+                # Set of Ensembl VEP-specific INFO fields.
+                for field_name in variants_to_table_fields['vep']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
 
         ###################################################
         # Step 9: Summarise the variant calling analysis. #
@@ -5536,114 +5497,117 @@ class VariantCallingGATK(Analysis):
 
             # Split the somatic snpEff-annotated VCF file into a TSV file.
 
-            file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(comparison_name=comparison_name)
+            if self.variants_to_table:
+                file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(
+                    comparison_name=comparison_name)
 
-            runnable_split_somatic_snpeff = self.add_runnable_consecutive(
-                runnable=ConsecutiveRunnable(
-                    name=self.get_prefix_split_somatic_snpeff(comparison_name=comparison_name),
-                    working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
-            executable_split_somatic_snpeff = self.set_stage_runnable(
-                stage=stage_split_somatic_snpeff,
-                runnable=runnable_split_somatic_snpeff)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
-            executable_split_somatic_snpeff.dependencies.append(runnable_annotate_somatic_snpeff.name)
+                runnable_split_somatic_snpeff = self.add_runnable_consecutive(
+                    runnable=ConsecutiveRunnable(
+                        name=self.get_prefix_split_somatic_snpeff(comparison_name=comparison_name),
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        debug=self.debug))
+                executable_split_somatic_snpeff = self.set_stage_runnable(
+                    stage=stage_split_somatic_snpeff,
+                    runnable=runnable_split_somatic_snpeff)
+                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                executable_split_somatic_snpeff.dependencies.append(runnable_annotate_somatic_snpeff.name)
 
-            if use_cache:
-                reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_cache_file_path(
-                    file_path=self.bwa_genome_db,
-                    absolute=True)
-            else:
-                reference_split_somatic_snpeff = self.bwa_genome_db
+                if use_cache:
+                    reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_cache_file_path(
+                        file_path=self.bwa_genome_db,
+                        absolute=True)
+                else:
+                    reference_split_somatic_snpeff = self.bwa_genome_db
 
-            # Run the GATK VariantsToTable analysis.
+                # Run the GATK VariantsToTable analysis.
 
-            runnable_step = RunnableStepGATK(
-                name='somatic_gatk_variants_to_table',
-                java_temporary_path=runnable_split_somatic_snpeff.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx2G',
-                java_jar_path=self.java_archive_gatk)
-            runnable_split_somatic_snpeff.add_runnable_step(runnable_step=runnable_step)
+                runnable_step = RunnableStepGATK(
+                    name='somatic_gatk_variants_to_table_snpeff',
+                    java_temporary_path=runnable_split_somatic_snpeff.temporary_directory_path(absolute=False),
+                    java_heap_maximum='Xmx2G',
+                    java_jar_path=self.java_archive_gatk)
+                runnable_split_somatic_snpeff.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_snpeff)
-            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_snpeff.annotated_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_snpeff.comparison_tsv)
-            runnable_step.add_gatk_switch(key='showFiltered')
-            # Set of fixed VCF fields.
-            for field_name in variants_to_table_fields['fixed']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK MuTect2 INFO fields.
-            for field_name in variants_to_table_fields['mutect2']['info']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK MuTect2 FORMAT fields.
-            for field_name in variants_to_table_fields['mutect2']['format']:
-                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
-            # Set of snpEff INFO fields.
-            for field_name in variants_to_table_fields['snpeff']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Automatically add all fields defined for the Variant Annotator resources, above.
-            if self.annotation_resources_dict:  # not None and not empty
-                for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.items():
-                    if file_path and annotation_list:
-                        for annotation in annotation_list:
-                            runnable_step.add_gatk_option(
-                                key='fields',
-                                value='.'.join((resource_name, annotation)),
-                                override=True)
+                runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+                runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_snpeff)
+                runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_snpeff.annotated_vcf)
+                runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_snpeff.comparison_tsv)
+                runnable_step.add_gatk_switch(key='showFiltered')
+                # Set of fixed VCF fields.
+                for field_name in variants_to_table_fields['fixed']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK MuTect2 INFO fields.
+                for field_name in variants_to_table_fields['mutect2']['info']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK MuTect2 FORMAT fields.
+                for field_name in variants_to_table_fields['mutect2']['format']:
+                    runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+                # Set of snpEff INFO fields.
+                for field_name in variants_to_table_fields['snpeff']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Automatically add all fields defined for the Variant Annotator resources, above.
+                if self.annotation_resources_dict:  # not None and not empty
+                    for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.items():
+                        if file_path and annotation_list:
+                            for annotation in annotation_list:
+                                runnable_step.add_gatk_option(
+                                    key='fields',
+                                    value='.'.join((resource_name, annotation)),
+                                    override=True)
 
             # Split the somatic Ensembl VEP-annotated VCF file into a TSV file.
 
-            file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(comparison_name=comparison_name)
+            if self.variants_to_table:
+                file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(comparison_name=comparison_name)
 
-            runnable_split_somatic_vep = self.add_runnable_consecutive(
-                runnable=ConsecutiveRunnable(
-                    name=self.get_prefix_split_somatic_vep(comparison_name=comparison_name),
-                    working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
-            executable_split_somatic_vep = self.set_stage_runnable(
-                stage=stage_split_somatic_vep,
-                runnable=runnable_split_somatic_vep)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
-            executable_split_somatic_vep.dependencies.append(runnable_annotate_somatic_vep.name)
+                runnable_split_somatic_vep = self.add_runnable_consecutive(
+                    runnable=ConsecutiveRunnable(
+                        name=self.get_prefix_split_somatic_vep(comparison_name=comparison_name),
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        debug=self.debug))
+                executable_split_somatic_vep = self.set_stage_runnable(
+                    stage=stage_split_somatic_vep,
+                    runnable=runnable_split_somatic_vep)
+                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                executable_split_somatic_vep.dependencies.append(runnable_annotate_somatic_vep.name)
 
-            if use_cache:
-                reference_split_somatic_vep = runnable_split_somatic_vep.get_cache_file_path(
-                    file_path=self.bwa_genome_db,
-                    absolute=True)
-            else:
-                reference_split_somatic_vep = self.bwa_genome_db
+                if use_cache:
+                    reference_split_somatic_vep = runnable_split_somatic_vep.get_cache_file_path(
+                        file_path=self.bwa_genome_db,
+                        absolute=True)
+                else:
+                    reference_split_somatic_vep = self.bwa_genome_db
 
-            # Run the GATK VariantsToTable analysis.
+                # Run the GATK VariantsToTable analysis.
 
-            runnable_step = RunnableStepGATK(
-                name='somatic_gatk_variants_to_table',
-                java_temporary_path=runnable_split_somatic_vep.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx2G',
-                java_jar_path=self.java_archive_gatk)
-            runnable_split_somatic_vep.add_runnable_step(runnable_step=runnable_step)
+                runnable_step = RunnableStepGATK(
+                    name='somatic_gatk_variants_to_table_vep',
+                    java_temporary_path=runnable_split_somatic_vep.temporary_directory_path(absolute=False),
+                    java_heap_maximum='Xmx2G',
+                    java_jar_path=self.java_archive_gatk)
+                runnable_split_somatic_vep.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_vep)
-            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_vep.complete_vcf_bgz)
-            runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_vep.comparison_tsv)
-            runnable_step.add_gatk_switch(key='showFiltered')
-            # Set of fixed VCF fields.
-            for field_name in variants_to_table_fields['fixed']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK MuTect2 INFO fields.
-            for field_name in variants_to_table_fields['mutect2']['info']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
-            # Set of GATK MuTect2 FORMAT fields.
-            for field_name in variants_to_table_fields['mutect2']['format']:
-                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
-            # Set of Ensembl VEP-specific INFO fields.
-            for field_name in variants_to_table_fields['vep']:
-                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+                runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_vep)
+                runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_vep.complete_vcf_bgz)
+                runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_vep.comparison_tsv)
+                runnable_step.add_gatk_switch(key='showFiltered')
+                # Set of fixed VCF fields.
+                for field_name in variants_to_table_fields['fixed']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK MuTect2 INFO fields.
+                for field_name in variants_to_table_fields['mutect2']['info']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+                # Set of GATK MuTect2 FORMAT fields.
+                for field_name in variants_to_table_fields['mutect2']['format']:
+                    runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+                # Set of Ensembl VEP-specific INFO fields.
+                for field_name in variants_to_table_fields['vep']:
+                    runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
 
         return
 
@@ -5974,22 +5938,29 @@ class VariantCallingGATK(Analysis):
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_split_cohort_snpeff.sample_vcf + '">')
                 str_list.append('<abbr title="Variant Calling Format">VCF</abbr>')
-                str_list.append('</a>&nbsp;')
+                str_list.append('</a>')
+                str_list.append('&nbsp;')
                 str_list.append('<a href="' + file_path_split_cohort_snpeff.sample_tbi + '">')
                 str_list.append('<abbr title="Tabix Index">TBI</abbr>')
-                str_list.append('</a>&nbsp;')
-                str_list.append('<a href="' + file_path_split_cohort_snpeff.sample_tsv + '">')
-                str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-                str_list.append('</a><br />')
+                str_list.append('</a>')
+                if self.variants_to_table:
+                    str_list.append('&nbsp;')
+                    str_list.append('<a href="' + file_path_split_cohort_snpeff.sample_tsv + '">')
+                    str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+                    str_list.append('</a>')
+                str_list.append('<br />')
                 str_list.append('<a href="' + file_path_split_cohort_vep.sample_vcf + '">')
                 str_list.append('<strong><abbr title="Variant Calling Format">VCF</abbr></strong>')
-                str_list.append('</a>&nbsp;')
+                str_list.append('</a>')
+                str_list.append('&nbsp;')
                 str_list.append('<a href="' + file_path_split_cohort_vep.sample_tbi + '">')
                 str_list.append('<abbr title="Tabix Index">TBI</abbr>')
-                str_list.append('</a>&nbsp;')
-                str_list.append('<a href="' + file_path_split_cohort_vep.sample_tsv + '">')
-                str_list.append('<strong><abbr title="Tab-Separated Value">TSV</abbr></strong>')
                 str_list.append('</a>')
+                if self.variants_to_table:
+                    str_list.append('&nbsp;')
+                    str_list.append('<a href="' + file_path_split_cohort_vep.sample_tsv + '">')
+                    str_list.append('<strong><abbr title="Tab-Separated Value">TSV</abbr></strong>')
+                    str_list.append('</a>')
                 str_list.append('</td>\n')
                 # Alignments
                 str_list.append('<td class="center">')
@@ -6099,9 +6070,6 @@ class VariantCallingGATK(Analysis):
                     str_list.append('</td>\n')
                     # Alignment Summary Metrics
                     str_list.append('<td class="center">')
-                    str_list.append('<a href="' + file_path_process_read_group.alignment_summary_metrics + '">')
-                    str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-                    str_list.append('</a>')
                     str_list.append('</td>\n')
                     # Hybrid Selection Metrics
                     str_list.append('<td class="center"></td>\n')
@@ -6247,22 +6215,29 @@ class VariantCallingGATK(Analysis):
                     str_list.append('<td class="center">')
                     str_list.append('<a href="' + file_path_annotate_somatic_snpeff.annotated_vcf + '">')
                     str_list.append('<abbr title="Variant Calling Format">VCF</abbr>')
-                    str_list.append('</a>&nbsp;')
+                    str_list.append('</a>')
+                    str_list.append('&nbsp;')
                     str_list.append('<a href="' + file_path_annotate_somatic_snpeff.annotated_tbi + '">')
                     str_list.append('<abbr title="Tabix Index">TBI</abbr>')
-                    str_list.append('</a>&nbsp;')
-                    str_list.append('<a href="' + file_path_split_somatic_snpeff.comparison_tsv + '">')
-                    str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-                    str_list.append('</a><br />')
+                    str_list.append('</a>')
+                    if self.variants_to_table:
+                        str_list.append('&nbsp;')
+                        str_list.append('<a href="' + file_path_split_somatic_snpeff.comparison_tsv + '">')
+                        str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+                        str_list.append('</a>')
+                    str_list.append('<br />')
                     str_list.append('<a href="' + file_path_annotate_somatic_vep.complete_vcf_bgz + '">')
                     str_list.append('<strong><abbr title="Variant Calling Format">VCF</abbr></strong>')
-                    str_list.append('</a>&nbsp;')
+                    str_list.append('</a>')
+                    str_list.append('&nbsp;')
                     str_list.append('<a href="' + file_path_annotate_somatic_vep.complete_vcf_tbi + '">')
                     str_list.append('<abbr title="Tabix Index">TBI</abbr>')
-                    str_list.append('</a>&nbsp;')
-                    str_list.append('<a href="' + file_path_split_somatic_vep.comparison_tsv + '">')
-                    str_list.append('<strong><abbr title="Tab-Separated Value">TSV</abbr></strong>')
                     str_list.append('</a>')
+                    if self.variants_to_table:
+                        str_list.append('&nbsp;')
+                        str_list.append('<a href="' + file_path_split_somatic_vep.comparison_tsv + '">')
+                        str_list.append('<strong><abbr title="Tab-Separated Value">TSV</abbr></strong>')
+                        str_list.append('</a>')
                     str_list.append('</td>\n')
 
                     # Summary Statistics
