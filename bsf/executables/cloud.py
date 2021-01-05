@@ -254,7 +254,7 @@ if __name__ == '__main__':
 
     if name_space.action == 'upload':
         runnable_step = RunnableStepAzureBlockBlobUpload(
-            name='blob_upload',
+            name='block_blob_upload',
             account_name=name_space.account_name,
             container_name=name_space.container_name,
             source_path=name_space.source_path,
@@ -264,7 +264,7 @@ if __name__ == '__main__':
 
     if name_space.action == 'download':
         runnable_step = RunnableStepAzureBlockBlobDownload(
-            name='blob_upload',
+            name='block_blob_download',
             account_name=name_space.account_name,
             container_name=name_space.container_name,
             source_path=name_space.source_path,
