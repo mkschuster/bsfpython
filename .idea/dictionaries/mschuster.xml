@@ -3,6 +3,7 @@
     <words>
       <w>barcodes</w>
       <w>basecalls</w>
+      <w>bgzip</w>
       <w>bioconductor</w>
       <w>bioinformatics</w>
       <w>biomedicine</w>
@@ -74,6 +75,7 @@
       <w>stdin</w>
       <w>stdout</w>
       <w>supertrack</w>
+      <w>tabix</w>
       <w>tophat</w>
       <w>transcriptome</w>
       <w>transcriptomes</w>
