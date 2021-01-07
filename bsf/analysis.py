@@ -1841,8 +1841,10 @@ class Stage(object):
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        python_module = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
-        python_module.check_state(stage=self, debug=debug)
+        module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
+
+        check_state_function = getattr(module_type, 'check_state')
+        check_state_function(stage=self, debug=debug)
 
         return
 
@@ -1854,7 +1856,9 @@ class Stage(object):
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        python_module = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
-        python_module.submit(stage=self, debug=debug)
+        module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
+
+        submit_function = getattr(module_type, 'submit')
+        submit_function(stage=self, debug=debug)
 
         return

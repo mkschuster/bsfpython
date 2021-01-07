@@ -48,6 +48,7 @@ name_space = argument_parser.parse_args()
 
 runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
 
-python_module = importlib.import_module(name=runnable.code_module)
+module_type = importlib.import_module(name=runnable.code_module)
 
-python_module.run(runnable=runnable)
+run_function = getattr(module_type, 'run')
+run_function(runnable=runnable)
