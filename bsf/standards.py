@@ -1214,7 +1214,7 @@ class StandardFilePath(BaseSection):
         @raise Exception: Unknown transcriptome index name
         """
         if basic:
-            file_name = transcriptome_version + '.basic.gtf'
+            file_name = transcriptome_version + '_basic.gtf'
         else:
             file_name = transcriptome_version + '.gtf'
 
@@ -1242,7 +1242,7 @@ class StandardFilePath(BaseSection):
         @raise Exception: Unknown transcriptome index name
         """
         if basic:
-            file_name = transcriptome_version + '.basic.sqlite'
+            file_name = transcriptome_version + '_basic.sqlite'
         else:
             file_name = transcriptome_version + '.sqlite'
 
