@@ -1,36 +1,35 @@
 #!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
+#  Copyright 2013 - 2021 Michael K. Schuster
 #
-# BSF Python script to convert a Picard sequence dictionary based on a
-# SAM header file into a UCSC chromosome sizes file.
-#
-# The SAM file header specifies in sequence (@SQ) lines
-# sequence names (SN:) and length (LN:) fields,
-# while the UCSC chromosome sizes file just contains sequence name
-# and length separated by tabs.
+#  Biomedical Sequencing Facility (BSF), part of the genomics core facility
+#  of the Research Center for Molecular Medicine (CeMM) of the
+#  Austrian Academy of Sciences and the Medical University of Vienna (MUW).
 #
 #
-# Copyright 2013 - 2019 Michael K. Schuster
+#  This file is part of BSF Python.
 #
-# Biomedical Sequencing Facility (BSF), part of the genomics core facility
-# of the Research Center for Molecular Medicine (CeMM) of the
-# Austrian Academy of Sciences and the Medical University of Vienna (MUW).
+#  BSF Python is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  BSF Python is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
+#
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# This file is part of BSF Python.
+#  BSF Python script to convert a Picard sequence dictionary based on a
+#  SAM header file into a UCSC chromosome sizes file.
 #
-# BSF Python is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# BSF Python is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#  The SAM file header specifies in sequence (@SQ) lines
+#  sequence names (SN:) and length (LN:) fields,
+#  while the UCSC chromosome sizes file just contains sequence name
+#  and length separated by tabs.
 #
 import os
 from argparse import ArgumentParser

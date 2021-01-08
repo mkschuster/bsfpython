@@ -4,7 +4,7 @@
 A package of classes and methods supporting Kallisto analyses.
 See https://pachterlab.github.io/kallisto/manual
 """
-#  Copyright 2013 - 2019 Michael K. Schuster
+#  Copyright 2013 - 2021 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the

@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# -*- coding: utf-8 -*-
 #
-# BSF GNU Bourne-Again (Bash) script to convert TopHat2 output files into
-# binary formats suitable for UCSC Genome Browser track hubs.
+# Copyright 2013 - 2021 Michael K. Schuster
 #
-#
-# Copyright 2013 - 2019 Michael K. Schuster
-#
+
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
 # Austrian Academy of Sciences and the Medical University of Vienna (MUW).
@@ -27,7 +23,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+#
+# BSF GNU Bourne-Again (Bash) script to convert TopHat2 output files into
+# binary formats suitable for UCSC Genome Browser track hubs.
+#
 if [[ -z "${LANG}" ]]; then
   declare -x LANG='C'
 else
