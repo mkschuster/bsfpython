@@ -30,15 +30,15 @@ The sample annotation sheet file name should obey the schema `<project_name>_<ge
 - `PairedReads Exclude` for excluding particular `PairedReads` objects, equivalent to read groups in BAM files from a high-level analysis.
   - `FALSE`to include a particular PairedReads object
   - `TRUE` to exclude a particular PairedReads object
-- `PairedReads Flow Cell` The flow cell identifier including the experiment name and the flow cell barcode. (e.g. BSF_0000_AAAAACXX)
-- `PairedReads Flow Cell Lane` The `PairedReads Flow Cell` identifier from above and the lane number (e.g BSF_0000_AAAAACXX_2).
+- `PairedReads Flow Cell` The flow cell identifier including the experiment name, and the flow cell barcode (e.g. BSF_0000_AAAAACXX).
+- `PairedReads Flow Cell Lane` The `PairedReads Flow Cell` identifier from above and the lane number (e.g. BSF_0000_AAAAACXX_2).
 - `PairedReads Index 1` The index sequence of the i7 adapter.
 - `PairedReads Index 2` The index sequence of the i5 adapter.
-- `PairedReads Lane` The lane number.
+- `PairedReads Lane` The integer lane number.
 - `PairedReads ReadGroup`
-- `PairedReads Structure` The read structure in Picard format indicating the number of cycles for the first read, the first index read, the second index read and the second read, if available (e.g. `51T8I` or `75T8I8I75T`).
+- `PairedReads Structure` The read structure in Picard format indicating the number of cycles for the first read, the first index read, the second index read, and the second read, if available (e.g. `51T8I` or `75T8I8I75T`).
 - `Reads1 Name` The logical name of the first read which will be used for file naming. 
-- `Reads1 File` The path to the file representing the first read in the case of FASTQ files or the unaligned BAM file. Absolute paths are used verbatim, relative paths are prepended with the BSF sample archive path configured in the user-specific configuration file.
+- `Reads1 File` The path to the file representing the first read in the case of FASTQ files, or the unaligned BAM file. Absolute paths are used verbatim, relative paths are prepended with the BSF sample archive path configured in the user-specific configuration file.
 - `Reads2 Name` Equivalent to `Reads1 Name`.
 - `Reads2 File` Equivalent to `Reads1 File`.
 - `Sample DESeq designs` A comma-separated string of design names this sample should be part of.
@@ -50,7 +50,7 @@ The sample annotation sheet file name should obey the schema `<project_name>_<ge
   - `SE` for single-end data
   - `PE` for paired-end data
 - `Sample DESeq RIN` If present, allows for plotting the distribution of the RNA integrity number (RIN) over all samples.
-- `Sample DESeq run` If present, indicates that technical replicates should be collapsed according to information in the `Sample Name` variable. The `Sample DESeq run` variable provides the original sample name before collapsing technical replicates. Normally, the `bsf.analyses.star.Star` analysis aligns and post-processes each read group-specific BAM file separately, before merging into a sample-specific aligned BAM file. Hence annotation of this variable is only required under exceptional circumstances.
+- `Sample DESeq run` If present, indicates that technical replicates should be collapsed according to information in the `Sample Name` variable. The `Sample DESeq run` variable provides the original sample name before collapsing technical replicates. Normally, the `bsf.analyses.star.Star` analysis aligns and post-processes each read group-specific BAM file separately, before merging into a sample-specific aligned BAM file. Hence, annotation of this variable is only required under exceptional circumstances.
 - `Sample DESeq ...` Further variables meaningful for the differential expression modelling can be annotated with a `Sample DESeq ...` prefix and will be propagated to the Bioconductor DESeq2 analysis. Examples could be: 
    - `Sample DESeq genotye`
    - `Sample DESeq phenotype`

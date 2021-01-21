@@ -48,7 +48,7 @@ The Sample Annotation Sheet format is defined in bsf.ngs.Collection._process_row
 
 Initially, replicates were implemented as BSF PairedReads objects inside BSF Sample objects.
 This strategy was in line with CASAVA processed run folder directory structures, as long as all
-BSF Sample objects resulted from the same BSF Processed Run Folder object (i.e flow cell).
+BSF Sample objects resulted from the same BSF Processed Run Folder object (i.e. flow cell).
 
 Later, when it became clear that samples could result from different flow cells resulting in
 BSF Sample objects bearing the same name, the code base needed some adjustments.
@@ -146,8 +146,7 @@ all hierarchical objects underneath, automatically.
 However, for a comparison schema for a BSF Analysis, 'ProcessedRunFolder', 'Project' and 'Sample'
 columns are an absolute requirement. ProcessedRunFolder auto-discovery registers all hierarchical
 objects (i.e. BSF Project and BSF Sample objects) underneath the BSF ProcessedRunFolder.
-Since Sample names are not guaranteed to be unique between BSF Project objects
-- they typically are 1, 2, 3, ... - both 'Project' and 'ProcessedRunFolder' need specifying.
+Since Sample names are not guaranteed to be unique between BSF Project objects – they typically are 1, 2, 3, ... – both 'Project' and 'ProcessedRunFolder' need specifying.
 
 
 bsf.ngs.Pool
@@ -165,7 +164,7 @@ merge two samples is implemented in the bsf.analyses.chipseq.ChIPSeq class.
   * Add individual FPKM values for each replicate.
     Implemented via bsf_process_cuffdiff.R.
   * Rename downloadable files to include the sample or comparison name.
-    Otherwise files with identical names may get overwritten.
+    Otherwise, files with identical names may get overwritten.
     Implemented via bsf_process_cufflinks.R and bsf_process_cuffdiff.R.
   * Maybe create a ZIP or Gzip archive to download and archive locally.
 
