@@ -35,7 +35,8 @@ from csv import DictReader
 from threading import Lock
 
 from bsf.connector import StandardOutputStream
-from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor
+from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor, \
+    SQLiteTableInfoAdaptor
 from bsf.process import Executable, get_timestamp
 
 output_directory_name = 'bsfpython_slurm_output'
@@ -137,6 +138,32 @@ class ProcessSLURM(object):
     @type allocated_tres: str | None
     @ivar requested_tres: Requested trackable resources
     @type requested_tres: str | None
+    @ivar tres_usage_in_average: Tres average usage in by all tasks in job.
+    @type tres_usage_in_average: str | None
+    @ivar tres_usage_in_maximum: Tres maximum usage in by all tasks in job.
+    @type tres_usage_in_maximum: str | None
+    @ivar tres_usage_in_maximum_node: Node for which each maximum TRES usage out occurred.
+    @type tres_usage_in_maximum_node: str | None
+    @ivar tres_usage_in_maximum_task: Task for which each maximum TRES usage out occurred.
+    @type tres_usage_in_maximum_task: str | None
+    @ivar tres_usage_in_minimum: Tres minimum usage in by all tasks in job.
+    @type tres_usage_in_minimum: str | None
+    @ivar tres_usage_in_minimum_node: Node for which each minimum TRES usage out occurred.
+    @type tres_usage_in_minimum_node: str | None
+    @ivar tres_usage_in_minimum_task: Task for which each minimum TRES usage out occurred.
+    @type tres_usage_in_minimum_task: str | None
+    @ivar tres_usage_in_total: Tres total usage in by all tasks in job.
+    @type tres_usage_in_total: str | None
+    @ivar tres_usage_out_maximum: Tres maximum usage out by all tasks in job.
+    @type tres_usage_out_maximum: str | None
+    @ivar tres_usage_out_maximum_node: Node for which each maximum TRES usage out occurred.
+    @type tres_usage_out_maximum_node: str | None
+    @ivar tres_usage_out_maximum_task: Task for which each maximum TRES usage out occurred.
+    @type tres_usage_out_maximum_task: str | None
+    @ivar tres_usage_out_average: Tres average usage out by all tasks in job.
+    @type tres_usage_out_average: str | None
+    @ivar tres_usage_out_total: Tres total usage out by all tasks in job.
+    @type tres_usage_out_total: str | None
     """
 
     def __init__(
@@ -184,7 +211,21 @@ class ProcessSLURM(object):
             allocated_gres=None,
             requested_gres=None,
             allocated_tres=None,
-            requested_tres=None):
+            requested_tres=None,
+            tres_usage_in_average=None,
+            tres_usage_in_maximum=None,
+            tres_usage_in_maximum_node=None,
+            tres_usage_in_maximum_task=None,
+            tres_usage_in_minimum=None,
+            tres_usage_in_minimum_node=None,
+            tres_usage_in_minimum_task=None,
+            tres_usage_in_total=None,
+            tres_usage_out_maximum=None,
+            tres_usage_out_maximum_node=None,
+            tres_usage_out_maximum_task=None,
+            tres_usage_out_average=None,
+            tres_usage_out_total=None
+    ):
         """Initialise a C{bsf.drms.slurm.ProcessSLURM}.
 
         @param process_slurm_id:
@@ -277,6 +318,32 @@ class ProcessSLURM(object):
         @type allocated_tres: str | None
         @param requested_tres: Requested trackable resources
         @type requested_tres: str | None
+        @param tres_usage_in_average: Tres average usage in by all tasks in job.
+        @type tres_usage_in_average: str | None
+        @param tres_usage_in_maximum: Tres maximum usage in by all tasks in job.
+        @type tres_usage_in_maximum: str | None
+        @param tres_usage_in_maximum_node: Node for which each maximum TRES usage out occurred.
+        @type tres_usage_in_maximum_node: str | None
+        @param tres_usage_in_maximum_task: Task for which each maximum TRES usage out occurred.
+        @type tres_usage_in_maximum_task: str | None
+        @param tres_usage_in_minimum: Tres minimum usage in by all tasks in job.
+        @type tres_usage_in_minimum: str | None
+        @param tres_usage_in_minimum_node: Node for which each minimum TRES usage out occurred.
+        @type tres_usage_in_minimum_node: str | None
+        @param tres_usage_in_minimum_task: Task for which each minimum TRES usage out occurred.
+        @type tres_usage_in_minimum_task: str | None
+        @param tres_usage_in_total: Tres total usage in by all tasks in job.
+        @type tres_usage_in_total: str | None
+        @param tres_usage_out_maximum: Tres maximum usage out by all tasks in job.
+        @type tres_usage_out_maximum: str | None
+        @param tres_usage_out_maximum_node: Node for which each maximum TRES usage out occurred.
+        @type tres_usage_out_maximum_node: str | None
+        @param tres_usage_out_maximum_task: Task for which each maximum TRES usage out occurred.
+        @type tres_usage_out_maximum_task: str | None
+        @param tres_usage_out_average: Tres average usage out by all tasks in job.
+        @type tres_usage_out_average: str | None
+        @param tres_usage_out_total: Tres total usage out by all tasks in job.
+        @type tres_usage_out_total: str | None
         """
         super(ProcessSLURM, self).__init__()
 
@@ -324,6 +391,19 @@ class ProcessSLURM(object):
         self.requested_gres = requested_gres
         self.allocated_tres = allocated_tres
         self.requested_tres = requested_tres
+        self.tres_usage_in_average = tres_usage_in_average
+        self.tres_usage_in_maximum = tres_usage_in_maximum
+        self.tres_usage_in_maximum_node = tres_usage_in_maximum_node
+        self.tres_usage_in_maximum_task = tres_usage_in_maximum_task
+        self.tres_usage_in_minimum = tres_usage_in_minimum
+        self.tres_usage_in_minimum_node = tres_usage_in_minimum_node
+        self.tres_usage_in_minimum_task = tres_usage_in_minimum_task
+        self.tres_usage_in_total = tres_usage_in_total
+        self.tres_usage_out_maximum = tres_usage_out_maximum
+        self.tres_usage_out_maximum_node = tres_usage_out_maximum_node
+        self.tres_usage_out_maximum_task = tres_usage_out_maximum_task
+        self.tres_usage_out_average = tres_usage_out_average
+        self.tres_usage_out_total = tres_usage_out_total
 
         return
 
@@ -352,10 +432,11 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Primary key
                 ('process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'),
                 # JobID
-                # The number of the job or job step. It is in the form: job.jobstep.
+                # The number of the job or job step.
                 ('job_id', 'TEXT UNIQUE'),
                 # JobIDRaw
-                #
+                # The identification number of the job or job step.
+                # Prints the JobID in the form JobID[.JobStep] for regular, heterogeneous and array jobs.
                 ('job_id_raw', 'TEXT'),
                 # JobName
                 # The name of the job or job step.
@@ -474,13 +555,59 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 ('average_disk_write', 'TEXT'),
                 # AllocGRES
                 # Names and counts of generic resources allocated.
+                # NOTE: In SLURM 19, but no longer in SLURM 20.
                 ('allocated_gres', 'TEXT'),
                 # ReqGRES
+                # Names and counts of generic resources requested.
+                # NOTE: In SLURM 19, but no longer in SLURM 20.
                 ('requested_gres', 'TEXT'),
                 # AllocTRES
+                # Trackable resources.
+                # These are the resources allocated to the job/step after the job started running.
                 ('allocated_tres', 'TEXT'),
                 # ReqTRES
+                # Trackable resources.
+                # These are the minimum resource counts requested by the job/step at submission time.
                 ('requested_tres', 'TEXT'),
+                # TresUsageInAve
+                # Tres average usage in by all tasks in job.
+                ('tres_usage_in_average', 'TEXT'),
+                # TresUsageInMax
+                # Tres maximum usage in by all tasks in job.
+                ('tres_usage_in_maximum', 'TEXT'),
+                # TresUsageInMaxNode
+                # Node for which each maximum TRES usage out occurred.
+                ('tres_usage_in_maximum_node', 'TEXT'),
+                # TresUsageInMaxTask
+                # Task for which each maximum TRES usage out occurred.
+                ('tres_usage_in_maximum_task', 'TEXT'),
+                # TresUsageInMin
+                # Tres minimum usage in by all tasks in job.
+                ('tres_usage_in_minimum', 'TEXT'),
+                # TresUsageInMinNode
+                # Node for which each minimum TRES usage out occurred.
+                ('tres_usage_in_minimum_node', 'TEXT'),
+                # TresUsageInMinTask
+                # Task for which each minimum TRES usage out occurred.
+                ('tres_usage_in_minimum_task', 'TEXT'),
+                # TresUsageInTot
+                # Tres total usage in by all tasks in job.
+                ('tres_usage_in_total', 'TEXT'),
+                # TresUsageOutMax
+                # Tres maximum usage out by all tasks in job.
+                ('tres_usage_out_maximum', 'TEXT'),
+                # TresUsageOutMaxNode
+                # Node for which each maximum TRES usage out occurred.
+                ('tres_usage_out_maximum_node', 'TEXT'),
+                # TresUsageOutMaxTask
+                # Task for which each maximum TRES usage out occurred.
+                ('tres_usage_out_maximum_task', 'TEXT'),
+                # TresUsageOutAve,
+                # Tres average usage out by all tasks in job.
+                ('tres_usage_out_average', 'TEXT'),
+                # TresUsageOutTot
+                # Tres total usage out by all tasks in job.
+                ('tres_usage_out_total', 'TEXT'),
             ])
 
         # NOTE: Experimentally patch the table definition for this DatabaseAdaptor.
@@ -501,6 +628,16 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         if len(column_dict_new) or len(column_dict_old):
             print('Attempting to patch SQLite table', self.table_name)
 
+            # Get the column definitions from teh original table, which is needed for the
+            # INSERT INTO (columns) expression.
+            pragma_table_info_adaptor = SQLiteTableInfoAdaptor(
+                database_connection=self.database_connection)
+
+            pragma_table_info_list = pragma_table_info_adaptor.select_all_by_table_name(
+                table_name=self.table_name)
+
+            column_expression_old = ', '.join(map(lambda x: x.column_name, pragma_table_info_list))
+
             table_name_old = '_'.join((self.table_name, 'old'))
 
             # Rename the old table to move it sideways.
@@ -518,64 +655,9 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             statement_list.append('INSERT')
             statement_list.append('INTO')
             statement_list.append(self.table_name)
+            statement_list.append('(' + column_expression_old + ')')
             statement_list.append('SELECT')
-
-            select_list = list()
-            select_list.append('process_slurm_id')
-            select_list.append('job_id')
-            select_list.append("''")  # job_id_raw
-            select_list.append('job_name')
-            select_list.append('partition')
-
-            select_list.append('max_vm_size')
-            select_list.append('max_vm_size_node')
-            select_list.append('max_vm_size_task')
-            select_list.append('average_vm_size')
-
-            select_list.append('max_rss')
-            select_list.append('max_rss_node')
-            select_list.append('max_rss_task')
-            select_list.append('average_rss')
-
-            select_list.append('max_pages')
-            select_list.append('max_pages_node')
-            select_list.append('max_pages_task')
-            select_list.append('average_pages')
-
-            select_list.append('min_cpu')
-            select_list.append('min_cpu_node')
-            select_list.append('min_cpu_task')
-            select_list.append('average_cpu')
-
-            select_list.append('number_tasks')
-            select_list.append('allocated_cpus')
-            select_list.append('elapsed')
-            select_list.append('state')
-            select_list.append('exit_code')
-
-            select_list.append('average_cpu_frequency')
-            select_list.append('requested_cpu_frequency')  # requested_cpu_frequency_min
-            select_list.append("''")  # requested_cpu_frequency_max
-            select_list.append("''")  # requested_cpu_frequency_gov
-            select_list.append('requested_memory')
-            select_list.append('consumed_energy')
-
-            select_list.append('max_disk_read')
-            select_list.append('max_disk_read_node')
-            select_list.append('max_disk_read_task')
-            select_list.append('average_disk_read')
-
-            select_list.append('max_disk_write')
-            select_list.append('max_disk_write_node')
-            select_list.append('max_disk_write_task')
-            select_list.append('average_disk_write')
-
-            select_list.append("''")  # allocated_gres
-            select_list.append("''")  # requested_gres
-            select_list.append("''")  # allocated_tres
-            select_list.append("''")  # requested_tres
-
-            statement_list.append(', '.join(select_list))
+            statement_list.append(column_expression_old)
             statement_list.append('FROM')
             statement_list.append(table_name_old)
 
@@ -837,6 +919,9 @@ def submit(stage, debug=0):
 
         if stage.queue:
             executable_drms.add_option_pair_long(key='partition', value=stage.queue)
+            # FIXME: This is a hack to cope with the new cluster configuration.
+            # TODO: This should be modelled via a DMRS-specific class.
+            executable_drms.add_option_pair_long(key='qos', value=stage.queue)
 
         if stage.reservation:
             executable_drms.add_option_pair_long(key='reservation', value=stage.reservation)
@@ -844,7 +929,7 @@ def submit(stage, debug=0):
         # Working directory, standard output and standard error streams.
 
         if stage.working_directory:
-            executable_drms.add_option_pair_long(key='workdir', value=stage.working_directory)
+            executable_drms.add_option_pair_long(key='chdir', value=stage.working_directory)
 
             # Write standard output and standard error streams into an
             # output directory under the working directory.
@@ -1036,7 +1121,21 @@ def check_state(stage, debug=0):
                 allocated_gres=row_dict['AllocGRES'],
                 requested_gres=row_dict['ReqGRES'],
                 allocated_tres=row_dict['AllocTRES'],
-                requested_tres=row_dict['ReqTRES'])
+                requested_tres=row_dict['ReqTRES'],
+                tres_usage_in_average=row_dict['TRESUsageInAve'],
+                tres_usage_in_maximum=row_dict['TRESUsageInMax'],
+                tres_usage_in_maximum_node=row_dict['TRESUsageInMaxNode'],
+                tres_usage_in_maximum_task=row_dict['TRESUsageInMaxTask'],
+                tres_usage_in_minimum=row_dict['TRESUsageInMin'],
+                tres_usage_in_minimum_node=row_dict['TRESUsageInMinNode'],
+                tres_usage_in_minimum_task=row_dict['TRESUsageInMinTask'],
+                tres_usage_in_total=row_dict['TRESUsageInTot'],
+                tres_usage_out_maximum=row_dict['TRESUsageOutMax'],
+                tres_usage_out_maximum_node=row_dict['TRESUsageOutMaxNode'],
+                tres_usage_out_maximum_task=row_dict['TRESUsageOutMaxTask'],
+                tres_usage_out_average=row_dict['TRESUsageOutAve'],
+                tres_usage_out_total=row_dict['TRESUsageOutTot'],
+            )
 
             # Check if the ProcessSLURM already exists.
             old_process_slurm = _process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
