@@ -35,7 +35,8 @@ from csv import DictReader
 from threading import Lock
 
 from bsf.connector import StandardOutputStream
-from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor
+from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor, \
+    SQLiteTableInfoAdaptor
 from bsf.process import Executable, get_timestamp
 
 output_directory_name = 'bsfpython_slurm_output'
@@ -355,7 +356,8 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # The number of the job or job step. It is in the form: job.jobstep.
                 ('job_id', 'TEXT UNIQUE'),
                 # JobIDRaw
-                #
+                # The identification number of the job or job step.
+                # Prints the JobID in the form JobID[.JobStep] for regular, heterogeneous and array jobs.
                 ('job_id_raw', 'TEXT'),
                 # JobName
                 # The name of the job or job step.
@@ -501,6 +503,16 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         if len(column_dict_new) or len(column_dict_old):
             print('Attempting to patch SQLite table', self.table_name)
 
+            # Get the column definitions from the original table, which is needed for the
+            # INSERT INTO (columns) expression.
+            pragma_table_info_adaptor = SQLiteTableInfoAdaptor(
+                database_connection=self.database_connection)
+
+            pragma_table_info_list = pragma_table_info_adaptor.select_all_by_table_name(
+                table_name=self.table_name)
+
+            column_expression_old = ', '.join(map(lambda x: x.column_name, pragma_table_info_list))
+
             table_name_old = '_'.join((self.table_name, 'old'))
 
             # Rename the old table to move it sideways.
@@ -518,64 +530,9 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             statement_list.append('INSERT')
             statement_list.append('INTO')
             statement_list.append(self.table_name)
+            statement_list.append('(' + column_expression_old + ')')
             statement_list.append('SELECT')
-
-            select_list = list()
-            select_list.append('process_slurm_id')
-            select_list.append('job_id')
-            select_list.append("''")  # job_id_raw
-            select_list.append('job_name')
-            select_list.append('partition')
-
-            select_list.append('max_vm_size')
-            select_list.append('max_vm_size_node')
-            select_list.append('max_vm_size_task')
-            select_list.append('average_vm_size')
-
-            select_list.append('max_rss')
-            select_list.append('max_rss_node')
-            select_list.append('max_rss_task')
-            select_list.append('average_rss')
-
-            select_list.append('max_pages')
-            select_list.append('max_pages_node')
-            select_list.append('max_pages_task')
-            select_list.append('average_pages')
-
-            select_list.append('min_cpu')
-            select_list.append('min_cpu_node')
-            select_list.append('min_cpu_task')
-            select_list.append('average_cpu')
-
-            select_list.append('number_tasks')
-            select_list.append('allocated_cpus')
-            select_list.append('elapsed')
-            select_list.append('state')
-            select_list.append('exit_code')
-
-            select_list.append('average_cpu_frequency')
-            select_list.append('requested_cpu_frequency')  # requested_cpu_frequency_min
-            select_list.append("''")  # requested_cpu_frequency_max
-            select_list.append("''")  # requested_cpu_frequency_gov
-            select_list.append('requested_memory')
-            select_list.append('consumed_energy')
-
-            select_list.append('max_disk_read')
-            select_list.append('max_disk_read_node')
-            select_list.append('max_disk_read_task')
-            select_list.append('average_disk_read')
-
-            select_list.append('max_disk_write')
-            select_list.append('max_disk_write_node')
-            select_list.append('max_disk_write_task')
-            select_list.append('average_disk_write')
-
-            select_list.append("''")  # allocated_gres
-            select_list.append("''")  # requested_gres
-            select_list.append("''")  # allocated_tres
-            select_list.append("''")  # requested_tres
-
-            statement_list.append(', '.join(select_list))
+            statement_list.append(column_expression_old)
             statement_list.append('FROM')
             statement_list.append(table_name_old)
 
@@ -1087,6 +1044,11 @@ def check_state(stage, debug=0):
     # Explicitly disconnect here so that the Thread can access the database.
 
     process_slurm_adaptor.disconnect()
+
+    # Since the SLURM sacct --jobs option just requires JobIDs, remove ProcessSLURM objects from the list,
+    # if their job_id represents a job step. JobID.JobStep, i.e., JobID.batch, JobID.external
+
+    process_slurm_list = [x for x in process_slurm_list if x.job_id.find('.') == -1]
 
     # Return if no ProcessSLURM objects need updating.
     if not process_slurm_list:
