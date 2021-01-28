@@ -432,7 +432,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Primary key
                 ('process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'),
                 # JobID
-                # The number of the job or job step.
+                # The number of the job or job step. It is in the form: job.jobstep.
                 ('job_id', 'TEXT UNIQUE'),
                 # JobIDRaw
                 # The identification number of the job or job step.
@@ -628,7 +628,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         if len(column_dict_new) or len(column_dict_old):
             print('Attempting to patch SQLite table', self.table_name)
 
-            # Get the column definitions from teh original table, which is needed for the
+            # Get the column definitions from the original table, which is needed for the
             # INSERT INTO (columns) expression.
             pragma_table_info_adaptor = SQLiteTableInfoAdaptor(
                 database_connection=self.database_connection)
@@ -1186,6 +1186,11 @@ def check_state(stage, debug=0):
     # Explicitly disconnect here so that the Thread can access the database.
 
     process_slurm_adaptor.disconnect()
+
+    # Since the SLURM sacct --jobs option just requires JobIDs, remove ProcessSLURM objects from the list,
+    # if their job_id represents a job step. JobID.JobStep, i.e., JobID.batch, JobID.external
+
+    process_slurm_list = [x for x in process_slurm_list if x.job_id.find('.') == -1]
 
     # Return if no ProcessSLURM objects need updating.
     if not process_slurm_list:
