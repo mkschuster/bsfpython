@@ -4430,7 +4430,7 @@ class DESeq(Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            for design_name in sorted(contrast_dict):
+            for design_name in sorted(design_dict):
                 str_list.append('<tr>\n')
                 str_list.append('<td>' + design_name + '</td>\n')
 
