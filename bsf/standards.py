@@ -816,6 +816,28 @@ class Genome(BaseSectionVersion):
             return ucsc_version
 
 
+class SnpEff(BaseSectionVersion):
+    """The C{bsf.standards.SnpEff} class models snpEff defaults.
+
+    The defaults are read from the [snpeff_{genome_version}] section of the global configuration file.
+    Attributes:
+    @cvar section: C{configparser.ConfigParser} section
+    @type section: str
+    """
+    section = 'snpeff'
+
+    @classmethod
+    def get_genome_version(cls, genome_version=None):
+        """Get the snpEff genome version.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: str | None
+        @return: snpEff genome version
+        @rtype: str | None
+        """
+        return cls.get(option='genome_version', version=genome_version)
+
+
 class Transcriptome(BaseSectionVersion):
     """The C{bsf.standards.Transcriptome} class models Transcriptome defaults.
 
