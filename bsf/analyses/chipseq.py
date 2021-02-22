@@ -2179,17 +2179,22 @@ class ChIPSeq(Analysis):
                         file_type='excel')
 
                     for row_dict in annotation_sheet.row_dicts:
+                        # DiffBind2 uses a 'Group1' variable, DiffBind3 just 'Group'.
+                        group1_name = 'Group1'
+                        if 'Group' in row_dict:
+                            group1_name = 'Group'
+
                         file_path_diff_bind_contrast = FilePathDiffBindContrast(
                             prefix=self.get_prefix_diff_bind(
                                 comparison_name=comparison_name,
                                 factor_name=factor_name),
-                            group_1=row_dict['Group1'],
+                            group_1=row_dict[group1_name],
                             group_2=row_dict['Group2'])
 
                         str_list.append('<tr>\n')
 
                         str_list.append('<td></td>\n')  # Comparison name
-                        str_list.append('<td>' + row_dict['Group1'] + ' vs ' + row_dict['Group2'] + '</td>\n')
+                        str_list.append('<td>' + row_dict[group1_name] + ' vs ' + row_dict['Group2'] + '</td>\n')
                         str_list.append('<td></td>\n')  # Correlation heat map of peak caller scores
                         str_list.append('<td></td>\n')  # Correlation heat map of counts
                         str_list.append('<td></td>\n')  # Correlation heat map of differential binding analysis
@@ -2199,7 +2204,7 @@ class ChIPSeq(Analysis):
                         str_list.append('<a href="' + file_path_diff_bind_contrast.ma_plot_pdf + '">')
                         str_list.append('<img')
                         str_list.append(' alt="DiffBind MA plot for factor {} contrast {} vs {}"'.format(
-                            factor_name, row_dict['Group1'], row_dict['Group2']))
+                            factor_name, row_dict[group1_name], row_dict['Group2']))
                         str_list.append(' src="' + file_path_diff_bind_contrast.ma_plot_png + '"')
                         str_list.append(' height="80" width="80" />')
                         str_list.append('</a>')
@@ -2210,7 +2215,7 @@ class ChIPSeq(Analysis):
                         str_list.append('<a href="' + file_path_diff_bind_contrast.scatter_plot_pdf + '">')
                         str_list.append('<img')
                         str_list.append(' alt="DiffBind scatter for factor {} contrast {} vs {}"'.format(
-                            factor_name, row_dict['Group1'], row_dict['Group2']))
+                            factor_name, row_dict[group1_name], row_dict['Group2']))
                         str_list.append(' src="' + file_path_diff_bind_contrast.scatter_plot_png + '"')
                         str_list.append(' height="80" width="80" />')
                         str_list.append('</a>')
@@ -2225,7 +2230,7 @@ class ChIPSeq(Analysis):
                             str_list.append('<a href="' + file_path_diff_bind_contrast.pca_plot_pdf + '">')
                             str_list.append('<img')
                             str_list.append(' alt="DiffBind PCA plot for factor {} contrast {} vs {}"'.format(
-                                factor_name, row_dict['Group1'], row_dict['Group2']))
+                                factor_name, row_dict[group1_name], row_dict['Group2']))
                             str_list.append(' src="' + file_path_diff_bind_contrast.pca_plot_png + '"')
                             str_list.append(' height="80" width="80" />')
                             str_list.append('</a>')
@@ -2238,7 +2243,7 @@ class ChIPSeq(Analysis):
                             str_list.append('<a href="' + file_path_diff_bind_contrast.box_plot_pdf + '">')
                             str_list.append('<img')
                             str_list.append(' alt="DiffBind Box plot for factor {} contrast {} vs {}"'.format(
-                                factor_name, row_dict['Group1'], row_dict['Group2']))
+                                factor_name, row_dict[group1_name], row_dict['Group2']))
                             str_list.append(' src="' + file_path_diff_bind_contrast.box_plot_png + '"')
                             str_list.append(' height="80" width="80" />')
                             str_list.append('</a>')
@@ -2253,7 +2258,7 @@ class ChIPSeq(Analysis):
                             str_list.append('<a href="' + file_path_diff_bind_contrast.regions_pdf + '">')
                             str_list.append('<img')
                             str_list.append(' alt="Chromosome region plot for factor {} contrast {} vs {}"'.format(
-                                factor_name, row_dict['Group1'], row_dict['Group2']))
+                                factor_name, row_dict[group1_name], row_dict['Group2']))
                             str_list.append(' src="' + file_path_diff_bind_contrast.regions_png + '"')
                             str_list.append(' height="80" width="80" />')
                             str_list.append('</a>')

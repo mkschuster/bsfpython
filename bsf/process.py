@@ -54,7 +54,7 @@ def get_timestamp():
 class Command(object):
     """The C{bsf.process.Command} class represents one program, its options and arguments.
 
-    A C{bsf.process.Command} can possibly contain another subordinate C{bsf.process.Command}.
+    A C{bsf.process.Command} object can possibly contain another subordinate C{bsf.process.Command} object.
 
     Attributes:
     @ivar name: Name
@@ -66,7 +66,7 @@ class Command(object):
     @type options: dict[Argument.key, list[Argument]]
     @ivar arguments: Python C{list} of Python C{str} (program argument) objects
     @type arguments: list[str]
-    @ivar sub_command: Subordinate C{bsf.process.Command}
+    @ivar sub_command: Subordinate C{bsf.process.Command} object
     @type sub_command: Command | None
     """
 
@@ -77,7 +77,7 @@ class Command(object):
             options=None,
             arguments=None,
             sub_command=None):
-        """Initialise a C{bsf.process.Command}.
+        """Initialise a C{bsf.process.Command} object.
 
         @param name: Name
         @type name: str | None
@@ -88,7 +88,7 @@ class Command(object):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
         """
 
@@ -119,7 +119,7 @@ class Command(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.process.Command}.
+        """Trace a C{bsf.process.Command} object.
 
         @param level: Indentation level
         @type level: int
@@ -159,11 +159,11 @@ class Command(object):
         return str_list
 
     def add_argument(self, argument, override):
-        """Add a C{bsf.argument.Argument} or one of its sub-classes.
+        """Add a C{bsf.argument.Argument} object or one of its sub-classes.
 
-        @param argument: C{bsf.argument.Argument}
+        @param argument: C{bsf.argument.Argument} object
         @type argument: Argument
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         if not override and argument.key in self.options:
@@ -181,163 +181,163 @@ class Command(object):
         return
 
     def add_switch_long(self, key, override=False):
-        """Initialise and add a C{bsf.argument.SwitchLong}.
+        """Initialise and add a C{bsf.argument.SwitchLong} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=SwitchLong(key=key), override=override)
 
     def add_switch_short(self, key, override=False):
-        """Initialise and add a C{bsf.argument.SwitchShort}.
+        """Initialise and add a C{bsf.argument.SwitchShort} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=SwitchShort(key=key), override=override)
 
     def add_option_long(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionLong}.
+        """Initialise and add a C{bsf.argument.OptionLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def add_option_short(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionShort}.
+        """Initialise and add a C{bsf.argument.OptionShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def add_option_pair(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionPair}.
+        """Initialise and add a C{bsf.argument.OptionPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def add_option_pair_short(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionPairShort}.
+        """Initialise and add a C{bsf.argument.OptionPairShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionPairShort(key=key, value=value), override=override)
 
     def add_option_pair_long(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionPairLong}.
+        """Initialise and add a C{bsf.argument.OptionPairLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionPairLong(key=key, value=value), override=override)
 
     def add_option_multi(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionMulti}.
+        """Initialise and add a C{bsf.argument.OptionMulti} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionMulti(key=key, value=value), override=override)
 
     def add_option_multi_long(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionMultiLong}.
+        """Initialise and add a C{bsf.argument.OptionMultiLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionMultiLong(key=key, value=value), override=override)
 
     def add_option_multi_short(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionMultiShort}.
+        """Initialise and add a C{bsf.argument.OptionMultiShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionMultiShort(key=key, value=value), override=override)
 
     def add_option_multi_pair(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionMultiPair}.
+        """Initialise and add a C{bsf.argument.OptionMultiPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionMultiPair(key=key, value=value), override=override)
 
     def add_option_multi_pair_long(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionMultiPairLong}.
+        """Initialise and add a C{bsf.argument.OptionMultiPairLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionMultiPairLong(key=key, value=value), override=override)
 
     def add_option_multi_pair_short(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionMultiPairShort}.
+        """Initialise and add a C{bsf.argument.OptionMultiPairShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.add_argument(argument=OptionMultiPairShort(key=key, value=value), override=override)
 
     def set_argument(self, argument, override):
-        """Set a C{bsf.argument.Argument} or one of its sub-classes.
+        """Set a C{bsf.argument.Argument} objects or one of its sub-classes.
 
-        @param argument: C{bsf.argument.Argument}
+        @param argument: C{bsf.argument.Argument} object
         @type argument: Argument
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         if not override and argument.key in self.options:
@@ -351,162 +351,162 @@ class Command(object):
         return
 
     def set_switch_long(self, key, override=False):
-        """Initialise and set a C{bsf.argument.SwitchLong}.
+        """Initialise and set a C{bsf.argument.SwitchLong} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=SwitchLong(key=key), override=override)
 
     def set_switch_short(self, key, override=False):
-        """Initialise and set a C{bsf.argument.SwitchShort}.
+        """Initialise and set a C{bsf.argument.SwitchShort} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=SwitchShort(key=key), override=override)
 
     def set_option_long(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionLong}.
+        """Initialise and set a C{bsf.argument.OptionLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def set_option_short(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionShort}.
+        """Initialise and set a C{bsf.argument.OptionShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def set_option_pair(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionPair}.
+        """Initialise and set a C{bsf.argument.OptionPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_option_pair_short(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionPairShort}.
+        """Initialise and set a C{bsf.argument.OptionPairShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionPairShort(key=key, value=value), override=override)
 
     def set_option_pair_long(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionPairLong}.
+        """Initialise and set a C{bsf.argument.OptionPairLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionPairLong(key=key, value=value), override=override)
 
     def set_option_multi(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionMulti}.
+        """Initialise and set a C{bsf.argument.OptionMulti} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionMulti(key=key, value=value), override=override)
 
     def set_option_multi_long(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionMultiLong}.
+        """Initialise and set a C{bsf.argument.OptionMultiLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionMultiLong(key=key, value=value), override=override)
 
     def set_option_multi_short(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionMultiShort}.
+        """Initialise and set a C{bsf.argument.OptionMultiShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionMultiShort(key=key, value=value), override=override)
 
     def set_option_multi_pair(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionMultiPair}.
+        """Initialise and set a C{bsf.argument.OptionMultiPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionMultiPair(key=key, value=value), override=override)
 
     def set_option_multi_pair_long(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionMultiPairLong}.
+        """Initialise and set a C{bsf.argument.OptionMultiPairLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionMultiPairLong(key=key, value=value), override=override)
 
     def set_option_multi_pair_short(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionMultiPairShort}.
+        """Initialise and set a C{bsf.argument.OptionMultiPairShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.set_argument(argument=OptionMultiPairShort(key=key, value=value), override=override)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.process.Command} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a C{bsf.process.Command} object via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
+        @param configuration: C{bsf.standards.Configuration} object
         @type configuration: Configuration
         @param section: Configuration file section, defaults to instance class
         @type section: str
@@ -598,26 +598,26 @@ class Executable(Command):
     """The C{bsf.process.Executable} class represents one C{bsf.process.Command} as UNIX process.
 
     Attributes:
-    @ivar stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+    @ivar stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
     @type stdin: Connector | None
-    @ivar stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+    @ivar stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
     @type stdout: Connector | None
-    @ivar stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+    @ivar stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
     @type stderr: Connector | None
-    @ivar dependencies: Python C{list} of C{bsf.process.Executable.name} properties in the
-        context of C{bsf.analysis.Stage} dependencies
+    @ivar dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+        in the context of C{bsf.analysis.Stage} dependencies
     @type dependencies: list[Executable.name]
     @ivar hold: Hold on job scheduling
     @type hold: str | None
-    @ivar submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+    @ivar submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
     @type submit: bool
-    @ivar maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
+    @ivar maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable} object
     @type maximum_attempts: int
     @ivar process_identifier: Process identifier
     @type process_identifier: str | None
     @ivar process_name: Process name
     @type process_name: str | None
-    @ivar sub_process: C{subprocess.Popen}
+    @ivar sub_process: C{subprocess.Popen} object
     @type sub_process: Popen | None
     """
 
@@ -628,7 +628,7 @@ class Executable(Command):
         If a file_path was provided, a corresponding Python C{file} will be opened in text mode,
         if not, C{sys.stdout} or C{sys.stderr} will be used according to the I{file_type}.
         If a debug level was set, diagnostic output will be printed to C{sys.stdout}, as well as the output stream.
-        @param file_handle: The I{STDOUT} or I{STDERR} C{io.TextIOWrapper} file handle
+        @param file_handle: The I{STDOUT} or I{STDERR} C{io.TextIOWrapper} object
         @type file_handle: TextIOWrapper
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: Lock
@@ -686,7 +686,7 @@ class Executable(Command):
     def process_stdout(stdout_handle, thread_lock, debug, stdout_path=None):
         """Process I{STDOUT} from the child process as a thread.
 
-        @param stdout_handle: The I{STDOUT} C{io.TextIOWrapper} file handle
+        @param stdout_handle: The I{STDOUT} C{io.TextIOWrapper} object
         @type stdout_handle: TextIOWrapper
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: Lock
@@ -706,7 +706,7 @@ class Executable(Command):
     def process_stderr(stderr_handle, thread_lock, debug, stderr_path=None):
         """Process I{STDERR} from the child process as a thread.
 
-        @param stderr_handle: The I{STDERR} C{io.TextIOWrapper} file handle
+        @param stderr_handle: The I{STDERR} C{io.TextIOWrapper} object
         @type stderr_handle: TextIOWrapper
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: Lock
@@ -739,7 +739,7 @@ class Executable(Command):
             process_identifier=None,
             process_name=None,
             sub_process=None):
-        """Initialise a C{bsf.process.Executable}.
+        """Initialise a C{bsf.process.Executable} object.
 
         @param name: Name
         @type name: str | None
@@ -750,28 +750,28 @@ class Executable(Command):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
-        @param maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
+        @param maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable} object
         @type maximum_attempts: int
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
         """
         # Further constrain the name instance variable in the Executable class.
@@ -818,7 +818,7 @@ class Executable(Command):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.process.Executable}.
+        """Trace a C{bsf.process.Executable} object.
 
         @param level: Indentation level
         @type level: int
@@ -856,7 +856,7 @@ class Executable(Command):
         return str_list
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.Executable} via the Python C{subprocess.Popen} class.
+        """Run a C{bsf.process.Executable} object via the Python C{subprocess.Popen} class.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -872,9 +872,9 @@ class Executable(Command):
         def _map_connector(_connector):
             """Map a connector to a file handle.
 
-            @param _connector: C{bsf.connector.Connector} or sub-class thereof.
+            @param _connector: C{bsf.connector.Connector} object or sub-class thereof.
             @type _connector: Connector
-            @return: File handle
+            @return: File handle object
             @rtype: IOBase | PIPE | DEVNULL
             """
             if isinstance(_connector, ElectronicSink):
@@ -1051,11 +1051,12 @@ class Executable(Command):
 
 
 class RunnableStep(Executable):
-    """The C{bsf.process.RunnableStep} represents one C{bsf.process.Executable} in a C{bsf.procedure.Runnable}.
+    """The C{bsf.process.RunnableStep} class represents one C{bsf.process.Executable} object
+    in a C{bsf.procedure.Runnable} object.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
-        after successfully completing this C{bsf.process.RunnableStep}
+    @ivar obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+        after successfully completing C{bsf.process.RunnableStep.run}
     @type obsolete_file_path_list: list[str]
     """
 
@@ -1076,7 +1077,7 @@ class RunnableStep(Executable):
             process_name=None,
             sub_process=None,
             obsolete_file_path_list=None):
-        """Initialise a C{bsf.process.RunnableStep}.
+        """Initialise a C{bsf.process.RunnableStep} object.
 
         @param name: Name
         @type name: str | None
@@ -1087,29 +1088,29 @@ class RunnableStep(Executable):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         """
         super(RunnableStep, self).__init__(
@@ -1136,7 +1137,7 @@ class RunnableStep(Executable):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.process.RunnableStep}.
+        """Trace a C{bsf.process.RunnableStep} object.
 
         @param level: Indentation level
         @type level: int
@@ -1155,7 +1156,7 @@ class RunnableStep(Executable):
         return str_list
 
     def remove_obsolete_file_paths(self):
-        """Remove file paths on the C{bsf.process.RunnableStep.obsolete_file_path_list} Python C{list}.
+        """Remove file paths of the C{bsf.process.RunnableStep.obsolete_file_path_list} Python C{list} object.
 
         This method is mainly used by C{bsf.runnable.consecutive} and related modules.
         """
@@ -1201,7 +1202,7 @@ class RunnableStepChangeMode(RunnableStep):
             file_path=None,
             mode_directory=None,
             mode_file=None):
-        """Initialise a C{bsf.process.RunnableStepChangeMode}.
+        """Initialise a C{bsf.process.RunnableStepChangeMode} object.
 
         @param name: Name
         @type name: str | None
@@ -1212,29 +1213,29 @@ class RunnableStepChangeMode(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param file_path: File path
         @type file_path: str | None
@@ -1267,7 +1268,7 @@ class RunnableStepChangeMode(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepChangeMode}.
+        """Run a C{bsf.process.RunnableStepChangeMode} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1366,7 +1367,7 @@ class RunnableStepChangeMode(RunnableStep):
 
 
 class RunnableStepCopy(RunnableStep):
-    """The C{bsf.process.RunnableStepCopy} represents a step copying files.
+    """The C{bsf.process.RunnableStepCopy} class represents a step copying files.
 
     Attributes:
     @ivar source_path: Source path
@@ -1394,7 +1395,7 @@ class RunnableStepCopy(RunnableStep):
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
-        """Initialise a C{bsf.process.RunnableStepCopy}.
+        """Initialise a C{bsf.process.RunnableStepCopy} object.
 
         @param name: Name
         @type name: str | None
@@ -1405,29 +1406,29 @@ class RunnableStepCopy(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param source_path: Source path
         @type source_path: str | None
@@ -1458,7 +1459,7 @@ class RunnableStepCopy(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepLink}.
+        """Run a C{bsf.process.RunnableStepLink} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1506,7 +1507,7 @@ class RunnableStepJava(RunnableStep):
             java_heap_minimum=None,
             java_heap_maximum=None,
             java_jar_path=None):
-        """Initialise a C{bsf.process.RunnableStepJava}.
+        """Initialise a C{bsf.process.RunnableStepJava} object.
 
         @param name: Name
         @type name: str | None
@@ -1517,29 +1518,29 @@ class RunnableStepJava(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | None
@@ -1643,7 +1644,7 @@ class RunnableStepPicard(RunnableStepJava):
             java_heap_maximum=None,
             java_jar_path=None,
             picard_command=None):
-        """Initialise a C{bsf.process.RunnableStepPicard}.
+        """Initialise a C{bsf.process.RunnableStepPicard} object.
 
         @param name: Name
         @type name: str | None
@@ -1654,29 +1655,29 @@ class RunnableStepPicard(RunnableStepJava):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | None
@@ -1717,20 +1718,20 @@ class RunnableStepPicard(RunnableStepJava):
         return
 
     def add_picard_option(self, key, value, override=False):
-        """Add a C{bsf.argument.OptionPair} to a C{bsf.process.RunnableStepPicard}.
+        """Add a C{bsf.argument.OptionPair} object to a C{bsf.process.RunnableStepPicard} object.
 
         @param key: Option key
         @type key: str
         @param value: Option value
         @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} objects without warning
         @type override: bool
         """
         return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
 
 
 class RunnableStepLink(RunnableStep):
-    """The C{bsf.process.RunnableStepLink} represents a step creating a symbolic link.
+    """The C{bsf.process.RunnableStepLink} class represents a step creating a symbolic link.
 
     Attributes:
     @ivar source_path: Source path
@@ -1758,7 +1759,7 @@ class RunnableStepLink(RunnableStep):
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
-        """Initialise a C{bsf.process.RunnableStepLink}.
+        """Initialise a C{bsf.process.RunnableStepLink} object.
 
         @param name: Name
         @type name: str | None
@@ -1769,29 +1770,29 @@ class RunnableStepLink(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param source_path: Source path
         @type source_path: str | None
@@ -1821,7 +1822,7 @@ class RunnableStepLink(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepLink}.
+        """Run a C{bsf.process.RunnableStepLink} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1844,7 +1845,7 @@ class RunnableStepLink(RunnableStep):
 
 
 class RunnableStepMakeDirectory(RunnableStep):
-    """The C{bsf.process.RunnableStepMakeDirectory} represents a step creating a directory.
+    """The C{bsf.process.RunnableStepMakeDirectory} class represents a step creating a directory.
 
     Attributes:
     @ivar directory_path: Directory path
@@ -1869,7 +1870,7 @@ class RunnableStepMakeDirectory(RunnableStep):
             sub_process=None,
             obsolete_file_path_list=None,
             directory_path=None):
-        """Initialise a C{bsf.process.RunnableStepMakeDirectory}.
+        """Initialise a C{bsf.process.RunnableStepMakeDirectory} object.
 
         @param name: Name
         @type name: str | None
@@ -1880,29 +1881,29 @@ class RunnableStepMakeDirectory(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param directory_path: Directory path
         @type directory_path: str | None
@@ -1929,7 +1930,7 @@ class RunnableStepMakeDirectory(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepMakeDirectory}.
+        """Run a C{bsf.process.RunnableStepMakeDirectory} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1952,7 +1953,7 @@ class RunnableStepMakeDirectory(RunnableStep):
 
 
 class RunnableStepMakeNamedPipe(RunnableStep):
-    """The C{bsf.process.RunnableStepMakeNamedPipe} represents a step creating a named pipe.
+    """The C{bsf.process.RunnableStepMakeNamedPipe} class represents a step creating a named pipe.
 
     Attributes:
     @ivar file_path: Named pipe file path
@@ -1977,7 +1978,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
             sub_process=None,
             obsolete_file_path_list=None,
             file_path=None):
-        """Initialise a C{bsf.process.RunnableStepMakeNamedPipe}.
+        """Initialise a C{bsf.process.RunnableStepMakeNamedPipe} object.
 
         @param name: Name
         @type name: str | None
@@ -1988,29 +1989,29 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param file_path: Named pipe file path
         @type file_path: str | None
@@ -2037,7 +2038,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepMakeNamedPipe}.
+        """Run a C{bsf.process.RunnableStepMakeNamedPipe} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -2088,7 +2089,7 @@ class RunnableStepMove(RunnableStep):
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
-        """Initialise a C{bsf.process.RunnableStepMove}.
+        """Initialise a C{bsf.process.RunnableStepMove} object.
 
         @param name: Name
         @type name: str | None
@@ -2099,29 +2100,29 @@ class RunnableStepMove(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param source_path: Source path
         @type source_path: str | None
@@ -2151,7 +2152,7 @@ class RunnableStepMove(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepMove}.
+        """Run a C{bsf.process.RunnableStepMove} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -2165,6 +2166,229 @@ class RunnableStepMove(RunnableStep):
         """
         if self.source_path and self.target_path:
             shutil.move(src=self.source_path, dst=self.target_path)
+
+        return 0
+
+
+class RunnableStepRemoveDirectory(RunnableStep):
+    """The C{bsf.process.RunnableStepRemoveDirectory} class represents a step removing a directory.
+
+    Attributes:
+    @ivar directory_path: Directory path
+    @type directory_path: str | None
+    """
+
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            sub_process=None,
+            obsolete_file_path_list=None,
+            directory_path=None):
+        """Initialise a C{bsf.process.RunnableStepRemoveDirectory} object.
+
+        @param name: Name
+        @type name: str | None
+        @param program: Program
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[Argument.key, list[Argument]] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
+        @param sub_command: Subordinate C{bsf.process.Command} object
+        @type sub_command: Command | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
+        @type stdin: Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
+        @type stdout: Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
+        @type stderr: Connector | None
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
+        @type dependencies: list[Executable.name] | None
+        @param hold: Hold on job scheduling
+        @type hold: str | None
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str | None
+        @param process_name: Process name
+        @type process_name: str | None
+        @param sub_process: C{subprocess.Popen} object
+        @type sub_process: Popen | None
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
+        @type obsolete_file_path_list: list[str] | None
+        @param directory_path: Directory path
+        @type directory_path: str | None
+        """
+        super(RunnableStepRemoveDirectory, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            sub_process=sub_process,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        self.directory_path = directory_path
+
+        return
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+        """Run a C{bsf.process.RunnableRemoveDirectory} object.
+
+        FileNotFoundError and OSError ENOTEMPTY Exceptions are caught.
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
+        """
+        if self.directory_path and not os.path.isdir(self.directory_path):
+            try:
+                os.rmdir(self.directory_path)
+            except FileNotFoundError:
+                pass
+            except OSError as exception:
+                if exception.errno != errno.ENOTEMPTY:
+                    raise
+
+        return 0
+
+
+class RunnableStepRemoveTree(RunnableStep):
+    """The C{bsf.process.RunnableStepRemoveTree} class represents a step removing a file system tree.
+
+    Attributes:
+    @ivar file_path: File path
+    @type file_path: str | None
+    @ivar ignore_errors: Ignore errors
+    @type ignore_errors: bool
+    """
+
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            sub_process=None,
+            obsolete_file_path_list=None,
+            file_path=None,
+            ignore_errors=None):
+        """Initialise a C{bsf.process.RunnableStepRemoveTree} object.
+
+        @param name: Name
+        @type name: str | None
+        @param program: Program
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[Argument.key, list[Argument]] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
+        @param sub_command: Subordinate C{bsf.process.Command} object
+        @type sub_command: Command | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
+        @type stdin: Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
+        @type stdout: Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
+        @type stderr: Connector | None
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
+        @type dependencies: list[Executable.name] | None
+        @param hold: Hold on job scheduling
+        @type hold: str | None
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str | None
+        @param process_name: Process name
+        @type process_name: str | None
+        @param sub_process: C{subprocess.Popen} object
+        @type sub_process: Popen | None
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
+        @type obsolete_file_path_list: list[str] | None
+        @param file_path: File path
+        @type file_path: str | None
+        """
+        super(RunnableStepRemoveTree, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            sub_process=sub_process,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        self.file_path = file_path
+        self.ignore_errors = ignore_errors
+
+        return
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+        """Run a C{bsf.process.RunnableRemoveTree} object.
+
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
+        """
+        if self.ignore_errors:
+            ignore_errors = True
+        else:
+            ignore_errors = False
+
+        shutil.rmtree(path=self.file_path, ignore_errors=ignore_errors)
 
         return 0
 
@@ -2195,7 +2419,7 @@ class RunnableStepSleep(RunnableStep):
             sub_process=None,
             obsolete_file_path_list=None,
             sleep_time=None):
-        """Initialise a C{bsf.process.RunnableStepSleep}.
+        """Initialise a C{bsf.process.RunnableStepSleep} object.
 
         @param name: Name
         @type name: str | None
@@ -2206,29 +2430,29 @@ class RunnableStepSleep(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str]
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param sleep_time: Sleep time in seconds
         @type sleep_time: float | None
@@ -2255,7 +2479,7 @@ class RunnableStepSleep(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepSleep}.
+        """Run a C{bsf.process.RunnableStepSleep} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -2302,7 +2526,7 @@ class RunnableStepSetEnvironment(RunnableStep):
             obsolete_file_path_list=None,
             key=None,
             value=None):
-        """Initialise a C{bsf.process.RunnableStepSetEnvironment}.
+        """Initialise a C{bsf.process.RunnableStepSetEnvironment} object.
 
         @param name: Name
         @type name: str | None
@@ -2313,29 +2537,29 @@ class RunnableStepSetEnvironment(RunnableStep):
         @type options: dict[Argument.key, list[Argument]] | None
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str]
-        @param sub_command: Subordinate C{bsf.process.Command}
+        @param sub_command: Subordinate C{bsf.process.Command} object
         @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
         @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
         @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
         @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
+        @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
         @type obsolete_file_path_list: list[str] | None
         @param key: Environment key
         @type key: str
@@ -2363,7 +2587,7 @@ class RunnableStepSetEnvironment(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepSetEnvironment}.
+        """Run a C{bsf.process.RunnableStepSetEnvironment} object.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
