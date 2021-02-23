@@ -96,6 +96,10 @@ class ConcurrentProcess(Connector):
     """The C{ConcurrentProcess} class represents a concrete pipe to or from a concurrent process.
 
     Attributes:
+    @ivar name: C{bsf.process.Executable.name}
+    @type name: str
+    @ivar connection: Connection type 'stdin', 'stdout' or 'stderr'
+    @type connection: str
     """
 
     def __init__(self, name, connection):
@@ -129,7 +133,9 @@ class StandardStream(Connector):
     Standard streams (i.e. STDIN, STDOUT, STDERR) require processing via a C{threading.Thread} to prevent buffers from
     filling up and subsequently sub-processes (C{subprocess.Popen}) from blocking.
     Attributes:
-    @ivar thread_callable: Callable for C{threading.Thread.target}
+    @ivar file_path: File path
+    @type file_path: str | None
+    @ivar thread_callable: C{Callable} object for C{threading.Thread.target}
     @type thread_callable: object | None
     @ivar thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
     @type thread_kwargs: dict[str, object] | None
@@ -153,7 +159,7 @@ class StandardStream(Connector):
 
         @param file_path: File path
         @type file_path: str | None
-        @param thread_callable: Callable for C{threading.Thread.target}
+        @param thread_callable: C{Callable} object for C{threading.Thread.target}
         @type thread_callable: object | None
         @param thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
         @type thread_kwargs: dict[str, object] | None
