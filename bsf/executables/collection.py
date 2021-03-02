@@ -149,18 +149,13 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.executables.bed.RunnableStepRescaleScore}.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         collection = Collection.from_sas_path(
             file_path='',
@@ -221,7 +216,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
             print('Final Collection:')
             sys.stdout.writelines(collection.trace(level=1))
 
-        return 0
+        return None
 
 
 if __name__ == '__main__':

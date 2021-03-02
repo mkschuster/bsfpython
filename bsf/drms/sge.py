@@ -599,12 +599,11 @@ def submit(stage, debug=0):
         # Finally, submit this command if requested and not in debug mode.
 
         if executable.submit and debug == 0:
-            child_return_code = executable_drms.run(debug=debug)
+            exception_str_list = executable_drms.run(debug=debug)
 
-            if child_return_code:
-                raise Exception(
-                    'SGE qsub returned exit code ' + repr(child_return_code) + '\n' +
-                    'Command list representation: ' + repr(executable_drms.command_list()))
+            if exception_str_list:
+                exception_str_list.append('Command list representation: ' + repr(executable_drms.command_list()))
+                raise Exception('\n'.join(exception_str_list))
 
         # Copy the SGE command line to the Bash script.
 

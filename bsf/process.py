@@ -51,6 +51,173 @@ def get_timestamp():
     return '[' + datetime.datetime.now().isoformat() + ']'
 
 
+def map_connector(connector=None, executable_list=None):
+    """Map a C{bsf.connector.Connector} object to a file handle.
+
+    @param connector: C{bsf.connector.Connector} object or sub-class thereof.
+    @type connector: Connector | None
+    @param executable_list: Python C{list} object of C{Executable} objects.
+    @type executable_list: list[Executable] | None
+    @return: File handle object
+    @rtype: IOBase | DEVNULL | PIPE | None
+    """
+    if isinstance(connector, ElectronicSink):
+        return DEVNULL
+
+    if isinstance(connector, ConnectorFile):
+        if isinstance(connector, ConnectorPipeNamed):
+            # A named pipe needs creating before it can be opened.
+            if not os.path.exists(connector.file_path):
+                os.mkfifo(connector.file_path)
+        return open(file=connector.file_path, mode=connector.file_mode)
+
+    if isinstance(connector, ConnectorPipe):
+        return PIPE
+
+    if isinstance(connector, StandardStream):
+        return PIPE
+
+    if isinstance(connector, ConcurrentProcess):
+        if executable_list is None:
+            raise Exception('A ConcurrentProcess Connector requires a list of Executable objects to connect to.')
+
+        for executable in executable_list:
+            if executable.name == connector.name:
+                if executable.sub_process is None:
+                    raise Exception(
+                        'Sub-process ' + repr(executable.name) + ' not initialised, yet.')
+                return getattr(executable.sub_process, connector.connection)
+        else:
+            raise Exception('Could not find a suitable Executable.name for Connector.name ' + repr(connector.name))
+
+    return None
+
+
+def run_executables(executable_list, debug=0):
+    """Run a Python C{list} of C{Executable} objects concurrently.
+
+    @param executable_list: Python C{list} of C{Executable} objects
+    @type executable_list: list[Executable]
+    @param debug: Integer debugging level
+    @type debug: int
+    @return: Python C{list} of Python C{str} (exception) objects
+    @rtype: list[str] | None
+    """
+    thread_lock = Lock()
+
+    for executable in executable_list:
+        # Per RunnableStep, up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
+        # should make sure that buffers are not filling up. If STDOUT or STDERR connectors are not defined,
+        # defaults need be set to avoid the sub-process from blocking.
+
+        if executable.stdout is None:
+            executable.stdout = StandardOutputStream()
+
+        if executable.stderr is None:
+            executable.stderr = StandardErrorStream()
+
+        # Create and assign sub-processes.
+        try:
+            executable.sub_process = Popen(
+                args=executable.command_list(),
+                bufsize=1,
+                stdin=map_connector(connector=executable.stdin, executable_list=executable_list),
+                stdout=map_connector(connector=executable.stdout, executable_list=executable_list),
+                stderr=map_connector(connector=executable.stderr, executable_list=executable_list),
+                text=True)
+        except OSError as exception:
+            if exception.errno == errno.ENOENT:
+                raise Exception(
+                    "For Executable.name {!r} Executable.program {!r} could not be found.".format(
+                        executable.name, executable.program))
+            else:
+                # Re-raise the Exception object.
+                raise exception
+
+        for attribute in ('stdin', 'stdout', 'stderr'):
+            connector = getattr(executable, attribute)
+            """ @type connector: Connector """
+
+            if isinstance(connector, StandardInputStream):
+                if connector.thread_callable is None:
+                    # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
+                    pass
+                else:
+                    connector.thread = Thread(
+                        target=connector.thread_callable,
+                        args=[executable.sub_process.stdin, thread_lock, debug],
+                        kwargs=connector.thread_kwargs)
+
+            if isinstance(connector, StandardOutputStream):
+                if connector.thread_callable is None:
+                    # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
+                    connector.thread = Thread(
+                        target=Executable.process_stdout,
+                        args=[executable.sub_process.stdout, thread_lock, debug],
+                        kwargs={'stdout_path': connector.file_path})
+                else:
+                    connector.thread = Thread(
+                        target=connector.thread_callable,
+                        args=[executable.sub_process.stdout, thread_lock, debug],
+                        kwargs=connector.thread_kwargs)
+
+            if isinstance(connector, StandardErrorStream):
+                if connector.thread_callable is None:
+                    # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
+                    connector.thread = Thread(
+                        target=Executable.process_stderr,
+                        args=[executable.sub_process.stderr, thread_lock, debug],
+                        kwargs={'stderr_path': connector.file_path})
+                else:
+                    connector.thread = Thread(
+                        target=connector.thread_callable,
+                        args=[executable.sub_process.stderr, thread_lock, debug],
+                        kwargs=connector.thread_kwargs)
+
+            if isinstance(connector, StandardStream) and connector.thread:
+                connector.thread.daemon = True
+                connector.thread.start()
+
+    # At this stage all subprocess.Popen objects should have been created.
+    # Now, wait for all child processes to complete.
+
+    exception_str_list = list()
+    for executable in executable_list:
+        child_return_code = executable.sub_process.wait()
+
+        # First, join all standard stream processing threads.
+
+        for attribute in ('stdin', 'stdout', 'stderr'):
+            connector = getattr(executable, attribute)
+            """ @type connector: Connector """
+            if isinstance(connector, StandardStream) and connector.thread:
+                thread_join_counter = 0
+                while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
+                    if debug > 0:
+                        thread_lock.acquire(True)
+                        print("{} Waiting for Executable.name {!r} {!r} processor to finish.".format(
+                            get_timestamp(),
+                            executable.name,
+                            attribute))
+                        thread_lock.release()
+
+                    connector.thread.join(timeout=connector.thread_timeout)
+                    thread_join_counter += 1
+
+        # Second, inspect the child process' return code.
+
+        if child_return_code > 0:
+            # Child return code.
+            exception_str_list.append("{} Child process Executable.name {!r} failed with return code {!r}.".format(
+                get_timestamp(), executable.name, +child_return_code))
+        elif child_return_code < 0:
+            # Child signal.
+            exception_str_list.append("{} Child process Executable.name {!r} received signal {!r}.".format(
+                get_timestamp(), executable.name, -child_return_code))
+
+    return exception_str_list
+
+
 class Command(object):
     """The C{bsf.process.Command} class represents one program, its options and arguments.
 
@@ -855,197 +1022,15 @@ class Executable(Command):
 
         return str_list
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.Executable} object via the Python C{subprocess.Popen} class.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
-
-        def _map_connector(_connector):
-            """Map a connector to a file handle.
-
-            @param _connector: C{bsf.connector.Connector} object or sub-class thereof.
-            @type _connector: Connector
-            @return: File handle object
-            @rtype: IOBase | PIPE | DEVNULL
-            """
-            if isinstance(_connector, ElectronicSink):
-                return DEVNULL
-
-            if isinstance(_connector, ConnectorFile):
-                if isinstance(_connector, ConnectorPipeNamed):
-                    # A named pipe needs creating before it can be opened.
-                    if not os.path.exists(_connector.file_path):
-                        os.mkfifo(_connector.file_path)
-                return open(file=_connector.file_path, mode=_connector.file_mode)
-
-            if isinstance(_connector, ConnectorPipe):
-                return PIPE
-
-            if isinstance(_connector, StandardStream):
-                return PIPE
-
-            if isinstance(_connector, ConcurrentProcess):
-                # A bsf.connector.ConcurrentProcess object
-                raise Exception('A ' + type(_connector).__name__ +
-                                ' object cannot be set for a ' + type(self).__name__ +
-                                ' object.')
-
-            return None
-
-        # Up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
-        # should make sure that buffers are not filling up. If STDOUT or STDERR connectors are not defined,
-        # the defaults need be set to avoid the process from blocking.
-
-        if self.stdout is None:
-            self.stdout = StandardOutputStream()
-
-        if self.stderr is None:
-            self.stderr = StandardErrorStream()
-
-        child_return_code = 0
-        attempt_counter = 0
-
-        thread_lock = Lock()
-
-        while attempt_counter < self.maximum_attempts:
-            attempt_counter += 1
-
-            try:
-                self.sub_process = Popen(
-                    args=self.command_list(),
-                    bufsize=1,
-                    stdin=_map_connector(_connector=self.stdin),
-                    stdout=_map_connector(_connector=self.stdout),
-                    stderr=_map_connector(_connector=self.stderr),
-                    text=True)
-            except OSError as exception:
-                if exception.errno == errno.ENOENT:
-                    raise Exception(repr(self) + ' ' + repr(self.program) + ' could not be found.')
-                else:
-                    # Re-raise the Exception object.
-                    raise exception
-
-            # Start threads for standard stream processing to prevent buffers from filling up and
-            # sub-processes from blocking.
-
-            for attribute in ('stdin', 'stdout', 'stderr'):
-                connector = getattr(self, attribute)
-                """ @type connector: Connector """
-
-                if isinstance(connector, StandardInputStream):
-                    if connector.thread_callable is None:
-                        # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
-                        pass
-                    else:
-                        connector.thread = Thread(
-                            target=connector.thread_callable,
-                            args=[self.sub_process.stdin, thread_lock, debug],
-                            kwargs=connector.thread_kwargs)
-
-                if isinstance(connector, StandardOutputStream):
-                    if connector.thread_callable is None:
-                        # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
-                        connector.thread = Thread(
-                            target=Executable.process_stdout,
-                            args=[self.sub_process.stdout, thread_lock, debug],
-                            kwargs={'stdout_path': connector.file_path})
-                    else:
-                        connector.thread = Thread(
-                            target=connector.thread_callable,
-                            args=[self.sub_process.stdout, thread_lock, debug],
-                            kwargs=connector.thread_kwargs)
-
-                if isinstance(connector, StandardErrorStream):
-                    if connector.thread_callable is None:
-                        # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
-                        connector.thread = Thread(
-                            target=Executable.process_stderr,
-                            args=[self.sub_process.stderr, thread_lock, debug],
-                            kwargs={'stderr_path': connector.file_path})
-                    else:
-                        connector.thread = Thread(
-                            target=connector.thread_callable,
-                            args=[self.sub_process.stderr, thread_lock, debug],
-                            kwargs=connector.thread_kwargs)
-
-                if isinstance(connector, StandardStream) and connector.thread:
-                    connector.thread.daemon = True
-                    connector.thread.start()
-
-            child_return_code = self.sub_process.wait()
-
-            # First, join all standard stream processing threads.
-
-            for attribute in ('stdin', 'stdout', 'stderr'):
-                connector = getattr(self, attribute)
-                """ @type connector: Connector """
-                if isinstance(connector, StandardStream) and connector.thread:
-                    thread_join_counter = 0
-                    while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
-                        if debug > 0:
-                            thread_lock.acquire(True)
-                            print(get_timestamp(),
-                                  'Waiting for ' + repr(attribute) + ' processor to finish.')
-                            thread_lock.release()
-
-                        connector.thread.join(timeout=connector.thread_timeout)
-                        thread_join_counter += 1
-
-            # Second, inspect the child process' return code.
-
-            if child_return_code > 0:
-                if debug > 0:
-                    print(get_timestamp(),
-                          'Child process ' + repr(self.name) +
-                          ' failed with exit code ' + repr(+child_return_code) + '.')
-            elif child_return_code < 0:
-                if debug > 0:
-                    print(get_timestamp(),
-                          'Child process ' + repr(self.name) +
-                          ' received signal ' + repr(-child_return_code) + '.')
-            else:
-                if debug > 0:
-                    print(get_timestamp(),
-                          'Child process ' + repr(self.name) +
-                          ' completed successfully ' + repr(+child_return_code) + '.')
-                break
-        else:
-            if debug > 0:
-                print(get_timestamp(),
-                      'Runnable ' + repr(self.name) +
-                      ' exceeded the maximum retry counter ' + repr(self.maximum_attempts) + '.')
-
-        return child_return_code
-
-    def evaluate_return_code(self, return_code):
-        """Evaluate a return code from the run method.
-
-        @param return_code: Return code
-        @type return_code: int
-        """
-        if return_code > 0:
-            print(get_timestamp(),
-                  'Child process ' + repr(self.name) +
-                  ' failed with return code ' + repr(+return_code) + '.')
-        elif return_code < 0:
-            print(get_timestamp(),
-                  'Child process ' + repr(self.name) +
-                  ' received signal ' + repr(-return_code) + '.')
-        else:
-            print(get_timestamp(),
-                  'Child process ' + repr(self.name) +
-                  ' completed with return code ' + repr(+return_code) + '.')
-
-        return
+        return run_executables(executable_list=[self], debug=debug)
 
 
 class RunnableStep(Executable):
@@ -1265,18 +1250,13 @@ class RunnableStepChangeMode(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepChangeMode} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
 
         def convert_mode(mode_str):
@@ -1300,7 +1280,7 @@ class RunnableStepChangeMode(RunnableStep):
 
         # If the file path is not defined, all further efforts are futile.
         if not self.file_path:
-            return 0
+            return None
 
         # Use a dictionary to map string literals to integers defined in the stat module rather than
         # evaluating code directly, which can be rather dangerous.
@@ -1361,7 +1341,7 @@ class RunnableStepChangeMode(RunnableStep):
                 for file_name in file_name_list:
                     os.chmod(os.path.join(file_path, file_name), int_mode_file)
 
-        return 0
+        return None
 
 
 class RunnableStepCopy(RunnableStep):
@@ -1456,25 +1436,20 @@ class RunnableStepCopy(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepLink} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
 
         if self.source_path and self.target_path and not os.path.exists(self.target_path):
             # Copy data and all stat info ("cp -p src dst").
             shutil.copy2(src=self.source_path, dst=self.target_path)
 
-        return 0
+        return None
 
 
 class RunnableStepJava(RunnableStep):
@@ -1819,18 +1794,13 @@ class RunnableStepLink(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepLink} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.source_path and self.target_path and not os.path.exists(self.target_path):
             try:
@@ -1839,7 +1809,7 @@ class RunnableStepLink(RunnableStep):
                 if exception.errno != errno.EEXIST:
                     raise
 
-        return 0
+        return None
 
 
 class RunnableStepMakeDirectory(RunnableStep):
@@ -1927,18 +1897,13 @@ class RunnableStepMakeDirectory(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepMakeDirectory} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.directory_path and not os.path.isdir(self.directory_path):
             try:
@@ -1947,7 +1912,7 @@ class RunnableStepMakeDirectory(RunnableStep):
                 if exception.errno != errno.EEXIST:
                     raise
 
-        return 0
+        return None
 
 
 class RunnableStepMakeNamedPipe(RunnableStep):
@@ -2035,18 +2000,13 @@ class RunnableStepMakeNamedPipe(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepMakeNamedPipe} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.file_path and not os.path.exists(self.file_path):
             try:
@@ -2055,7 +2015,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
                 if exception.errno != errno.EEXIST:
                     raise
 
-        return 0
+        return None
 
 
 class RunnableStepMove(RunnableStep):
@@ -2149,23 +2109,18 @@ class RunnableStepMove(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepMove} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.source_path and self.target_path:
             shutil.move(src=self.source_path, dst=self.target_path)
 
-        return 0
+        return None
 
 
 class RunnableStepRemoveDirectory(RunnableStep):
@@ -2253,19 +2208,14 @@ class RunnableStepRemoveDirectory(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableRemoveDirectory} object.
 
         FileNotFoundError and OSError ENOTEMPTY Exceptions are caught.
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.directory_path and not os.path.isdir(self.directory_path):
             try:
@@ -2276,7 +2226,98 @@ class RunnableStepRemoveDirectory(RunnableStep):
                 if exception.errno != errno.ENOTEMPTY:
                     raise
 
-        return 0
+        return None
+
+
+class RunnableStepRemoveFile(RunnableStep):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            sub_process=None,
+            obsolete_file_path_list=None,
+            file_path=None):
+        """Initialise a C{bsf.process.RunnableStepRemoveFile} object.
+
+        @param name: Name
+        @type name: str | None
+        @param program: Program
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[Argument.key, list[Argument]] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
+        @param sub_command: Subordinate C{bsf.process.Command} object
+        @type sub_command: Command | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
+        @type stdin: Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
+        @type stdout: Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
+        @type stderr: Connector | None
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
+        @type dependencies: list[Executable.name] | None
+        @param hold: Hold on job scheduling
+        @type hold: str | None
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str | None
+        @param process_name: Process name
+        @type process_name: str | None
+        @param sub_process: C{subprocess.Popen} object
+        @type sub_process: Popen | None
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
+        @type obsolete_file_path_list: list[str] | None
+        @param file_path: File path
+        @type file_path: str | None
+        """
+        super(RunnableStepRemoveFile, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            sub_process=sub_process,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        self.file_path = file_path
+
+        return
+
+    def run(self, debug=0):
+        """Run a C{bsf.process.RunnableStepRemoveFile} object.
+
+        @param debug: Debug level
+        @type debug: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
+        """
+        os.remove(path=self.file_path)
+
+        return None
 
 
 class RunnableStepRemoveTree(RunnableStep):
@@ -2368,18 +2409,13 @@ class RunnableStepRemoveTree(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableRemoveTree} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.ignore_errors:
             ignore_errors = True
@@ -2388,7 +2424,7 @@ class RunnableStepRemoveTree(RunnableStep):
 
         shutil.rmtree(path=self.file_path, ignore_errors=ignore_errors)
 
-        return 0
+        return None
 
 
 class RunnableStepSleep(RunnableStep):
@@ -2476,23 +2512,18 @@ class RunnableStepSleep(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepSleep} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.sleep_time is not None:
             time.sleep(self.sleep_time)
 
-        return 0
+        return None
 
 
 class RunnableStepSetEnvironment(RunnableStep):
@@ -2584,20 +2615,15 @@ class RunnableStepSetEnvironment(RunnableStep):
 
         return
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.process.RunnableStepSetEnvironment} object.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         if self.key is not None:
             os.environ[self.key] = self.value
 
-        return 0
+        return None

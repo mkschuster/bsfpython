@@ -755,19 +755,19 @@ class Aligner(Analysis):
                 runnable_step = RunnableStepMakeDirectory(
                     name='make_directory',
                     directory_path=file_path_align.output_directory)
-                runnable_align.add_runnable_step_pre(runnable_step=runnable_step)
+                runnable_align.add_runnable_step_prologue(runnable_step=runnable_step)
 
                 # Make named pipes via RunnableStepMakeNamedPipe.
 
                 runnable_step = RunnableStepMakeNamedPipe(
                     name='make_fifo_aligned_sam',
                     file_path=file_path_align.aligned_sam)
-                runnable_align.add_runnable_step_pre(runnable_step=runnable_step)
+                runnable_align.add_runnable_step_prologue(runnable_step=runnable_step)
 
                 runnable_step = RunnableStepMakeNamedPipe(
                     name='make_fifo_cleaned_bam',
                     file_path=file_path_align.cleaned_bam)
-                runnable_align.add_runnable_step_pre(runnable_step=runnable_step)
+                runnable_align.add_runnable_step_prologue(runnable_step=runnable_step)
 
                 # Start the programs in reverse order so that they do not block while opening their named pipe(s).
 

@@ -59,7 +59,7 @@ if isinstance(runnable, ConsecutiveRunnable):
         elif name_space.format == 'str':
             print('\n' + 'RunnableStep command str:', runnable_step.command_str())
 elif isinstance(runnable, ConcurrentRunnable):
-    for runnable_step in runnable.runnable_step_list_pre:
+    for runnable_step in runnable.runnable_step_list_prologue:
         if name_space.format == 'list':
             print('\n' + 'RunnableStep pre command list:', runnable_step.command_list())
         elif name_space.format == 'str':
@@ -71,7 +71,7 @@ elif isinstance(runnable, ConcurrentRunnable):
         elif name_space.format == 'str':
             print('\n' + 'RunnableStep concurrent command str:', runnable_step.command_str())
 
-    for runnable_step in runnable.runnable_step_list_post:
+    for runnable_step in runnable.runnable_step_list_epilogue:
         if name_space.format == 'list':
             print('\n' + 'RunnableStep post command list:', runnable_step.command_list())
         elif name_space.format == 'str':
