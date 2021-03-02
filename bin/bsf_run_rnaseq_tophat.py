@@ -67,10 +67,10 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(input_path)
 
-    child_return_code_local = executable_samtools.run()
+    local_exception_str_list = executable_samtools.run()
 
-    if child_return_code_local:
-        raise Exception('Could not complete the samtools view step on the BAM file for the replicate.')
+    if local_exception_str_list:
+        raise Exception('\n'.join(local_exception_str_list))
 
     # SAM header lines that need propagating around FASTQ files. Sigh!
     sam_header_pg = list()
@@ -113,10 +113,10 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code_local = executable_java.run()
+    local_exception_str_list = executable_java.run()
 
-    if child_return_code_local:
-        raise Exception('Could not complete the Picard SamToFastq step.')
+    if local_exception_str_list:
+        raise Exception('\n'.join(local_exception_str_list))
 
     platform_unit = str()
     for line_str in sam_header_rg:
@@ -199,7 +199,7 @@ if not os.path.isdir(path_temporary):
         if exception.errno != errno.EEXIST:
             raise
 
-runnable_step_tophat = pickler_dict['runnable_step']
+runnable_step_tophat: RunnableStep = pickler_dict['runnable_step']
 assert isinstance(runnable_step_tophat, RunnableStep)
 
 if name_space.debug > 1:
@@ -265,10 +265,10 @@ if name_space.debug > 1:
     print('Executable after conversion')
     sys.stdout.writelines(runnable_step_tophat.trace(level=1))
 
-child_return_code = runnable_step_tophat.run()
+exception_str_list = runnable_step_tophat.run()
 
-if child_return_code:
-    raise Exception('Could not complete the Tophat step.')
+if exception_str_list:
+    raise Exception('\n'.join(exception_str_list))
 
 # Clean up temporary files.
 

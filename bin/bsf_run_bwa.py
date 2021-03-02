@@ -142,10 +142,10 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     samtools_view.add_switch_long(key='no-PG')
     samtools_view.arguments.append(runnable_step_bwa.sub_command.arguments[1])
 
-    child_return_code = samtools.run()
+    exception_str_list = samtools.run()
 
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
+    if exception_str_list:
+        raise Exception('\n'.join(exception_str_list))
 
     with open(file=path_temporary_sam, mode='rt') as input_file:
         for line_str in input_file:
@@ -213,10 +213,10 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     # USE_JDK_INFLATER [false]
     # OPTIONS_FILE Required
 
-    child_return_code = java_process.run()
+    exception_str_list = java_process.run()
 
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(java_process.name))
+    if exception_str_list:
+        raise Exception('\n'.join(exception_str_list))
 
     # The Read Group (@RG) option needs inserting at the BWA stage,
     # otherwise reads are not associated with a read group in the aligned SAM file.
@@ -236,10 +236,10 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     if os.path.getsize(path_fastq_2):
         runnable_step_bwa.sub_command.arguments.append(path_fastq_2)
 
-child_return_code = runnable_step_bwa.run()
+exception_str_list = runnable_step_bwa.run()
 
-if child_return_code:
-    raise Exception('Could not complete the {!r} step.'.format(runnable_step_bwa.name))
+if exception_str_list:
+    raise Exception('\n'.join(exception_str_list))
 
 # Remove the temporary, uncompressed FASTQ files if they exist.
 if os.path.exists(path_fastq_1):
@@ -283,10 +283,10 @@ clean_sam.add_option_pair(key='VERBOSITY', value='WARNING')
 # USE_JDK_INFLATER [false]
 # OPTIONS_FILE Required
 
-child_return_code = java_process.run()
+exception_str_list = java_process.run()
 
-if child_return_code:
-    raise Exception('Could not complete the {!r} step.'.format(java_process.name))
+if exception_str_list:
+    raise Exception('\n'.join(exception_str_list))
 
 # Retrofit the stored SAM header lines if required.
 
@@ -304,10 +304,10 @@ if len(sam_header_pg) or len(sam_header_rg):
     samtools_view.add_switch_long(key='no-PG')
     samtools_view.arguments.append(path_cleaned_sam)
 
-    child_return_code = samtools.run()
+    exception_str_list = samtools.run()
 
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step on the SAM file after CleanSam.'.format(samtools.name))
+    if exception_str_list:
+        raise Exception('\n'.join(exception_str_list))
 
     with open(file=path_temporary_sam, mode='rt') as input_file:
         with open(file=path_header_sam, mode='wt') as output_file:
@@ -368,10 +368,10 @@ if len(sam_header_pg) or len(sam_header_rg):
     # USE_JDK_INFLATER [false]
     # OPTIONS_FILE Required
 
-    child_return_code = java_process.run()
+    exception_str_list = java_process.run()
 
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(java_process.name))
+    if exception_str_list:
+        raise Exception('\n'.join(exception_str_list))
 
     # Remove the now redundant cleaned SAM file.
     os.remove(path_cleaned_sam)
@@ -427,10 +427,10 @@ sort_sam.add_option_pair(key='CREATE_MD5_FILE', value='true')
 # USE_JDK_INFLATER [false]
 # OPTIONS_FILE Required
 
-child_return_code = java_process.run()
+exception_str_list = java_process.run()
 
-if child_return_code:
-    raise Exception('Could not complete the {!r} step.'.format(java_process.name))
+if exception_str_list:
+    raise Exception('\n'.join(exception_str_list))
 
 # Remove the cleaned SAM file.
 

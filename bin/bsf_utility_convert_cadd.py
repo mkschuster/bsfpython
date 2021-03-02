@@ -169,11 +169,10 @@ stdin_executable.add_switch_long(key='decompress')
 stdin_executable.add_switch_long(key='stdout')
 stdin_executable.arguments.append(name_space.input_path)
 
-child_return_code = stdin_executable.run(debug=name_space.debug)
+exception_str_list = stdin_executable.run(debug=name_space.debug)
 
-if child_return_code:
-    raise Exception(
-        'Executable.run() returned exit code ' + repr(child_return_code) + '\n' +
-        'Command list representation: ' + repr(stdin_executable.command_list()))
+if exception_str_list:
+    exception_str_list.append('Command list representation: ' + repr(stdin_executable.command_list()))
+    raise Exception('\n'.join(exception_str_list))
 
 print('All done.')

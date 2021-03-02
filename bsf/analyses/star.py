@@ -333,7 +333,7 @@ class Star(Aligner):
         runnable_step = RunnableStep(
             name='gzip',
             program='gzip')
-        runnable_align.add_runnable_step_post(runnable_step=runnable_step)
+        runnable_align.add_runnable_step_epilogue(runnable_step=runnable_step)
 
         runnable_step.add_switch_long(key='best')
         runnable_step.arguments.append(file_path_align.splice_junctions_tsv)
