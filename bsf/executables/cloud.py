@@ -146,17 +146,13 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
     Attributes:
     """
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.executables.cloud.RunnableStepAzureBlockBlobUpload}.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return 0 on success
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         blob_properties = azure_block_blob_upload(
             file_path=self.source_path,
@@ -169,7 +165,7 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
         print('Azure Blob ETag:', blob_properties.etag)
         print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
 
-        return 0
+        return None
 
 
 class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
@@ -178,17 +174,13 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
     Attributes:
     """
 
-    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+    def run(self, debug=0):
         """Run a C{bsf.executables.cloud.RunnableStepAzureBlockBlobDownload}.
 
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return: Return 0 on success
-        @rtype: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
         """
         blob_properties = azure_block_blob_download(
             file_path=self.source_path,
@@ -201,7 +193,7 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
         print('Azure Blob ETag:', blob_properties.etag)
         print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
 
-        return 0
+        return None
 
 
 if __name__ == '__main__':

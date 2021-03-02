@@ -722,7 +722,7 @@ class IlluminaRunFolderArchive(Analysis):
                     name='md5sum',
                     program='md5sum',
                     stdout=ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt'))
-                runnable_intensities.add_runnable_step_post(runnable_step=runnable_step)
+                runnable_intensities.add_runnable_step_epilogue(runnable_step=runnable_step)
 
                 runnable_step.add_switch_long(key='binary')
 

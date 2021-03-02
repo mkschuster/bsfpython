@@ -30,7 +30,7 @@ import os
 import pickle
 import shutil
 
-from bsf.process import RunnableStep, get_timestamp
+from bsf.process import RunnableStep
 from bsf.standards import Configuration
 
 
@@ -469,7 +469,7 @@ class Runnable(object):
         # Work through the list of bsf.process.RunnableStep objects in logical order.
         # Keep track of the previous bsf.process.RunnableStep.
 
-        child_return_code = 0
+        exception_str_list = None
         runnable_step_current = None
         runnable_step_previous = None
 
@@ -485,12 +485,12 @@ class Runnable(object):
 
             # Do the work.
 
-            child_return_code = runnable_step_current.run()
+            exception_str_list = runnable_step_current.run()
 
             # Upon failure, break out of this loop without deleting obsolete files or altering status files
             # at this point.
 
-            if child_return_code != 0:
+            if exception_str_list:
                 break
 
             # Delete the list of file paths that the current bsf.process.RunnableStep declared to be obsolete now.
@@ -510,7 +510,7 @@ class Runnable(object):
 
             runnable_step_previous = runnable_step_current
 
-        if child_return_code == 0:
+        if not exception_str_list:
             # Upon success, remove the status file of the previous RunnableStep, if it has been defined at this stage.
 
             if runnable_step_previous is not None:
@@ -521,18 +521,7 @@ class Runnable(object):
             if runnable_step_current is not None:
                 self.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
 
-            if child_return_code > 0:
-                return Exception(
-                    get_timestamp() +
-                    ' Child process ' + repr(self.name) + ' ' + repr(runnable_step_current.name) +
-                    ' failed with return code ' +
-                    repr(+child_return_code) + '.')
-            elif child_return_code < 0:
-                return Exception(
-                    get_timestamp() +
-                    ' Child process ' + repr(self.name) + ' ' + repr(runnable_step_current.name) +
-                    ' received signal ' +
-                    repr(-child_return_code) + '.')
+            Exception('\n'.join(exception_str_list))
 
         return None
 
@@ -649,12 +638,12 @@ class ConcurrentRunnable(Runnable):
     C{bsf.process.RunnableStep} or sub-classes thereof.
 
     Attributes:
-    @ivar runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
-    @type runnable_step_list_pre: list[RunnableStep] | None
-    @ivar runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects
+    @ivar runnable_step_list_prologue: Python C{list} of C{bsf.process.RunnableStep} objects run as prologue
+    @type runnable_step_list_prologue: list[RunnableStep] | None
+    @ivar runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects run concurrently
     @type runnable_step_list_concurrent: list[RunnableStep] | None
-    @ivar runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
-    @type runnable_step_list_post: list[RunnableStep] | None
+    @ivar runnable_step_list_epilogue: Python C{list} of C{bsf.process.RunnableStep} objects run as epilogue
+    @type runnable_step_list_epilogue: list[RunnableStep] | None
     """
 
     def __init__(
@@ -665,9 +654,9 @@ class ConcurrentRunnable(Runnable):
             cache_directory=None,
             cache_path_dict=None,
             debug=0,
-            runnable_step_list_pre=None,
+            runnable_step_list_prologue=None,
             runnable_step_list_concurrent=None,
-            runnable_step_list_post=None):
+            runnable_step_list_epilogue=None):
         """Initialise a C{bsf.ConcurrentRunnable}.
 
         @param name: Name
@@ -685,12 +674,12 @@ class ConcurrentRunnable(Runnable):
         @type cache_path_dict: dict[str, str] | None
         @param debug: Integer debugging level
         @type debug: int
-        @param runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
-        @type runnable_step_list_pre: list[RunnableStep] | None
-        @param runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects
+        @param runnable_step_list_prologue: Python C{list} of C{bsf.process.RunnableStep} objects run as prologue
+        @type runnable_step_list_prologue: list[RunnableStep] | None
+        @param runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects run concurrently
         @type runnable_step_list_concurrent: list[RunnableStep] | None
-        @param runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
-        @type runnable_step_list_post: list[RunnableStep] | None
+        @param runnable_step_list_epilogue: Python C{list} of C{bsf.process.RunnableStep} objects run as epilogue
+        @type runnable_step_list_epilogue: list[RunnableStep] | None
         """
         super(ConcurrentRunnable, self).__init__(
             name=name,
@@ -700,20 +689,20 @@ class ConcurrentRunnable(Runnable):
             cache_path_dict=cache_path_dict,
             debug=debug)
 
-        if runnable_step_list_pre is None:
-            self.runnable_step_list_pre = list()
+        if runnable_step_list_prologue is None:
+            self.runnable_step_list_prologue = list()
         else:
-            self.runnable_step_list_pre = runnable_step_list_pre
+            self.runnable_step_list_prologue = runnable_step_list_prologue
 
         if runnable_step_list_concurrent is None:
             self.runnable_step_list_concurrent = list()
         else:
             self.runnable_step_list_concurrent = runnable_step_list_concurrent
 
-        if runnable_step_list_post is None:
-            self.runnable_step_list_post = list()
+        if runnable_step_list_epilogue is None:
+            self.runnable_step_list_epilogue = list()
         else:
-            self.runnable_step_list_post = runnable_step_list_post
+            self.runnable_step_list_epilogue = runnable_step_list_epilogue
 
         return
 
@@ -736,9 +725,9 @@ class ConcurrentRunnable(Runnable):
         str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
         str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
-        str_list.append('{}  runnable_step_list_pre: {!r}\n'.format(indent, self.runnable_step_list_pre))
+        str_list.append('{}  runnable_step_list_prologue: {!r}\n'.format(indent, self.runnable_step_list_prologue))
         str_list.append('{}  runnable_step_list_concurrent: {!r}\n'.format(indent, self.runnable_step_list_concurrent))
-        str_list.append('{}  runnable_step_list_post: {!r}\n'.format(indent, self.runnable_step_list_post))
+        str_list.append('{}  runnable_step_list_epilogue: {!r}\n'.format(indent, self.runnable_step_list_epilogue))
         str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
 
         str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
@@ -746,7 +735,7 @@ class ConcurrentRunnable(Runnable):
             str_list.append('{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key]))
 
         str_list.append('{}  Python list of pre RunnableStep objects:\n'.format(indent))
-        for runnable_step in self.runnable_step_list_pre:
+        for runnable_step in self.runnable_step_list_prologue:
             str_list.extend(runnable_step.trace(level=level + 1))
 
         str_list.append('{}  Python list of concurrent RunnableStep objects:\n'.format(indent))
@@ -754,13 +743,13 @@ class ConcurrentRunnable(Runnable):
             str_list.extend(runnable_step.trace(level=level + 1))
 
         str_list.append('{}  Python list of postRunnableStep objects:\n'.format(indent))
-        for runnable_step in self.runnable_step_list_post:
+        for runnable_step in self.runnable_step_list_epilogue:
             str_list.extend(runnable_step.trace(level=level + 1))
 
         return str_list
 
-    def add_runnable_step_pre(self, runnable_step):
-        """Convenience method to add a C{bsf.process.RunnableStep} to the pre-run list.
+    def add_runnable_step_prologue(self, runnable_step):
+        """Convenience method to add a C{bsf.process.RunnableStep} to the prologue list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: RunnableStep | None
@@ -768,12 +757,12 @@ class ConcurrentRunnable(Runnable):
         if runnable_step is None:
             return
 
-        self.runnable_step_list_pre.append(runnable_step)
+        self.runnable_step_list_prologue.append(runnable_step)
 
         return
 
-    def add_runnable_step_post(self, runnable_step):
-        """Convenience method to add a C{bsf.process.RunnableStep} to the post-run list.
+    def add_runnable_step_epilogue(self, runnable_step):
+        """Convenience method to add a C{bsf.process.RunnableStep} to the epilogue list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: RunnableStep | None
@@ -781,12 +770,12 @@ class ConcurrentRunnable(Runnable):
         if runnable_step is None:
             return
 
-        self.runnable_step_list_post.append(runnable_step)
+        self.runnable_step_list_epilogue.append(runnable_step)
 
         return
 
     def add_runnable_step(self, runnable_step):
-        """Convenience method to facilitate initialising and adding a C{bsf.process.RunnableStep}.
+        """Convenience method to add a C{bsf.process.RunnableStep} to the concurrent list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: RunnableStep | None
