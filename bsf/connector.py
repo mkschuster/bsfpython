@@ -70,17 +70,12 @@ class ConnectorFile(Connector):
 
 
 class ConnectorPipe(Connector):
-    """The C{ConnectorPipe} class represents an abstract pipe to a downstream sub-process.
+    """The C{ConnectorPipe} class represents an abstract pipe.
 
     Attributes:
     """
 
-    def __init__(self):
-        """Initialise a C{ConnectorPipe} object.
-        """
-        super(ConnectorPipe, self).__init__()
-
-        return
+    pass
 
 
 class ConnectorPipeNamed(ConnectorFile):
@@ -93,7 +88,7 @@ class ConnectorPipeNamed(ConnectorFile):
 
 
 class ConcurrentProcess(Connector):
-    """The C{ConcurrentProcess} class represents a concrete pipe to or from a concurrent process.
+    """The C{ConcurrentProcess} class represents a pipe to or from a concurrent process.
 
     Attributes:
     @ivar name: C{bsf.process.Executable.name}
@@ -143,8 +138,8 @@ class StandardStream(Connector):
     @type thread_joins: int
     @ivar thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
     @type thread_timeout: int
-    @ivar thread: C{threading.Thread} object | None
-    @type thread: Thread
+    @ivar thread: C{threading.Thread} object
+    @type thread: Thread | None
     """
 
     def __init__(
