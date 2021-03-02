@@ -30,7 +30,7 @@ restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
 import errno
 import os
 from io import TextIOWrapper
-from subprocess import Popen, PIPE
+from subprocess import Popen, DEVNULL, PIPE
 from threading import Lock, Thread
 
 from bsf.connector import *
@@ -72,7 +72,7 @@ def run(runnable):
         @rtype: TextIOWrapper | PIPE
         """
         if isinstance(_connector, ElectronicSink):
-            return open(file='/dev/null', mode='wb')
+            return DEVNULL
 
         if isinstance(_connector, ConnectorFile):
             if isinstance(_connector, ConnectorPipeNamed):
@@ -140,11 +140,10 @@ def run(runnable):
         try:
             runnable_step.sub_process = Popen(
                 args=runnable_step.command_list(),
+                bufsize=1,
                 stdin=_map_connector(_connector=runnable_step.stdin),
                 stdout=_map_connector(_connector=runnable_step.stdout),
                 stderr=_map_connector(_connector=runnable_step.stderr),
-                close_fds=True,
-                shell=False,
                 text=True)
         except OSError as exception:
             if exception.errno == errno.ENOENT:
@@ -174,7 +173,7 @@ def run(runnable):
                 if connector.thread_callable is None:
                     # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
                     connector.thread = Thread(
-                        target=connector.thread_callable,
+                        target=Executable.process_stdout,
                         args=[runnable_step.sub_process.stdout, thread_lock, runnable.debug],
                         kwargs={'stdout_path': connector.file_path})
                 else:

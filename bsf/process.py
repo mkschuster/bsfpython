@@ -922,12 +922,10 @@ class Executable(Command):
             try:
                 self.sub_process = Popen(
                     args=self.command_list(),
-                    bufsize=0,
+                    bufsize=1,
                     stdin=_map_connector(_connector=self.stdin),
                     stdout=_map_connector(_connector=self.stdout),
                     stderr=_map_connector(_connector=self.stderr),
-                    close_fds='posix' in sys.builtin_module_names,
-                    shell=False,
                     text=True)
             except OSError as exception:
                 if exception.errno == errno.ENOENT:

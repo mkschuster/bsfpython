@@ -27,7 +27,6 @@
 #  GATK VariantAnnotator.
 #
 import os
-import sys
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE
 
@@ -40,12 +39,9 @@ def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
     output_file = open(file=output_file_path, mode='wb')
     output_process = Popen(
         args=['bgzip'],
-        bufsize=-1,
         stdin=PIPE,
         stdout=output_file,
         stderr=None,
-        shell=False,
-        close_fds='posix' in sys.builtin_module_names,
         text=True)
     thread_lock.release()
 
