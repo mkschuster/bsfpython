@@ -521,7 +521,7 @@ class Runnable(object):
             if runnable_step_current is not None:
                 self.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
 
-            Exception('\n'.join(exception_str_list))
+            return Exception('\n'.join(exception_str_list))
 
         return None
 

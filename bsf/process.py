@@ -1030,7 +1030,6 @@ class Executable(Command):
         @return: Python C{list} of Python C{str} (exception) objects
         @rtype: list[str] | None
         """
-
         return run_executables(executable_list=[self], debug=debug)
 
 
@@ -2226,6 +2225,97 @@ class RunnableStepRemoveDirectory(RunnableStep):
             except OSError as exception:
                 if exception.errno != errno.ENOTEMPTY:
                     raise
+
+        return None
+
+
+class RunnableStepRemoveFile(RunnableStep):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            sub_process=None,
+            obsolete_file_path_list=None,
+            file_path=None):
+        """Initialise a C{bsf.process.RunnableStepRemoveFile} object.
+
+        @param name: Name
+        @type name: str | None
+        @param program: Program
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[Argument.key, list[Argument]] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
+        @param sub_command: Subordinate C{bsf.process.Command} object
+        @type sub_command: Command | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
+        @type stdin: Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
+        @type stdout: Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector} object
+        @type stderr: Connector | None
+        @param dependencies: Python C{list} of Python C{str} (C{bsf.process.Executable.name}) objects
+            in the context of C{bsf.analysis.Stage} dependencies
+        @type dependencies: list[Executable.name] | None
+        @param hold: Hold on job scheduling
+        @type hold: str | None
+        @param submit: Submit this C{bsf.process.Executable} object during C{bsf.analysis.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str | None
+        @param process_name: Process name
+        @type process_name: str | None
+        @param sub_process: C{subprocess.Popen} object
+        @type sub_process: Popen | None
+        @param obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
+            after successfully completing C{bsf.process.RunnableStep.run}
+        @type obsolete_file_path_list: list[str] | None
+        @param file_path: File path
+        @type file_path: str | None
+        """
+        super(RunnableStepRemoveFile, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            sub_process=sub_process,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        self.file_path = file_path
+
+        return
+
+    def run(self, debug=0):
+        """Run a C{bsf.process.RunnableStepRemoveFile} object.
+
+        @param debug: Debug level
+        @type debug: int
+        @return: Python C{list} of Python C{str} (exception) objects
+        @rtype: list[str] | None
+        """
+        os.remove(path=self.file_path)
 
         return None
 
