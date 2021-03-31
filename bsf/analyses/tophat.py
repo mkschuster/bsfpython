@@ -29,6 +29,7 @@ import os
 
 from bsf.analyses.aligner import Aligner, FilePathAlign as AlignerFilePathAlign
 from bsf.connector import ConnectorFile
+from bsf.procedure import ConcurrentRunnable
 from bsf.process import RunnableStep, RunnableStepLink
 from bsf.standards import Configuration, Index, StandardFilePath, Transcriptome
 
@@ -288,7 +289,7 @@ class Tophat2(Aligner):
         """Add one or more Tophat2-specific C{RunnableStep} objects to the C{ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: bsf.procedure.ConcurrentRunnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
@@ -327,7 +328,7 @@ class Tophat2(Aligner):
         # NOTE: In case a single Tophat2 thread is requested, the final BAM file is moved to "accepted_hits.bam",
         # which is not compatible with the named pipe of the same name. The tophat process needs to open
         # the named pipe fpr writing. The --no-convert-bam option implies that the Tophat2-internal samtools view
-        # command writes to teh named pipe.
+        # command writes to the named pipe.
         runnable_step.add_switch_long(key='no-convert-bam')
 
         # Picard MergeBamAlignments requires the SQ dictionary in FASTA order.

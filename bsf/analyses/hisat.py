@@ -31,8 +31,10 @@ Project:  https://ccb.jhu.edu/software/hisat2/index.shtml
 import os
 
 from bsf.analyses.aligner import Aligner, FilePathAlign as AlignerFilePathAlign
+from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
+from bsf.procedure import ConcurrentRunnable
 from bsf.process import RunnableStep
 from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
@@ -177,7 +179,7 @@ class Hisat2(Aligner):
         @param debug: Integer debugging level
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[bsf.analysis.Stage] | None
+        @type stage_list: list[Stage] | None
         @param collection: C{bsf.ngs.Collection}
         @type collection: Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -271,9 +273,9 @@ class Hisat2(Aligner):
         C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: bsf.procedure.ConcurrentRunnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: bsf.analysis.Stage
+        @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | None
         @param file_path_2: FASTQ file path 2

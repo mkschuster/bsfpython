@@ -30,6 +30,7 @@ import os
 from bsf.analyses.aligner import Aligner, FilePathAlign
 from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
+from bsf.procedure import ConcurrentRunnable
 from bsf.process import Command, RunnableStep
 from bsf.standards import StandardFilePath
 
@@ -78,7 +79,7 @@ class MaximalExactMatches(Aligner):
         """Add a BWA MEM-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: bsf.procedure.ConcurrentRunnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
