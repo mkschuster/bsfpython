@@ -32,10 +32,12 @@ import os
 
 from bsf.analyses.aligner import Aligner, \
     FilePathAlign as AlignerFilePathAlign, \
+    FilePathSample as AlignerFilePathSample, \
     FilePathSummary as AlignerFilePathSummary
 from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
+from bsf.procedure import ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStep
 from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
@@ -66,6 +68,28 @@ class FilePathAlign(AlignerFilePathAlign):
         self.splice_junctions_tsv = os.path.join(prefix, '_'.join((prefix, 'SJ.out.tab')))
 
         self.star_prefix = os.path.join(prefix, '_'.join((prefix, '')))
+
+        return
+
+
+class FilePathSample(AlignerFilePathSample):
+    """The C{bsf.analyses.star.FilePathSample} class models file paths at the sample stage.
+
+    Attributes:
+
+    """
+
+    def __init__(self, prefix):
+        """
+
+        @param prefix:
+        """
+        super(FilePathSample, self).__init__(prefix=prefix)
+
+        self.prefix = os.path.join(prefix, prefix)
+        self.sample_wig = os.path.join(prefix, prefix + '.wig')
+        self.sample_bw = os.path.join(prefix, prefix + '.bw')
+        self.sample_bwi = os.path.join(prefix, prefix + '_bwi.txt')
 
         return
 
@@ -153,6 +177,17 @@ class Star(Aligner):
         @rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
+
+    @classmethod
+    def get_file_path_sample(cls, sample_name):
+        """Get a C{FilePathSample} object from this or a sub-class.
+
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
+        @return: C{FilePathAlign} or sub-class object
+        @rtype: FilePathSample
+        """
+        return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
     @classmethod
     def get_file_path_summary(cls):
@@ -284,10 +319,11 @@ class Star(Aligner):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.ConcurrentRunnable}.
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: bsf.procedure.ConcurrentRunnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
@@ -340,11 +376,46 @@ class Star(Aligner):
 
         return
 
+    def add_runnable_step_sample(self, runnable_sample, stage_sample):
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConsecutiveRunnable}.
+
+        @param runnable_sample: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_sample: ConsecutiveRunnable
+        @param stage_sample: C{bsf.analysis.Stage}
+        @type stage_sample: Stage
+        """
+        file_path_sample = FilePathSample(prefix=runnable_sample.name)
+
+        # This requires kentUtils to automatically convert via wigToBigWig.
+        runnable_step = RunnableStep(
+            name='bam2wig',
+            program='bam2wig.py',
+            obsolete_file_path_list=[file_path_sample.sample_wig])
+        runnable_step.add_option_long(key='input-file', value=file_path_sample.sample_bam)
+        runnable_step.add_option_long(
+            key='chromSize',
+            value=StandardFilePath.get_resource_genome_fasta_index(genome_version=self.genome_version))
+        runnable_step.add_option_long(key='out-prefix', value=file_path_sample.prefix)
+
+        runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step = RunnableStep(
+            name='bigwig_info',
+            program='bigWigInfo',
+            stdout=ConnectorFile(file_path=file_path_sample.sample_bwi, file_mode='wt'))
+        runnable_step.arguments.append(file_path_sample.sample_bw)
+
+        runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+        return
+
     def add_runnable_step_summary(self, runnable_summary, stage_summary):
-        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConsecutiveRunnable}.
 
         @param runnable_summary: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_summary: bsf.procedure.ConsecutiveRunnable
+        @type runnable_summary: ConsecutiveRunnable
         @param stage_summary: C{bsf.analysis.Stage}
         @type stage_summary: Stage
         """
@@ -408,6 +479,37 @@ class Star(Aligner):
     def report(self):
         """Create a report.
         """
+
+        def get_bigwig_info_signal_range(file_path):
+            """Private function to read the bigWig signal range from a bigWig information file.
+
+            @param file_path: bigWigInfo file path
+            @type file_path: str
+            @return: UCSC Track Hub "type bigWig" line with optional signal range
+            @rtype: str
+            """
+            # NOTE: This is a copy of ChIPSeq.report.get_bigwig_info_signal_range()
+            if os.path.isabs(file_path):
+                file_path_absolute = file_path
+            else:
+                file_path_absolute = os.path.join(self.genome_directory, file_path)
+
+            if os.path.exists(file_path_absolute):
+                minimum = None
+                maximum = None
+
+                with open(file=file_path_absolute, mode='rt') as file_handle:
+                    for line in file_handle:
+                        if line.startswith('min:'):
+                            line_list = line.split()
+                            minimum = line_list[1].strip()
+                        if line.startswith('max:'):
+                            line_list = line.split()
+                            maximum = line_list[1].strip()
+
+                return 'type bigWig ' + minimum + ' ' + maximum + '\n'
+            else:
+                return 'type bigWig\n'
 
         def report_html():
             """Private function to create a HTML report.
@@ -778,6 +880,16 @@ class Star(Aligner):
             str_list.append('centerLabelsDense on\n')
             str_list.append('\n')
 
+            str_list.append('track coverage\n')
+            str_list.append('type bigWig\n')
+            str_list.append('shortLabel Coverage\n')
+            str_list.append('longLabel ' + self.name + ' Coverage\n')
+            str_list.append('visibility hide\n')
+            str_list.append('compositeTrack on\n')
+            str_list.append('allButtonPair on\n')  # Has to be off to allow for configuration via a matrix.
+            str_list.append('centerLabelsDense on\n')
+            str_list.append('\n')
+
             # Sample-specific tracks
 
             for sample in self.sample_list:
@@ -790,7 +902,7 @@ class Star(Aligner):
                 file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
                 #
-                # Add a trackDB entry for each Tophat accepted_hits.bam file.
+                # Add a trackDB entry for each STAR BAM file.
                 #
                 # Common settings
                 str_list.append('  track ' + sample.name + '_alignment\n')
@@ -809,6 +921,39 @@ class Star(Aligner):
 
                 # Composite track settings
                 str_list.append('  parent alignment on\n')
+                str_list.append('  centerLabelsDense on\n')
+                str_list.append('  \n')
+
+                # Add a trackDB entry for each STAR bigWig file.
+                #
+                # Common settings
+                str_list.append('  track ' + sample.name + '_coverage\n')
+                str_list.append('  ' + get_bigwig_info_signal_range(file_path=file_path_sample.sample_bwi))
+                str_list.append('  shortLabel ' + sample.name + '_coverage\n')
+                str_list.append('  longLabel ' + sample.name + ' STAR RNA-seq alignment coverage\n')
+                str_list.append('  bigDataUrl ' + file_path_sample.sample_bw + '\n')
+                # str_list.append('  html ...\n')
+                str_list.append('  visibility full\n')
+
+                # Common optional settings
+                str_list.append('  color 0,0,0\n')
+
+                # bigWig - Signal graphing track settings
+                str_list.append('  alwaysZero on\n')
+                str_list.append('  autoScale on\n')
+                str_list.append('  graphTypeDefault bar\n')
+                str_list.append('  maxHeightPixels 100:60:20\n')
+                # str_list.append('  maxWindowToQuery 10000000\n')
+                # str_list.append('  smoothingWindow 5\n')
+                # str_list.append('  transformFunc NONE\n')
+                # str_list.append('  viewLimits 0:45\n')
+                # str_list.append('  viewLimitsMax 0:50\n')
+                # str_list.append('  windowingFunction maximum\n')
+                # str_list.append('  yLineMark <#>\n')
+                # str_list.append('  yLineOnOff on \n')
+                # str_list.append('  gridDefault on\n')
+                # Composite track settings
+                str_list.append('  parent coverage on\n')
                 str_list.append('  centerLabelsDense on\n')
                 str_list.append('  \n')
 

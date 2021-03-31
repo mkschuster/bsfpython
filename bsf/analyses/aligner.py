@@ -32,7 +32,7 @@ import warnings
 
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
-from bsf.procedure import FilePath, Runnable, ConcurrentRunnable, ConsecutiveRunnable
+from bsf.procedure import FilePath, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
     RunnableStepMove, RunnableStep, RunnableStepLink
 from bsf.standards import Configuration, StandardFilePath, JavaArchive
@@ -553,10 +553,11 @@ class Aligner(Analysis):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConcurrentRunnable}.
 
         @param runnable_align: C{bsf.procedure.Runnable}
-        @type runnable_align: Runnable
+        @type runnable_align: ConcurrentRunnable
         @param stage_align: C{bsf.analysis.Stage}
         @type stage_align: Stage
         @param file_path_1: FASTQ file path 1
@@ -566,11 +567,23 @@ class Aligner(Analysis):
         """
         return
 
-    def add_runnable_step_summary(self, runnable_summary, stage_summary):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
+    def add_runnable_step_sample(self, runnable_sample, stage_sample):
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConsecutiveRunnable}.
 
-        @param runnable_summary: C{bsf.procedure.Runnable}
-        @type runnable_summary: Runnable
+        @param runnable_sample: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_sample: ConsecutiveRunnable
+        @param stage_sample: C{bsf.analysis.Stage}
+        @type stage_sample: Stage
+        """
+        return
+
+    def add_runnable_step_summary(self, runnable_summary, stage_summary):
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConsecutiveRunnable}.
+
+        @param runnable_summary: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_summary: ConsecutiveRunnable
         @param stage_summary: C{bsf.analysis.Stage}
         @type stage_summary: Stage
         """
@@ -780,7 +793,7 @@ class Aligner(Analysis):
                         file_path_align.cleaned_bam,
                     ],
                     java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx4G',
+                    java_heap_maximum='Xmx5G',
                     java_jar_path=self.java_archive_picard,
                     picard_command='SortSam')
                 runnable_align.add_runnable_step(runnable_step=runnable_step)
@@ -1275,6 +1288,10 @@ class Aligner(Analysis):
             # GA4GH_CLIENT_SECRETS [client_secrets.json]
             # USE_JDK_DEFLATER [false]
             # USE_JDK_INFLATER [false]
+
+            # Add aligner-specific RunnableStep objects.
+
+            self.add_runnable_step_sample(runnable_sample=runnable_sample, stage_sample=stage_sample)
 
         #################
         # Summary Stage #
