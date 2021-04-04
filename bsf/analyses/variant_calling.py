@@ -6563,22 +6563,19 @@ class VariantCallingGATK(Analysis):
             str_list.append('track Alignments\n')
             str_list.append('shortLabel Alignments\n')
             str_list.append('longLabel BWA NGS read alignments\n')
-            str_list.append('superTrack on show\n')
-            str_list.append('group alignments\n')
+            str_list.append('superTrack on\n')
             str_list.append('\n')
 
             str_list.append('track Callable\n')
             str_list.append('shortLabel Callable\n')
             str_list.append('longLabel Callable\n')
-            str_list.append('superTrack on show\n')
-            str_list.append('group callable\n')
+            str_list.append('superTrack on\n')
             str_list.append('\n')
 
             str_list.append('track Variants\n')
             str_list.append('shortLabel Variants\n')
             str_list.append('longLabel Variant calls\n')
-            str_list.append('superTrack on show\n')
-            str_list.append('group variants\n')
+            str_list.append('superTrack on\n')
             str_list.append('\n')
 
             # Sample-specific tracks
@@ -6597,10 +6594,9 @@ class VariantCallingGATK(Analysis):
                 file_path_split_cohort_snpeff = self.get_file_path_split_cohort_snpeff(sample_name=sample.name)
                 file_path_split_cohort_vep = self.get_file_path_split_cohort_vep(sample_name=sample.name)
 
-                #
                 #  Alignments track
                 #
-                # Common settings
+                # Common track settings
                 str_list.append('track ' + sample.name + '_alignments\n')
                 str_list.append('type bam\n')
                 str_list.append('shortLabel ' + sample.name + '_alignments\n')
@@ -6608,14 +6604,10 @@ class VariantCallingGATK(Analysis):
                 str_list.append('bigDataUrl ' + file_path_process_sample.realigned_bam + '\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility squish\n')
-
-                # Common optional settings
+                # Common optional track settings
                 str_list.append('color 0,0,0\n')
-
                 # bam/cram - Compressed Sequence Alignment track settings
-                # None
-
-                # Composite track settings
+                # Supertrack settings
                 str_list.append('parent Alignments\n')
                 str_list.append('\n')
 
@@ -6623,10 +6615,9 @@ class VariantCallingGATK(Analysis):
                         os.path.join(
                             self.genome_directory,
                             file_path_diagnose_sample.callable_bb)):
-                    #
                     #  Callable track
                     #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track ' + sample.name + '_callable\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + sample.name + '_callable\n')
@@ -6634,21 +6625,16 @@ class VariantCallingGATK(Analysis):
                     str_list.append('bigDataUrl ' + file_path_diagnose_sample.callable_bb + '\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility squish\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bigBed - Item or region track settings
-                    # None
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Callable\n')
                     str_list.append('\n')
 
-                #
                 # snpEff Variants track
                 #
-                # Common settings
+                # Common track settings
                 str_list.append('track ' + sample.name + '_snpeff\n')
                 str_list.append('type vcfTabix\n')
                 str_list.append('shortLabel ' + sample.name + '_snpeff\n')
@@ -6656,19 +6642,15 @@ class VariantCallingGATK(Analysis):
                 str_list.append('bigDataUrl ' + file_path_split_cohort_snpeff.sample_vcf + '\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility dense\n')
-
-                # Common optional settings
-
-                # vcfTabix specific settings
-
-                # Composite track settings
+                # Common optional track settings
+                # vcfTabix - Variant Call Format (indexed by tabix) track settings
+                # Supertrack settings
                 str_list.append('parent Variants\n')
                 str_list.append('\n')
 
-                #
                 # Ensembl VEP Variants track
                 #
-                # Common settings
+                # Common track settings
                 str_list.append('track ' + sample.name + '_vep\n')
                 str_list.append('type vcfTabix\n')
                 str_list.append('shortLabel ' + sample.name + '_vep\n')
@@ -6676,12 +6658,9 @@ class VariantCallingGATK(Analysis):
                 str_list.append('bigDataUrl ' + file_path_split_cohort_vep.sample_vcf + '\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility dense\n')
-
-                # Common optional settings
-
-                # vcfTabix specific settings
-
-                # Composite track settings
+                # Common optional track settings
+                # vcfTabix - Variant Call Format (indexed by tabix) track settings
+                # Supertrack settings
                 str_list.append('parent Variants\n')
                 str_list.append('\n')
 

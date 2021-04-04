@@ -1488,6 +1488,36 @@ class Analysis(object):
 
         return
 
+    def ucsc_hub_bigwig_info_signal_range(self, file_path):
+        """Read the bigWig signal range from a bigWig information file and return a UCSC Track Hub "type bigWig" line.
+
+        @param file_path: bigWigInfo file path
+        @type file_path: str
+        @return: UCSC Track Hub "type bigWig" line with optional signal range
+        @rtype: str
+        """
+        if os.path.isabs(file_path):
+            file_path_absolute = file_path
+        else:
+            file_path_absolute = os.path.join(self.genome_directory, file_path)
+
+        if os.path.exists(file_path_absolute):
+            minimum = None
+            maximum = None
+
+            with open(file=file_path_absolute, mode='rt') as file_handle:
+                for line in file_handle:
+                    if line.startswith('min:'):
+                        line_list = line.split()
+                        minimum = line_list[1].strip()
+                    if line.startswith('max:'):
+                        line_list = line.split()
+                        maximum = line_list[1].strip()
+
+            return 'type bigWig ' + minimum + ' ' + maximum + '\n'
+        else:
+            return 'type bigWig\n'
+
     def check_state(self):
         """Check the state of each C{bsf.analysis.Stage}.
         """

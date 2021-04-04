@@ -27,7 +27,9 @@ A package of classes and methods supporting the Tophat aligner.
 #
 import os
 
-from bsf.analyses.aligner import Aligner, FilePathAlign as AlignerFilePathAlign
+from bsf.analyses.aligner import Aligner, \
+    FilePathAlign as AlignerFilePathAlign, \
+    FilePathSample
 from bsf.connector import ConnectorFile
 from bsf.procedure import ConcurrentRunnable
 from bsf.process import RunnableStep, RunnableStepLink
@@ -49,7 +51,7 @@ class FilePathAlign(AlignerFilePathAlign):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.tophat.FilePathAlign} object
+        """Initialise a C{bsf.analyses.tophat.FilePathAlign} object.
 
         @param prefix: Prefix
         @type prefix: str
@@ -369,7 +371,42 @@ class Tophat2(Aligner):
             name='link_align_summary_txt',
             source_path=file_path_align.align_summary_txt_link_source,
             target_path=file_path_align.align_summary_txt_link_target)
-        runnable_align.add_runnable_step(runnable_step=runnable_step)
+        runnable_align.add_runnable_step_epilogue(runnable_step=runnable_step)
+
+        return
+
+    def add_runnable_step_sample(self, runnable_sample, stage_sample):
+        """Add one or more Tophat2-specific C{bsf.process.RunnableStep} objects
+        to the C{bsf.procedure.ConsecutiveRunnable}.
+
+        @param runnable_sample: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_sample: ConsecutiveRunnable
+        @param stage_sample: C{bsf.analysis.Stage}
+        @type stage_sample: Stage
+        """
+        # NOTE: This method a copy of STAR.add_runnable_step_sample().
+        file_path_sample = FilePathSample(prefix=runnable_sample.name)
+
+        # This requires kentUtils to automatically convert via wigToBigWig.
+        runnable_step = RunnableStep(
+            name='bam2wig',
+            program='bam2wig.py',
+            obsolete_file_path_list=[file_path_sample.sample_wig])
+        runnable_step.add_option_long(key='input-file', value=file_path_sample.sample_bam)
+        runnable_step.add_option_long(
+            key='chromSize',
+            value=StandardFilePath.get_resource_genome_fasta_index(genome_version=self.genome_version))
+        runnable_step.add_option_long(key='out-prefix', value=file_path_sample.prefix_prefix)
+
+        runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step = RunnableStep(
+            name='bigwig_info',
+            program='bigWigInfo',
+            stdout=ConnectorFile(file_path=file_path_sample.sample_bwi, file_mode='wt'))
+        runnable_step.arguments.append(file_path_sample.sample_bw)
+
+        runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
         return
 

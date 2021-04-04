@@ -3420,7 +3420,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel TopHat RNA-seq read alignments\n')
             str_list.append('visibility hide\n')
             str_list.append('superTrack on\n')
-            str_list.append('group alignments\n')
             str_list.append('\n')
 
             str_list.append('track Assemblies\n')
@@ -3428,7 +3427,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel Cuffmerge transcript structures\n')
             str_list.append('visibility full\n')
             str_list.append('superTrack on\n')
-            str_list.append('group assemblies\n')
             str_list.append('\n')
 
             str_list.append('track Coverage\n')
@@ -3436,7 +3434,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel TopHat RNA-seq alignment coverage\n')
             str_list.append('visibility full\n')
             str_list.append('superTrack on\n')
-            str_list.append('group coverage\n')
             str_list.append('\n')
 
             str_list.append('track Deletions\n')
@@ -3444,7 +3441,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel TopHat RNA-seq deletions\n')
             str_list.append('visibility hide\n')
             str_list.append('superTrack on\n')
-            str_list.append('group alignments\n')
             str_list.append('\n')
 
             str_list.append('track Insertions\n')
@@ -3452,7 +3448,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel TopHat RNA-seq insertions\n')
             str_list.append('visibility hide\n')
             str_list.append('superTrack on\n')
-            str_list.append('group alignments\n')
             str_list.append('\n')
 
             str_list.append('track Junctions\n')
@@ -3460,7 +3455,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel TopHat RNA-seq splice junctions\n')
             str_list.append('visibility show\n')
             str_list.append('superTrack on\n')
-            str_list.append('group alignments\n')
             str_list.append('\n')
 
             str_list.append('track Transcripts\n')
@@ -3468,7 +3462,6 @@ class Tuxedo(Analysis):
             str_list.append('longLabel Cufflinks transcript structures\n')
             str_list.append('visibility show\n')
             str_list.append('superTrack on\n')
-            str_list.append('group transcripts\n')
             str_list.append('\n')
 
             # Sample-specific tracks
@@ -3487,10 +3480,9 @@ class Tuxedo(Analysis):
                 elif self.aligner == 'star':
                     pass
                 else:
+                    # Alignments track
                     #
-                    # Add a trackDB entry for each Tophat accepted_hits.bam file.
-                    #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track ' + sample.name + '_alignments\n')
                     str_list.append('type bam\n')
                     str_list.append('shortLabel ' + sample.name + '_alignments\n')
@@ -3498,21 +3490,16 @@ class Tuxedo(Analysis):
                     str_list.append('bigDataUrl rnaseq_tophat_' + sample.name + '/accepted_hits.bam\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility dense\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bam/cram - Compressed Sequence Alignment track settings
-                    # None
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Alignments\n')
                     str_list.append('\n')
 
+                    # Coverage track
                     #
-                    # Add a trackDB entry for each Tophat accepted_hits.bw file.
-                    #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track ' + sample.name + '_coverage\n')
                     # TODO: The bigWig type must declare the expected signal range.
                     # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
@@ -3522,10 +3509,8 @@ class Tuxedo(Analysis):
                     str_list.append('bigDataUrl rnaseq_tophat_' + sample.name + '/accepted_hits.bw\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility full\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bigWig - Signal graphing track settings
                     str_list.append('alwaysZero on\n')
                     str_list.append('autoScale on\n')
@@ -3540,16 +3525,13 @@ class Tuxedo(Analysis):
                     # str_list.append('yLineMark <#>\n')
                     # str_list.append('yLineOnOff on \n')
                     # str_list.append('gridDefault on\n')
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Coverage\n')
-                    str_list.append('centerLabelsDense off\n')
                     str_list.append('\n')
 
+                    # Deletions track
                     #
-                    # Add a trackDB entry for each Tophat deletions.bb file.
-                    #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track ' + sample.name + '_deletions\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + sample.name + '_deletions\n')
@@ -3557,21 +3539,16 @@ class Tuxedo(Analysis):
                     str_list.append('bigDataUrl rnaseq_tophat_' + sample.name + '/deletions.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility hide\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bigBed - Item or region track settings
-                    # None
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Deletions\n')
                     str_list.append('\n')
 
+                    # Insertions track
                     #
-                    # Add a trackDB entry for each Tophat insertions.bb file.
-                    #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track insertions_' + sample.name + '\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + sample.name + '_insertions\n')
@@ -3579,21 +3556,16 @@ class Tuxedo(Analysis):
                     str_list.append('bigDataUrl rnaseq_tophat_' + sample.name + '/insertions.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility hide\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bigBed - Item or region track settings
-                    # None
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Insertions\n')
                     str_list.append('\n')
 
+                    # Junctions track
                     #
-                    # Add a trackDB entry for each Tophat junctions.bb file.
-                    #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track ' + sample.name + '_junctions\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + sample.name + '_junctions\n')
@@ -3601,21 +3573,16 @@ class Tuxedo(Analysis):
                     str_list.append('bigDataUrl rnaseq_tophat_' + sample.name + '/junctions.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility pack\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bigBed - Item or region track settings
-                    # None
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Junctions\n')
                     str_list.append('\n')
 
+                    # Transcripts track
                     #
-                    # Add a trackDB entry for each Tophat transcripts.bb file.
-                    #
-                    # Common settings
+                    # Common track settings
                     str_list.append('track ' + sample.name + '_transcripts\n')
                     str_list.append('type bigGenePred\n')
                     str_list.append('shortLabel ' + sample.name + '_transcripts\n')
@@ -3623,24 +3590,19 @@ class Tuxedo(Analysis):
                     str_list.append('bigDataUrl rnaseq_cufflinks_' + sample.name + '/transcripts.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility hide\n')
-
-                    # Common optional settings
+                    # Common optional track settings
                     str_list.append('color 0,0,0\n')
-
                     # bigGenePred - Gene Annotations settings
-                    # None
-
-                    # Composite track settings
+                    # Supertrack settings
                     str_list.append('parent Transcripts\n')
                     str_list.append('\n')
 
             # Comparison-specific tracks
 
             for comparison_name in sorted(self._comparison_dict):
+                # Assemblies track
                 #
-                # Add a trackDB entry for each Cuffmerge merged.bb file.
-                #
-                # Common settings
+                # Common track settings
                 str_list.append('track ' + comparison_name + '_assembly\n')
                 str_list.append('type bigGenePred\n')
                 str_list.append('shortLabel ' + comparison_name + '_assembly\n')
@@ -3648,14 +3610,10 @@ class Tuxedo(Analysis):
                 str_list.append('bigDataUrl rnaseq_cuffmerge_' + comparison_name + '/merged.bb\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility pack\n')
-
-                # Common optional settings
+                # Common optional track settings
                 str_list.append('color 0,0,0\n')
-
                 # bigGenePred - Gene Annotations settings
-                # None
-
-                # Composite track settings
+                # Supertrack settings
                 str_list.append('parent Assemblies\n')
                 str_list.append('\n')
 
@@ -4059,7 +4017,7 @@ class DESeq(Analysis):
             runnable_step.add_option_long(key='gtf-reference', value=self.transcriptome_gtf)
             runnable_step.add_option_long(key='genome-version', value=self.genome_version)
             runnable_step.add_option_long(key='threads', value=str(stage_analysis.threads))
-                                                                                                                                           
+
             # Run the results stage, if a contrast annotation sheet is already available and has design-specific rows.
             if has_contrasts:
                 runnable_results = self.add_runnable_consecutive(
@@ -4639,7 +4597,7 @@ class DESeq(Analysis):
             str_list.append('<p>')
             str_list.append('For each design, the following tables are provided in tab-separated value (TSV) format.')
             str_list.append('</p>\n')
-            
+
             str_list.append('<ul>\n')
             str_list.append('<li>')
             str_list.append('<strong>Raw Counts:</strong> ')
