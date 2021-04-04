@@ -22,10 +22,14 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+#
+#  BSF Python script to drive the Variant Calling analysis pipeline.
+#
+import os
 import sys
 from argparse import ArgumentParser
 
-from bsf.analyses.variant_calling import VariantCallingGATK
+from bsf.analyses.variant_calling import VariantCallingGATK, FilePathProcessSample, FilePathProcessReadGroup
 
 argument_parser = ArgumentParser(
     description=VariantCallingGATK.name + ' driver script.')
@@ -44,6 +48,13 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--find-missing',
+    action='store_true',
+    dest='find_missing',
+    help='identify missing files',
+    required=False)
+
+argument_parser.add_argument(
     'configuration',
     help='configuration (*.ini) file path',
     type=str)
@@ -59,16 +70,68 @@ if name_space.debug:
 
 analysis.run()
 analysis.check_state()
-analysis.submit(name=name_space.stage)
 
-print(analysis.name)
-print('Project name:      ', analysis.project_name)
-print('Genome version:    ', analysis.genome_version)
-print('Input directory:   ', analysis.input_directory)
-print('Output directory:  ', analysis.output_directory)
-print('Project directory: ', analysis.project_directory)
-print('Genome directory:  ', analysis.genome_directory)
+if name_space.find_missing:
+    # Work through the BSF Sample table to see, which files are missing.
 
-if analysis.debug >= 2:
-    print(repr(analysis), 'final trace:')
-    sys.stdout.writelines(analysis.trace(level=1))
+    for sample in analysis.sample_list:
+        if sample.is_excluded():
+            print("Excluded sample:", sample.name)
+            continue
+
+        prefix_sample = VariantCallingGATK.get_prefix_process_sample(sample_name=sample.name)
+        file_path_sample = FilePathProcessSample(prefix=prefix_sample)
+
+        sample_missing = False
+        for file_name_sample in (
+                file_path_sample.realigned_bam,
+                file_path_sample.realigned_bai,
+                file_path_sample.realigned_md5,
+                file_path_sample.realigned_bam_bai,
+                file_path_sample.raw_variants_gvcf_vcf,
+                file_path_sample.raw_variants_gvcf_tbi,
+                file_path_sample.alignment_summary_metrics,
+                file_path_sample.duplicate_metrics
+        ):
+            if not os.path.exists(os.path.join(analysis.genome_directory, file_name_sample)):
+                sample_missing = True
+                print("  Sample file missing:", file_name_sample)
+
+        if sample_missing:
+            read_group_missing = False
+            for paired_reads in sample.paired_reads_list:
+                paired_reads_name = paired_reads.get_name()
+                prefix_process_lane = VariantCallingGATK.get_prefix_process_lane(paired_reads_name=paired_reads_name)
+                file_path_read_group = FilePathProcessReadGroup(prefix=prefix_process_lane)
+                for file_name_read_group in (
+                        file_path_read_group.recalibrated_bam,
+                        file_path_read_group.recalibrated_bai,
+                        file_path_read_group.recalibrated_md5
+                ):
+                    if not os.path.exists(os.path.join(analysis.genome_directory, file_name_read_group)):
+                        read_group_missing = True
+                        print("    ReadGroup file missing:", file_name_read_group)
+
+            if read_group_missing:
+                print("Read group(s) missing.")
+            else:
+                print("Read group(s) complete!")
+
+        if sample_missing:
+            print("Missing sample:", sample.name)
+        else:
+            print("Complete sample:", sample.name)
+else:
+    analysis.submit(name=name_space.stage)
+
+    print(analysis.name)
+    print('Project name:      ', analysis.project_name)
+    print('Genome version:    ', analysis.genome_version)
+    print('Input directory:   ', analysis.input_directory)
+    print('Output directory:  ', analysis.output_directory)
+    print('Project directory: ', analysis.project_directory)
+    print('Genome directory:  ', analysis.genome_directory)
+
+    if analysis.debug >= 2:
+        print(repr(analysis), 'final trace:')
+        sys.stdout.writelines(analysis.trace(level=1))
