@@ -29,10 +29,11 @@ Project:  https://github.com/alexdobin/STAR
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+from typing import List
 
 from bsf.analyses.aligner import Aligner, \
     FilePathAlign as AlignerFilePathAlign, \
-    FilePathSample as AlignerFilePathSample, \
+    FilePathSample, \
     FilePathSummary as AlignerFilePathSummary
 from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
@@ -55,7 +56,7 @@ class FilePathAlign(AlignerFilePathAlign):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star.FilePathAlign} object
+        """Initialise a C{bsf.analyses.star.FilePathAlign} object.
 
         @param prefix: Prefix
         @type prefix: str
@@ -72,28 +73,6 @@ class FilePathAlign(AlignerFilePathAlign):
         return
 
 
-class FilePathSample(AlignerFilePathSample):
-    """The C{bsf.analyses.star.FilePathSample} class models file paths at the sample stage.
-
-    Attributes:
-
-    """
-
-    def __init__(self, prefix):
-        """
-
-        @param prefix:
-        """
-        super(FilePathSample, self).__init__(prefix=prefix)
-
-        self.prefix = os.path.join(prefix, prefix)
-        self.sample_wig = os.path.join(prefix, prefix + '.wig')
-        self.sample_bw = os.path.join(prefix, prefix + '.bw')
-        self.sample_bwi = os.path.join(prefix, prefix + '_bwi.txt')
-
-        return
-
-
 class FilePathSummary(AlignerFilePathSummary):
     """The C{bsf.analyses.star.FilePathSummary} class models file paths at the summary stage.
 
@@ -101,7 +80,7 @@ class FilePathSummary(AlignerFilePathSummary):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star.FilePathSummary} object
+        """Initialise a C{bsf.analyses.star.FilePathSummary} object.
 
         @param prefix: Prefix
         @type prefix: str
@@ -177,17 +156,6 @@ class Star(Aligner):
         @rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
-
-    @classmethod
-    def get_file_path_sample(cls, sample_name):
-        """Get a C{FilePathSample} object from this or a sub-class.
-
-        @param sample_name: C{bsf.ngs.Sample.name}
-        @type sample_name: str
-        @return: C{FilePathAlign} or sub-class object
-        @rtype: FilePathSample
-        """
-        return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
     @classmethod
     def get_file_path_summary(cls):
@@ -385,6 +353,7 @@ class Star(Aligner):
         @param stage_sample: C{bsf.analysis.Stage}
         @type stage_sample: Stage
         """
+        # NOTE: This method a copy of Tophat2.add_runnable_step_sample().
         file_path_sample = FilePathSample(prefix=runnable_sample.name)
 
         # This requires kentUtils to automatically convert via wigToBigWig.
@@ -396,7 +365,7 @@ class Star(Aligner):
         runnable_step.add_option_long(
             key='chromSize',
             value=StandardFilePath.get_resource_genome_fasta_index(genome_version=self.genome_version))
-        runnable_step.add_option_long(key='out-prefix', value=file_path_sample.prefix)
+        runnable_step.add_option_long(key='out-prefix', value=file_path_sample.prefix_prefix)
 
         runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
@@ -477,491 +446,305 @@ class Star(Aligner):
         return
 
     def report(self):
-        """Create a report.
+        """Create a HTML report and a UCSC Genome Browser Track Hub.
         """
+        # Create a symbolic link containing the project name and a UUID.
+        # This code only needs the public URL.
+        link_path = self.create_public_project_link()
 
-        def get_bigwig_info_signal_range(file_path):
-            """Private function to read the bigWig signal range from a bigWig information file.
+        str_list: List[str] = list()
 
-            @param file_path: bigWigInfo file path
-            @type file_path: str
-            @return: UCSC Track Hub "type bigWig" line with optional signal range
-            @rtype: str
-            """
-            # NOTE: This is a copy of ChIPSeq.report.get_bigwig_info_signal_range()
-            if os.path.isabs(file_path):
-                file_path_absolute = file_path
-            else:
-                file_path_absolute = os.path.join(self.genome_directory, file_path)
+        str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+        str_list.append('\n')
 
-            if os.path.exists(file_path_absolute):
-                minimum = None
-                maximum = None
+        str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+        str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
+        str_list.append('\n')
 
-                with open(file=file_path_absolute, mode='rt') as file_handle:
-                    for line in file_handle:
-                        if line.startswith('min:'):
-                            line_list = line.split()
-                            minimum = line_list[1].strip()
-                        if line.startswith('max:'):
-                            line_list = line.split()
-                            maximum = line_list[1].strip()
+        str_list.append('<h2 id="alignment_visualisation">Alignment Visualisation</h2>\n')
+        str_list.append('\n')
 
-                return 'type bigWig ' + minimum + ' ' + maximum + '\n'
-            else:
-                return 'type bigWig\n'
+        str_list.append('<p id="ucsc_track_hub">')
+        str_list.append('Alignments can be visualised by attaching the ')
+        str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
+        str_list.append('.\n')
+        str_list.append('Upon following the link, a project-specific track configuration section ')
+        str_list.append('<strong>' + self.project_name + '</strong> ')
+        str_list.append('gets added to the UCSC Genome Browser display. By default, all tracks are turned off. ')
+        str_list.append('While all tracks can be switched on directly from the configuration section, ')
+        str_list.append('especially for larger projects, it may be better to activate individual tracks by ')
+        str_list.append('following the track category label, first.\n')
+        str_list.append('</p>\n')
+        str_list.append('\n')
 
-        def report_html():
-            """Private function to create a HTML report.
-            """
-            # Create a symbolic link containing the project name and a UUID.
-            link_path = self.create_public_project_link()
+        str_list.append('<h2 id="qc_plots">QC Plots</h2>\n')
+        str_list.append('\n')
+        str_list.append('<table id="qc_table">\n')
+        str_list.append('<thead>\n')
+        str_list.append('<tr>\n')
+        str_list.append('<th>Sample</th>\n')
+        str_list.append('<th>Read Group</th>\n')
+        str_list.append('<th>Metrics</th>\n')
+        str_list.append('</tr>\n')
+        str_list.append('</thead>\n')
+        str_list.append('<tbody>\n')
 
-            # This code only needs the public URL.
+        file_path_summary = self.get_file_path_summary()
 
-            # Write a HTML document.
+        # Alignment Summary Plots
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.alignment_sample_pdf + '">')
+        str_list.append('<img alt="Mapped - Sample"')
+        str_list.append(' src="' + file_path_summary.alignment_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.alignment_read_group_pdf + '">')
+        str_list.append('<img alt="Mapped - Read Group"')
+        str_list.append(' src="' + file_path_summary.alignment_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Mapped</td>\n')
+        str_list.append('</tr>\n')
 
-            str_list = list()
-            """ @type str_list: list[str] """
+        # Mapped Fraction Plots
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.mapped_fraction_sample_pdf + '">')
+        str_list.append('<img alt="Mapped Fraction - Sample"')
+        str_list.append(' src="' + file_path_summary.mapped_fraction_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.mapped_fraction_read_group_pdf + '">')
+        str_list.append('<img alt="Mapped Fraction - Read Group"')
+        str_list.append(' src="' + file_path_summary.mapped_fraction_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Mapped Fraction</td>\n')
+        str_list.append('</tr>\n')
 
-            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
-            str_list.append('\n')
+        # Mapped Number Plots
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.mapped_number_sample_pdf + '">')
+        str_list.append('<img alt="Mapped Number - Sample"')
+        str_list.append(' src="' + file_path_summary.mapped_number_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.mapped_number_read_group_pdf + '">')
+        str_list.append('<img alt="Mapped Number - Read Group"')
+        str_list.append(' src="' + file_path_summary.mapped_number_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Mapped Number</td>\n')
+        str_list.append('</tr>\n')
 
-            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
-            str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
-            str_list.append('\n')
+        # Junction Fraction Plots
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.junction_fraction_sample_pdf + '">')
+        str_list.append('<img alt="Junction Fraction - Sample"')
+        str_list.append(' src="' + file_path_summary.junction_fraction_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.junction_fraction_read_group_pdf + '">')
+        str_list.append('<img alt="Junction Fraction - Read Group"')
+        str_list.append(' src="' + file_path_summary.junction_fraction_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Junction Fraction</td>\n')
+        str_list.append('</tr>\n')
 
-            str_list.append('<h2 id="alignment_visualisation">Alignment Visualisation</h2>\n')
-            str_list.append('\n')
+        # Junction Number Plots
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.junction_number_sample_pdf + '">')
+        str_list.append('<img alt="Junction Number - Sample"')
+        str_list.append(' src="' + file_path_summary.junction_number_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.junction_number_read_group_pdf + '">')
+        str_list.append('<img alt="Junction Number - Read Group"')
+        str_list.append(' src="' + file_path_summary.junction_number_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Junction Number</td>\n')
+        str_list.append('</tr>\n')
 
-            str_list.append('<p id="ucsc_track_hub">')
-            str_list.append('Alignments can be visualised by attaching the ')
-            str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
-            str_list.append('.\n')
-            str_list.append('Upon following the link, a project-specific track configuration section ')
-            str_list.append('<strong>' + self.project_name + '</strong> ')
-            str_list.append('gets added to the UCSC Genome Browser display. By default, all tracks are turned off. ')
-            str_list.append('While all tracks can be switched on directly from the configuration section, ')
-            str_list.append('especially for larger projects, it may be better to activate individual tracks by ')
-            str_list.append('following the track category label, first.\n')
-            str_list.append('</p>\n')
-            str_list.append('\n')
+        # Summary Tables
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.table_sample_tsv + '">')
+        str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.table_read_group_tsv + '">')
+        str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Summary</td>\n')
+        str_list.append('</tr>\n')
 
-            str_list.append('<h2 id="qc_plots">QC Plots</h2>\n')
-            str_list.append('\n')
-            str_list.append('<table id="qc_table">\n')
-            str_list.append('<thead>\n')
+        # The table rows below are a copy of the Aligner.report() method.
+
+        # Alignment Summary Plot
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_alignment_sample_pdf + '">')
+        str_list.append('<img alt="Alignment Summary - Sample"')
+        str_list.append(' src="' + file_path_summary.pasm_alignment_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_alignment_read_group_pdf + '">')
+        str_list.append('<img alt="Alignment Summary - Read Group"')
+        str_list.append(' src="' + file_path_summary.pasm_alignment_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Alignment Summary</td>\n')
+        str_list.append('</tr>\n')
+
+        # Alignment Summary Plot Absolute Mapped
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_absolute_sample_pdf + '">')
+        str_list.append('<img alt="Absolute Mapped - Sample"')
+        str_list.append(' src="' + file_path_summary.pasm_absolute_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_absolute_read_group_pdf + '">')
+        str_list.append('<img alt="Absolute Mapped - Read Group"')
+        str_list.append(' src="' + file_path_summary.pasm_absolute_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Absolute Mapped</td>\n')
+        str_list.append('</tr>\n')
+
+        # Alignment Summary Plot Percentage Mapped
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_percentage_sample_pdf + '">')
+        str_list.append('<img alt="Percentage Mapped - Sample"')
+        str_list.append(' src="' + file_path_summary.pasm_percentage_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_percentage_read_group_pdf + '">')
+        str_list.append('<img alt="Percentage Mapped - Read Group"')
+        str_list.append(' src="' + file_path_summary.pasm_percentage_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Percentage Mapped</td>\n')
+        str_list.append('</tr>\n')
+
+        # Alignment Summary Plot Strand Balance
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_strand_balance_sample_pdf + '">')
+        str_list.append('<img alt="Strand Balance - Sample"')
+        str_list.append(' src="' + file_path_summary.pasm_strand_balance_sample_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_strand_balance_read_group_pdf + '">')
+        str_list.append('<img alt="Strand Balance - Read Group"')
+        str_list.append(' src="' + file_path_summary.pasm_strand_balance_read_group_png + '"')
+        str_list.append(' height="100" width="100" />')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Strand Balance</td>\n')
+        str_list.append('</tr>\n')
+
+        # Alignment Summary Metrics Tables
+        str_list.append('<tr>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_table_sample_tsv + '">')
+        str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="center">')
+        str_list.append('<a href="' + file_path_summary.pasm_table_read_group_tsv + '">')
+        str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+        str_list.append('</a>')
+        str_list.append('</td>\n')
+        str_list.append('<td class="left">Alignment Summary</td>\n')
+        str_list.append('</tr>\n')
+
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_levels_sample_png)):
             str_list.append('<tr>\n')
-            str_list.append('<th>Sample</th>\n')
-            str_list.append('<th>Read Group</th>\n')
-            str_list.append('<th>Metrics</th>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pdsm_levels_sample_pdf + '">')
+            str_list.append('<img alt="Duplication Levels - Sample"')
+            str_list.append(' src="' + file_path_summary.pdsm_levels_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Duplication Levels</td>\n')
             str_list.append('</tr>\n')
-            str_list.append('</thead>\n')
-            str_list.append('<tbody>\n')
 
-            file_path_summary = self.get_file_path_summary()
-
-            # Alignment Summary Plots
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_percentage_sample_png)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.alignment_sample_pdf + '">')
-            str_list.append('<img alt="Mapped - Sample"')
-            str_list.append(' src="' + file_path_summary.alignment_sample_png + '"')
+            str_list.append('<a href="' + file_path_summary.pdsm_percentage_sample_pdf + '">')
+            str_list.append('<img alt="Duplication Percentage - Sample"')
+            str_list.append(' src="' + file_path_summary.pdsm_percentage_sample_png + '"')
             str_list.append(' height="100" width="100" />')
             str_list.append('</a>')
             str_list.append('</td>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.alignment_read_group_pdf + '">')
-            str_list.append('<img alt="Mapped - Read Group"')
-            str_list.append(' src="' + file_path_summary.alignment_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
             str_list.append('</td>\n')
-            str_list.append('<td class="left">Mapped</td>\n')
+            str_list.append('<td class="left">Duplication Percentage</td>\n')
             str_list.append('</tr>\n')
 
-            # Mapped Fraction Plots
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_table_sample_tsv)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.mapped_fraction_sample_pdf + '">')
-            str_list.append('<img alt="Mapped Fraction - Sample"')
-            str_list.append(' src="' + file_path_summary.mapped_fraction_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.mapped_fraction_read_group_pdf + '">')
-            str_list.append('<img alt="Mapped Fraction - Read Group"')
-            str_list.append(' src="' + file_path_summary.mapped_fraction_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Mapped Fraction</td>\n')
-            str_list.append('</tr>\n')
-
-            # Mapped Number Plots
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.mapped_number_sample_pdf + '">')
-            str_list.append('<img alt="Mapped Number - Sample"')
-            str_list.append(' src="' + file_path_summary.mapped_number_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.mapped_number_read_group_pdf + '">')
-            str_list.append('<img alt="Mapped Number - Read Group"')
-            str_list.append(' src="' + file_path_summary.mapped_number_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Mapped Number</td>\n')
-            str_list.append('</tr>\n')
-
-            # Junction Fraction Plots
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.junction_fraction_sample_pdf + '">')
-            str_list.append('<img alt="Junction Fraction - Sample"')
-            str_list.append(' src="' + file_path_summary.junction_fraction_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.junction_fraction_read_group_pdf + '">')
-            str_list.append('<img alt="Junction Fraction - Read Group"')
-            str_list.append(' src="' + file_path_summary.junction_fraction_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Junction Fraction</td>\n')
-            str_list.append('</tr>\n')
-
-            # Junction Number Plots
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.junction_number_sample_pdf + '">')
-            str_list.append('<img alt="Junction Number - Sample"')
-            str_list.append(' src="' + file_path_summary.junction_number_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.junction_number_read_group_pdf + '">')
-            str_list.append('<img alt="Junction Number - Read Group"')
-            str_list.append(' src="' + file_path_summary.junction_number_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Junction Number</td>\n')
-            str_list.append('</tr>\n')
-
-            # Summary Tables
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.table_sample_tsv + '">')
+            str_list.append('<a href="' + file_path_summary.pdsm_table_sample_tsv + '">')
             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.table_read_group_tsv + '">')
-            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-            str_list.append('</a>')
             str_list.append('</td>\n')
-            str_list.append('<td class="left">Summary</td>\n')
+            str_list.append('<td class="left">Duplication Summary</td>\n')
             str_list.append('</tr>\n')
 
-            # The table rows below are a copy of the Aligner.report() method.
+        str_list.append('</tbody>\n')
+        str_list.append('</table>\n')
+        str_list.append('\n')
 
-            # Alignment Summary Plot
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_alignment_sample_pdf + '">')
-            str_list.append('<img alt="Alignment Summary - Sample"')
-            str_list.append(' src="' + file_path_summary.pasm_alignment_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_alignment_read_group_pdf + '">')
-            str_list.append('<img alt="Alignment Summary - Read Group"')
-            str_list.append(' src="' + file_path_summary.pasm_alignment_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Alignment Summary</td>\n')
-            str_list.append('</tr>\n')
+        # Add the sample table.
+        str_list.extend(self.report_html_sample())
 
-            # Alignment Summary Plot Absolute Mapped
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_absolute_sample_pdf + '">')
-            str_list.append('<img alt="Absolute Mapped - Sample"')
-            str_list.append(' src="' + file_path_summary.pasm_absolute_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_absolute_read_group_pdf + '">')
-            str_list.append('<img alt="Absolute Mapped - Read Group"')
-            str_list.append(' src="' + file_path_summary.pasm_absolute_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Absolute Mapped</td>\n')
-            str_list.append('</tr>\n')
+        # Save the HTML report.
+        self.report_to_file(content=str_list)
 
-            # Alignment Summary Plot Percentage Mapped
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_percentage_sample_pdf + '">')
-            str_list.append('<img alt="Percentage Mapped - Sample"')
-            str_list.append(' src="' + file_path_summary.pasm_percentage_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_percentage_read_group_pdf + '">')
-            str_list.append('<img alt="Percentage Mapped - Read Group"')
-            str_list.append(' src="' + file_path_summary.pasm_percentage_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Percentage Mapped</td>\n')
-            str_list.append('</tr>\n')
-
-            # Alignment Summary Plot Strand Balance
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_strand_balance_sample_pdf + '">')
-            str_list.append('<img alt="Strand Balance - Sample"')
-            str_list.append(' src="' + file_path_summary.pasm_strand_balance_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_strand_balance_read_group_pdf + '">')
-            str_list.append('<img alt="Strand Balance - Read Group"')
-            str_list.append(' src="' + file_path_summary.pasm_strand_balance_read_group_png + '"')
-            str_list.append(' height="100" width="100" />')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Strand Balance</td>\n')
-            str_list.append('</tr>\n')
-
-            # Alignment Summary Metrics Tables
-            str_list.append('<tr>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_table_sample_tsv + '">')
-            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pasm_table_read_group_tsv + '">')
-            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-            str_list.append('</a>')
-            str_list.append('</td>\n')
-            str_list.append('<td class="left">Alignment Summary</td>\n')
-            str_list.append('</tr>\n')
-
-            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_levels_sample_png)):
-                str_list.append('<tr>\n')
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_summary.pdsm_levels_sample_pdf + '">')
-                str_list.append('<img alt="Duplication Levels - Sample"')
-                str_list.append(' src="' + file_path_summary.pdsm_levels_sample_png + '"')
-                str_list.append(' height="100" width="100" />')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                str_list.append('<td class="center">')
-                str_list.append('</td>\n')
-                str_list.append('<td class="left">Duplication Levels</td>\n')
-                str_list.append('</tr>\n')
-
-            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_percentage_sample_png)):
-                str_list.append('<tr>\n')
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_summary.pdsm_percentage_sample_pdf + '">')
-                str_list.append('<img alt="Duplication Percentage - Sample"')
-                str_list.append(' src="' + file_path_summary.pdsm_percentage_sample_png + '"')
-                str_list.append(' height="100" width="100" />')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                str_list.append('<td class="center">')
-                str_list.append('</td>\n')
-                str_list.append('<td class="left">Duplication Percentage</td>\n')
-                str_list.append('</tr>\n')
-
-            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_table_sample_tsv)):
-                str_list.append('<tr>\n')
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_summary.pdsm_table_sample_tsv + '">')
-                str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                str_list.append('<td class="center">')
-                str_list.append('</td>\n')
-                str_list.append('<td class="left">Duplication Summary</td>\n')
-                str_list.append('</tr>\n')
-
-            str_list.append('</tbody>\n')
-            str_list.append('</table>\n')
-            str_list.append('\n')
-
-            str_list.append('<h2 id="sample_section">Sample Table</h2>\n')
-            str_list.append('\n')
-            str_list.append('<table id="sample_table">\n')
-            str_list.append('<thead>\n')
-            str_list.append('<tr>\n')
-            str_list.append('<th>Sample</th>\n')
-            str_list.append('<th>BAM</th>\n')
-            str_list.append('<th>BAI</th>\n')
-            str_list.append('<th>MD5</th>\n')
-            str_list.append('</tr>\n')
-            str_list.append('</thead>\n')
-            str_list.append('<tbody>\n')
-
-            for sample in self.sample_list:
-                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
-
-                if not paired_reads_dict:
-                    # Skip Sample objects, which PairedReads objects have all been excluded.
-                    continue
-
-                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
-
-                str_list.append('<tr>\n')
-                # Sample
-                str_list.append('<td class="left">' + sample.name + '</td>\n')
-                # BAM
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.sample_bam + '">')
-                str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                # BAI
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.sample_bai + '">')
-                str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                # MD5
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.sample_md5 + '">')
-                str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                str_list.append('</tr>\n')
-
-            str_list.append('</tbody>\n')
-            str_list.append('</table>\n')
-            str_list.append('\n')
-
-            self.report_to_file(content=str_list)
-
-            return
-
-        def report_hub():
-            """Private function to create a UCSC Track Hub.
-            """
-
-            str_list = list()
-            """ @type str_list: list[str] """
-
-            # Group via UCSC super tracks.
-
-            str_list.append('track alignment\n')
-            str_list.append('type bam\n')
-            str_list.append('shortLabel Alignment\n')
-            str_list.append('longLabel ' + self.name + ' Alignment\n')
-            str_list.append('visibility hide\n')
-            str_list.append('compositeTrack on\n')
-            str_list.append('allButtonPair on\n')  # Has to be off to allow for configuration via a matrix.
-            str_list.append('centerLabelsDense on\n')
-            str_list.append('\n')
-
-            str_list.append('track coverage\n')
-            str_list.append('type bigWig\n')
-            str_list.append('shortLabel Coverage\n')
-            str_list.append('longLabel ' + self.name + ' Coverage\n')
-            str_list.append('visibility hide\n')
-            str_list.append('compositeTrack on\n')
-            str_list.append('allButtonPair on\n')  # Has to be off to allow for configuration via a matrix.
-            str_list.append('centerLabelsDense on\n')
-            str_list.append('\n')
-
-            # Sample-specific tracks
-
-            for sample in self.sample_list:
-                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
-
-                if not paired_reads_dict:
-                    # Skip Sample objects, which PairedReads objects have all been excluded.
-                    continue
-
-                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
-
-                #
-                # Add a trackDB entry for each STAR BAM file.
-                #
-                # Common settings
-                str_list.append('  track ' + sample.name + '_alignment\n')
-                str_list.append('  type bam\n')
-                str_list.append('  shortLabel ' + '_'.join((sample.name, self.prefix, 'alignment')) + '\n')
-                str_list.append('  longLabel ' + ' '.join((sample.name, self.name, 'Alignment')) + '\n')
-                str_list.append('  bigDataUrl ' + file_path_sample.sample_bam + '\n')
-                # str_list.append('  html ...\n')
-                str_list.append('  visibility dense\n')
-
-                # Common optional settings
-                # str_list.append('  color 0,0,0\n')
-
-                # bam/cram - Compressed Sequence Alignment track settings
-                # None
-
-                # Composite track settings
-                str_list.append('  parent alignment on\n')
-                str_list.append('  centerLabelsDense on\n')
-                str_list.append('  \n')
-
-                # Add a trackDB entry for each STAR bigWig file.
-                #
-                # Common settings
-                str_list.append('  track ' + sample.name + '_coverage\n')
-                str_list.append('  ' + get_bigwig_info_signal_range(file_path=file_path_sample.sample_bwi))
-                str_list.append('  shortLabel ' + sample.name + '_coverage\n')
-                str_list.append('  longLabel ' + sample.name + ' STAR RNA-seq alignment coverage\n')
-                str_list.append('  bigDataUrl ' + file_path_sample.sample_bw + '\n')
-                # str_list.append('  html ...\n')
-                str_list.append('  visibility full\n')
-
-                # Common optional settings
-                str_list.append('  color 0,0,0\n')
-
-                # bigWig - Signal graphing track settings
-                str_list.append('  alwaysZero on\n')
-                str_list.append('  autoScale on\n')
-                str_list.append('  graphTypeDefault bar\n')
-                str_list.append('  maxHeightPixels 100:60:20\n')
-                # str_list.append('  maxWindowToQuery 10000000\n')
-                # str_list.append('  smoothingWindow 5\n')
-                # str_list.append('  transformFunc NONE\n')
-                # str_list.append('  viewLimits 0:45\n')
-                # str_list.append('  viewLimitsMax 0:50\n')
-                # str_list.append('  windowingFunction maximum\n')
-                # str_list.append('  yLineMark <#>\n')
-                # str_list.append('  yLineOnOff on \n')
-                # str_list.append('  gridDefault on\n')
-                # Composite track settings
-                str_list.append('  parent coverage on\n')
-                str_list.append('  centerLabelsDense on\n')
-                str_list.append('  \n')
-
-            self.ucsc_hub_to_file(content=str_list)
-
-            return
-
-        report_html()
-        report_hub()
+        # Save a UCSC Track Hub with alignment and coverage composite tracks.
+        self.ucsc_hub_to_file(content=self.report_hub_alignment() + self.report_hub_coverage())
 
         return
