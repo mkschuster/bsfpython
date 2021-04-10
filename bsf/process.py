@@ -1159,9 +1159,9 @@ class RunnableStepChangeMode(RunnableStep):
     Attributes:
     @ivar file_path: File path
     @type file_path: str | None
-    @ivar mode_directory: Directory access mode according to C{stat}
+    @ivar mode_directory: Comma-separated list of C{stat} constant names defining directory access modes
     @type mode_directory: str | None
-    @ivar mode_file: File access mode for files according to C{stat}
+    @ivar mode_file: Comma-separated list of C{stat} constant names defining file access modes
     @type mode_file: str | None
     """
 
@@ -1222,9 +1222,9 @@ class RunnableStepChangeMode(RunnableStep):
         @type obsolete_file_path_list: list[str] | None
         @param file_path: File path
         @type file_path: str | None
-        @param mode_directory: Directory access mode according to C{stat}
+        @param mode_directory: Comma-separated list of C{stat} constant names defining directory access modes
         @type mode_directory: str | None
-        @param mode_file: File access mode for files according to C{stat}
+        @param mode_file: Comma-separated list of C{stat} constant names defining file access modes
         @type mode_file: str | None
         """
         super(RunnableStepChangeMode, self).__init__(
@@ -1268,50 +1268,15 @@ class RunnableStepChangeMode(RunnableStep):
             @rtype: int
             """
             mode_int = 0
-            for permission_bit in filter(
-                    lambda x: x != '',
-                    map(
-                        lambda x: x.strip(),
-                        mode_str.split(','))):
-                if permission_bit.upper() in permission_dict:
-                    mode_int |= permission_dict[permission_bit.upper()]
+            for permission_str in filter(lambda x: x != '', map(lambda x: x.strip(), mode_str.split(','))):
+                # The default of 0 does not modify the mode in case the attribute does not exist.
+                mode_int |= getattr(stat, permission_str.upper(), 0)
 
             return mode_int
 
         # If the file path is not defined, all further efforts are futile.
         if not self.file_path:
             return None
-
-        # Use a dictionary to map string literals to integers defined in the stat module rather than
-        # evaluating code directly, which can be rather dangerous.
-
-        permission_dict = {
-            'S_ISUID': stat.S_ISUID,
-            'S_ISGID': stat.S_ISGID,
-            # System V file locking enforcement.
-            'S_ENFMT': stat.S_ENFMT,
-            # Sticky bit.
-            'S_ISVTX': stat.S_ISVTX,
-            'S_IREAD': stat.S_IREAD,
-            'S_IWRITE': stat.S_IWRITE,
-            # UNIX V7 synonyms.
-            'S_IEXEC': stat.S_IEXEC,
-            'S_IRWXU': stat.S_IRWXU,
-            # User permissions.
-            'S_IRUSR': stat.S_IRUSR,
-            'S_IWUSR': stat.S_IWUSR,
-            'S_IXUSR': stat.S_IXUSR,
-            'S_IRWXG': stat.S_IRWXG,
-            # Group permissions.
-            'S_IRGRP': stat.S_IRGRP,
-            'S_IWGRP': stat.S_IWGRP,
-            'S_IXGRP': stat.S_IXGRP,
-            'S_IRWXO': stat.S_IRWXO,
-            # Other permissions.
-            'S_IROTH': stat.S_IROTH,
-            'S_IWOTH': stat.S_IWOTH,
-            'S_IXOTH': stat.S_IXOTH,
-        }
 
         # Convert comma-separated directory permission constants to an integer.
         if self.mode_directory is None:
