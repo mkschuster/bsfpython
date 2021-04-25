@@ -5706,30 +5706,38 @@ class VariantCallingGATK(Analysis):
                 directory_sample = report_create_directory(
                     path=os.path.join(directory_results_by_sample, sample.name))
 
-                for attribute, extension in (
-                        ('realigned_bam', '.bam'),
-                        ('realigned_bai', '.bam.bai'),
-                        ('realigned_md5', '.bam.md5')):
+                symbolic_link_sequence = (
+                    ('realigned_bam', '.bam'),
+                    ('realigned_bai', '.bam.bai'),
+                    ('realigned_md5', '.bam.md5'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_process_sample, attribute)),
                             directory_sample),
                         target_path=os.path.join(directory_sample, sample.name + extension))
 
-                for attribute, extension in (
-                        ('sample_vcf', '_snpeff.vcf.gz'),
-                        ('sample_tbi', '_snpeff.vcf.gz.tbi'),
-                        ('sample_tsv', '_snpeff.tsv')):
+                symbolic_link_sequence = [
+                    ('sample_vcf', '_snpeff.vcf.gz'),
+                    ('sample_tbi', '_snpeff.vcf.gz.tbi'),
+                ]
+                if self.variants_to_table:
+                    symbolic_link_sequence.append(('sample_tsv', '_snpeff.tsv'))
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_cohort_snpeff, attribute)),
                             directory_sample),
                         target_path=os.path.join(directory_sample, sample.name + extension))
 
-                for attribute, extension in (
-                        ('sample_vcf', '_vep.vcf.gz'),
-                        ('sample_tbi', '_vep.vcf.gz.tbi'),
-                        ('sample_tsv', '_vep.tsv')):
+                symbolic_link_sequence = [
+                    ('sample_vcf', '_vep.vcf.gz'),
+                    ('sample_tbi', '_vep.vcf.gz.tbi'),
+                ]
+                if self.variants_to_table:
+                    symbolic_link_sequence.append(('sample_tsv', '_vep.tsv'))
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_cohort_vep, attribute)),
@@ -5741,10 +5749,12 @@ class VariantCallingGATK(Analysis):
                 directory_alignments = report_create_directory(
                     path=os.path.join(directory_results_by_type, 'alignments'))
 
-                for attribute, extension in (
-                        ('realigned_bam', '.bam'),
-                        ('realigned_bai', '.bam.bai'),
-                        ('realigned_md5', '.bam.md5')):
+                symbolic_link_sequence = (
+                    ('realigned_bam', '.bam'),
+                    ('realigned_bai', '.bam.bai'),
+                    ('realigned_md5', '.bam.md5'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_process_sample, attribute)),
@@ -5759,10 +5769,13 @@ class VariantCallingGATK(Analysis):
                 directory_variants_snpeff = report_create_directory(
                     path=os.path.join(directory_variants, 'snpeff'))
 
-                for attribute, extension in (
-                        ('sample_vcf', '_snpeff.vcf.gz'),
-                        ('sample_tbi', '_snpeff.vcf.gz.tbi'),
-                        ('sample_tsv', '_snpeff.tsv')):
+                symbolic_link_sequence = [
+                    ('sample_vcf', '_snpeff.vcf.gz'),
+                    ('sample_tbi', '_snpeff.vcf.gz.tbi'),
+                ]
+                if self.variants_to_table:
+                    symbolic_link_sequence.append(('sample_tsv', '_snpeff.tsv'))
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_cohort_snpeff, attribute)),
@@ -5772,32 +5785,39 @@ class VariantCallingGATK(Analysis):
                 directory_variants_vep = report_create_directory(
                     path=os.path.join(directory_variants, 'vep'))
 
-                for attribute, extension in (
-                        ('sample_vcf', '_vep.vcf.gz'),
-                        ('sample_tbi', '_vep.vcf.gz.tbi'),
-                        ('sample_tsv', '_vep.tsv')):
+                symbolic_link_sequence = [
+                    ('sample_vcf', '_vep.vcf.gz'),
+                    ('sample_tbi', '_vep.vcf.gz.tbi'),
+                ]
+                if self.variants_to_table:
+                    symbolic_link_sequence.append(('sample_tsv', '_vep.tsv'))
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_cohort_vep, attribute)),
                             directory_variants_vep),
                         target_path=os.path.join(directory_variants_vep, sample.name + extension))
 
-                for attribute, extension in (
-                        ('annotated_vcf', '_annotated.vcf.gz'),
-                        ('annotated_tbi', '_annotated.vcf.gz.tbi'),
-                        ('complete_vcf_bgz', '_snpeff.vcf.gz'),
-                        ('complete_vcf_tbi', '_snpeff.vcf.gz.tbi'),
-                        ('complete_genes', '_snpeff_summary.genes.txt'),
-                        ('complete_stats', '_snpeff_summary.html')):
+                symbolic_link_sequence = (
+                    ('annotated_vcf', '_annotated.vcf.gz'),
+                    ('annotated_tbi', '_annotated.vcf.gz.tbi'),
+                    ('complete_vcf_bgz', '_snpeff.vcf.gz'),
+                    ('complete_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                    ('complete_genes', '_snpeff_summary.genes.txt'),
+                    ('complete_stats', '_snpeff_summary.html'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_cohort_snpeff, attribute)),
                             directory_results_by_cohort),
                         target_path=os.path.join(directory_results_by_cohort, self.cohort_name + extension))
 
-                for attribute, extension in (
-                        ('complete_vcf_bgz', '_vep.vcf.gz'),
-                        ('complete_vcf_tbi', '_vep.vcf.gz.tbi')):
+                symbolic_link_sequence = (
+                    ('complete_vcf_bgz', '_vep.vcf.gz'),
+                    ('complete_vcf_tbi', '_vep.vcf.gz.tbi'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_cohort_vep, attribute)),
@@ -5809,9 +5829,11 @@ class VariantCallingGATK(Analysis):
             for comparison_name in self._comparison_dict:
                 file_path_somatic = self.get_file_path_somatic(comparison_name=comparison_name)
 
-                for attribute, extension in (
-                        ('somatic_vcf', '.vcf.gz'),
-                        ('somatic_tbi', '.vcf.gz.tbi')):
+                symbolic_link_sequence = (
+                    ('somatic_vcf', '.vcf.gz'),
+                    ('somatic_tbi', '.vcf.gz.tbi'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_somatic, attribute)),
@@ -5821,13 +5843,15 @@ class VariantCallingGATK(Analysis):
                 file_path_annotate_somatic_snpeff = self.get_file_path_annotate_somatic_snpeff(
                     comparison_name=comparison_name)
 
-                for attribute, extension in (
-                        ('complete_vcf_bgz', '_snpeff.vcf.gz'),
-                        ('complete_vcf_tbi', '_snpeff.vcf.gz.tbi'),
-                        ('complete_genes', '_snpeff_summary.genes.txt'),
-                        ('complete_stats', '_snpeff_summary.html'),
-                        ('annotated_vcf', '_annotated.vcf.gz'),
-                        ('annotated_tbi', '_annotated.vcf.gz.tbi')):
+                symbolic_link_sequence = (
+                    ('complete_vcf_bgz', '_snpeff.vcf.gz'),
+                    ('complete_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                    ('complete_genes', '_snpeff_summary.genes.txt'),
+                    ('complete_stats', '_snpeff_summary.html'),
+                    ('annotated_vcf', '_annotated.vcf.gz'),
+                    ('annotated_tbi', '_annotated.vcf.gz.tbi'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_somatic_snpeff, attribute)),
@@ -5837,8 +5861,10 @@ class VariantCallingGATK(Analysis):
                 file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(
                     comparison_name=comparison_name)
 
-                for attribute, extension in (
-                        ('comparison_tsv', '_snpeff.tsv'),):
+                symbolic_link_sequence = []
+                if self.variants_to_table:
+                    symbolic_link_sequence.append(('comparison_tsv', '_snpeff.tsv'))
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_somatic_snpeff, attribute)),
@@ -5848,9 +5874,11 @@ class VariantCallingGATK(Analysis):
                 file_path_annotate_somatic_vep = self.get_file_path_annotate_somatic_vep(
                     comparison_name=comparison_name)
 
-                for attribute, extension in (
-                        ('complete_vcf_bgz', '_vep.vcf.gz'),
-                        ('complete_vcf_tbi', '_vep.vcf.gz.tbi')):
+                symbolic_link_sequence = (
+                    ('complete_vcf_bgz', '_vep.vcf.gz'),
+                    ('complete_vcf_tbi', '_vep.vcf.gz.tbi'),
+                )
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_annotate_somatic_vep, attribute)),
@@ -5860,8 +5888,10 @@ class VariantCallingGATK(Analysis):
                 file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(
                     comparison_name=comparison_name)
 
-                for attribute, extension in (
-                        ('comparison_tsv', '_vep.tsv'),):
+                symbolic_link_sequence = []
+                if self.variants_to_table:
+                    symbolic_link_sequence.append(('comparison_tsv', '_vep.tsv'))
+                for attribute, extension in symbolic_link_sequence:
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_somatic_vep, attribute)),
