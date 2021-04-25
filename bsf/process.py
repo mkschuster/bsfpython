@@ -1991,6 +1991,8 @@ class RunnableStepMove(RunnableStep):
     @type source_path: str | None
     @ivar target_path: Target path
     @type target_path: str | None
+    @ivar use_shutil: Use the Python shutil module rather than a (POSIX) utility
+    @type use_shutil: bool | None
     """
 
     def __init__(
@@ -2011,7 +2013,8 @@ class RunnableStepMove(RunnableStep):
             sub_process=None,
             obsolete_file_path_list=None,
             source_path=None,
-            target_path=None):
+            target_path=None,
+            use_shutil=None):
         """Initialise a C{bsf.process.RunnableStepMove} object.
 
         @param name: Name
@@ -2051,6 +2054,8 @@ class RunnableStepMove(RunnableStep):
         @type source_path: str | None
         @param target_path: Target path
         @type target_path: str | None
+        @param use_shutil: Use the Python shutil module rather than a (POSIX) utility
+        @type use_shutil: bool | None
         """
         super(RunnableStepMove, self).__init__(
             name=name,
@@ -2071,6 +2076,11 @@ class RunnableStepMove(RunnableStep):
 
         self.source_path = source_path
         self.target_path = target_path
+        self.use_shutil = use_shutil
+
+        if not self.use_shutil:
+            self.program = 'mv'
+            self.arguments = [self.source_path, self.target_path]
 
         return
 
@@ -2083,9 +2093,11 @@ class RunnableStepMove(RunnableStep):
         @rtype: list[str] | None
         """
         if self.source_path and self.target_path:
-            shutil.move(src=self.source_path, dst=self.target_path)
-
-        return None
+            if self.use_shutil:
+                shutil.move(src=self.source_path, dst=self.target_path)
+                return None
+            else:
+                return super(RunnableStepMove, self).run(debug=debug)
 
 
 class RunnableStepRemoveDirectory(RunnableStep):
