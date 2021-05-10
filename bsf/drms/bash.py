@@ -27,6 +27,7 @@ Distributed Resource Management System (DRMS) module.
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+from typing import List
 
 from bsf.connector import ConnectorFile
 
@@ -43,8 +44,7 @@ def submit(stage, debug=0):
     @type debug: int
     """
 
-    output_list = list()
-    """ @type output_list: list[str] """
+    output_list: List[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')

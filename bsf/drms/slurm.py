@@ -33,6 +33,7 @@ import re
 import warnings
 from csv import DictReader
 from threading import Lock
+from typing import List
 
 from bsf.connector import StandardOutputStream
 from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor, \
@@ -735,8 +736,7 @@ def submit(stage, debug=0):
     if not os.access(file_path, os.W_OK):
         raise Exception('Cannot write to SQLite database file path:', repr(file_path))
 
-    output_list = list()
-    """ @type output_list: list[str] """
+    output_list: List[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -838,8 +838,8 @@ def submit(stage, debug=0):
         # submitting the process. Isn't that exactly what we have a scheduler for? Sigh.
         # Consequently, SLURM process identifiers need to be tracked here, by means of a SQLite database.
 
-        process_identifier_list = list()
-        """ @type process_identifier_list: list[str] """
+        process_identifier_list: List[str] = list()
+
         for executable_name in executable.dependencies:
             process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable_name)
             if len(process_slurm_list):
@@ -1033,8 +1033,8 @@ def check_state(stage, debug=0):
         file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
-    process_slurm_list = list()
-    """ @type process_slurm_list: list[ProcessSLURM] """
+    process_slurm_list: List[ProcessSLURM] = list()
+
     # Get all Processes from the database that have no state set.
     process_slurm_list.extend(process_slurm_adaptor.select_all_by_state(state=None))
     # Get all processes from the database that have a state of 'PENDING' or 'RUNNING' as those need checking.

@@ -26,6 +26,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+from typing import List
 
 from bsf.analysis import Analysis, Stage
 from bsf.connector import ConnectorFile, ConnectorPipe, ConcurrentProcess
@@ -42,7 +43,6 @@ class IlluminaRunFolderArchive(Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} class represents the logic to archive
     an Illumina Run Folder in a format suitable for magnetic tape libraries.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -592,10 +592,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Cluster intensity file (*.cif) directories, if present, need excluding from archiving at a later stage.
 
-        exclude_intensities_patterns = list()
-        """ @type exclude_intensities_patterns: list[str] """
-        archive_folder_dependencies = list()
-        """ @type archive_folder_dependencies: list[str] """
+        exclude_intensities_patterns: List[str] = list()
+        archive_folder_dependencies: List[str] = list()
 
         archive_folder_dependencies.append(runnable_pre_process_folder.name)
 
@@ -885,7 +883,6 @@ class IlluminaRunFolderArchive(Analysis):
 class FilePathIlluminaRunFolderRestore(FilePath):
     """The C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} models files in an archive directory.
 
-    Attributes:
     @ivar folder: Folder GNU Tar archive file
     @type folder: str
     @ivar intensities: Intensities GNU Tar archive file
@@ -911,7 +908,6 @@ class IlluminaRunFolderRestore(Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
     Illumina Run Folder from a format suitable for magnetic tape libraries.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

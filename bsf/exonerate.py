@@ -26,6 +26,7 @@ A package of classes and methods supporting Guy Slater's Exonerate alignment too
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 import re
+from typing import List
 
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
 
@@ -33,9 +34,8 @@ vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
 class VULGAR(object):
     """This class models the Verbose Useful Labelled Gapped Alignment Report (C{bsf.exonerate.VULGAR}) as defined by
     Guy Slater's Exonerate generic alignment tool.
-    https://www.ebi.ac.uk/~guy/exonerate/
 
-    Attributes:
+    @see: https://www.ebi.ac.uk/~guy/exonerate/
     @ivar q_name: Query name
     @type q_name: str | None
     @ivar q_start: Query start
@@ -164,11 +164,10 @@ def parse_alignment_file(file_path):
     @return: Python C{list} of C{bsf.exonerate.VULGAR} objects
     @rtype: list[VULGAR]
     """
-    vulgar_list = list()
-    """ @type vulgar_list: list[VULGAR] """
+    vulgar_list: List[VULGAR] = list()
 
-    with open(file=file_path, mode='rt') as input_file:
-        for line_str in input_file:
+    with open(file=file_path, mode='rt') as text_io:
+        for line_str in text_io:
             vulgar_match = re.search(pattern=vulgar_pattern, string=line_str)
             if vulgar_match:
                 vulgar = VULGAR.from_vulgar_str(vulgar_str=vulgar_match.group(1))

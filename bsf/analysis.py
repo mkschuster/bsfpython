@@ -36,6 +36,7 @@ import sys
 import urllib.parse
 import uuid
 import warnings
+from typing import Dict, List
 
 from bsf.ngs import Collection, Sample
 from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
@@ -49,7 +50,6 @@ class Analysis(object):
     It consists of one or more C{bsf.analysis.Stage} objects that may run one or more
     C{bsf.process.Executable} or C{bsf.process.RunnableStep} objects (programs).
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -247,8 +247,7 @@ class Analysis(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  project_name: {!r}\n'.format(indent, self.project_name))
@@ -762,8 +761,7 @@ class Analysis(object):
         @return: HTML image element
         @rtype: str
         """
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('<img')
         str_list.append('alt="' + text + '"')
@@ -788,8 +786,7 @@ class Analysis(object):
         @return: Genome description
         @rtype: list[str]
         """
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         if genome_version is None:
             return str_list
@@ -824,8 +821,7 @@ class Analysis(object):
         @return: Transcriptome description
         @rtype: list[str]
         """
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         if transcriptome_version is None:
             return str_list
@@ -887,8 +883,7 @@ class Analysis(object):
         if title is None or not title:
             title = ' '.join((self.project_name, self.name))
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         if strict:
             str_list.append('<!DOCTYPE html PUBLIC ')
@@ -975,8 +970,7 @@ class Analysis(object):
         if not title:
             title = ' '.join((self.project_name, self.name))
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('<hr class="footer" />\n')
         str_list.append('<p class="footer">\n')
@@ -1054,8 +1048,7 @@ class Analysis(object):
         @return: XHTML 1.0 report as Python C{list} of Python C{str} objects
         @rtype: list[str]
         """
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.extend(
             self.get_html_header(
@@ -1353,8 +1346,7 @@ class Analysis(object):
         @return: XHTML 1.0 anchor element as Python C{list} of Python C{str} objects
         @rtype: list[str]
         """
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('UCSC Genome Browser Track Hub ')
         str_list.append('<a href="' + self.ucsc_hub_url(link_path=link_path) + '">' + self.project_name + '</a>')
@@ -1372,8 +1364,7 @@ class Analysis(object):
         if prefix is None or not prefix:
             prefix = self.prefix
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('hub ' + '_'.join((self.project_name, prefix)) + '\n')
         str_list.append('shortLabel ' + '_'.join((self.project_name, prefix)) + '\n')
@@ -1400,8 +1391,7 @@ class Analysis(object):
             prefix = self.prefix
 
         # If the file exists, read it first to retain any other genome assembly entries.
-        genome_version_dict = dict()
-        """ @type genome_version_dict: dict[str, str] """
+        genome_version_dict: Dict[str, str] = dict()
 
         file_path = os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_genomes)))
 
@@ -1436,8 +1426,7 @@ class Analysis(object):
         genome_version_dict[Genome.resolve_ucsc_alias(genome_version=self.genome_version)] = \
             '/'.join((self.genome_version, '_'.join((prefix, self.ucsc_name_tracks))))
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         for genome_version in sorted(genome_version_dict):
             str_list.append('genome ' + genome_version + '\n')
@@ -1573,7 +1562,6 @@ class Stage(object):
     A C{bsf.analysis.Stage} represents C{bsf.process.Executable} or C{bsf.procedure.Runnable} objects that share
     similar resource requirements of a I{Distributed Resource Management System} (I{DRMS}).
 
-    Attributes:
     @ivar name: Name
     @type name: str
     @ivar working_directory: Working directory path
@@ -1737,8 +1725,7 @@ class Stage(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:                 {!r}\n'.format(indent, self.name))

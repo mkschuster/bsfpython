@@ -36,6 +36,7 @@ import warnings
 from io import IOBase, TextIOWrapper
 from subprocess import Popen, PIPE, DEVNULL
 from threading import Lock, Thread
+from typing import List
 
 from bsf.argument import *
 from bsf.connector import *
@@ -135,8 +136,7 @@ def run_executables(executable_list, debug=0):
                 raise exception
 
         for attribute in ('stdin', 'stdout', 'stderr'):
-            connector = getattr(executable, attribute)
-            """ @type connector: Connector """
+            connector: Connector = getattr(executable, attribute)
 
             if isinstance(connector, StandardInputStream):
                 if connector.thread_callable is None:
@@ -188,8 +188,7 @@ def run_executables(executable_list, debug=0):
         # First, join all standard stream processing threads.
 
         for attribute in ('stdin', 'stdout', 'stderr'):
-            connector = getattr(executable, attribute)
-            """ @type connector: Connector """
+            connector: Connector = getattr(executable, attribute)
             if isinstance(connector, StandardStream) and connector.thread:
                 thread_join_counter = 0
                 while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
@@ -223,7 +222,6 @@ class Command(object):
 
     A C{bsf.process.Command} object can possibly contain another subordinate C{bsf.process.Command} object.
 
-    Attributes:
     @ivar name: Name
     @type name: str
     @ivar program: Program
@@ -295,8 +293,7 @@ class Command(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:               {!r}\n'.format(indent, self.name))
@@ -705,8 +702,7 @@ class Command(object):
         @return: Python C{list} of program, options, switches and arguments
         @rtype: list[str]
         """
-        command_line = list()
-        """ @type command_line: list[str] """
+        command_line: List[str] = list()
 
         if self.program:
             command_line.append(self.program)
@@ -764,7 +760,6 @@ class Command(object):
 class Executable(Command):
     """The C{bsf.process.Executable} class represents one C{bsf.process.Command} as UNIX process.
 
-    Attributes:
     @ivar stdin: Standard input I{STDIN} C{bsf.connector.Connector} object
     @type stdin: Connector | None
     @ivar stdout: Standard output I{STDOUT} C{bsf.connector.Connector} object
@@ -994,8 +989,7 @@ class Executable(Command):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  stdin:              {!r}\n'.format(indent, self.stdin))
@@ -1037,7 +1031,6 @@ class RunnableStep(Executable):
     """The C{bsf.process.RunnableStep} class represents one C{bsf.process.Executable} object
     in a C{bsf.procedure.Runnable} object.
 
-    Attributes:
     @ivar obsolete_file_path_list: Python C{list} of Python C{str} file path objects that can be removed
         after successfully completing C{bsf.process.RunnableStep.run}
     @type obsolete_file_path_list: list[str]
@@ -1129,8 +1122,7 @@ class RunnableStep(Executable):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  obsolete_file_path_list: {!r}\n'.format(indent, self.obsolete_file_path_list))
@@ -1156,7 +1148,6 @@ class RunnableStep(Executable):
 class RunnableStepChangeMode(RunnableStep):
     """The C{bsf.process.RunnableStepChangeMode} class represents a step changing file access mode.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str | None
     @ivar mode_directory: Comma-separated list of C{stat} constant names defining directory access modes
@@ -1312,7 +1303,6 @@ class RunnableStepChangeMode(RunnableStep):
 class RunnableStepCopy(RunnableStep):
     """The C{bsf.process.RunnableStepCopy} class represents a step copying files.
 
-    Attributes:
     @ivar source_path: Source path
     @type source_path: str | None
     @ivar target_path: Target path
@@ -1419,9 +1409,6 @@ class RunnableStepCopy(RunnableStep):
 
 class RunnableStepJava(RunnableStep):
     """The C{bsf.process.RunnableStepJava} class represents peculiarities of a Java program.
-
-    Attributes:
-    None
     """
 
     def __init__(
@@ -1555,9 +1542,6 @@ class RunnableStepJava(RunnableStep):
 
 class RunnableStepPicard(RunnableStepJava):
     """The C{bsf.process.RunnableStepPicard} class represents a Picard tool program.
-
-    Attributes:
-    None
     """
 
     def __init__(
@@ -1671,7 +1655,6 @@ class RunnableStepPicard(RunnableStepJava):
 class RunnableStepLink(RunnableStep):
     """The C{bsf.process.RunnableStepLink} class represents a step creating a symbolic link.
 
-    Attributes:
     @ivar source_path: Source path
     @type source_path: str | None
     @ivar target_path: Target path
@@ -1780,7 +1763,6 @@ class RunnableStepLink(RunnableStep):
 class RunnableStepMakeDirectory(RunnableStep):
     """The C{bsf.process.RunnableStepMakeDirectory} class represents a step creating a directory.
 
-    Attributes:
     @ivar directory_path: Directory path
     @type directory_path: str | None
     """
@@ -1883,7 +1865,6 @@ class RunnableStepMakeDirectory(RunnableStep):
 class RunnableStepMakeNamedPipe(RunnableStep):
     """The C{bsf.process.RunnableStepMakeNamedPipe} class represents a step creating a named pipe.
 
-    Attributes:
     @ivar file_path: Named pipe file path
     @type file_path: str | None
     """
@@ -1986,7 +1967,6 @@ class RunnableStepMakeNamedPipe(RunnableStep):
 class RunnableStepMove(RunnableStep):
     """The C{bsf.process.RunnableStepMove} class represents a step moving a directory or file.
 
-    Attributes:
     @ivar source_path: Source path
     @type source_path: str | None
     @ivar target_path: Target path
@@ -2103,7 +2083,6 @@ class RunnableStepMove(RunnableStep):
 class RunnableStepRemoveDirectory(RunnableStep):
     """The C{bsf.process.RunnableStepRemoveDirectory} class represents a step removing a directory.
 
-    Attributes:
     @ivar directory_path: Directory path
     @type directory_path: str | None
     """
@@ -2300,7 +2279,6 @@ class RunnableStepRemoveFile(RunnableStep):
 class RunnableStepRemoveTree(RunnableStep):
     """The C{bsf.process.RunnableStepRemoveTree} class represents a step removing a file system tree.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str | None
     @ivar ignore_errors: Ignore errors
@@ -2407,7 +2385,6 @@ class RunnableStepRemoveTree(RunnableStep):
 class RunnableStepSleep(RunnableStep):
     """The C{bsf.process.RunnableStepSleep} class represents a step sleeping the process.
 
-    Attributes:
     @ivar sleep_time: Sleep time in seconds
     @type sleep_time: float | None
     """
@@ -2506,7 +2483,6 @@ class RunnableStepSleep(RunnableStep):
 class RunnableStepSetEnvironment(RunnableStep):
     """The C{bsf.process.RunnableStepSetEnvironment} class represents a step setting the process environment.
 
-    Attributes:
     @ivar key: Environment key
     @type key: str
     @ivar value: Environment value

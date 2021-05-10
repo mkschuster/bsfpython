@@ -28,6 +28,8 @@ A package of classes and methods modelling Comma-Separated Value (CSV) and Tab-S
 import re
 import warnings
 from csv import DictReader, DictWriter
+from io import TextIOWrapper
+from typing import Callable, Dict, List, Optional
 
 
 class AnnotationSheet(object):
@@ -39,11 +41,11 @@ class AnnotationSheet(object):
     via the C{bsf.annotation.AnnotationSheet.__init__} method without the need to create a
     C{bsf.annotation.AnnotationSheet} sub-class in code.
 
-    Attributes:
     @cvar _field_names: Python C{list} if field (column) names
     @type _field_names: list[str]
-    @cvar _test_methods:
-    @type _test_methods: typing.Dict[str, typing.List[typing.Callable]
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{Callable} value data
+    @type _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]]
     @ivar file_path: File path
     @type file_path: str | None
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -53,8 +55,8 @@ class AnnotationSheet(object):
     @ivar field_names: Python C{list} of Python C{str} (field name) objects
     @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{typing.Callable} value data
-    @type test_methods: typing.Dict[str, typing.List[typing.Callable]]
+        Python C{list} of Python C{Callable} value data
+    @type test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
     @type row_dicts: list[dict[str, str]]
     @ivar _csv_reader_file: C{io.TextIO}
@@ -93,8 +95,7 @@ class AnnotationSheet(object):
 
     # Python dict of Python str (field name) key data and
     # Python list of Python typing.Callable value data
-    _test_methods = dict()
-    """ @type _test_methods: typing.Dict[str, typing.List[typing.Callable] """
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
 
     # Python dict of (boolean state) Python str objects and Python bool value objects.
     _boolean_states = {
@@ -657,7 +658,7 @@ class AnnotationSheet(object):
             name=None,
             header=None,
             field_names=None,
-            test_methods=None,
+            test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]] = None,
             row_dicts=None):
         """Initialise a C{bsf.annotation.AnnotationSheet} object.
 
@@ -672,8 +673,8 @@ class AnnotationSheet(object):
         @param field_names: Python C{list} of Python C{str} (field name) objects
         @type field_names: list[str] | None
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
-            Python C{list} of Python C{typing.Callable} value data
-        @type test_methods: typing.Dict[str, typing.List[typing.Callable]] | None
+            Python C{list} of Python C{Callable} value data
+        @type test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]]
         @param row_dicts: Python C{list} of Python C{dict} objects
         @type row_dicts: list[dict[str, str]] | None
         """
@@ -712,17 +713,10 @@ class AnnotationSheet(object):
         else:
             self.row_dicts = row_dicts
 
-        self._csv_reader_file = None
-        """ @type _csv_reader_file: io.TextIOWrapper | None """
-
-        self._csv_reader_object = None
-        """ @type _csv_reader_object: DictReader | None """
-
-        self._csv_writer_file = None
-        """ @type _csv_writer_file: io.TextIOWrapper | None """
-
-        self._csv_writer_object = None
-        """ @type _csv_writer_object: DictWriter | None """
+        self._csv_reader_file: Optional[TextIOWrapper] = None
+        self._csv_reader_object: Optional[DictReader] = None
+        self._csv_writer_file: Optional[TextIOWrapper] = None
+        self._csv_writer_object: Optional[DictWriter] = None
 
         return
 
@@ -736,8 +730,7 @@ class AnnotationSheet(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  file_path:    {!r}\n'.format(indent, self.file_path))
@@ -901,11 +894,7 @@ class AnnotationSheet(object):
                 if field_name in self.test_methods:
                     for class_method_pointer in self.test_methods[field_name]:
                         # Only validate fields, for which instructions exist in the test_methods dict.
-                        messages += class_method_pointer(
-                            row_number=row_number,
-                            row_dict=row_dict,
-                            column_name=field_name
-                        )
+                        messages += class_method_pointer(row_number, row_dict, field_name)
 
         return messages
 

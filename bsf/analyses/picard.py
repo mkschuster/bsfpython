@@ -30,6 +30,7 @@ import re
 import sys
 import warnings
 import weakref
+from typing import Callable, Dict, List, Optional
 
 import pysam
 
@@ -49,7 +50,6 @@ from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaArc
 class PicardIlluminaRunFolder(Analysis):
     """The C{bsf.analyses.picard.PicardIlluminaRunFolder} class of Picard Analyses acting on Illumina Run Folders.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -203,8 +203,7 @@ class PicardIlluminaRunFolder(Analysis):
         self.java_archive_picard = java_archive_picard
         self.force = force
 
-        self._irf = None
-        """ @type _irf: RunFolder | None """
+        self._irf: Optional[RunFolder] = None
 
         return
 
@@ -356,8 +355,6 @@ class ExtractIlluminaBarcodesSheet(AnnotationSheet):
     """The C{bsf.analyses.picard.ExtractIlluminaBarcodesSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.analysis.Analysis}.
-
-    Attributes:
     """
 
     _file_type = 'excel-tab'
@@ -371,15 +368,13 @@ class ExtractIlluminaBarcodesSheet(AnnotationSheet):
         'library_name',
     ]
 
-    _test_methods = dict()
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
 
 
 class IlluminaBasecallsToSamSheet(AnnotationSheet):
     """The C{bsf.analyses.picard.IlluminaBasecallsToSamSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.analysis.Analysis}.
-
-    Attributes:
     """
 
     _file_type = 'excel-tab'
@@ -394,7 +389,7 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
         'BARCODE_2',
     ]
 
-    _test_methods = dict()
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
 
     def adjust(self, barcode_length_tuple, unassigned_file_path):
         """Adjust the C{bsf.analyses.picard.IlluminaBasecallsToSamSheet}.
@@ -439,7 +434,6 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
 class FilePathExtractIlluminaCell(FilePath):
     """The C{bsf.analyses.picard.FilePathExtractIlluminaCell} models flow cell-specific file paths.
 
-    Attributes:
     @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
     @type prefix_cell: str
     @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
@@ -471,7 +465,6 @@ class FilePathExtractIlluminaCell(FilePath):
 class FilePathExtractIlluminaLane(FilePath):
     """The C{bsf.analyses.picard.FilePathExtractIlluminaLane} models lane-specific file paths.
 
-    Attributes:
     @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
     @type prefix_lane: str
     @ivar output_directory: Output directory
@@ -529,7 +522,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
     The analysis is based on Picard I{ExtractIlluminaBarcodes} and Picard I{IlluminaBasecallsToSam}.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -834,7 +826,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
             file_path=self.library_path)
-        """ @type library_annotation_sheet: LibraryAnnotationSheet """
 
         if self.lanes is None:
             validation_messages = library_annotation_sheet.validate(
@@ -875,8 +866,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # TODO: For NextSeq instruments, it would be sufficient to require annotation for only lane one and
         # copy information to lanes two to four internally.
 
-        cell_dependency_list = list()
-        """ @type cell_dependency_list: list[str] """
+        cell_dependency_list: List[str] = list()
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
@@ -1236,7 +1226,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 class FilePathIlluminaMultiplexSamLane(FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaMultiplexSamLane} class models files in a directory.
 
-    Attributes:
     @ivar unsorted_bam: Unsorted BAM file
     @type unsorted_bam: str
     @ivar unsorted_md5: Unsorted BAM file MD5 check sum
@@ -1286,7 +1275,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     """The C{bsf.analyses.picard.IlluminaMultiplexSam} class represents the
     Picard I{IlluminaBasecallsToMultiplexSam} analysis.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -1387,7 +1375,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         """Initialise a C{bsf.analyses.picard.IlluminaMultiplexSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -1798,7 +1786,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 class FilePathIlluminaDemultiplexSamCell(FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell} models flow cell-specific file paths.
 
-    Attributes:
     @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
     @type prefix_cell: str
     @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
@@ -1830,7 +1817,6 @@ class FilePathIlluminaDemultiplexSamCell(FilePath):
 class FilePathIlluminaDemultiplexSamLane(FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane} models lane-specific file paths.
 
-    Attributes:
     @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
     @type prefix_lane: str
     @ivar project_barcode: Project-specific barcode CSV file
@@ -1897,8 +1883,6 @@ class IlluminaDemultiplexSamSheet(AnnotationSheet):
     """The C{bsf.analyses.picard.IlluminaDemultiplexSamSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.picard.IlluminaDemultiplexSam} C{bsf.analysis.Analysis}.
-
-    Attributes:
     """
 
     _file_type = 'excel-tab'
@@ -1915,7 +1899,7 @@ class IlluminaDemultiplexSamSheet(AnnotationSheet):
         'BARCODE_2',
     ]
 
-    _test_methods = dict()
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
 
     def adjust(self, barcode_length_tuple):
         """Adjust a C{bsf.analyses.picard.IlluminaDemultiplexSamSheet}.
@@ -1943,7 +1927,6 @@ class IlluminaDemultiplexSam(Analysis):
     """The C{bsf.analyses.picard.IlluminaDemultiplexSam} class represents the logic to
     decode sequence archive BAM files into sample-specific BAM files via the Picard I{IlluminaSamDemux} tool.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -2397,8 +2380,7 @@ class IlluminaDemultiplexSam(Analysis):
         prf = ProcessedRunFolder(name=ProcessedRunFolder.default_name)
         collection.add_processed_run_folder(prf=prf)
 
-        cell_dependency_list = list()
-        """ @type cell_dependency_list: list[str] """
+        cell_dependency_list: List[str] = list()
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
@@ -2724,7 +2706,6 @@ class IlluminaDemultiplexSam(Analysis):
 class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
     """The C{bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane} models files in a directory.
 
-    Attributes:
     @ivar summary_tsv: Summary metrics TSV file
     @type summary_tsv: str
     @ivar detailed_tsv: Detailed metrics TSV file
@@ -2748,7 +2729,6 @@ class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
 class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
     """The C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} class represents Picard CollectHiSeqXPfFailMetrics.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -2830,7 +2810,6 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 class FilePathDownsampleSamReadGroup(FilePath):
     """The C{bsf.analyses.picard.FilePathDownsampleSamReadGroup} models files in a directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar downsampled_bam: Down-sampled BAM file
@@ -2853,8 +2832,6 @@ class FilePathDownsampleSamReadGroup(FilePath):
 
 class DownsampleSam(Analysis):
     """The C{bsf.analyses.picard.DownsampleSam} class represents the logic to run the Picard DownsampleSam analysis.
-
-    Attributes:
 
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
@@ -3128,7 +3105,6 @@ class DownsampleSam(Analysis):
 class FilePathSamToFastqReadGroup(FilePath):
     """The C{bsf.analyses.picard.FilePathSamToFastqReadGroup} class models read group-specific Picard SamToFastq files.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     """
@@ -3149,7 +3125,6 @@ class FilePathSamToFastqReadGroup(FilePath):
 class FilePathSamToFastqProject(FilePath):
     """The C{bsf.analyses.picard.FilePathSamToFastqProject} class models project-specific Picard SamToFastq files.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar sas_path_old: Old Sample Annotation Sheet file path
@@ -3180,7 +3155,6 @@ class FilePathSamToFastqProject(FilePath):
 class SamToFastq(Analysis):
     """The C{bsf.analyses.picard.SamToFastq} class represents the logic to run the Picard SamToFastq analysis.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -3419,8 +3393,7 @@ class SamToFastq(Analysis):
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
         stage_project = self.get_stage(name=self.get_stage_name_project())
 
-        project_dependency_list = list()
-        """ @type project_dependency_list: list[str] """
+        project_dependency_list: List[str] = list()
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -3453,8 +3426,8 @@ class SamToFastq(Analysis):
 
                         alignment_file = pysam.AlignmentFile(reads.file_path, 'rb', check_sq=False)
 
+                        read_group_dict: Dict[str, str]
                         for read_group_dict in alignment_file.header['RG']:
-                            """ @type read_group_dict: dict[str, str] """
                             # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
                             # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
                             platform_unit = re.sub(

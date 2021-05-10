@@ -46,7 +46,6 @@ from bsf.standards import Configuration, StandardFilePath, Transcriptome
 class FilePathAlign(AlignerFilePathAlign):
     """The C{bsf.analyses.star.FilePathAlign} class models file paths at the alignment stage.
 
-    Attributes:
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
     @type aligned_sam: str
     @ivar splice_junctions_tsv: Splice junctions tab-separated value (TSV) file path
@@ -75,8 +74,6 @@ class FilePathAlign(AlignerFilePathAlign):
 
 class FilePathSummary(AlignerFilePathSummary):
     """The C{bsf.analyses.star.FilePathSummary} class models file paths at the summary stage.
-
-    Attributes:
     """
 
     def __init__(self, prefix):
@@ -116,7 +113,6 @@ class FilePathSummary(AlignerFilePathSummary):
 class Star(Aligner):
     """STAR C{bsf.analyses.aligner.Aligner} sub-class.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

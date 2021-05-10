@@ -33,6 +33,7 @@ import os
 import re
 import warnings
 from argparse import ArgumentParser
+from typing import Dict, Tuple
 
 
 def split_md5sum_line(md5sum_str):
@@ -64,8 +65,7 @@ def split_md5sum_line(md5sum_str):
     return _check_sum, _check_mode, _file_name
 
 
-md5_dict = dict()
-""" @type md5_dict: dict[str, (str, str)] """
+md5_dict: Dict[str, Tuple[str, str]] = dict()
 
 
 def add_md5_entry(entry_file_name, entry_check_sum, entry_check_mode):

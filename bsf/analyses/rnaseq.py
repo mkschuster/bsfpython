@@ -31,6 +31,7 @@ import pickle
 import re
 import sys
 import warnings
+from typing import Callable, Dict, List
 
 from bsf.analyses.hisat import Hisat2
 from bsf.analyses.kallisto import Kallisto
@@ -49,7 +50,6 @@ from bsf.standards import Configuration, StandardFilePath, Index, Transcriptome
 class FilePathTophat(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathTophat} models files in a sample-specific TopHat directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar accepted_hits_bam: TopHat accepted hits BAM file
@@ -124,7 +124,6 @@ class FilePathTophat(FilePath):
 class FilePathCufflinks(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes tab-separated value (TSV) file
@@ -193,7 +192,6 @@ class FilePathCufflinks(FilePath):
 class FilePathCuffmerge(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar assembly_txt: Assembly text file
@@ -265,7 +263,6 @@ class FilePathCuffmerge(FilePath):
 class FilePathCuffquant(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar abundances: Cuffquant abundances file
@@ -289,7 +286,6 @@ class FilePathCuffquant(FilePath):
 class FilePathCuffnorm(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar abundances_tsv: Abundances TSV file
@@ -313,7 +309,6 @@ class FilePathCuffnorm(FilePath):
 class FilePathCuffdiff(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     """
@@ -335,8 +330,6 @@ class FilePathCuffdiff(FilePath):
 
 class FilePathProcessCuffdiff(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathProcessCuffdiff} models files in a comparison-specific Cuffdiff directory.
-
-    Attributes:
     """
 
     pass
@@ -345,7 +338,6 @@ class FilePathProcessCuffdiff(FilePath):
 class FilePathMonocle(FilePath):
     """The C{bsf.analyses.rnaseq.FilePathMonocle} models files in a comparison-specific Monocle directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar annotation_tsv: Monocle annotation TSV
@@ -370,8 +362,6 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     """The C{bsf.analyses.rnaseq.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
 
     The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
-
-    Attributes:
     """
 
     _file_type = 'excel-tab'
@@ -381,13 +371,12 @@ class TuxedoSamplePairSheet(AnnotationSheet):
         'V2',
     ]
 
-    _test_methods = dict()
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
 
 
 class Tuxedo(Analysis):
     """Tuxedo RNASeq C{bsf.analysis.Analysis} sub-class.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -899,8 +888,7 @@ class Tuxedo(Analysis):
         self.no_length_correction = no_length_correction
         self.aligner = aligner
 
-        self._comparison_dict = dict()
-        """ @type _comparison_dict: dict[str, list[SampleGroup]] """
+        self._comparison_dict: Dict[str, List[SampleGroup]] = dict()
 
         return
 
@@ -1025,8 +1013,7 @@ class Tuxedo(Analysis):
                     self.sample_list.extend(self.collection.get_all_samples(exclude=True))
 
                     # Create a global comparison by adding all sample groups.
-                    _sample_group_list = list()
-                    """ @type _sample_group_list: list[SampleGroup] """
+                    _sample_group_list: List[SampleGroup] = list()
 
                     for _group_name, _sample_list in self.collection.sample_group_dict.items():
                         _sample_group = SampleGroup(name=_group_name, sample_list=_sample_list)
@@ -1045,8 +1032,7 @@ class Tuxedo(Analysis):
                     self.sample_list.extend(self.collection.get_all_samples(exclude=True))
 
                     # Create a global comparison by adding all samples under their sample name as group name.
-                    _sample_group_list = list()
-                    """ @type _sample_group_list: list[SampleGroup] """
+                    _sample_group_list: List[SampleGroup] = list()
 
                     for _sample in self.sample_list:
                         # Sample objects are only useful, if at least one PairedReads object is not excluded.
@@ -1066,10 +1052,8 @@ class Tuxedo(Analysis):
                     regular_expression = re.compile(pattern='\\W')
 
                     for row_dict in annotation_sheet.row_dicts:
-                        _sample_group_list = list()
-                        """ @type _sample_group_list: list[SampleGroup] """
-                        _comparison_name_list = list()
-                        """ @type _comparison_name_list: list[str] """
+                        _sample_group_list: List[SampleGroup] = list()
+                        _comparison_name_list: List[str] = list()
                         # In addition to defining samples, allow also the definition of groups in comparison files.
                         # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to
                         # the group. So,
@@ -1096,8 +1080,7 @@ class Tuxedo(Analysis):
                             _group_name, _sample_list_old = self.collection.get_samples_from_row_dict(
                                 row_dict=row_dict,
                                 prefix=prefix)
-                            _sample_list_new = list()
-                            """ @type _sample_list_new: list[Sample] """
+                            _sample_list_new: List[Sample] = list()
                             if _group_name and len(_sample_list_old):
                                 # Sample objects are only useful, if at least one PairedReads object is not excluded.
                                 for _sample in _sample_list_old:
@@ -1364,8 +1347,7 @@ class Tuxedo(Analysis):
         stage_process_cuffdiff = self.get_stage(name=self.get_stage_name_process_cuffdiff())
         # stage_monocle = self.get_stage(name=self.get_stage_name_monocle())
 
-        runnable_run_cufflinks_list = list()
-        """ @type runnable_run_cufflinks_list: list[Runnable] """
+        runnable_run_cufflinks_list: List[ConsecutiveRunnable] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -1451,10 +1433,8 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_tophat arguments for reads1 and reads2.
 
-                reads_1_file_path_list = list()
-                """ @type reads_1_file_path_list: list[str] """
-                reads_2_file_path_list = list()
-                """ @type reads_2_file_path_list: list[str] """
+                reads_1_file_path_list: List[str] = list()
+                reads_2_file_path_list: List[str] = list()
 
                 for paired_reads_name in sorted(paired_reads_dict):
                     for paired_reads in paired_reads_dict[paired_reads_name]:
@@ -1815,8 +1795,7 @@ class Tuxedo(Analysis):
         # expected to exist by another process.
         # Circumvent such a situation by introducing dependencies on previous Cuffmerge processes. Sigh.
         # TODO: Report this to the Cufflinks author.
-        executable_cuffmerge_dict = dict()
-        """ @type executable_cuffmerge_dict: dict[str, Executable] """
+        executable_cuffmerge_dict: Dict[str, Executable] = dict()
 
         for comparison_name in sorted(self._comparison_dict):
             if self.debug > 0:
@@ -1830,16 +1809,11 @@ class Tuxedo(Analysis):
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
             # Check that the comparison contains at least one sample group.
 
-            cuffdiff_cuffnorm_abundances_dict = dict()
-            """ @type cuffdiff_cuffnorm_abundances_dict: dict[str, list[str]] """
-            cuffdiff_cuffnorm_alignments_dict = dict()
-            """ @type cuffdiff_cuffnorm_alignments_dict: dict[str, list[str]] """
-            cuffdiff_cuffnorm_dependencies = list()
-            """ @type cuffdiff_cuffnorm_dependencies: list[str] """
-            cuffmerge_cuffnorm_submit = len(sample_group_list) >= 1
-            """ @type cuffmerge_cuffnorm_submit: bool """
-            cuffmerge_transcript_gtf_list = list()
-            """ @type cuffmerge_transcript_gtf_list: list[str] """
+            cuffdiff_cuffnorm_abundances_dict: Dict[str, List[str]] = dict()
+            cuffdiff_cuffnorm_alignments_dict: Dict[str, List[str]] = dict()
+            cuffdiff_cuffnorm_dependencies: List[str] = list()
+            cuffmerge_cuffnorm_submit: bool = len(sample_group_list) >= 1
+            cuffmerge_transcript_gtf_list: List[str] = list()
 
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_run_cuffmerge = self.get_prefix_run_cuffmerge(comparison_name=comparison_name)
@@ -2019,10 +1993,8 @@ class Tuxedo(Analysis):
                 if self.debug > 0:
                     print('    SampleGroup name:', sample_group.name)
 
-                per_group_abundances_list = list()
-                """ @type per_group_abundances_list: list[str] """
-                per_group_alignments_list = list()
-                """ @type per_group_alignments_list: list[str] """
+                per_group_abundances_list: List[str] = list()
+                per_group_alignments_list: List[str] = list()
 
                 for sample in sample_group.sample_list:
                     if self.debug > 0:
@@ -2160,12 +2132,11 @@ class Tuxedo(Analysis):
                     # FIXME: ReadGroup versus Sample level
                     # Depending on the replicate_grouping instance variable, the abundance file can be on
                     # the read_group or sample level, while Monocle annotation will always be on the sample level.
-                    monocle_row_dict = {
+                    monocle_row_dict: Dict[str, str] = {
                         'file': file_path_run_cuffquant.abundances,
                         # 'sample_name' is used by Monocle in the plot_cell_clusters() function internally.
                         'original_name': sample.name
                     }
-                    """ @type monocle_row_dict: dict[str, str] """
                     # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample Monocle *'.
                     for annotation_key in filter(
                             lambda x: x.startswith('Monocle '), sample.annotation_dict.keys()):
@@ -2441,8 +2412,7 @@ class Tuxedo(Analysis):
 
             # Write a HTML document.
 
-            str_list = list()
-            """ @type str_list: list[str] """
+            str_list: List[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">')
             str_list.append(self.project_name + ' ' + self.name)
@@ -3410,8 +3380,7 @@ class Tuxedo(Analysis):
             """Private function to create a UCSC Track Hub.
             """
 
-            str_list = list()
-            """ @type str_list: list[str] """
+            str_list: List[str] = list()
 
             # Group via UCSC super tracks.
 
@@ -3647,7 +3616,6 @@ class FilePathDESeq(FilePath):
 class DESeq(Analysis):
     """DESeq RNASeq C{bsf.analysis.Analysis} sub-class.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -3954,7 +3922,7 @@ class DESeq(Analysis):
                     sample_name=sample.name)
                 file_path_kallisto_sample = Kallisto.get_file_path_sample(
                     sample_name=sample.name)
-                row_dict = {
+                row_dict: Dict[str, str] = {
                     'bam_path': file_path_star_sample.sample_bam,
                     'bai_path': file_path_star_sample.sample_bai,
                     'ah5_path': file_path_kallisto_sample.abundance_h5,
@@ -3966,7 +3934,6 @@ class DESeq(Analysis):
                     row_dict['run'] = sample.name
                 else:
                     row_dict['sample'] = sample.name
-                """ @type row_dict: dict[str, str] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
                 for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                     row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
@@ -4089,8 +4056,7 @@ class DESeq(Analysis):
 
             # Write a HTML document.
 
-            str_list = list()
-            """ @type str_list: list[str] """
+            str_list: List[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -4131,9 +4097,10 @@ class DESeq(Analysis):
                 file_type='excel',
                 name='DESeq Design Table')
 
-            design_dict = {value['design']: value for value in design_sheet.row_dicts if
-                           not design_sheet.get_boolean(row_dict=value, key='exclude')}
-            """ @type design_dict: dict[str, dict[str, str]] """
+            design_dict: Dict[str, Dict[str, str]] = {
+                value['design']: value for value in design_sheet.row_dicts if
+                not design_sheet.get_boolean(row_dict=value, key='exclude')
+            }
 
             str_list.append('<h2 id="lrt">Likelihood Ratio Testing (LRT)</h2>\n')
             str_list.append('\n')
@@ -4257,8 +4224,7 @@ class DESeq(Analysis):
                 name='DESeq Contrasts Table')
 
             # For compatibility with design-specific summary files, re-index the contrast sheet on design names.
-            contrast_dict = dict()
-            """ @type contrast_dict: dict[str, list] """
+            contrast_dict: Dict[str, List[Dict[str, str]]] = dict()
 
             for contrast_row_dict in contrast_sheet.row_dicts:
                 if contrast_row_dict['Design'] not in contrast_dict:

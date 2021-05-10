@@ -26,12 +26,12 @@ A package that centralises (SQLite) Database access.
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 from sqlite3 import Connection, Cursor, IntegrityError, OperationalError, connect
+from typing import Dict, List
 
 
 class DatabaseConnection(object):
-    """C{bsf.database.DatabaseConnection} class encapsulating the C{sqlite3.Connection} class.
+    """The C{bsf.database.DatabaseConnection} class encapsulates the C{sqlite3.Connection} class.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str
     @ivar _connection: C{sqlite3.Connection}
@@ -113,7 +113,6 @@ class DatabaseConnection(object):
 class SQLiteMaster(object):
     """The C{bsf.database.SQLiteMaster} models a row of the SQLite-specific 'sqlite_master' system table.
 
-    Attributes:
     @ivar sql_object_type: SQLite object type
     @type sql_object_type: str | None
     @ivar sql_object_name: SQLite object name
@@ -162,7 +161,7 @@ class SQLiteMasterAdaptor(object):
 
     The C{bsf.database.SQLiteMasterAdaptor} does not depend on the C{bsf.database.DatabaseAdaptor} class, since
     the table schema is intrinsic to SQLite so that most methods do not apply.
-    Attributes:
+
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: DatabaseConnection
     """
@@ -197,8 +196,7 @@ class SQLiteMasterAdaptor(object):
         @return: SQL I{SELECT} statement
         @rtype: str
         """
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('SELECT')
         statement_list.append(self._build_column_result_expression())
@@ -221,8 +219,7 @@ class SQLiteMasterAdaptor(object):
         @return: Python C{list} of C{bsf.database.SQLiteMaster} objects
         @rtype: list[SQLiteMaster]
         """
-        object_list = list()
-        """ @type object_list: list[SQLiteMaster] """
+        object_list: List[SQLiteMaster] = list()
 
         cursor = self.database_connection.get_cursor()
 
@@ -271,7 +268,6 @@ class SQLiteMasterAdaptor(object):
 class SQLiteTableInfo(object):
     """SQLite-specific PRAGMA table_info() row object.
 
-    Attributes:
     @ivar column_identifier: SQLite column identifier
     @type column_identifier: int | None
     @ivar column_name: SQLite column name
@@ -324,7 +320,6 @@ class SQLiteTableInfo(object):
 class SQLiteTableInfoAdaptor(object):
     """SQLite-specific PRAGMA table_info() adaptor.
 
-    Attributes:
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: DatabaseConnection
     """
@@ -362,8 +357,7 @@ class SQLiteTableInfoAdaptor(object):
         @return: Python C{list} of C{bsf.database.SQLiteTableInfo} objects
         @rtype: list[SQLiteTableInfo]
         """
-        object_list = list()
-        """ @type object_list: list[SQLiteTableInfo] """
+        object_list: List[SQLiteTableInfo] = list()
 
         cursor = self.database_connection.get_cursor()
 
@@ -380,7 +374,6 @@ class DatabaseAdaptor(object):
 
     Instance variables should be overridden in sub-classes.
 
-    Attributes:
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: DatabaseConnection
     @ivar table_name: SQL database table name
@@ -570,8 +563,7 @@ class DatabaseAdaptor(object):
         if not table_name_new:
             table_name_new = '_'.join((self.table_name, 'altered'))
 
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('ALTER')
         statement_list.append('TABLE')
@@ -588,8 +580,7 @@ class DatabaseAdaptor(object):
         @return: SQL I{CREATE TABLE} statement
         @rtype: str
         """
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('CREATE')
         statement_list.append('TABLE')
@@ -605,8 +596,7 @@ class DatabaseAdaptor(object):
         @return: SQL I{DROP TABLE} statement
         @rtype: str
         """
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('DROP')
         statement_list.append('TABLE')
@@ -622,8 +612,7 @@ class DatabaseAdaptor(object):
         @return: SQL I{INSERT INTO} statement
         @rtype: str
         """
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('INSERT')
         statement_list.append('INTO')
@@ -646,8 +635,7 @@ class DatabaseAdaptor(object):
         @return: SQL I{SELECT} statement
         @rtype: str
         """
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('SELECT')
         statement_list.append(self._build_column_result_expression())
@@ -680,8 +668,7 @@ class DatabaseAdaptor(object):
             raise Exception(
                 'Cannot create a SQL UPDATE statement ' + repr(self.table_name) + ' without a primary key.')
 
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        statement_list: List[str] = list()
 
         statement_list.append('UPDATE')
         statement_list.append(self.table_name)
@@ -852,10 +839,11 @@ class DatabaseAdaptor(object):
         pragma_table_info_list = pragma_table_info_adaptor.select_all_by_table_name(
             table_name=self.table_name)
 
-        column_dict_old = dict(map(lambda x: (x, None), map(lambda x: x.column_name, pragma_table_info_list)))
-        """ @type column_dict_old: dict[str, None] """
-        column_dict_new = dict(map(lambda x: (x, None), map(lambda x: x[0], self.column_definition)))
-        """ @type column_dict_new: dict[str, None] """
+        column_dict_old: Dict[str, None] = dict(
+            map(lambda x: (x, None), map(lambda x: x.column_name, pragma_table_info_list)))
+
+        column_dict_new: Dict[str, None] = dict(
+            map(lambda x: (x, None), map(lambda x: x[0], self.column_definition)))
 
         # Use a list comprehension to create a list of key objects since the dict gets modified in the loop.
         for key in [key for key in column_dict_new]:
@@ -872,7 +860,6 @@ class JobSubmission(object):
     This class is equivalent to the C{bsf.process.Executable} and C{bsf.process.Command} classes, but much less complex.
     Command lines are stored as submitted and not broken down into sub-commands, options and arguments.
 
-    Attributes:
     @ivar executable_id: Primary key
     @type executable_id: int | None
     @ivar name: C{bsf.process.Executable.name}
@@ -906,8 +893,6 @@ class JobSubmission(object):
 
 class JobSubmissionAdaptor(DatabaseAdaptor):
     """C{bsf.database.JobSubmissionAdaptor} class providing database access for C{bsf.database.JobSubmission}.
-
-    Attributes:
     """
 
     def __init__(

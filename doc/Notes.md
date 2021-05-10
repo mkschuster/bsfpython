@@ -172,14 +172,14 @@ merge two samples is implemented in the bsf.analyses.chipseq.ChIPSeq class.
 ## Object Hierarchy
 
 bsf
-  - from bsf import Defaults (no further dependency)
-  - from bsf.ngs import Collection (no further dependency)
-  - from bsf.argument import * (no further dependency)
+  - `from bsf import Defaults` (no further dependency)
+  - `from bsf.ngs import Collection` (no further dependency)
+  - `from bsf.argument import *` (no further dependency)
 
 bsf.analysis.Analysis
-  - from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable (no further dependency)
-  - from bsf.ngs import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet (no further dependency)
-  - from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC
+  - `from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable` (no further dependency)
+  - `from bsf.ngs import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet` (no further dependency)
+  - `from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC`
 
 bsf.argument
   - no further dependency

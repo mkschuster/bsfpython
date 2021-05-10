@@ -28,6 +28,7 @@ A package of classes and methods modelling configuration and default information
 import os
 import stat
 from configparser import ConfigParser
+from typing import Dict, List, Optional
 from xml.etree.ElementTree import ElementTree
 
 
@@ -71,7 +72,6 @@ class Configuration(object):
 
     A C{bsf.standards.Configuration} has an associated Python C{configparser.ConfigParser} to parse the file(s).
 
-    Attributes:
     @cvar global_configuration: Global C{bsf.standards.Configuration}
     @type global_configuration: Configuration
     @cvar global_file_path: Global configuration file
@@ -215,8 +215,7 @@ class Configuration(object):
         else:
             self.config_parser = config_parser
 
-        self._config_path_list = None
-        """ @type _config_path_list: list[str] | None """
+        self._config_path_list: Optional[List[str]] = None
 
         return
 
@@ -230,8 +229,7 @@ class Configuration(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  file_path_list: {!r}\n'.format(indent, self.file_path_list))
@@ -285,7 +283,7 @@ class BaseSection(object):
     """The C{bsf.standards.BaseSection} class is the base class for a global configuration section.
 
     The defaults are read from the [{section}] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -370,7 +368,7 @@ class BaseSectionVersion(object):
     """The C{bsf.standards.BaseSectionVersion} class is the base class for a global configuration section and version.
 
     The defaults are read from the [{section}_{version}] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -440,7 +438,7 @@ class JavaArchive(BaseSection):
     """The C{bsf.standards.JavaArchive} class models Java Archive (JAR) defaults.
 
     The defaults are read from the [java_archive] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -506,7 +504,7 @@ class JavaClassPath(BaseSection):
     """The C{bsf.standards.JavaClassPath} class models Java Class Path directory defaults.
 
     The defaults are read from the [java_classpath] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -526,7 +524,7 @@ class EnsemblVEP(BaseSectionVersion):
     """The C{bsf.standards.EnsemblVEP} class models Ensembl Variant Effect Predictor (VEP) defaults.
 
     The defaults are read from the [ensembl_vep_{genome_version}] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -691,7 +689,7 @@ class Genome(BaseSectionVersion):
     """The C{bsf.standards.Genome} class models Genome defaults.
 
     The defaults are read from the [genome_{genome_version}] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -820,7 +818,7 @@ class SnpEff(BaseSectionVersion):
     """The C{bsf.standards.SnpEff} class models snpEff defaults.
 
     The defaults are read from the [snpeff_{genome_version}] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -842,7 +840,7 @@ class Transcriptome(BaseSectionVersion):
     """The C{bsf.standards.Transcriptome} class models Transcriptome defaults.
 
     The defaults are read from the [transcriptome_{transcriptome_version}] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -919,7 +917,7 @@ class StandardFilePath(BaseSection):
     """The C{bsf.standards.StandardFilePath} class models file path defaults.
 
     The defaults are read from the [directories] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1347,7 +1345,7 @@ class Index(BaseSection):
     """The C{bsf.standards.Index} class models genome or transcriptome index directory defaults.
 
     The defaults are read from the [indices] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1358,7 +1356,7 @@ class Operator(BaseSection):
     """The C{bsf.standards.Operator} class models operator defaults.
 
     The defaults are read from the [operator] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1405,7 +1403,7 @@ class UCSC(BaseSection):
     """The C{bsf.standards.UCSC} class models UCSC Genome Browser uniform resource locator (URL) defaults.
 
     The defaults are read from the [ucsc] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1435,7 +1433,7 @@ class URL(BaseSection):
     """The C{bsf.standards.URL} class models web server uniform resource locator (URL) defaults.
 
     The defaults are read from the [url] section of the global configuration file.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1514,7 +1512,7 @@ class VendorQualityFilter(BaseSection):
 
     The defaults are read from the [VendorQualityFilter] section of the global configuration file.
     For each flow cell type a boolean specifies whether vendor quality filtering should be applied or not.
-    Attributes:
+
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1552,7 +1550,6 @@ class VendorQualityFilter(BaseSection):
 class Secrets(BaseSection):
     """The C{bsf.standards.Secrets} class models file paths to configuration files with secrets.
 
-    Attributes:
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     """
@@ -1611,7 +1608,6 @@ class Secrets(BaseSection):
 class Central(BaseSection):
     """The C{bsf.standards.Central} class models the central XML configuration document.
 
-    Attributes:
     @cvar section: C{configparser.ConfigParser} section
     @type section: str
     @cvar element_tree: C{xml.etree.ElementTree.ElementTree}
@@ -1651,7 +1647,6 @@ class Central(BaseSection):
 class CentralIndexDirectories(object):
     """The C{bsf.standards.CentralIndexDirectories} class models index directory names.
 
-    Attributes:
     @ivar bowtie1: Bowtie1 index directory name
     @type bowtie1: str
     @ivar bowtie2: Bowtie2 index directory name
@@ -1708,8 +1703,7 @@ class CentralVendorQualityFilters(object):
             return None
 
     def __init__(self):
-        self.filter_dict = dict()
-        """ @type filter_dict: dict[str, bool] """
+        self.filter_dict: Dict[str, bool] = dict()
 
         for element in Central.get_element_tree().find(path='VendorQualityFilters').iter():
             if element.tag == 'VendorQualityFilters':

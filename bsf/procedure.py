@@ -29,6 +29,7 @@ import errno
 import os
 import pickle
 import shutil
+from typing import List
 
 from bsf.process import RunnableStep
 from bsf.standards import Configuration
@@ -39,11 +40,9 @@ class FilePath(object):
     C{bsf.procedure.Runnable} class.
 
     Each C{bsf.procedure.Runnable} class is expected to define its corresponding C{bsf.procedure.FilePath} sub-class.
-    Attributes:
+
     @ivar prefix: File path prefix
     @type prefix: str
-    #ivar temporary_directory: Temporary directory path
-    #type temporary_directory: str
     """
 
     def __init__(self, prefix):
@@ -65,7 +64,6 @@ class Runnable(object):
     C{bsf.procedure.Runnable.runner_script}. It can be thought of a GNU Bash script that executes as set of
     C{bsf.process.RunnableStep} objects reflecting commands of a GNU Bash script.
 
-    Attributes:
     @cvar runner_script: Name of the I{Runner} script
     @type runner_script: str
     @ivar name: Name
@@ -144,8 +142,7 @@ class Runnable(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -189,8 +186,7 @@ class Runnable(object):
         @rtype: Runnable
         """
         with open(file=file_path, mode='rb') as input_file:
-            runnable = pickle.Unpickler(input_file).load()
-            """ @type runnable: Runnable """
+            runnable: Runnable = pickle.Unpickler(input_file).load()
 
         # Did the Unpickler really return a Runnable object?
         assert isinstance(runnable, Runnable)
@@ -456,8 +452,7 @@ class Runnable(object):
         # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
         # previous bsf.process.RunnableStep.
 
-        new_runnable_step_list = list()
-        """ @type new_runnable_step_list: list[RunnableStep] """
+        new_runnable_step_list: List[RunnableStep] = list()
         for runnable_step in reversed(runnable_step_list):
             new_runnable_step_list.append(runnable_step)
             if os.path.exists(self.runnable_step_status_file_path(
@@ -530,7 +525,6 @@ class ConsecutiveRunnable(Runnable):
     """The C{bsf.procedure.ConsecutiveRunnable} represents a procedure of consecutively running
     C{bsf.process.RunnableStep} or sub-classes thereof.
 
-    Attributes:
     @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
     @type runnable_step_list: list[RunnableStep]
     """
@@ -589,8 +583,7 @@ class ConsecutiveRunnable(Runnable):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -637,7 +630,6 @@ class ConcurrentRunnable(Runnable):
     """The C{bsf.procedure.ConcurrentRunnable} represents a procedure of concurrently running
     C{bsf.process.RunnableStep} or sub-classes thereof.
 
-    Attributes:
     @ivar runnable_step_list_prologue: Python C{list} of C{bsf.process.RunnableStep} objects run as prologue
     @type runnable_step_list_prologue: list[RunnableStep] | None
     @ivar runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects run concurrently
@@ -716,8 +708,7 @@ class ConcurrentRunnable(Runnable):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))

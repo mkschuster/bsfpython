@@ -31,9 +31,12 @@ import warnings
 from argparse import ArgumentParser
 from csv import DictReader
 from subprocess import Popen
+from typing import Dict, List, Optional, Tuple
 
-from pysam import VariantFile
+import pysam
+from pysam import VariantFile, VariantHeader, VariantRecord
 
+from bsf.connector import Connector
 from bsf.process import Command, Executable, RunnableStep
 
 
@@ -41,11 +44,10 @@ class RunnableStepCsqToVep(RunnableStep):
     """The C{bsf.executables.vcf.RunnableStepCsqToVep} class expands Ensembl Variant Effect Predictor (VEP)
     CSQ INFO annotation into a set of VEP_* INFO annotation.
 
-    Attributes:
     @ivar soc_path: Sequence Ontology term priority configuration (TSV) file path
     @type soc_path: str | None
     @ivar ofc_path: Output field configuration (TSV) file path
-    @type ofc_path; str | None
+    @type ofc_path: str | None
     @ivar vcf_path_old: Old VCF file path
     @type vcf_path_old: str | None
     @ivar vcf_path_new: New VCF file path
@@ -87,11 +89,11 @@ class RunnableStepCsqToVep(RunnableStep):
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: bsf.connector.Connector | None
+        @type stdin: Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: bsf.connector.Connector | None
+        @type stdout: Connector | None
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: bsf.connector.Connector | None
+        @type stderr: Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
@@ -111,7 +113,7 @@ class RunnableStepCsqToVep(RunnableStep):
         @param soc_path: Sequence Ontology term priority configuration (TSV) file path
         @type soc_path: str | None
         @param ofc_path: Output field configuration (TSV) file path
-        @type ofc_path; str | None
+        @type ofc_path: str | None
         @param vcf_path_old: Old VCF file path
         @type vcf_path_old: str | None
         @param vcf_path_new: New VCF file path
@@ -197,21 +199,17 @@ class RunnableStepCsqToVep(RunnableStep):
 
         # Read the Sequence Ontology (TSV) configuration file.
         # This file provides consequence prioritisation.
-        sequence_ontology_list = list()
-        """ @type sequence_ontology_list: list[str] """
+        sequence_ontology_list: List[str] = list()
 
-        with open(file=self.soc_path, mode='rt') as input_file:
-            for row_dict in DictReader(input_file, dialect='excel-tab'):
-                """ @type row_dict: dict[str, str] """
+        with open(file=self.soc_path, mode='rt') as text_io:
+            for row_dict in DictReader(f=text_io, dialect='excel-tab'):
                 sequence_ontology_list.append(row_dict['SO term'])
 
         # Load the VEP output field (TSV) configuration file.
-        vep_header_dict = dict()
-        """ @type vep_header_dict: dict[str, dict[str, str]] """
+        vep_header_dict: Dict[str, Dict[str, str]] = dict()
 
-        with open(file=self.ofc_path, mode='rt') as input_file:
-            for row_dict in DictReader(input_file, dialect='excel-tab'):
-                """ @type row_dict: dict[str, str] """
+        with open(file=self.ofc_path, mode='rt') as text_io:
+            for row_dict in DictReader(f=text_io, dialect='excel-tab'):
                 # NOTE: Override all types with 'String' to allow multiple values joined by '&' characters.
                 row_dict['Type'] = 'String'
                 vep_header_dict[row_dict['ID']] = row_dict
@@ -220,8 +218,7 @@ class RunnableStepCsqToVep(RunnableStep):
 
         # Copy the header for a new VCF instance.
 
-        vh_new = vf_old.header.copy()
-        """ @type vh_new: pysam.libcbcf.VariantHeader """
+        vh_new: VariantHeader = vf_old.header.copy()
 
         if 'CSQ' not in vf_old.header.info:
             raise Exception("Cannot convert a VCF file without a 'CSQ' INFO field.")
@@ -235,17 +232,14 @@ class RunnableStepCsqToVep(RunnableStep):
         #
         # vh_new.info.remove_header('CSQ')
 
-        csq = vf_old.header.info['CSQ']
-        """ @type csq: pysam.libcbcf.VariantMetadata """
+        csq: pysam.libcbcf.VariantMetadata = vf_old.header.info['CSQ']
 
         # Build a new header with VEP_ INFO fields.
         # Split the description on white space first, the pipe-separated list of VEP field declarations
         # is then in the last block.
 
-        csq_key_list = csq.description.split()[-1].split('|')
-        """ @type csq_key_list: list[str] """
-        csq_index_allele_num = None
-        """ @type csq_index_allele_num: int | None """
+        csq_key_list: List[str] = csq.description.split()[-1].split('|')
+        csq_index_allele_num: Optional[int] = None
 
         for index, csq_key in enumerate(csq_key_list):
             if csq_key == 'ALLELE_NUM':
@@ -290,9 +284,9 @@ class RunnableStepCsqToVep(RunnableStep):
 
         if debug > 1:
             # Print the new header.
+            key: str
+            vmd: pysam.libcbcf.VariantMetadata
             for key, vmd in vh_new.info.items():
-                """ @type key: str """
-                """ @type vmd: pysam.libcbcf.VariantMetadata """
                 # print('Key:', repr(key), 'VariantMetadata:', repr(vmd))
                 # print(type(vmd), 'dir:', dir(vmd))
                 print(
@@ -311,11 +305,10 @@ class RunnableStepCsqToVep(RunnableStep):
 
         # Parse the CSQ INFO field of each VariantRecord.
 
+        vr: VariantRecord
         for vr in vf_old.fetch():
-            """ @type vr: pysam.libcbcf.VariantRecord """
             vr.translate(vh_new)
-            vri = vr.info
-            """ @type vri: pysam.libcbcf.VariantRecordInfo """
+            vri: pysam.libcbcf.VariantRecordInfo = vr.info
 
             # Initialise a Python dict of VEP key and Python list value data.
             # {
@@ -329,8 +322,7 @@ class RunnableStepCsqToVep(RunnableStep):
             #     ],
             #     ...,
             # }
-            vep_dict = dict()
-            """ @type vep_dict: dict[str, list[list[str]]] """
+            vep_dict: Dict[str, List[List[str]]] = dict()
 
             # Total number of alleles including REF and ALT.
             allele_length = len(vr.alleles)
@@ -340,8 +332,8 @@ class RunnableStepCsqToVep(RunnableStep):
                 continue
 
             # Iterate over all comma-separated allele-transcript blocks.
+            csq_component: str
             for csq_component in vri['CSQ']:
-                """ @type csq_component: str """
                 csq_value_list = csq_component.split('|')
 
                 allele_number = int(csq_value_list[csq_index_allele_num])
@@ -404,12 +396,10 @@ class RunnableStepCsqToVep(RunnableStep):
             # For each allele, select exactly one index from the list of possible consequences.
             # Thereby, the most severe sequence ontology term that has also the PICK flag gets prioritised.
             # Failing a PICK flag, in case the filter script has removed all, the most severe consequence gets picked.
-            priority_list = list()
-            """ @type priority_list: list[int | None] """
+            priority_list: List[Optional[int]] = list()
             for i in range(0, allele_length):
                 # VEP consequences can be '&' separated values (e.g. splice_region_variant&synonymous_variant).
-                consequence_tuple_list = list()
-                """ @type consequence_tuple_list: list[(int, str)] """
+                consequence_tuple_list: List[Tuple[int, str]] = list()
                 for index, vep_consequence in enumerate(vep_dict['VEP_Consequence'][i]):
                     for value in vep_consequence.split('&'):
                         consequence_tuple_list.append((index, value))

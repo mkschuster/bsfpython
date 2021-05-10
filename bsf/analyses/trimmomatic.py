@@ -27,6 +27,7 @@ A package of classes and methods supporting the Trimmomatic tool.
 #
 import os
 import sys
+from typing import List
 
 from bsf.analysis import Analysis, Stage
 from bsf.executables.collection import RunnableStepCollectionPruneFastq
@@ -39,7 +40,6 @@ from bsf.standards import Configuration, JavaArchive
 class FilePathTrimmomaticReadGroup(FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} models read group-specific Trimmomatic files.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar trim_log_tsv: Trimmomatic trim log Tab-Separated Value (TSV) file path
@@ -89,7 +89,6 @@ class FilePathTrimmomaticReadGroup(FilePath):
 class FilePathTrimmomaticProject(FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} class models project-specific Trimmomatic files.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar sas_path_old: Old Sample Annotation Sheet file path
@@ -119,8 +118,6 @@ class FilePathTrimmomaticProject(FilePath):
 
 class Trimmomatic(Analysis):
     """The C{bsf.analyses.trimmomatic.Trimmomatic} class represents the logic to run the Trimmomatic analysis.
-
-    Attributes:
 
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
@@ -403,8 +400,7 @@ class Trimmomatic(Analysis):
         stage_summary = self.get_stage(name=self.get_stage_name_summary())
         stage_project = self.get_stage(name=self.get_stage_name_project())
 
-        project_dependency_list = list()
-        """ @type project_dependency_list: list[str] """
+        project_dependency_list: List[str] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -415,8 +411,7 @@ class Trimmomatic(Analysis):
                 print(self, 'Sample name:', sample.name)
                 sys.stdout.writelines(sample.trace(level=1))
 
-            sample_step_list = list()
-            """ @type sample_step_list: list[str] """
+            sample_step_list: List[str] = list()
             if 'Trimmomatic Steps' in sample.annotation_dict:
                 for trimming_step in sample.annotation_dict['Trimmomatic Steps']:
                     sample_step_list.extend(self.configuration.list_from_csv(csv_string=trimming_step))
@@ -651,8 +646,7 @@ class Trimmomatic(Analysis):
 
         # Write a HTML document.
 
-        report_list = list()
-        """ @type report_list: list[str] """
+        report_list: List[str] = list()
 
         report_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         report_list.append('\n')

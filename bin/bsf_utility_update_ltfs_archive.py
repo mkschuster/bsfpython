@@ -33,6 +33,7 @@
 import fnmatch
 import os
 from argparse import ArgumentParser
+from typing import Dict, List
 
 argument_parser = ArgumentParser(
     description='LTFS archive collection and update script.')
@@ -65,8 +66,7 @@ argument_parser.add_argument(
 name_space = argument_parser.parse_args()
 
 # The LTFS dict uses IRF keys and list value data of LTFS tapes.
-ltfs_dict = dict()
-""" @type ltfs_dict: dict[str, list[str]] """
+ltfs_dict: Dict[str, List[str]] = dict()
 
 # Read the initial LTFS content file that needs updating.
 

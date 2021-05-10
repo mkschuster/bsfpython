@@ -32,6 +32,7 @@ import re
 import shutil
 import sys
 from argparse import ArgumentParser
+from typing import List
 
 from bsf.connector import ConnectorFile
 from bsf.process import Command, Executable, RunnableStep
@@ -73,10 +74,8 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
         raise Exception('\n'.join(local_exception_str_list))
 
     # SAM header lines that need propagating around FASTQ files. Sigh!
-    sam_header_pg = list()
-    """ @type sam_header_pg: list[str] """
-    sam_header_rg = list()
-    """ @type sam_header_rg: list[str] """
+    sam_header_pg: List[str] = list()
+    sam_header_rg: List[str] = list()
 
     with open(file=path_temporary_sam, mode='rt') as _input_file:
         for line_str in _input_file:

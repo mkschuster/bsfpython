@@ -29,10 +29,11 @@ import os
 import re
 import sys
 import warnings
-from typing import List
+from typing import Dict, List, Optional, Tuple
 
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
+from bsf.ngs import Collection, PairedReads, Sample
 from bsf.procedure import FilePath, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
     RunnableStepMove, RunnableStep, RunnableStepLink
@@ -42,7 +43,6 @@ from bsf.standards import Configuration, StandardFilePath, JavaArchive
 class FilePathAlign(FilePath):
     """The C{bsf.analyses.aligner.FilePathAlign} class models file paths at the alignment stage.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar stderr_txt: Text file to capture STDERR of the aligner
@@ -80,7 +80,6 @@ class FilePathAlign(FilePath):
 class FilePathReadGroup(FilePath):
     """The C{bsf.analyses.aligner.FilePathReadGroup} class models file paths at the read group processing stage.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar merged_bam: Merged binary alignment map (BAM) file path
@@ -125,7 +124,6 @@ class FilePathReadGroup(FilePath):
 class FilePathSample(FilePath):
     """The C{bsf.analyses.aligner.FilePathSample} class models file paths at the sample processing stage.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar merged_bam: Merged binary alignment map (BAM) file path
@@ -192,7 +190,6 @@ class FilePathSample(FilePath):
 class FilePathSummary(FilePath):
     """The C{bsf.analyses.aligner.FilePathSummary} class models file paths at the summary stage.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar pasm_alignment_read_group_pdf: Picard Alignment Summary Metrics per read group PDF plot
@@ -299,7 +296,6 @@ class FilePathSummary(FilePath):
 class Aligner(Analysis):
     """The C{bsf.analyses.aligner.Aligner} class represents the logic to run a (short read) aligner.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -485,9 +481,9 @@ class Aligner(Analysis):
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
         @type stage_list: list[Stage] | None
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection | None
+        @type collection: Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample] | None
+        @type sample_list: list[Sample] | None
         @param genome_fasta: Genome FASTA file
         @type genome_fasta: str | None
         @param genome_index: Genome index
@@ -610,7 +606,7 @@ class Aligner(Analysis):
             """Get the unmapped BAM file annotation of a C{bsf.ngs.PairedReads} object.
 
             @param _paired_reads: C{bsf.ngs.PairedReads} object
-            @type _paired_reads: bsf.ngs.PairedReads
+            @type _paired_reads: PairedReads
             @return: Python C{tuple} of Python C{str} (base name) and Python C{str} (unmapped BAM file path)
             @rtype: (str, str | None)
             """
@@ -687,8 +683,7 @@ class Aligner(Analysis):
             name='star_read_group',
             field_names=['sample', 'read_group'])
 
-        runnable_sample_list = list()
-        """ @type runnable_sample_list: list[Runnable] """
+        runnable_sample_list: List[ConsecutiveRunnable] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -701,11 +696,9 @@ class Aligner(Analysis):
 
             # To run Picard MergeBamAlignment, all alignments from a BAM file need merging into one.
 
-            unmapped_bam_file_dict = dict()
-            """ @type unmapped_bam_file_dict: dict[str, (str, list[Runnable])] """
+            unmapped_bam_file_dict: Dict[str, Tuple[Optional[str], List[ConcurrentRunnable]]] = dict()
 
-            runnable_read_group_list = list()
-            """ @type runnable_read_group_list: list[Runnable] """
+            runnable_read_group_list: List[ConsecutiveRunnable] = list()
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 

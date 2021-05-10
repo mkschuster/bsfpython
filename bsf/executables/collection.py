@@ -36,6 +36,7 @@ import sys
 from argparse import ArgumentParser
 from subprocess import Popen
 
+from bsf.connector import Connector
 from bsf.ngs import Collection
 from bsf.process import Command, Executable, RunnableStep
 
@@ -43,7 +44,6 @@ from bsf.process import Command, Executable, RunnableStep
 class RunnableStepCollectionPruneFastq(RunnableStep):
     """The C{bsf.executables.collection.RunnableStepCollectionPruneFastq} class prunes a sample annotation sheet.
 
-    Attributes:
     @ivar file_path_old: Old Sample Annotation Sheet file path
     @type file_path_old: str | None
     @ivar file_path_new: New Sample Annotation Sheet file path
@@ -92,11 +92,11 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: Command | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: bsf.connector.Connector | None
+        @type stdin: Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: bsf.connector.Connector | None
+        @type stdout: Connector | None
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: bsf.connector.Connector | None
+        @type stderr: Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None

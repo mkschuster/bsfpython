@@ -39,7 +39,6 @@ class RunnableStepAzureBlockBlob(RunnableStep):
     """The C{bsf.executables.cloud.RunnableStepAzureBlockBlob} class supports the
      I{Microsoft Azure Storage Blob Service}.
 
-    Attributes:
     @ivar account_name: I{Microsoft Azure Storage Account} name
     @type account_name: str
     @ivar container_name: I{Microsoft Azure Storage Blob Service} container name
@@ -142,8 +141,6 @@ class RunnableStepAzureBlockBlob(RunnableStep):
 
 class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
     """The C{bsf.executables.cloud.RunnableStepAzureBlockBlobUpload} class uploads file paths as block blobs.
-
-    Attributes:
     """
 
     def run(self, debug=0):
@@ -170,8 +167,6 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
 
 class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
     """The C{bsf.executables.cloud.RunnableStepAzureBlockBlobDownload} class downloads block blobs to file paths.
-
-    Attributes:
     """
 
     def run(self, debug=0):

@@ -32,6 +32,8 @@ C{bsf.argument.OptionPairShort} (-key=value).
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+from typing import List
+
 __all__ = \
     'Argument', \
     'Switch', 'SwitchLong', 'SwitchShort', \
@@ -44,7 +46,6 @@ __all__ = \
 class Argument(object):
     """The C{bsf.argument.Argument} class represents an argument obeying a I{key} schema.
 
-    Attributes:
     @ivar key: Key
     @type key: str
     @ivar value: Value
@@ -116,8 +117,7 @@ class Argument(object):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  key: {!r}\n'.format(indent, self.key))
@@ -143,16 +143,12 @@ class Argument(object):
 
 class Switch(Argument):
     """The C{bsf.argument.Switch} class represents an argument obeying a I{--key} or I{-k} schema.
-
-    Attributes:
     """
     pass
 
 
 class SwitchLong(Switch):
     """The C{bsf.argument.SwitchLong} class represents an argument obeying a I{--key} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -167,8 +163,6 @@ class SwitchLong(Switch):
 
 class SwitchShort(Switch):
     """The C{bsf.argument.SwitchShort} class represents an argument obeying a I{-k} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -184,7 +178,6 @@ class SwitchShort(Switch):
 class Option(Switch):
     """The C{bsf.argument.Option} class represents arguments obeying a I{--key value} or I{-k value} schema.
 
-    Attributes:
     @ivar value: Value
     @type value: str
     """
@@ -216,8 +209,7 @@ class Option(Switch):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  key: {!r}\n'.format(indent, self.key))
@@ -250,8 +242,6 @@ class Option(Switch):
 
 class OptionLong(Option):
     """The C{bsf.argument.OptionLong} class represents an argument obeying a I{--key value} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -266,8 +256,6 @@ class OptionLong(Option):
 
 class OptionShort(Option):
     """The C{bsf.argument.OptionShort} class represents an argument obeying a I{-k value} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -282,8 +270,6 @@ class OptionShort(Option):
 
 class OptionPair(Option):
     """The C{bsf.argument.OptionPair} class represents an argument obeying a I{KEY=VALUE} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -306,8 +292,6 @@ class OptionPair(Option):
 
 class OptionPairLong(OptionPair):
     """The C{bsf.argument.OptionPairLong} class represents an argument obeying a I{--KEY=VALUE} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -322,8 +306,6 @@ class OptionPairLong(OptionPair):
 
 class OptionPairShort(OptionPair):
     """The C{bsf.argument.OptionPairShort} class represents an argument obeying a I{-KEY=VALUE} schema.
-
-    Attributes:
     """
 
     def get_str(self):
@@ -339,8 +321,6 @@ class OptionPairShort(OptionPair):
 class OptionMulti(Option):
     """The C{bsf.argument.Option} class represents arguments obeying a I{--key value1 value2}
     or I{-k value1 value2} schema.
-
-    Attributes:
     """
 
     def get_list(self):
@@ -359,8 +339,8 @@ class OptionMultiLong(OptionMulti, OptionLong):
 
     The order of inheritance (OptionMulti, OptionLong) ascertains that OptionMulti.get_list()
     gets called before OptionLong.get_list().
-    Attributes:
     """
+
     pass
 
 
@@ -369,8 +349,8 @@ class OptionMultiShort(OptionMulti, OptionShort):
 
     The order of inheritance (OptionMulti, OptionShort) ascertains that OptionMulti.get_list()
     gets called before OptionShort.get_list().
-    Attributes:
     """
+
     pass
 
 
@@ -379,8 +359,8 @@ class OptionMultiPair(OptionMulti, OptionPair):
 
     The order of inheritance (OptionMulti, OptionPair) ascertains that OptionMulti.get_list()
     gets called before OptionPair.get_list().
-    Attributes:
     """
+
     pass
 
 
@@ -389,8 +369,8 @@ class OptionMultiPairLong(OptionMulti, OptionPairLong):
 
     The order of inheritance (OptionMulti, OptionPairLong) ascertains that OptionMulti.get_list()
     gets called before OptionPairLong.get_list().
-    Attributes:
     """
+
     pass
 
 
@@ -399,6 +379,6 @@ class OptionMultiPairShort(OptionMulti, OptionPairShort):
 
     The order of inheritance (OptionMulti, OptionPairShort) ascertains that OptionMulti.get_list()
     gets called before OptionPairShort.get_list().
-    Attributes:
     """
+
     pass

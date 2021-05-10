@@ -29,6 +29,7 @@ Distributed Resource Management System (DRMS) module
 import errno
 import os
 import re
+from typing import List
 
 from bsf.connector import StandardOutputStream
 from bsf.database import DatabaseAdaptor, DatabaseConnection
@@ -464,8 +465,7 @@ def submit(stage, debug=0):
 
         return
 
-    output_list = list()
-    """ @type output_list: list[str] """
+    output_list: List[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -510,8 +510,7 @@ def submit(stage, debug=0):
         if stage.memory_limit_hard and not stage.memory_free_virtual:
             stage.memory_free_virtual = stage.memory_limit_hard
 
-        resource_list = list()
-        """ @type resource_list: list[str] """
+        resource_list: List[str] = list()
 
         # Require physical memory to be free ...
         if stage.memory_free_mem:
