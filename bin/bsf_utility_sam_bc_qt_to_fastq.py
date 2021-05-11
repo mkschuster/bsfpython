@@ -26,15 +26,19 @@
 #  BSF Python script to extract the index read sequence (BC) and quality scores (QT) of an unaligned BAM file
 #  into a separate GNU Zip-compressed FASTQ file.
 #
-import gzip
 import os
 import queue
 import re
 import threading
 import warnings
 from argparse import ArgumentParser
+from gzip import GzipFile
+from queue import Queue
+from typing import Dict, List
 
 import pysam
+from pysam import AlignmentFile
+from pysam.libcalignedsegment import AlignedSegment
 
 
 def write_gzip_file(task_gzip_file, task_fifo_queue):
@@ -46,8 +50,7 @@ def write_gzip_file(task_gzip_file, task_fifo_queue):
     @type task_fifo_queue: queue.Queue
     """
     while True:
-        line_str = task_fifo_queue.get()
-        """ @type line_str: str """
+        line_str: str = task_fifo_queue.get()
         task_gzip_file.write(line_str)
         task_fifo_queue.task_done()
 
@@ -91,7 +94,7 @@ name_space = argument_parser.parse_args()
 
 vendor_filter = not name_space.npf_reads
 
-alignment_file = pysam.AlignmentFile(name_space.input_path, 'rb', check_sq=False)
+alignment_file = AlignmentFile(name_space.input_path, 'rb', check_sq=False)
 
 # Open a GzipFile object for each ReadGroup on the basis of @RG PU entries.
 
@@ -105,14 +108,12 @@ if 'SO' in header_dict:
 else:
     warnings.warn("Could not find a 'SO' tag in the '@HD' line.")
 
-gzip_file_dict = dict()
-""" @type gzip_file_dict: dict[str, list[gzip.GzipFile]] """
+gzip_file_dict: Dict[str, List[GzipFile]] = dict()
 
-fifo_queue_dict = dict()
-""" @type fifo_queue_dict: dict[str, list[Queue.Queue]] """
+fifo_queue_dict: Dict[str, List[Queue]] = dict()
 
+read_group_dict: Dict[str, str]
 for read_group_dict in alignment_file.header['RG']:
-    """ @type read_group_dict: dict[str, str] """
     # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
     # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
     platform_unit = re.sub(
@@ -123,12 +124,12 @@ for read_group_dict in alignment_file.header['RG']:
     if read_group_dict['ID'] not in gzip_file_dict:
         gzip_file_dict[read_group_dict['ID']] = list()
     else:
-        warnings.warn('ReadGroup ID already present in gzip_file_dict:', read_group_dict['ID'])
+        warnings.warn('ReadGroup ID already present in gzip_file_dict: ' + read_group_dict['ID'])
 
     if read_group_dict['ID'] not in fifo_queue_dict:
         fifo_queue_dict[read_group_dict['ID']] = list()
     else:
-        warnings.warn('ReadGroup ID already present in fifo_queue_dict:', read_group_dict['ID'])
+        warnings.warn('ReadGroup ID already present in fifo_queue_dict: ' + read_group_dict['ID'])
 
     gzip_file_list = gzip_file_dict[read_group_dict['ID']]
 
@@ -136,7 +137,7 @@ for read_group_dict in alignment_file.header['RG']:
 
     for suffix in ('1', '2', 'i'):
         # Create a GzipFile.
-        gzip_file = gzip.GzipFile(
+        gzip_file = GzipFile(
             filename=os.path.join(name_space.output_path, platform_unit + '_' + suffix + '.fastq.gz'),
             mode='wb',
             compresslevel=9)
@@ -156,8 +157,8 @@ for read_group_dict in alignment_file.header['RG']:
         read_thread.daemon = True
         read_thread.start()
 
+aligned_segment: AlignedSegment
 for aligned_segment in alignment_file:
-    """ @type aligned_segment: pysam.libcalignedsegment.AlignedSegment """
     if vendor_filter and aligned_segment.is_qcfail:
         continue
 
@@ -171,7 +172,7 @@ for aligned_segment in alignment_file:
         '@' + aligned_segment.query_name + '\n' +
         aligned_segment.query_sequence + '\n' +
         '+\n' +
-        pysam.array_to_qualitystring(aligned_segment.query_qualities) + '\n'
+        pysam.libcutils.array_to_qualitystring(aligned_segment.query_qualities) + '\n'
     )
 
     if aligned_segment.has_tag('BC'):

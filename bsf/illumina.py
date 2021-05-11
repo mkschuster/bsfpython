@@ -29,6 +29,7 @@ specific for Illumina sequencing systems.
 import datetime
 import os
 import warnings
+from typing import Dict, List, Optional, Tuple
 from xml.etree.ElementTree import ElementTree
 
 import dateutil.tz
@@ -40,7 +41,6 @@ from bsf.annotation import AnnotationSheet
 class Adaptors(object):
     """The C{bsf.illumina.Adaptors} class models Illumina Sequencing Adaptor index sequences.
 
-    Attributes:
     @cvar default_class: Default class
     @type default_class: str
     @cvar default_type: Default type
@@ -119,8 +119,7 @@ class Adaptors(object):
             Python C{str} (adaptor name) and Python C{bool} (reverse complement)
         @rtype: list[(str, str, str, bool)]
         """
-        result_list = list()
-        """ @type result_list: list[(str, str, str, bool)] """
+        result_list: List[Tuple[str, str, str, bool]] = list()
 
         if adaptor_class:  # not None and not empty
             adaptor_class_list = [adaptor_class]
@@ -162,7 +161,6 @@ class RunInformationFlowcellLayout(object):
     """The C{bsf.illumina.RunInformationFlowcellLayout} class models
     one I{<FlowcellLayout>} XML element in an I{Illumina Run Information} (RunInfo.xml) document.
 
-    Attributes:
     @ivar lane_count: Number of lanes
     @type lane_count: int
     @ivar surface_count: Number of surfaces
@@ -222,7 +220,6 @@ class RunInformationRead(object):
     """The C{bsf.illumina.RunInformationRead} class models
     one <Read> XML element in an Illumina Run Information (RunInfo.xml) document.
 
-    Attributes:
     @ivar number: Read number
     @type number: int
     @ivar cycles: Cycle number
@@ -254,7 +251,6 @@ class RunInformation(object):
     """The C{bsf.illumina.RunInformation} class represents an Illumina
     run information XML (RunInfo.xml) document.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str | None
     @ivar file_type: File type
@@ -352,8 +348,7 @@ class RunInformation(object):
         else:
             second_read = int(xml_second_read.get(key='FirstCycle'))
 
-        run_information_read_list = list()
-        """ @type run_information_read_list: list[RunInformationRead] """
+        run_information_read_list: List[RunInformationRead] = list()
         number = 1
 
         for read_element in run_element.find(path='Reads').iter(tag='Read'):
@@ -423,11 +418,9 @@ class RunInformation(object):
         xml_flow_cell_layout = run_info_tree.find(path='Run/FlowcellLayout')
         if xml_flow_cell_layout is not None:
             xml_tiles = run_info_tree.find(path='Run/FlowcellLayout/TileSet/Tiles')
+            tile_name_list: Optional[List[str]] = None
             if xml_tiles is not None:
                 tile_name_list = [xml_tile.text for xml_tile in xml_tiles.iter(tag='Tile')]
-            else:
-                tile_name_list = None
-                """ @type tile_name_list: list[str] | None """
 
             flow_cell_layout = RunInformationFlowcellLayout(
                 lane_count=int(xml_flow_cell_layout.get(key='LaneCount')),
@@ -555,8 +548,7 @@ class RunInformation(object):
         """
         cycle_number = 1
 
-        read_start_list = list()
-        """ @type read_start_list: list[int] """
+        read_start_list: List[int] = list()
 
         for run_information_read in self.run_information_read_list:
             read_start_list.append(cycle_number)
@@ -573,8 +565,7 @@ class RunInformation(object):
         """
         cycle_number = 1
 
-        read_end_list = list()
-        """ @type read_end_list: list[int] """
+        read_end_list: List[int] = list()
 
         for run_information_read in self.run_information_read_list:
             cycle_number += run_information_read.cycles
@@ -617,8 +608,7 @@ class RunInformation(object):
         @return: Python C{list} of Python C{str} (read structure) objects
         @rtype: list[str]
         """
-        read_structure_list = list()
-        """ @type read_structure_list: list[str] """
+        read_structure_list: List[str] = list()
 
         for run_information_read in self.run_information_read_list:
             if run_information_read.index:
@@ -643,7 +633,6 @@ class RunParameters(object):
     """The C{bsf.illumina.RunParameters} class models the contents of runParameters.xml
     files inside an Illumina Run Folder.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
@@ -873,7 +862,6 @@ class XMLConfiguration(object):
     """The C{bsf.illumina.XMLConfiguration} class models the contents of XML configuration
     files inside an Illumina Run Folder.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str | None
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
@@ -918,7 +906,6 @@ class AnalysisConfiguration(XMLConfiguration):
     """The C{bsf.illumina.AnalysisConfiguration} class models Image and Base Call analysis
     XML configuration files inside an Illumina Run Folder.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
@@ -937,8 +924,7 @@ class AnalysisConfiguration(XMLConfiguration):
         """
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
 
-        self._lane_tile_dict = dict()
-        """ @type _lane_tile_dict: dict[str, dict[str, bool]] """
+        self._lane_tile_dict: Dict[str, Dict[str, bool]] = dict()
 
         if self.element_tree.getroot() is None:
             return
@@ -982,8 +968,6 @@ class AnalysisConfiguration(XMLConfiguration):
 class ImageAnalysis(AnalysisConfiguration):
     """The C{bsf.illumina.ImageAnalysis} class models the contents of the
     I{IRF/Data/Intensities/config.xml} XML configuration file inside an Illumina Run Folder.
-
-    Attributes:
     """
     pass
 
@@ -991,8 +975,6 @@ class ImageAnalysis(AnalysisConfiguration):
 class BaseCallAnalysis(AnalysisConfiguration):
     """The C{bsf.illumina.BaseCallAnalysis} class models the contents of the
     I{IRF/Data/Intensities/BaseCalls/config.xml} XML configuration file inside an Illumina Run Folder.
-
-    Attributes:
     """
     pass
 
@@ -1004,7 +986,6 @@ class RunFolderNotComplete(Exception):
 class RunFolder(object):
     """The C{bsf.illumina.RunFolder} class represents an Illumina Run Folder.
 
-    Attributes:
     @cvar rta_dict: Python C{dict} of Python C{str} (RTA version) key objects and
         Python C{str} (RTA description) value objects
     @type rta_dict: dict[str, str]
@@ -1160,11 +1141,9 @@ class RunFolder(object):
         else:
             self.base_call_analysis = BaseCallAnalysis()
 
-        self._missing_base_call_tiles = dict()
-        """ @type _missing_base_call_tiles: dict[int, dict[str, bool]] """
+        self._missing_base_call_tiles: Dict[int, Dict[str, bool]] = dict()
 
-        self._missing_image_analysis_tiles = dict()
-        """ @type _missing_image_analysis_tiles: dict[int, dict[str, bool]] """
+        self._missing_image_analysis_tiles: Dict[int, Dict[str, bool]] = dict()
 
         return
 
@@ -1456,16 +1435,13 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
 
-        _file_name_list = list()
-        """ @type _file_name_list: list[str] """
-        _file_suffix_list = list()
-        """ @type _file_suffix_list: list[str] """
+        _file_name_list: List[str] = list()
+        _file_suffix_list: List[str] = list()
 
         if rta in ('1.18.54',):
             # MiSeq
@@ -1546,8 +1522,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -1562,8 +1537,7 @@ class RunFolder(object):
                 else:
                     print('Missing directory', lane_path)
                     continue
-                lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-                """ @type lane_dict: dict[str, int] """
+                lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
                 if debug > 1:
                     print('Processing directory', lane_path)
@@ -1578,8 +1552,7 @@ class RunFolder(object):
                     else:
                         print('Missing directory', cycle_path)
                         continue
-                    cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                    """ @type cycle_dict: dict[str, int] """
+                    cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
                     if debug > 2:
                         print('Processing directory', cycle_path)
@@ -1674,8 +1647,7 @@ class RunFolder(object):
         else:
             print('Missing directory', os.path.join(directory_path, _directory_name))
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -1776,8 +1748,7 @@ class RunFolder(object):
         else:
             print('Missing directory', os.path.join(directory_path, _directory_name))
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -1805,8 +1776,7 @@ class RunFolder(object):
             else:
                 print('Missing directory', lane_path)
                 continue
-            lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-            """ @type lane_dict: dict[str, int] """
+            lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
             if debug > 1:
                 print('Processing directory', lane_path)
@@ -1848,8 +1818,7 @@ class RunFolder(object):
                     else:
                         print('Missing directory', cycle_path)
                         continue
-                    cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                    """ @type cycle_dict: dict[str, int] """
+                    cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
                     if debug > 2:
                         print('Processing directory', cycle_path)
@@ -1996,8 +1965,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2044,15 +2012,13 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
 
         # Build a list of cycle numbers that have no error map such as the last cycle of a read and index cycles.
-        no_error_cycles = list()
-        """ @type no_error_cycles: list[int] """
+        no_error_cycles: List[int] = list()
 
         cycles = 1
         for run_information_read in self.run_information.run_information_read_list:
@@ -2114,8 +2080,7 @@ class RunFolder(object):
                 else:
                     print('Missing directory', lane_path)
                     continue
-                lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-                """ @type lane_dict: dict[str, int] """
+                lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
                 if debug > 1:
                     print('Processing directory', lane_path)
@@ -2168,8 +2133,7 @@ class RunFolder(object):
                         else:
                             print('Missing directory', cycle_path)
                             continue
-                        cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                        """ @type cycle_dict: dict[str, int] """
+                        cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
                         if debug > 2:
                             print('Processing directory', cycle_path)
@@ -2283,8 +2247,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2331,8 +2294,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2416,8 +2378,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2465,12 +2426,9 @@ class RunFolder(object):
             read_end_list = self.run_information.get_read_end_list
 
             # Qualities are calculated for payload i.e. non-index reads from cycle 25 onwards.
-            cycle_number = 1
-            """ @type cycle_number: int """
-            quality_cycle_list = list()
-            """ @type quality_cycle_list: list[int] """
-            quality_start_list = list()
-            """ @type quality_start_list: list[int] """
+            cycle_number: int = 1
+            quality_cycle_list: List[int] = list()
+            quality_start_list: List[int] = list()
             quality_cycle_start_read_1 = 0
             for run_information_read in self.run_information.run_information_read_list:
                 if not run_information_read.index:
@@ -2494,8 +2452,7 @@ class RunFolder(object):
                 else:
                     print('Missing directory', cycle_path)
                     continue
-                cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                """ @type cycle_dict: dict[str, int] """
+                cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
                 _cycle_file_name_list = [
                     'BasecallingMetricsOut.bin',
                     'EventMetricsOut.bin',
@@ -2586,8 +2543,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2628,14 +2584,12 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
 
-        _file_name_list = list()
-        """ @type _file_name_list: list[str] """
+        _file_name_list: List[str] = list()
 
         if rta in ('1.18.54',):
             # The MiSeq instrument uses the reagent kit barcode.
@@ -2689,10 +2643,7 @@ class RunFolder(object):
 
         # Helper dict to map surface numbers to abbreviations.
 
-        surface_dict = dict()
-        """ @type surface_dict: dict[int, str] """
-        surface_dict[1] = 'bot'
-        surface_dict[2] = 'top'
+        surface_dict = {1: 'bot', 2: 'top'}
 
         # Process the IRF/Thumbnail_Images/ directory.
 
@@ -2703,8 +2654,7 @@ class RunFolder(object):
         else:
             print('Missing directory', _directory_path)
             return
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)
@@ -2719,8 +2669,7 @@ class RunFolder(object):
                 print('Missing directory', os.path.join(_directory_path, lane_name))
                 continue
             lane_path = os.path.join(_directory_path, lane_name)
-            lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
-            """ @type lane_dict: dict[str, int] """
+            lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
             if debug > 1:
                 print('Processing directory', lane_path)
@@ -2739,8 +2688,7 @@ class RunFolder(object):
                 else:
                     print('Missing directory', cycle_path)
                     continue
-                cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
-                """ @type cycle_dict: dict[str, int] """
+                cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
                 if debug > 2:
                     print('Processing directory', cycle_path)
@@ -2840,8 +2788,7 @@ class RunFolder(object):
 
         # _directory_name = os.path.basename(self.file_path)
         _directory_path = self.file_path
-        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
-        """ @type _directory_dict: dict[str, int] """
+        _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
         if debug > 0:
             print('Processing directory', _directory_path)

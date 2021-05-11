@@ -36,8 +36,6 @@ __all__ = \
 
 class Connector(object):
     """The C{Connector} class represents an abstract super-class of inter-process connections.
-
-    Attributes:
     """
 
     pass
@@ -46,7 +44,6 @@ class Connector(object):
 class ConnectorFile(Connector):
     """The C{ConnectorFile} class represents a C{file} connection.
 
-    Attributes:
     @ivar file_path: File path
     @type file_path: str
     @ivar file_mode: File mode
@@ -71,8 +68,6 @@ class ConnectorFile(Connector):
 
 class ConnectorPipe(Connector):
     """The C{ConnectorPipe} class represents an abstract pipe.
-
-    Attributes:
     """
 
     pass
@@ -80,8 +75,6 @@ class ConnectorPipe(Connector):
 
 class ConnectorPipeNamed(ConnectorFile):
     """The C{ConnectorPipeNamed} class represents a named pipe.
-
-    Attributes:
     """
 
     pass
@@ -90,7 +83,6 @@ class ConnectorPipeNamed(ConnectorFile):
 class ConcurrentProcess(Connector):
     """The C{ConcurrentProcess} class represents a pipe to or from a concurrent process.
 
-    Attributes:
     @ivar name: C{bsf.process.Executable.name}
     @type name: str
     @ivar connection: Connection type 'stdin', 'stdout' or 'stderr'
@@ -115,8 +107,6 @@ class ConcurrentProcess(Connector):
 
 class ElectronicSink(Connector):
     """The C{ElectronicSink} class represents a C{file} connection to /dev/null.
-
-    Attributes:
     """
 
     pass
@@ -127,7 +117,7 @@ class StandardStream(Connector):
 
     Standard streams (i.e. STDIN, STDOUT, STDERR) require processing via a C{threading.Thread} to prevent buffers from
     filling up and subsequently sub-processes (C{subprocess.Popen}) from blocking.
-    Attributes:
+
     @ivar file_path: File path
     @type file_path: str | None
     @ivar thread_callable: C{Callable} object for C{threading.Thread.target}
@@ -176,27 +166,21 @@ class StandardStream(Connector):
 
 
 class StandardInputStream(StandardStream):
-    """The C{StandardInputStream} class represents a STDIN stream processed via C{threading.Thread}.
-
-    Attributes:
+    """The C{StandardInputStream} class represents a I{STDIN} stream processed via C{threading.Thread}.
     """
 
     pass
 
 
 class StandardOutputStream(StandardStream):
-    """The C{StandardOutputStream} class represents a STDOUT stream processed via C{threading.Thread}.
-
-    Attributes:
+    """The C{StandardOutputStream} class represents a I{STDOUT} stream processed via C{threading.Thread}.
     """
 
     pass
 
 
 class StandardErrorStream(StandardStream):
-    """The C{StandardErrorStream} class represents a STDERR stream processed via C{threading.Thread}.
-
-    Attributes:
+    """The C{StandardErrorStream} class represents a I{STDERR} stream processed via C{threading.Thread}.
     """
 
     pass

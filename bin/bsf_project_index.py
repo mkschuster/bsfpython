@@ -31,6 +31,7 @@ import re
 import stat
 import sys
 from argparse import ArgumentParser
+from typing import Optional
 
 from bsf.analysis import Analysis
 from bsf.standards import StandardFilePath
@@ -101,10 +102,8 @@ name_space = argument_parser.parse_args()
 analysis = Analysis(project_name=name_space.project)
 analysis.run()
 
-project_name = name_space.project
-""" @type project_name: str | None """
-project_directory = name_space.project
-""" @type project_directory: str """
+project_name: Optional[str] = name_space.project
+project_directory: str = name_space.project
 
 if not os.path.isabs(project_directory):
 

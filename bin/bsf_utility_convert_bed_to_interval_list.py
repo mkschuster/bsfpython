@@ -27,6 +27,7 @@
 #
 import os
 from argparse import ArgumentParser
+from typing import Dict, List
 
 # Set the environment consistently.
 
@@ -89,10 +90,8 @@ else:
 # build a Python list of sequence region names and a Python dict of Python str (sequence region name) key
 # and Python list of Python list (interval) objects.
 
-sequence_name_dict = dict()
-""" @type sequence_name_dict: dict[str, list[list[str]]] """
-sequence_name_list = list()
-""" @type sequence_name_list: list[str] """
+sequence_name_dict: Dict[str, List[List[str]]] = dict()
+sequence_name_list: List[str] = list()
 
 with open(file=output_path, mode='wt') as output_file:
     # Read the SAM header dictionary and copy it to the output file.

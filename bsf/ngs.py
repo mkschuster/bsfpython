@@ -30,6 +30,7 @@ import re
 import stat
 import warnings
 from weakref import ReferenceType
+from typing import Callable, Dict, List, Optional
 
 from bsf.annotation import AnnotationSheet
 from bsf.standards import Configuration
@@ -38,7 +39,6 @@ from bsf.standards import Configuration
 class NextGenerationBase(object):
     """The C{bsf.ngs.NextGenerationBase} class represents a super-class for Next Generation Sequencing (NGS) objects.
 
-    Attributes:
     @ivar name: Name
     @type name: str | None
     @ivar file_path: File path
@@ -159,7 +159,6 @@ class Reads(NextGenerationBase):
 
     Typically, a C{Reads} object represents a FASTQ or unmapped BAM file.
 
-    Attributes:
     @ivar barcode: Barcode used for sample multiplexing
     @type barcode: str | None
     @ivar lane: Lane number
@@ -307,8 +306,7 @@ class Reads(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_paired_reads: {!r}\n'.format(indent, self.weak_reference_paired_reads))
@@ -415,7 +413,7 @@ class PairedReads(NextGenerationBase):
     """The C{bsf.ngs.PairedReads} class represents a pair of C{bsf.ngs.Reads}.
 
     For the C{bsf.ngs.Reads.file_type} I{CASAVA} this represents a read pair (i.e. I{R1} and I{R2}).
-    Attributes:
+
     @ivar reads_1: First C{bsf.ngs.Reads} object
     @type reads_1: Reads | None
     @ivar reads_2: Second C{bsf.ngs.Reads} object
@@ -562,8 +560,7 @@ class PairedReads(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample))
@@ -714,7 +711,7 @@ class Sample(NextGenerationBase):
 
     It consists of one or more C{bsf.ngs.PairedReads} objects as (biological or technical) replicates
     that result from the same flow cell.
-    Attributes:
+
     @cvar default_name: Default key
     @type default_name: str
     @ivar paired_reads_list: Python C{list} of C{bsf.ngs.PairedReads} objects
@@ -859,8 +856,7 @@ class Sample(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_project: {!r}\n'.format(indent, self.weak_reference_project))
@@ -982,8 +978,7 @@ class Sample(NextGenerationBase):
             Python C{list} of C{bsf.ngs.PairedReads} value data
         @rtype: dict[str, list[PairedReads]]
         """
-        paired_reads_dict = dict()
-        """ @type paired_reads_dict: dict[str, list[PairedReads]] """
+        paired_reads_dict: Dict[str, List[PairedReads]] = dict()
 
         for paired_reads in self.paired_reads_list:
             if exclude and paired_reads.exclude:
@@ -1025,8 +1020,6 @@ class Sample(NextGenerationBase):
 class Project(NextGenerationBase):
     """The C{bsf.ngs.Project} class represents a Next-Generation Sequencing Project
     consisting of one or more C{bsf.ngs.Sample} objects.
-
-    Attributes:
 
     @cvar default_name: Default key
     @type default_name: str
@@ -1135,8 +1128,7 @@ class Project(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_prf: {!r}\n'.format(indent, self.weak_reference_prf))
@@ -1195,8 +1187,7 @@ class Project(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: list[Sample]
         """
-        sample_list = list()
-        """ @type sample_list: list[bsf.ngs.Sample] """
+        sample_list: List[Sample] = list()
 
         for sample_name in sorted(self.sample_dict):
             sample = self.sample_dict[sample_name]
@@ -1209,7 +1200,6 @@ class Project(NextGenerationBase):
 class ProcessedRunFolder(NextGenerationBase):
     """The C{bsf.ngs.ProcessedRunFolder} class represents an Illumina Run Folder after processing with CASAVA.
 
-    Attributes:
     @cvar default_name: Default key
     @type default_name: str
     @ivar prefix: Prefix
@@ -1385,8 +1375,7 @@ class ProcessedRunFolder(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  weak_reference_collection: {!r}\n'.format(indent, self.weak_reference_collection))
@@ -1446,8 +1435,7 @@ class ProcessedRunFolder(NextGenerationBase):
         @return: A Python C{list} of C{bsf.ngs.Project} objects
         @rtype: list[Project]
         """
-        project_list = list()
-        """ @type project_list: list[Project] """
+        project_list: List[Project] = list()
 
         for project_name in sorted(self.project_dict):
             project_list.append(self.project_dict[project_name])
@@ -1459,7 +1447,6 @@ class Collection(NextGenerationBase):
     """The C{bsf.ngs.Collection} class represents a collection of
     one or more C{bsf.ngs.ProcessedRunFolder} objects.
 
-    Attributes:
     @cvar default_name: Default key
     @type default_name: str
     @ivar processed_run_folder_dict: Python C{dict} of C{bsf.ngs.ProcessedRunFolder.name} key objects and
@@ -1545,17 +1532,10 @@ class Collection(NextGenerationBase):
         @return: C{bsf.ngs.Collection}
         @rtype: Collection
         """
-        current_prf = None
-        """ @type current_prf: ProcessedRunFolder | None """
-
-        current_project = None
-        """ @type current_project: Project | None """
-
-        current_sample = None
-        """ @type current_sample: Sample | None """
-
-        current_paired_reads = None
-        """ @type current_paired_reads: PairedReads | None """
+        current_prf: Optional[ProcessedRunFolder] = None
+        current_project: Optional[Project] = None
+        current_sample: Optional[Sample] = None
+        current_paired_reads: Optional[PairedReads] = None
 
         def process_file_type():
             """Private function to get file type information.
@@ -1910,11 +1890,8 @@ class Collection(NextGenerationBase):
                     63: process_old_reads,
                 }
 
-            reads_file = None
-            """ @type reads_file: str | None """
-
-            reads_name = None
-            """ @type reads_name: str | None """
+            reads_file: Optional[str] = None
+            reads_name: Optional[str] = None
 
             # Reads{suffix} File
             _key = 'Reads' + suffix + ' File'
@@ -1972,7 +1949,7 @@ class Collection(NextGenerationBase):
             @param sample: C{bsf.ngs.Sample} object
             @type sample: Sample
             @param paired_reads: C{bsf.ngs.PairedReads} or C{None} object
-            @type paired_reads: bsf.ngs.PairedReads | None
+            @type paired_reads: PairedReads | None
             @param default_path: Default file path
             @type default_path: str
             @return: C{bsf.ngs.PairedReads} or C{None} object
@@ -2398,8 +2375,7 @@ class Collection(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list = list()
-        """ @type str_list: list[str] """
+        str_list: List[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
@@ -2487,8 +2463,7 @@ class Collection(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.ProcessedRunFolder} objects
         @rtype: list[ProcessedRunFolder]
         """
-        processed_run_folder_list = list()
-        """ @type processed_run_folder_list: list[bsf.ngs.ProcessedRunFolder] """
+        processed_run_folder_list: List[ProcessedRunFolder] = list()
 
         for processed_run_folder_name in sorted(self.processed_run_folder_dict):
             processed_run_folder_list.append(self.processed_run_folder_dict[processed_run_folder_name])
@@ -2501,8 +2476,7 @@ class Collection(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.Project} objects
         @rtype: list[Project]
         """
-        project_list = list()
-        """ @type project_list: list[Project] """
+        project_list: List[Project] = list()
 
         for processed_run_folder in self.get_all_processed_run_folders():
             project_list.extend(processed_run_folder.get_all_projects())
@@ -2517,8 +2491,7 @@ class Collection(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: list[Sample]
         """
-        sample_list = list()
-        """ @type sample_list: list[Sample] """
+        sample_list: List[Sample] = list()
 
         for project in self.get_all_projects():
             sample_list.extend(project.get_all_samples(exclude=exclude))
@@ -2599,8 +2572,7 @@ class Collection(NextGenerationBase):
             Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: (str, list[Sample])
         """
-        sample_list = list()
-        """ @type sample_list: list[Sample] """
+        sample_list: List[Sample] = list()
 
         value = str()
 
@@ -2733,8 +2705,7 @@ class Collection(NextGenerationBase):
 
             return dict()
 
-        row_dict = None
-        """ @type row_dict: dict[str, str] | None """
+        row_dict: Optional[Dict[str, str]] = None
 
         for prf_name in sorted(self.processed_run_folder_dict):
             prf = self.processed_run_folder_dict[prf_name]
@@ -2840,7 +2811,7 @@ class SampleGroup(object):
     """The C{bsf.ngs.SampleGroup} class represents a named Python list of C{bsf.ngs.Sample} objects.
 
     The grouping is usually defined in a sample annotation sheet.
-    Attributes:
+
     @ivar name: Name
     @type name: str | None
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -2909,8 +2880,7 @@ class SampleGroup(object):
             Python C{list} value objects of C{bsf.ngs.PairedReads} objects value data
         @rtype: dict[str, list[PairedReads]]
         """
-        group_dict = dict()
-        """ @type group_dict: dict[str, list[PairedReads]] """
+        group_dict: Dict[str, List[PairedReads]] = dict()
 
         for sample in self.sample_list:
             for paired_reads_name, paired_reads_list in \
@@ -2930,8 +2900,6 @@ class SampleGroup(object):
 class SampleAnnotationSheet(AnnotationSheet):
     """The C{bsf.ngs.SampleAnnotationSheet} class represents a Comma-Separated Value (CSV) table of sample information
     after running the C{bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder} C{bsf.analysis.Analysis}.
-
-    Attributes:
     """
 
     _file_type = 'excel'
@@ -2954,7 +2922,7 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Reads2 File',
     ]
 
-    _test_methods = {
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
         # File Type
         'ProcessedRunFolder Name': [
             AnnotationSheet.check_alphanumeric,

@@ -26,6 +26,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 import os
+from typing import List
 
 from bsf.analysis import Analysis, Stage
 from bsf.connector import ConnectorFile, ConnectorPipe, ConcurrentProcess
@@ -42,7 +43,6 @@ class IlluminaRunFolderArchive(Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} class represents the logic to archive
     an Illumina Run Folder in a format suitable for magnetic tape libraries.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -74,6 +74,8 @@ class IlluminaRunFolderArchive(Analysis):
     @type cloud_container: str | None
     @ivar cloud_path_prefix: Blob file path prefix
     @type cloud_path_prefix: str | None
+    @ivar cloud_concurrency: Maximum number of network connections
+    @type cloud_concurrency: int | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     """
@@ -251,6 +253,7 @@ class IlluminaRunFolderArchive(Analysis):
             cloud_account=None,
             cloud_container=None,
             cloud_path_prefix=None,
+            cloud_concurrency=None,
             force=None):
         """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
 
@@ -305,6 +308,8 @@ class IlluminaRunFolderArchive(Analysis):
         @type cloud_container: str | None
         @param cloud_path_prefix: Blob file path prefix
         @type cloud_path_prefix: str | None
+        @param cloud_concurrency: Maximum number of network connections
+        @type cloud_concurrency: int | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         """
@@ -334,6 +339,7 @@ class IlluminaRunFolderArchive(Analysis):
         self.cloud_account = cloud_account
         self.cloud_container = cloud_container
         self.cloud_path_prefix = cloud_path_prefix
+        self.cloud_concurrency = cloud_concurrency
         self.force = force
 
         return
@@ -396,6 +402,10 @@ class IlluminaRunFolderArchive(Analysis):
         option = 'cloud_path_prefix'
         if configuration.config_parser.has_option(section=section, option=option):
             self.cloud_path_prefix = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cloud_concurrency'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_concurrency = configuration.config_parser.getint(section=section, option=option)
 
         option = 'force'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -505,6 +515,11 @@ class IlluminaRunFolderArchive(Analysis):
         if not self.project_name:
             self.project_name = '_'.join((self.experiment_name, irf.run_information.flow_cell))
 
+        # Check that the cloud concurrency value (maximum number of network connections) is an integer.
+
+        if not self.cloud_concurrency:
+            self.cloud_concurrency = 1
+
         super(IlluminaRunFolderArchive, self).run()
 
         stage_pre_process_folder = self.get_stage(name=self.get_stage_name_pre_process())
@@ -592,10 +607,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Cluster intensity file (*.cif) directories, if present, need excluding from archiving at a later stage.
 
-        exclude_intensities_patterns = list()
-        """ @type exclude_intensities_patterns: list[str] """
-        archive_folder_dependencies = list()
-        """ @type archive_folder_dependencies: list[str] """
+        exclude_intensities_patterns: List[str] = list()
+        archive_folder_dependencies: List[str] = list()
 
         archive_folder_dependencies.append(runnable_pre_process_folder.name)
 
@@ -866,7 +879,8 @@ class IlluminaRunFolderArchive(Analysis):
                 account_name=self.cloud_account,
                 container_name=self.cloud_container,
                 source_path=archive_file_path,
-                target_path=target_path)
+                target_path=target_path,
+                max_concurrency=self.cloud_concurrency)
             runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
             # Upload the MD5 checksum file.
@@ -876,7 +890,8 @@ class IlluminaRunFolderArchive(Analysis):
                 account_name=self.cloud_account,
                 container_name=self.cloud_container,
                 source_path=archive_file_path + '.md5',
-                target_path=target_path + '.md5')
+                target_path=target_path + '.md5',
+                max_concurrency=self.cloud_concurrency)
             runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
         return
@@ -885,7 +900,6 @@ class IlluminaRunFolderArchive(Analysis):
 class FilePathIlluminaRunFolderRestore(FilePath):
     """The C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} models files in an archive directory.
 
-    Attributes:
     @ivar folder: Folder GNU Tar archive file
     @type folder: str
     @ivar intensities: Intensities GNU Tar archive file
@@ -911,7 +925,6 @@ class IlluminaRunFolderRestore(Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
     Illumina Run Folder from a format suitable for magnetic tape libraries.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

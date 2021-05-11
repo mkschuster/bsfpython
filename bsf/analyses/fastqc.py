@@ -28,17 +28,18 @@ A package of classes and methods supporting the FastQC tool.
 import os
 import sys
 import urllib.parse
+from typing import List
 
 from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepMakeDirectory
+from bsf.standards import Configuration
 
 
 class FilePathFastQCReadGroup(FilePath):
     """The C{bsf.analyses.fastqc.FilePathFastQCReadGroup} models read group-specific FastQC file paths.
 
-    Attributes:
     @ivar archive: GNU Zip compressed archive
     @type archive: str
     @ivar report: FastQC HTML report
@@ -66,7 +67,6 @@ class FilePathFastQCReadGroup(FilePath):
 class FastQC(Analysis):
     """BSF FastQC-specific Quality Assessment C{bsf.analysis.Analysis} sub-class.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -144,7 +144,7 @@ class FastQC(Analysis):
         """Initialise a C{bsf.analyses.fastqc.FastQC}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -195,7 +195,7 @@ class FastQC(Analysis):
         Instance variables without a configuration option remain unchanged.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
         """
@@ -304,8 +304,7 @@ class FastQC(Analysis):
 
         # Write a HTML document.
 
-        report_list = list()
-        """ @type report_list: list[str] """
+        report_list: List[str] = list()
 
         report_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         report_list.append('\n')

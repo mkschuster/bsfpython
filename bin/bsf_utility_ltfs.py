@@ -76,7 +76,6 @@ def convert_into_readable(integer_bytes):
 class LinearTapeFileSystemDirectory(object):
     """The C{LinearTapeFileSystemDirectory} class represents a source (and target) directory in the copy process.
 
-    Attributes:
     @ivar source_path: Source directory path
     @type source_path: str | None
     @ivar target_path: Target directory path
@@ -135,7 +134,6 @@ class LinearTapeFileSystemDirectory(object):
 class LinearTapeFileSystemCopy(object):
     """The C{LinearTapeFileSystemCopy} class represents one Linear Tape File System Copy (ltfscp) process.
 
-    Attributes:
     @ivar total_buffer_size: Total buffer size
     @type total_buffer_size: str | None
     @ivar buffer_size: Buffer size per thread
@@ -437,8 +435,7 @@ linear_tape_file_system_copy = LinearTapeFileSystemCopy(
     sparse=name_space.sparse,
     default_target_path=name_space.target_path)
 
-cartridge_code = name_space.cartridge
-""" @type cartridge_code: str """
+cartridge_code: str = name_space.cartridge
 
 if cartridge_code.endswith('.txt'):
     # In case shell completion is used, remove the trailing *.txt suffix.

@@ -37,8 +37,6 @@ from bsf.standards import StandardFilePath
 
 class Bowtie1(Aligner):
     """The C{bsf.analyses.bowtie.Bowtie1} class represents the logic to run the Bowtie1 aligner.
-
-    Attributes:
     """
     name = 'Bowtie1 Analysis'
     prefix = 'bowtie1'
@@ -113,7 +111,6 @@ class Bowtie1(Aligner):
 class Bowtie2(Aligner):
     """The C{bsf.analyses.bowtie.Bowtie2} class represents the logic to run the Bowtie2 aligner.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

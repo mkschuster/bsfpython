@@ -28,7 +28,7 @@ A package of classes and methods supporting ChIP-Seq analyses.
 import os
 import sys
 import warnings
-from typing import Dict, List
+from typing import Callable, Dict, List
 
 from bsf.analyses.bowtie import Bowtie2
 from bsf.analysis import Analysis, Stage
@@ -43,7 +43,6 @@ from bsf.standards import Configuration, StandardFilePath, Genome, Transcriptome
 class ChIPSeqComparison(object):
     """ChIP-Seq comparison annotation sheet.
 
-    Attributes:
     @ivar name: Comparison name
     @type name: str
     @ivar group: Group
@@ -195,7 +194,6 @@ class ChIPSeqComparison(object):
 class FilePathAlignment(FilePath):
     """The C{bsf.analyses.chipseq.FilePathAlignment} models alignment file paths.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar sample_bam: Sample-specific BAM file path
@@ -237,66 +235,56 @@ class FilePathAlignment(FilePath):
 class FilePathPeakCalling(FilePath):
     """The C{bsf.analyses.chipseq.FilePathPeakCalling} models files in a comparison-specific MACS directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     @ivar name_prefix: MACS --name option
     @type name_prefix: str
-
     @ivar control_bdg: Control (lambda) signal bedGraph
     @type control_bdg: str
     @ivar control_bw: Control (lambda) signal bigWig
     @type control_bw: str
     @ivar control_bwi: Control (lambda) signal bigWigInfo
     @type control_bwi: str
-
     @ivar treatment_bdg: Treatment signal bedGraph
     @type treatment_bdg: str
     @ivar treatment_bw: Treatment signal bigWig
     @type treatment_bw: str
     @ivar treatment_bwi: Treatment signal bigWigInfo
     @type treatment_bwi: str
-
     @ivar comparison_log_fe_bdg: Comparison signal as log10(fold-enrichment) bedGraph
     @type comparison_log_fe_bdg: str
     @ivar comparison_log_fe_bw: Comparison signal as log10(fold-enrichment) bigWig
     @type comparison_log_fe_bw: str
     @ivar comparison_log_fe_bwi: Comparison signal as log10(fold-enrichment) bigWigInfo
     @type comparison_log_fe_bwi: str
-
     @ivar comparison_ppois_bdg: Comparison signal as Poisson p-value bedGraph
     @type comparison_ppois_bdg: str
     @ivar comparison_ppois_bw: Comparison signal as Poisson p-value bigWig
     @type comparison_ppois_bw: str
     @ivar comparison_ppois_bwi: Comparison signal as Poisson p-value bigWigInfo
     @type comparison_ppois_bwi: str
-
     @ivar comparison_subtract_bdg: Comparison signal as subtraction bedGraph
     @type comparison_subtract_bdg: str
     @ivar comparison_subtract_bw: Comparison signal as subtraction bigWig
     @type comparison_subtract_bw: str
     @ivar comparison_subtract_bwi: Comparison signal as subtraction bigWigInfo
     @type comparison_subtract_bwi: str
-
     @ivar summits_bed: Peak summits BED
     @type summits_bed: str
     @ivar summits_bb: Peak summits bigBed
     @type summits_bb: str
     @ivar summits_bbi: Peak summits bigBedInfo
     @type summits_bbi: str
-
     @ivar narrow_peaks_bed: Narrow peaks BED
     @type narrow_peaks_bed: str
     @ivar narrow_peaks_bb: Narrow peaks bigBed
     @type narrow_peaks_bb: str
     @ivar narrow_peaks_bbi: Narrow peaks bigBedInfo
     @type narrow_peaks_bbi: str
-
     @ivar peaks_tsv: MACS2 peaks tab-separated value (TSV)
     @type peaks_tsv: str
     @ivar peaks_xls: MACS2 peaks tab-separated value (TSV)
     @type peaks_xls: str
-
     @ivar model_r: MACS peak model as Rscript
     @type model_r: str
     @ivar model_pdf: MACS "Peak Model" and "Cross-Correlation" plots PDF
@@ -438,8 +426,6 @@ class FilePathDiffBindContrast(FilePath):
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
     """ChIP-Seq Bioconductor DiffBind annotation sheet class.
-
-    Attributes:
     """
 
     _file_type = 'excel'
@@ -464,7 +450,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         # 'Counts',
     ]
 
-    _test_methods = {
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
         'SampleID': [
             AnnotationSheet.check_alphanumeric,
         ],
@@ -533,7 +519,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 class ChIPSeq(Analysis):
     """The C{bsf.analyses.chipseq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific Analysis.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

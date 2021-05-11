@@ -32,12 +32,11 @@ from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStepJava, RunnableStepLink, RunnableStepMakeDirectory
+from bsf.standards import Configuration
 
 
 class FilePathEGACryptorReadGroup(FilePath):
     """The C{bsf.analyses.ega.FilePathEGACryptorReadGroup} models read group-specific EGA Cryptor file paths.
-
-    Attributes:
     """
 
     def __init__(self, prefix):
@@ -54,9 +53,8 @@ class FilePathEGACryptorReadGroup(FilePath):
 
 
 class EGACryptor(Analysis):
-    """BSF EGA Cryptor C{bsf.analysis.Analysis} sub-class.
+    """The C{EGACryptor} C{bsf.analysis.Analysis} class models a EGA Cryptor.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -115,7 +113,7 @@ class EGACryptor(Analysis):
         """Initialise a C{bsf.analyses.ega.EGACryptor}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
@@ -169,7 +167,7 @@ class EGACryptor(Analysis):
         Instance variables without a configuration option remain unchanged.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
         """

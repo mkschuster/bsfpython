@@ -42,7 +42,6 @@ from bsf.standards import Configuration, StandardFilePath, Transcriptome
 class FilePathAlign(AlignerFilePathAlign):
     """The C{bsf.analyses.hisat.FilePathAlign} class models file paths at the alignment stage.
 
-    Attributes:
     @ivar summary_txt: Alignment summary file
     @type summary_txt: str
     """
@@ -63,7 +62,6 @@ class FilePathAlign(AlignerFilePathAlign):
 class Hisat2(Aligner):
     """The C{bsf.analyses.hisat.Hisat2} class represents the logic to run a (short read) aligner.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

@@ -28,10 +28,12 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 import os
 import warnings
 from subprocess import Popen
+from typing import Callable, Dict, List, Optional, Tuple
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
+from bsf.connector import Connector
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.ngs import Collection, Sample, SampleAnnotationSheet
 from bsf.procedure import FilePath, ConsecutiveRunnable
@@ -44,8 +46,6 @@ class BamIndexDecoderSheet(AnnotationSheet):
     """The C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoderSheet} class represents a
     Tab-Separated Value (TSV) table of library information for the
     C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.analysis.Analysis}.
-
-    Attributes:
     """
 
     _file_type = 'excel-tab'
@@ -63,13 +63,11 @@ class BamIndexDecoderSheet(AnnotationSheet):
         'description',
     ]
 
-    _test_methods = dict()
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
 
 
 class LibraryAnnotationSheet(AnnotationSheet):
     """The C{LibraryAnnotationSheet} class represents a Comma-Separated Value (CSV) table for de-multiplexing.
-
-    Attributes:
     """
 
     _file_type = 'excel'
@@ -88,7 +86,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         'read_structure',  # Picard tools Read Structure
     ]
 
-    _test_methods = {
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
         'lane': [
             AnnotationSheet.check_alphanumeric_value,
         ],
@@ -127,8 +125,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         @return: Python C{dict} of Python C{int} (lane) key and Python C{list} of Python C{dict} (row dict) values
         @rtype: dict[int, list[dict[str, str]]]
         """
-        flow_cell_dict = dict()
-        """ @type flow_cell_dict: dict[int, list[dict[str, str]]] """
+        flow_cell_dict: Dict[int, List[Dict[str, str]]] = dict()
 
         for row_dict in self.row_dicts:
             lane_int = int(row_dict['lane'])
@@ -145,8 +142,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
             Python C{int} (i5) barcode sequence length value data
         @rtype: dict[int, (int, int)]
         """
-        flow_cell_dict = dict()
-        """ @type flow_cell_dict: dict[int, (int, int)] """
+        flow_cell_dict: Dict[int, Tuple[int, int]] = dict()
 
         for row_dict in self.row_dicts:
             lane_int = int(row_dict['lane'])
@@ -326,7 +322,6 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
     IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
     Java Archive (JAR) file.
 
-    Attributes:
     @ivar itb_classpath: IlluminaToBam Java Class Path directory
     @type itb_classpath: str | None
     @ivar itb_command: IlluminaToBam command
@@ -367,11 +362,11 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str] | None
         @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: bsf.connector.Connector | None
+        @type stdin: Connector | None
         @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: bsf.connector.Connector | None
+        @type stdout: Connector | None
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: bsf.connector.Connector | None
+        @type stderr: Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[Executable.name] | None
@@ -445,7 +440,6 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 class FilePathIlluminaToBamLane(FilePath):
     """The C{bsf.analyses.illumina_to_bam_tools.FilePathIlluminaRunFolderRestore} models files in an archive directory.
 
-    Attributes:
     @ivar unsorted_bam: Unsorted BAM file
     @type unsorted_bam: str
     @ivar unsorted_md5: Unsorted BAM file MD5 check sum
@@ -490,7 +484,6 @@ class IlluminaToBam(Analysis):
     """The C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} class represents the logic to
     convert Illumina BCL to a BAM or SAM files.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -929,11 +922,9 @@ class IlluminaToBam(Analysis):
 
         super(IlluminaToBam, self).run()
 
-        lane_dependency_str = None
-        """ @type lane_dependency_str: str | None """
+        lane_dependency_str: Optional[str] = None
 
-        cell_dependency_list = list()
-        """ @type cell_dependency_list: list[str] """
+        cell_dependency_list: List[str] = list()
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
@@ -1162,7 +1153,6 @@ class IlluminaToBam(Analysis):
 class FilePathBamIndexDecoderCell(FilePath):
     """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell} models flow cell-specific file paths.
 
-    Attributes:
     @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
     @type prefix_cell: str
     @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
@@ -1194,7 +1184,6 @@ class FilePathBamIndexDecoderCell(FilePath):
 class FilePathBamIndexDecoderLane(FilePath):
     """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} models lane-specific file paths.
 
-    Attributes:
     @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
     @type prefix_lane: str
     @ivar project_barcode: Project-specific barcode CSV file
@@ -1260,7 +1249,6 @@ class BamIndexDecoder(Analysis):
     """The C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} class represents the logic to
     decode sequence archive BAM files into sample-specific BAM files.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -1630,7 +1618,6 @@ class BamIndexDecoder(Analysis):
         # Load the LibraryAnnotationSheet and validate.
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
-        """ @type library_annotation_sheet: LibraryAnnotationSheet """
 
         validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
 
@@ -1673,8 +1660,7 @@ class BamIndexDecoder(Analysis):
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
 
-        cell_dependency_list = list()
-        """ @type cell_dependency_list: list[str] """
+        cell_dependency_list: List[str] = list()
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)

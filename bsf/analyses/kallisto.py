@@ -31,6 +31,7 @@ import sys
 import warnings
 
 from bsf.analysis import Analysis, Stage
+from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
 from bsf.standards import Configuration, StandardFilePath, Transcriptome
@@ -39,7 +40,6 @@ from bsf.standards import Configuration, StandardFilePath, Transcriptome
 class FilePathSample(FilePath):
     """The C{bsf.analyses.kallisto.FilePathSample} models files in a sample-specific Kallisto directory.
 
-    Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str
     """
@@ -63,7 +63,6 @@ class FilePathSample(FilePath):
 class Kallisto(Analysis):
     """Kallisto C{bsf.analysis.Analysis} sub-class.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -161,9 +160,9 @@ class Kallisto(Analysis):
         @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
         @type stage_list: list[Stage]
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[Sample]
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_index_path: Tophat transcriptome index path

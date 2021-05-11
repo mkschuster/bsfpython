@@ -38,7 +38,6 @@ from bsf.standards import StandardFilePath
 class MaximalExactMatches(Aligner):
     """The C{bsf.analyses.bwa.MaximalExactMatches} class represents the BWA Maximal Exact Matches (MEM) algorithm.
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes

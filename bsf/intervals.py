@@ -28,6 +28,7 @@ A package of classes and methods modelling (genome) intervals.
 import math
 import os
 from argparse import ArgumentParser
+from typing import Dict, List
 
 from pysam import AlignmentFile
 
@@ -36,7 +37,7 @@ class Interval(object):
     """Intervals with sequence region name, start and end coordinates.
 
     The C{bsf.intervals.Interval} object reflects Picard-style interval lists and its coordinates are 1-based.
-    Attributes:
+
     @ivar name: Sequence region name
     @type name: str
     @ivar start: Start coordinate
@@ -94,7 +95,6 @@ class Interval(object):
 class Container(object):
     """Container for C{bsf.intervals.Interval} objects that keeps a running sum.
 
-    Attributes:
     @ivar interval_list: Python C{list} of C{Interval} objects
     @type interval_list: list[Interval]
     @ivar sum: Sum
@@ -164,14 +164,9 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
     if not os.path.exists(interval_path):
         raise Exception('Interval file ' + repr(interval_path) + ' does not exists.')
 
-    container_list = list()
-    """ @type container_list: list[Container] """
-
-    interval_list = list()
-    """ @type interval_list: list[Interval] """
-
-    total_length = 0
-    """ @type total_length: int """
+    container_list: List[Container] = list()
+    interval_list: List[Interval] = list()
+    total_length: int = 0
 
     with open(file=interval_path, mode='rt') as input_file:
         for line_str in input_file:
@@ -255,17 +250,14 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     if not os.path.exists(dictionary_path):
         raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
 
-    container_list = list()
-    """ @type container_list: list[Container] """
-
-    total_length = 0
-    """ @type total_length: int """
+    sq_entry: Dict
+    container_list: List[Container] = list()
+    total_length: int = 0
 
     alignment_file = AlignmentFile(dictionary_path, 'rt')
 
     # Summarise sequence lengths to get the total length.
     for sq_entry in alignment_file.header['SQ']:
-        """ @type sq_entry: dict """
         total_length += int(sq_entry['LN'])
 
     if natural:
@@ -295,19 +287,15 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
 
         return container_list
 
-    current_length = 0.0
-    """ @type current_length: float """
+    current_length: float = 0.0
     container = Container()
     for sq_entry in alignment_file.header['SQ']:
-        sq_start = 0.0
-        """ @type sq_start: float """
-        sq_length = float(sq_entry['LN'])
-        """ @type sq_length: float """
+        sq_start: float = 0.0
+        sq_length: float = float(sq_entry['LN'])
         while sq_start < sq_length:  # float
             # The sequence end is the minimum of the sequence start plus remaining tile length or
             # the sequence length.
-            sq_end = min(sq_start + tile_length - current_length, sq_length)
-            """ @type seq_end: float """
+            sq_end: float = min(sq_start + tile_length - current_length, sq_length)
             container.append(
                 Interval(
                     name=str(sq_entry['SN']),
