@@ -32,6 +32,7 @@ import pickle
 import sys
 import warnings
 from subprocess import Popen
+from typing import Dict, List, Optional, Tuple, Union
 
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
@@ -40,7 +41,7 @@ from bsf.connector import Connector, ConnectorFile
 from bsf.executables.vcf import RunnableStepCsqToVep
 from bsf.intervals import Container, get_genome_tiles, get_interval_tiles
 from bsf.ngs import Collection, Sample
-from bsf.procedure import FilePath, Runnable, ConsecutiveRunnable
+from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
 from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive
@@ -48,8 +49,6 @@ from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchi
 
 class RunnableStepGATK(RunnableStepJava):
     """C{bsf.analyses.variant_calling.RunnableStepGATK} class representing a Genome Analysis Toolkit (GATK) program.
-
-    Attributes:
     """
 
     def __init__(
@@ -170,7 +169,6 @@ class RunnableStepGATK(RunnableStepJava):
 class FilePathAlignment(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathAlignment} models files in a sample-specific directory.
 
-    Attributes:
     @ivar aligned_bam: Alignment BAM file path
     @type aligned_bam: str
     @ivar aligned_bai: Alignment BAI file path
@@ -197,7 +195,6 @@ class FilePathAlignment(FilePath):
 class FilePathProcessReadGroup(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathProcessReadGroup} models files in a sample-specific directory.
 
-    Attributes:
     @ivar trimmed_bam: Fulcrum Genomics (fgbio) TrimPrimer BAM file path
     @type trimmed_bam: str
     @ivar trimmed_bai: Fulcrum Genomics (fgbio) TrimPrimer BAI file path
@@ -266,7 +263,6 @@ class FilePathProcessReadGroup(FilePath):
 class FilePathProcessSample(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathProcessSample} models files in a sample-specific directory.
 
-    Attributes:
     @ivar merged_bam: Merged BAM file path
     @type merged_bam: str
     @ivar merged_bai: Merged BAI file path
@@ -329,7 +325,6 @@ class FilePathProcessSample(FilePath):
 class FilePathDiagnoseSample(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathDiagnoseSample} models files in a sample-specific directory.
 
-    Attributes:
     @ivar diagnose_targets_vcf: Diagnose Targets VCF file path
     @type diagnose_targets_vcf: str
     @ivar diagnose_targets_tbi: Diagnose Targets TBI file path
@@ -394,7 +389,6 @@ class FilePathDiagnoseSample(FilePath):
 class FilePathMergeCohort(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathMergeCohort} models files in a cohort-specific directory.
 
-    Attributes:
     @ivar combined_gvcf_vcf: Combined gVCF file path
     @type combined_gvcf_vcf: str
     @ivar combined_gvcf_tbi: Combined TBI file path
@@ -418,7 +412,6 @@ class FilePathMergeCohort(FilePath):
 class FilePathGenotypeCohort(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathGenotypeCohort} models files in a cohort-specific directory.
 
-    Attributes:
     @ivar genotyped_raw_vcf: Genotyped raw VCF file path
     @type genotyped_raw_vcf: str
     @ivar genotyped_raw_tbi: Genotyped raw TBI file path
@@ -442,7 +435,6 @@ class FilePathGenotypeCohort(FilePath):
 class FilePathProcessCohort(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathGenotypeCohort} models files in a cohort-specific directory.
 
-    Attributes:
     @ivar recalibrated_snp_raw_indel_vcf: Recalibrated SNP raw InDel VCF file path
     @type recalibrated_snp_raw_indel_vcf: str
     @ivar recalibrated_snp_raw_indel_tbi: Recalibrated SNP raw InDel TBI file path
@@ -496,7 +488,6 @@ class FilePathProcessCohort(FilePath):
 class FilePathAnnotateSnpEff(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathAnnotateSnpEff} models snpEff-annotated, cohort-specific files.
 
-    Attributes:
     @ivar complete_vcf: Complete snpEff VCF file path
     @type complete_vcf: str
     @ivar complete_vcf_bgz: Bgzip-compressed complete snpEff VCF file path
@@ -550,7 +541,6 @@ class FilePathAnnotateSnpEff(FilePath):
 class FilePathAnnotateVEP(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathAnnotateVEP} models Ensembl VEP-annotated, cohort-specific files.
 
-    Attributes:
     @ivar statistics: Ensembl VEP statistics HTML file path
     @type statistics: str
     @ivar complete_raw_vcf: Ensembl VEP complete raw VCF file path
@@ -605,7 +595,6 @@ class FilePathAnnotateVEP(FilePath):
 class FilePathSplitCohort(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathSplitCohort} models sample-specific files.
 
-    Attributes:
     @ivar sample_vcf: Sample VCF file path
     @type sample_vcf: str
     @ivar sample_tbi: Sample TBI file path
@@ -683,7 +672,6 @@ class FilePathSummary(FilePath):
 class FilePathSomatic(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathSomatic} models files in somatic scatter and gathering.
 
-    Attributes:
     @ivar somatic_vcf: Somatic VCF file path
     @type somatic_vcf: str
     @ivar somatic_tbi: Somatic TBI file path
@@ -707,7 +695,6 @@ class FilePathSomatic(FilePath):
 class FilePathSomaticScatterGather(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathSomaticScatterGather} models files in somatic scatter and gathering.
 
-    Attributes:
     @ivar somatic_vcf: Somatic VSF file path
     @type somatic_vcf: str
     @ivar somatic_tbi: Somatic TBI file path
@@ -731,7 +718,6 @@ class FilePathSomaticScatterGather(FilePath):
 class FilePathSplitSomatic(FilePath):
     """The C{bsf.analyses.variant_calling.FilePathSplitSomatic} models sample-specific somatic variant calling files.
 
-    Attributes:
     @ivar comparison_tsv: Comparison-specific TSV file path
     @type comparison_tsv: str
     """
@@ -752,7 +738,6 @@ class FilePathSplitSomatic(FilePath):
 class VariantCallingGATKComparison(object):
     """C{bsf.analyses.variant_calling.VariantCallingGATKComparison} class representing a somatic comparison.
 
-    Attributes:
     @ivar normal_sample: Normal sample
     @type normal_sample: Sample | None
     @ivar tumor_sample: Tumour sample
@@ -802,7 +787,6 @@ class VariantCallingGATKComparison(object):
 class VariantCallingGATKAmplicons(object):
     """C{bsf.analyses.variant_calling.VariantCallingGATKAmplicons} class representing amplicons.
 
-    Attributes:
     @ivar name: Name
     @type name: str | None
     @ivar amplicons_path: Amplicons file path
@@ -859,7 +843,6 @@ class VariantCallingGATKAmplicons(object):
 class VariantCallingGATKCallingIntervals(object):
     """C{bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals} class representing calling intervals.
 
-    Attributes:
     @ivar name: Name
     @type name: str | None
     @ivar calling_path: Calling intervals file path
@@ -916,7 +899,6 @@ class VariantCallingGATKCallingIntervals(object):
 class VariantCallingGATKTargetIntervals(object):
     """C{bsf.analyses.variant_calling.VariantCallingGATKTargetIntervals} class representing target intervals.
 
-    Attributes:
     @ivar name: Name
     @type name: str | None
     @ivar probes_path: Probe (bait) intervals file path
@@ -991,7 +973,6 @@ class VariantCallingGATK(Analysis):
     """C{bsf.analyses.variant_calling.VariantCallingGATK} class representing the logic to run the
     Genome Analysis Toolkit (GATK).
 
-    Attributes:
     @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
@@ -1931,19 +1912,13 @@ class VariantCallingGATK(Analysis):
         self.java_archive_snpeff = java_archive_snpeff
         self.java_archive_vcf_filter = java_archive_vcf_filter
 
-        self._comparison_dict = dict()
-        """ @type _comparison_dict: dict[str, VariantCallingGATKComparison] """
-
-        self._cache_path_dict = None
-        """ @type _cache_path_dict: dict[str, str] | None """
+        self._comparison_dict: Dict[str, VariantCallingGATKComparison] = dict()
+        self._cache_path_dict: Optional[Dict[str, str]] = None
 
         # Initialise the Python list of genome tile regions with an empty region to run a single process by default.
 
-        self._tile_region_cohort_list = None
-        """ @type _tile_region_cohort_list: list[Container] | None """
-
-        self._tile_region_somatic_list = None
-        """ @type _tile_region_somatic_list: list[Container] | None """
+        self._tile_region_cohort_list: Optional[List[Container]] = None
+        self._tile_region_somatic_list: Optional[List[Container]] = None
 
         return
 
@@ -2485,19 +2460,19 @@ class VariantCallingGATK(Analysis):
         def run_merge_cohort_scatter_gather(analysis_stage, cohort_runnable_dict, cohort_name):
             """Private method to hierarchically merge samples into cohorts using a scatter gather approach.
 
-            This method merges GVCF file paths from individual process_sample bsf.procedure.Runnable objects or
-            an accessory cohort.
+            This method merges GVCF file paths from individual process_sample bsf.procedure.ConsecutiveRunnable
+            objects or an accessory cohort.
             @param analysis_stage: C{bsf.analysis.Analysis} C{bsf.analysis.Stage}
             @type analysis_stage: Stage
             @param cohort_runnable_dict: Python C{dict} of Python C{str} key and Python C{list} of
-                C{bsf.procedure.Runnable}, Python C{str} object value data
-            @type cohort_runnable_dict: dict[str, list[(Runnable | str, str)]]
-            @param cohort_name: Cohort name to select a Python list of C{bsf.procedure.Runnable} objects from the
-                I{cohort_runnable_dict} Python C{dict}
+                C{bsf.procedure.ConsecutiveRunnable}, Python C{str} object value data
+            @type cohort_runnable_dict: dict[str, list[(ConsecutiveRunnable | str, str)]]
+            @param cohort_name: Cohort name to select a Python list of C{bsf.procedure.ConsecutiveRunnable} objects
+                from the I{cohort_runnable_dict} Python C{dict}
             @type cohort_name: str
-            @return: A Python C{tuple} of the final C{bsf.procedure.Runnable} of the gather stage and
+            @return: A Python C{tuple} of the final C{bsf.procedure.ConsecutiveRunnable} of the gather stage and
                 the gVCF file path
-            @rtype: (Runnable, str)
+            @rtype: (ConsecutiveRunnable, str)
             """
 
             # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
@@ -2506,7 +2481,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_merge_cohort_final = FilePathMergeCohort(prefix=prefix_merge_cohort_final)
 
-            # If the final TBI index file already exists, create the bsf.procedure.Runnable objects,
+            # If the final TBI index file already exists, create the bsf.procedure.ConsecutiveRunnable objects,
             # but do not submit their corresponding bsf.process.Executable objects.
 
             if os.path.exists(os.path.join(self.genome_directory, file_path_merge_cohort_final.combined_gvcf_tbi)):
@@ -2514,19 +2489,16 @@ class VariantCallingGATK(Analysis):
             else:
                 final_index_exists = True
 
-            # The cohort_object_list contains either bsf.procedure.Runnable objects from the process_sample stage or
-            # Python str (GVCF file path) objects for accessory cohorts to be merged.
+            # The cohort_object_list contains either bsf.procedure.ConsecutiveRunnable objects from the
+            # process_sample stage or Python str (GVCF file path) objects for accessory cohorts to be merged.
             cohort_object_list = cohort_runnable_dict[cohort_name]
 
             # Scatter
-            runnable_scatter = None
-            """ @type runnable_scatter: Runnable | None """
-            runnable_scatter_list = list()
-            """ @type runnable_scatter_list: list[Runnable] """
+            runnable_scatter_list: List[ConsecutiveRunnable] = list()
 
-            tile_index_list = range(0, len(self._tile_region_cohort_list))
+            tile_index_list_old = range(0, len(self._tile_region_cohort_list))
 
-            for tile_index in tile_index_list:
+            for tile_index in tile_index_list_old:
                 prefix_merge_cohort_scatter = '_'.join((analysis_stage.name, cohort_name, 'scatter', str(tile_index)))
 
                 file_path_merge_cohort_scatter = FilePathMergeCohort(prefix=prefix_merge_cohort_scatter)
@@ -2546,10 +2518,11 @@ class VariantCallingGATK(Analysis):
                 if not final_index_exists:
                     executable_scatter.submit = False
                 for cohort_component, cohort_component_prefix in cohort_object_list:
-                    # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
-                    # Set them only for bsf.procedure.Runnable objects,
+                    # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+                    # bsf.process.Executable.name objects.
+                    # Set them only for bsf.procedure.ConsecutiveRunnable objects,
                     # but not for Python str (file path) objects.
-                    if isinstance(cohort_component, Runnable):
+                    if isinstance(cohort_component, ConsecutiveRunnable):
                         executable_scatter.dependencies.append(cohort_component.name)
 
                 runnable_scatter_list.append(runnable_scatter)
@@ -2591,26 +2564,24 @@ class VariantCallingGATK(Analysis):
                     value=file_path_merge_cohort_scatter.combined_gvcf_vcf)
 
             # Gather
-            runnable_gather = None
-            """ @type runnable_gather: Runnable | None """
+            runnable_gather_list: List[ConsecutiveRunnable] = list()
 
             if len(self._tile_region_cohort_list) == 1:
                 # If there is only one tile, no need to gather.
-                # Assign the sole scatter bsf.procedure.Runnable to the sole gather bsf.procedure.Runnable.
-                runnable_gather = runnable_scatter
+                # Assign the sole scatter bsf.procedure.ConsecutiveRunnable to the
+                # sole gather bsf.procedure.ConsecutiveRunnable.
+                runnable_gather_list.append(runnable_scatter_list[0])
             else:
                 # Gather by hierarchically merging by the number of chunks on the partitioned genome tile index list.
-                # Initialise a list of bsf.procedure.Runnable objects and indices for the hierarchical merge.
-                runnable_gather_list = runnable_scatter_list
+                # Initialise a list of bsf.procedure.ConsecutiveRunnable objects and indices for the hierarchical merge.
+                runnable_gather_list_old = runnable_scatter_list
                 gather_level = 0
-                while len(tile_index_list) > 1:
-                    temporary_runnable_gather_list = list()
-                    """ @type temporary_runnable_gather_list: list[Runnable] """
-                    temporary_tile_index_list = list()
-                    """ @type temporary_tile_index_list: list[int] """
+                while len(tile_index_list_old) > 1:
+                    tile_index_list_new: List[int] = list()
+                    runnable_gather_list_new: List[ConsecutiveRunnable] = list()
                     # Partition the index list into chunks of given size.
-                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
-                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
+                    partition_list = [tile_index_list_old[offset:offset + self.number_of_chunks_cohort]
+                                      for offset in range(0, len(tile_index_list_old), self.number_of_chunks_cohort)]
 
                     for partition_index, chunk_index_list in enumerate(partition_list):
                         # The file prefix includes the level and partition index.
@@ -2638,8 +2609,9 @@ class VariantCallingGATK(Analysis):
                         if not final_index_exists:
                             executable_gather.submit = False
                         # Dependencies on scatter processes are set based on genome tile indices below.
-                        temporary_runnable_gather_list.append(runnable_gather)
-                        temporary_tile_index_list.append(partition_index)
+                        runnable_gather_list.append(runnable_gather)
+                        runnable_gather_list_new.append(runnable_gather)
+                        tile_index_list_new.append(partition_index)
 
                         if use_cache:
                             reference_gather = runnable_gather.get_cache_file_path(
@@ -2667,7 +2639,7 @@ class VariantCallingGATK(Analysis):
                         _sub_command.add_switch_long(key='assumeSorted')
                         # Finally, process per chunk index.
                         for chunk_index in chunk_index_list:
-                            _runnable_scatter_or_gather = runnable_gather_list[chunk_index]
+                            _runnable_scatter_or_gather = runnable_gather_list_old[chunk_index]
                             _file_path_scatter_or_gather = FilePathMergeCohort(prefix=_runnable_scatter_or_gather.name)
                             # Set GATK option variant
                             _sub_command.add_option_long(
@@ -2680,22 +2652,23 @@ class VariantCallingGATK(Analysis):
                             # Delete the *.g.vcf.gz.tbi file.
                             _runnable_step.obsolete_file_path_list.append(
                                 _file_path_scatter_or_gather.combined_gvcf_tbi)
-                            # Set dependencies on preceding bsf.procedure.Runnable.name or
+                            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
                             # bsf.process.Executable.name objects.
-                            # Depend on the bsf.procedure.Runnable.name of the corresponding
-                            # bsf.procedure.Runnable of the scattering above.
+                            # Depend on the bsf.procedure.ConsecutiveRunnable.name of the corresponding
+                            # bsf.procedure.ConsecutiveRunnable of the scattering above.
                             executable_gather.dependencies.append(_runnable_scatter_or_gather.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
-                    runnable_gather_list = temporary_runnable_gather_list
-                    tile_index_list = temporary_tile_index_list
+                    runnable_gather_list_old = runnable_gather_list_new
+                    tile_index_list_old = tile_index_list_new
                     gather_level += 1
 
-            # For the last gather bsf.procedure.Runnable, move (rename) file paths to the top-level prefix and
-            # adjust the FilePath object accordingly.
+            # For the last gather bsf.procedure.ConsecutiveRunnable, move (rename) file paths to the
+            # top-level prefix and adjust the FilePath object accordingly.
             # NOTE: The renaming of merged cohort files from *_scatter_0_* or *_gather_1_0_* to
             # *_combined.g.vcf causes a lot of extra work, because the file names can no longer be
-            # deduced form the Runnable.name.
+            # deduced from the ConsecutiveRunnable.name.
+            runnable_gather = runnable_gather_list[-1]
             file_path_merge_cohort_gather = FilePathMergeCohort(prefix=runnable_gather.name)
 
             _runnable_step = RunnableStepMove(
@@ -2720,15 +2693,15 @@ class VariantCallingGATK(Analysis):
 
             @param file_path_cohort_gvcf: Cohort-level gVCF file path
             @type file_path_cohort_gvcf: str
-            @return: Final C{bsf.procedure.Runnable} of the gather stage
-            @rtype: Runnable
+            @return: Final C{bsf.procedure.ConsecutiveRunnable} of the gather stage
+            @rtype: ConsecutiveRunnable
             """
 
             file_path_genotype_cohort_final = FilePathGenotypeCohort(
                 prefix=self.get_prefix_process_cohort(
                     cohort_name=self.cohort_name))
 
-            # If the final TBI index file already exists, create the bsf.procedure.Runnable objects,
+            # If the final TBI index file already exists, create the bsf.procedure.ConsecutiveRunnable objects,
             # but do not submit their corresponding bsf.process.Executable objects.
 
             if os.path.exists(os.path.join(self.genome_directory, file_path_genotype_cohort_final.genotyped_raw_tbi)):
@@ -2736,14 +2709,11 @@ class VariantCallingGATK(Analysis):
             else:
                 final_index_exists = True
 
-            runnable_scatter = None
-            """ @type runnable_scatter: Runnable | None """
-            runnable_scatter_list = list()
-            """ @type runnable_scatter_list: list[Runnable] """
+            runnable_scatter_list: List[ConsecutiveRunnable] = list()
 
-            tile_index_list = range(0, len(self._tile_region_cohort_list))
+            tile_index_list_old = range(0, len(self._tile_region_cohort_list))
 
-            for tile_index in tile_index_list:
+            for tile_index in tile_index_list_old:
                 prefix_process_cohort_scatter = '_'.join((
                     stage_process_cohort.name, self.cohort_name, 'scatter', str(tile_index)))
 
@@ -2763,7 +2733,8 @@ class VariantCallingGATK(Analysis):
                 # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                 if not final_index_exists:
                     executable_scatter.submit = False
-                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+                # bsf.process.Executable.name objects.
                 executable_scatter.dependencies.append(runnable_merge_cohort.name)
 
                 runnable_scatter_list.append(runnable_scatter)
@@ -2803,26 +2774,24 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='out', value=file_path_genotype_cohort_scatter.genotyped_raw_vcf)
 
             # Gather
-            runnable_gather = None
-            """ @type runnable_gather: Runnable | None """
+            runnable_gather_list: List[ConsecutiveRunnable] = list()
 
             if len(self._tile_region_cohort_list) == 1:
                 # If there is only one tile, no need to gather.
-                # Assign the sole scatter bsf.procedure.Runnable to the sole gather bsf.procedure.Runnable.
-                runnable_gather = runnable_scatter
+                # Assign the sole scatter bsf.procedure.ConsecutiveRunnable to the
+                # sole gather bsf.procedure.ConsecutiveRunnable.
+                runnable_gather_list.append(runnable_scatter_list[0])
             else:
                 # Gather by hierarchically merging by the number of chunks on the partitioned genome tile index list.
-                # Initialise a list of bsf.procedure.Runnable objects and indices for the hierarchical merge.
-                runnable_gather_list = runnable_scatter_list
+                # Initialise a list of bsf.procedure.ConsecutiveRunnable objects and indices for the hierarchical merge.
+                runnable_gather_list_old = runnable_scatter_list
                 gather_level = 0
-                while len(tile_index_list) > 1:
-                    temporary_runnable_gather_list = list()
-                    """ @type temporary_runnable_gather_list: list[Runnable] """
-                    temporary_tile_index_list = list()
-                    """ @type temporary_tile_index_list: list[int] """
+                while len(tile_index_list_old) > 1:
+                    runnable_gather_list_new: List[ConsecutiveRunnable] = list()
+                    tile_index_list_new: List[int] = list()
                     # Partition the index list into chunks of given size.
-                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
-                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
+                    partition_list = [tile_index_list_old[offset:offset + self.number_of_chunks_cohort]
+                                      for offset in range(0, len(tile_index_list_old), self.number_of_chunks_cohort)]
 
                     for partition_index, chunk_index_list in enumerate(partition_list):
                         # The file prefix includes the level and partition index.
@@ -2850,8 +2819,9 @@ class VariantCallingGATK(Analysis):
                         if not final_index_exists:
                             executable_gather.submit = False
                         # Dependencies on scatter processes are set based on genome tile indices below.
-                        temporary_runnable_gather_list.append(runnable_gather)
-                        temporary_tile_index_list.append(partition_index)
+                        runnable_gather_list.append(runnable_gather)
+                        runnable_gather_list_new.append(runnable_gather)
+                        tile_index_list_new.append(partition_index)
 
                         if use_cache:
                             reference_gather = runnable_gather.get_cache_file_path(
@@ -2880,7 +2850,7 @@ class VariantCallingGATK(Analysis):
                         # Finally, add bsf.process.RunnableStep options, obsolete files and
                         # bsf.process.Executable dependencies per chunk index.
                         for chunk_index in chunk_index_list:
-                            runnable_scatter_or_gather = runnable_gather_list[chunk_index]
+                            runnable_scatter_or_gather = runnable_gather_list_old[chunk_index]
                             _file_path_scatter_or_gather = FilePathGenotypeCohort(
                                 prefix=runnable_scatter_or_gather.name)
                             # Set GATK option variant
@@ -2894,17 +2864,18 @@ class VariantCallingGATK(Analysis):
                             # Delete the *.g.vcf.gz.tbi file.
                             _runnable_step.obsolete_file_path_list.append(
                                 _file_path_scatter_or_gather.genotyped_raw_tbi)
-                            # Set dependencies on preceding bsf.procedure.Runnable.name or
+                            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
                             # bsf.process.Executable.name objects.
                             executable_gather.dependencies.append(runnable_scatter_or_gather.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
-                    runnable_gather_list = temporary_runnable_gather_list
-                    tile_index_list = temporary_tile_index_list
+                    runnable_gather_list_old = runnable_gather_list_new
+                    tile_index_list_old = tile_index_list_new
                     gather_level += 1
 
-            # For the last gather bsf.procedure.Runnable, move (rename) file paths to the top-level prefix and
-            # adjust the FilePath object accordingly.
+            # For the last gather bsf.procedure.ConsecutiveRunnable, move (rename) file paths to the
+            # top-level prefix and adjust the FilePath object accordingly.
+            runnable_gather = runnable_gather_list[-1]
             file_path_genotype_cohort_gather = FilePathGenotypeCohort(prefix=runnable_gather.name)
 
             _runnable_step = RunnableStepMove(
@@ -2929,15 +2900,15 @@ class VariantCallingGATK(Analysis):
 
             @param comparison_key: C{VariantCallingGATKComparison.name}
             @type comparison_key: str
-            @return: Final C{bsf.procedure.Runnable} of the gather stage
-            @rtype: Runnable
+            @return: Final C{bsf.procedure.ConsecutiveRunnable} of the gather stage
+            @rtype: ConsecutiveRunnable
             """
 
             # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
 
             file_path_somatic_final = self.get_file_path_somatic(comparison_name=comparison_key)
 
-            # If the final TBI index file already exists, create the bsf.procedure.Runnable objects,
+            # If the final TBI index file already exists, create the bsf.procedure.ConsecutiveRunnable objects,
             # but do not submit their corresponding bsf.process.Executable objects.
 
             if os.path.exists(os.path.join(self.genome_directory, file_path_somatic_final.somatic_tbi)):
@@ -2977,14 +2948,11 @@ class VariantCallingGATK(Analysis):
             #         tile_number=self.number_of_tiles_somatic)
 
             # Scatter
-            runnable_scatter = None
-            """ @type runnable_scatter: Runnable | None """
-            runnable_scatter_list = list()
-            """ @type runnable_scatter_list: list[Runnable] """
+            runnable_scatter_list: List[ConsecutiveRunnable] = list()
 
-            tile_index_list = range(0, len(self._tile_region_somatic_list))
+            tile_index_list_old = range(0, len(self._tile_region_somatic_list))
 
-            for tile_index in tile_index_list:
+            for tile_index in tile_index_list_old:
                 prefix_somatic_scatter = '_'.join(
                     (self.get_stage_name_somatic(), comparison_key, 'scatter', str(tile_index)))
 
@@ -3004,7 +2972,8 @@ class VariantCallingGATK(Analysis):
                 # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                 if not final_index_exists:
                     executable_scatter.submit = False
-                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+                # bsf.process.Executable.name objects.
                 if comparison.normal_sample:
                     executable_scatter.dependencies.append(
                         self.get_prefix_process_sample(sample_name=comparison.normal_sample.name))
@@ -3084,26 +3053,24 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='out', value=file_path_somatic_scatter.somatic_vcf)
 
             # Gather
-            runnable_gather = None
-            """ @type runnable_gather: Runnable | None """
+            runnable_gather_list: List[ConsecutiveRunnable] = list()
 
             if len(self._tile_region_somatic_list) == 1:
                 # If there is only one tile, no need to gather.
-                # Assign the sole scatter bsf.procedure.Runnable to the sole gather bsf.procedure.Runnable.
-                runnable_gather = runnable_scatter
+                # Assign the sole scatter bsf.procedure.ConsecutiveRunnable to the
+                # sole gather bsf.procedure.ConsecutiveRunnable.
+                runnable_gather_list.append(runnable_scatter_list[0])
             else:
                 # Gather by hierarchically merging by the number of chunks on the partitioned genome tile index list.
-                # Initialise a list of bsf.procedure.Runnable objects and indices for the hierarchical merge.
-                runnable_gather_list = runnable_scatter_list
+                # Initialise a list of bsf.procedure.ConsecutiveRunnable objects and indices for the hierarchical merge.
+                runnable_gather_list_old = runnable_scatter_list
                 gather_level = 0
-                while len(tile_index_list) > 1:
-                    temporary_runnable_gather_list = list()
-                    """ @type temporary_runnable_gather_list: list[Runnable] """
-                    temporary_tile_index_list = list()
-                    """ @type temporary_tile_index_list: list[int] """
+                while len(tile_index_list_old) > 1:
+                    runnable_gather_list_new: List[ConsecutiveRunnable] = list()
+                    tile_index_list_new: List[int] = list()
                     # Partition the index list into chunks of given size.
-                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_somatic]
-                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_somatic)]
+                    partition_list = [tile_index_list_old[offset:offset + self.number_of_chunks_somatic]
+                                      for offset in range(0, len(tile_index_list_old), self.number_of_chunks_somatic)]
 
                     for partition_index, chunk_index_list in enumerate(partition_list):
                         # The file prefix includes the level and partition index.
@@ -3127,8 +3094,9 @@ class VariantCallingGATK(Analysis):
                         if not final_index_exists:
                             executable_gather.submit = False
                         # Dependencies on scatter processes are set based on genome tile indices below.
-                        temporary_runnable_gather_list.append(runnable_gather)
-                        temporary_tile_index_list.append(partition_index)
+                        runnable_gather_list.append(runnable_gather)
+                        runnable_gather_list_new.append(runnable_gather)
+                        tile_index_list_new.append(partition_index)
 
                         if use_cache:
                             reference_gather = runnable_gather.get_cache_file_path(
@@ -3157,7 +3125,7 @@ class VariantCallingGATK(Analysis):
                         # Finally, add bsf.process.RunnableStep options, obsolete files and
                         # bsf.process.Executable dependencies per chunk index.
                         for chunk_index in chunk_index_list:
-                            runnable_object = runnable_gather_list[chunk_index]
+                            runnable_object = runnable_gather_list_old[chunk_index]
                             file_path_somatic_gather = FilePathSomaticScatterGather(prefix=runnable_object.name)
                             # Set GATK option variant
                             _sub_command.add_option_long(
@@ -3168,17 +3136,18 @@ class VariantCallingGATK(Analysis):
                             _runnable_step.obsolete_file_path_list.append(file_path_somatic_gather.somatic_vcf)
                             # Delete the *.g.vcf.gz.tbi file.
                             _runnable_step.obsolete_file_path_list.append(file_path_somatic_gather.somatic_tbi)
-                            # Set dependencies on preceding bsf.procedure.Runnable.name or
+                            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
                             # bsf.process.Executable.name objects.
                             executable_gather.dependencies.append(runnable_object.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
-                    runnable_gather_list = temporary_runnable_gather_list
-                    tile_index_list = temporary_tile_index_list
+                    runnable_gather_list_old = runnable_gather_list_new
+                    tile_index_list_old = tile_index_list_new
                     gather_level += 1
 
-            # For the last gather bsf.procedure.Runnable, move (rename) file paths to the top-level prefix and
-            # adjust the FilePath object accordingly.
+            # For the last gather bsf.procedure.ConsecutiveRunnable, move (rename) file paths to the
+            # top-level prefix and adjust the FilePath object accordingly.
+            runnable_gather = runnable_gather_list[-1]
             file_path_somatic_gather = FilePathSomaticScatterGather(prefix=runnable_gather.name)
 
             _runnable_step = RunnableStepMove(
@@ -3206,8 +3175,8 @@ class VariantCallingGATK(Analysis):
             @type prefix: str
             @param vcf_file_path: VCF file path
             @type vcf_file_path: str
-            @return: C{bsf.procedure.Runnable}
-            @rtype: Runnable
+            @return: C{bsf.procedure.ConsecutiveRunnable}
+            @rtype: ConsecutiveRunnable
             """
             # snpEff                  (snpeff)
             # Bgzip                   (snpeff_bgzip)
@@ -3355,8 +3324,8 @@ class VariantCallingGATK(Analysis):
             @type prefix: str
             @param vcf_file_path: VCF file path
             @type vcf_file_path: str
-            @return: C{bsf.procedure.Runnable}
-            @rtype: Runnable
+            @return: C{bsf.procedure.ConsecutiveRunnable}
+            @rtype: ConsecutiveRunnable
             """
             # Ensembl Variant Effect Predictor (ensembl_vep)
             # Bgzip                            (ensembl_vep_bgzip)
@@ -3874,16 +3843,14 @@ class VariantCallingGATK(Analysis):
         stage_split_somatic_vep = self.get_stage(name=self.get_stage_name_split_somatic_vep())
 
         # Create a Python dict of Python str (cohort name) key and Python list of
-        # process_sample bsf.procedure.Runnable object value data.
+        # process_sample bsf.procedure.ConsecutiveRunnable object value data.
         # This dictionary is required by the merge_cohort stage to hierarchically merge cohorts.
 
-        runnable_process_sample_dict = dict()
-        """ @type runnable_process_sample_dict: dict[str, list[(Runnable, str)]] """
+        runnable_process_sample_dict: Dict[str, List[Tuple[ConsecutiveRunnable, str]]] = dict()
 
         # Create a Python list of diagnose_sample bsf.procedure.Runnable objects.
 
-        runnable_diagnose_sample_list = list()
-        """ @type runnable_diagnose_sample_list: list[Runnable] """
+        runnable_diagnose_sample_list: List[ConsecutiveRunnable] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -3900,8 +3867,7 @@ class VariantCallingGATK(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
-            runnable_process_read_group_list = list()
-            """ @type runnable_process_read_group_list: list[Runnable] """
+            runnable_process_read_group_list: List[ConsecutiveRunnable] = list()
 
             for paired_reads_name in sorted(paired_reads_dict):
                 if not paired_reads_dict[paired_reads_name]:
@@ -3920,7 +3886,7 @@ class VariantCallingGATK(Analysis):
                     name='align_lane_bwa',
                     program='bwa',
                     sub_command=Command(program='mem'))
-                # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.Runnable,
+                # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.ConsecutiveRunnable,
                 # it gets serialised into the pickler_file.
 
                 # Read configuration sections
@@ -4012,7 +3978,7 @@ class VariantCallingGATK(Analysis):
                 if (os.path.exists(os.path.join(self.genome_directory, file_path_alignment.aligned_md5)) and
                         os.path.getsize(os.path.join(self.genome_directory, file_path_alignment.aligned_md5))):
                     executable_align_lane.submit = False
-                # Check also for existence of a new-style bsf.procedure.Runnable status file.
+                # Check also for existence of a new-style bsf.procedure.ConsecutiveRunnable status file.
                 if os.path.exists(os.path.join(
                         stage_align_lane.working_directory,
                         '_'.join((stage_align_lane.name, paired_reads_name, 'completed.txt')))):
@@ -4040,7 +4006,7 @@ class VariantCallingGATK(Analysis):
                 file_path_process_read_group = self.get_file_path_process_read_group(
                     paired_reads_name=paired_reads_name)
 
-                # Create a bsf.procedure.Runnable and bsf.process.Executable for processing each read group.
+                # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for processing each read group.
 
                 runnable_process_lane = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
@@ -4052,9 +4018,10 @@ class VariantCallingGATK(Analysis):
                 executable_process_lane = self.set_stage_runnable(
                     stage=stage_process_lane,
                     runnable=runnable_process_lane)
-                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+                # bsf.process.Executable.name objects.
                 executable_process_lane.dependencies.append(executable_align_lane.name)
-                # Set dependencies for succeeding bsf.procedure.Runnable or bsf.process.Executable objects.
+                # Set dependencies for succeeding bsf.procedure.ConsecutiveRunnable or bsf.process.Executable objects.
                 runnable_process_read_group_list.append(runnable_process_lane)
 
                 if use_cache:
@@ -4331,7 +4298,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_process_sample = self.get_file_path_process_sample(sample_name=sample.name)
 
-            # Create a bsf.procedure.Runnable and bsf.process.Executable for processing each Sample.
+            # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for processing each Sample.
 
             runnable_process_sample = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
@@ -4343,7 +4310,8 @@ class VariantCallingGATK(Analysis):
             executable_process_sample = self.set_stage_runnable(
                 stage=stage_process_sample,
                 runnable=runnable_process_sample)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             for runnable_process_lane in runnable_process_read_group_list:
                 executable_process_sample.dependencies.append(runnable_process_lane.name)
 
@@ -4661,9 +4629,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
             runnable_step.add_gatk_option(key='out', value=file_path_process_sample.raw_variants_gvcf_vcf)
 
-            # Finally, record the process_sample bsf.procedure.Runnable for the merge_cohort stage under the Sample's
-            # 'Cohort Name' annotation, or if it does not exist, under the cohort name defined in the
-            # bsf.analysis.Analysis in the configuration file.
+            # Finally, record the process_sample bsf.procedure.ConsecutiveRunnable for the merge_cohort stage
+            # under the Sample's 'Cohort Name' annotation, or if it does not exist, under the cohort name
+            # defined in the bsf.analysis.Analysis in the configuration file.
 
             if 'Cohort Name' in sample.annotation_dict:
                 cohort_key = sample.annotation_dict['Cohort Name'][0]
@@ -4693,7 +4661,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_diagnose_sample = self.get_file_path_diagnose_sample(sample_name=sample.name)
 
-            # Create a bsf.procedure.Runnable and bsf.process.Executable for diagnosing each sample.
+            # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for diagnosing each sample.
 
             runnable_diagnose_sample = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
@@ -4705,9 +4673,10 @@ class VariantCallingGATK(Analysis):
             executable_diagnose_sample = self.set_stage_runnable(
                 stage=stage_diagnose_sample,
                 runnable=runnable_diagnose_sample)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             executable_diagnose_sample.dependencies.append(runnable_process_sample.name)
-            # Set dependencies for succeeding bsf.procedure.Runnable or bsf.process.Executable objects.
+            # Set dependencies for succeeding bsf.procedure.ConsecutiveRunnable or bsf.process.Executable objects.
             runnable_diagnose_sample_list.append(runnable_diagnose_sample)
 
             if use_cache:
@@ -4931,12 +4900,13 @@ class VariantCallingGATK(Analysis):
         # Should sample annotation sheets be read or can the combined GVCF file be read in
         # to extract the actual sample names?
 
-        # Create a Python dict of Python str (cohort name) key and Python list of bsf.procedure.Runnable value data.
+        # Create a Python dict of Python str (cohort name) key and Python list of bsf.procedure.ConsecutiveRunnable
+        # value data.
         # Initialise a single key with the final cohort name and an empty list for merging the final cohort.
 
-        runnable_merge_cohort_dict = {self.cohort_name: []}
-        """ @type runnable_merge_cohort_dict: 
-            dict[str, list[(Runnable | str, str)]] """
+        runnable_merge_cohort_dict: Dict[str, List[Tuple[Union[ConsecutiveRunnable, str], str]]] = {
+            self.cohort_name: []
+        }
 
         runnable_merge_cohort_list = runnable_merge_cohort_dict[self.cohort_name]
 
@@ -4953,7 +4923,7 @@ class VariantCallingGATK(Analysis):
         # Run the GATK CombineGVCF analysis once more to merge all cohort-specific GVCF files defined in this project.
 
         if len(runnable_merge_cohort_list) == 1:
-            # If the cohort-specific bsf.procedure.Runnable list has only one component,
+            # If the cohort-specific bsf.procedure.ConsecutiveRunnable list has only one component,
             # the merge has already been completed.
             runnable_merge_cohort, file_path_merge_cohort_gvcf = runnable_merge_cohort_list[-1]
         elif len(runnable_merge_cohort_list) > 1:
@@ -4962,15 +4932,15 @@ class VariantCallingGATK(Analysis):
                 cohort_runnable_dict=runnable_merge_cohort_dict,
                 cohort_name=self.cohort_name)
         else:
-            raise Exception('Unexpected number of bsf.procedure.Runnable objects on the merge_cohort list.')
+            raise Exception('Unexpected number of bsf.procedure.ConsecutiveRunnable objects on the merge_cohort list.')
 
         # Run an additional GATK CombineGVCFs analysis to merge into a super-cohort, if defined.
 
         if self.accessory_cohort_gvcfs:  # not None and not empty
             # If accessory cohorts are defined, initialise a new Python dict of Python str cohort name key and
-            # Python list of bsf.procedure.Runnable value data. Initialise the list with the last
-            # bsf.procedure.Runnable object and extend with the the list of accessory cohort file names.
-            # The run_merge_cohort_scatter_gather() method can cope with bsf.procedure.Runnable or
+            # Python list of bsf.procedure.ConsecutiveRunnable value data. Initialise the list with the last
+            # bsf.procedure.ConsecutiveRunnable object and extend with the the list of accessory cohort file names.
+            # The run_merge_cohort_scatter_gather() method can cope with bsf.procedure.ConsecutiveRunnable or
             # str objects.
             cohort_key = '_'.join((self.cohort_name, 'accessory'))
             runnable_merge_cohort_dict = {cohort_key: [(runnable_merge_cohort, file_path_merge_cohort_gvcf)]}
@@ -4988,7 +4958,7 @@ class VariantCallingGATK(Analysis):
             # prefix_merge_cohort = self.get_prefix_merge_cohort(cohort_name=self.cohort_name)
             pass
 
-        # Specify the final FilePathMergeCohort object from the final bsf.procedure.Runnable object.
+        # Specify the final FilePathMergeCohort object from the final bsf.procedure.ConsecutiveRunnable object.
         # file_path_merge_cohort = FilePathMergeCohort(prefix=prefix_merge_cohort)
 
         ###############################
@@ -5014,7 +4984,7 @@ class VariantCallingGATK(Analysis):
 
         file_path_process_cohort = self.get_file_path_process_cohort(cohort_name=self.cohort_name)
 
-        # Create a bsf.procedure.Runnable and bsf.process.Executable for processing the cohort.
+        # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for processing the cohort.
 
         runnable_process_cohort = self.add_runnable_consecutive(
             runnable=ConsecutiveRunnable(
@@ -5026,7 +4996,7 @@ class VariantCallingGATK(Analysis):
         executable_process_cohort = self.set_stage_runnable(
             stage=stage_process_cohort,
             runnable=runnable_process_cohort)
-        # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+        # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or bsf.process.Executable.name objects.
         executable_process_cohort.dependencies.append(runnable_process_cohort_gather.name)
 
         if use_cache:
@@ -5209,7 +5179,7 @@ class VariantCallingGATK(Analysis):
         executable_annotate_cohort_snpeff = self.set_stage_runnable(
             stage=stage_annotate_cohort_snpeff,
             runnable=runnable_annotate_cohort_snpeff)
-        # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+        # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or bsf.process.Executable.name objects.
         executable_annotate_cohort_snpeff.dependencies.append(runnable_process_cohort.name)
 
         # Run Ensembl Variant Effect Predictor (VEP) annotation.
@@ -5220,7 +5190,7 @@ class VariantCallingGATK(Analysis):
         executable_annotate_cohort_vep = self.set_stage_runnable(
             stage=stage_annotate_cohort_vep,
             runnable=runnable_annotate_cohort_vep)
-        # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+        # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or bsf.process.Executable.name objects.
         executable_annotate_cohort_vep.dependencies.append(runnable_process_cohort.name)
 
         ######################################################
@@ -5257,7 +5227,8 @@ class VariantCallingGATK(Analysis):
             executable_split_cohort_snpeff = self.set_stage_runnable(
                 stage=stage_split_cohort_snpeff,
                 runnable=runnable_split_cohort_snpeff)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             executable_split_cohort_snpeff.dependencies.append(runnable_annotate_cohort_snpeff.name)
 
             if use_cache:
@@ -5334,7 +5305,8 @@ class VariantCallingGATK(Analysis):
             executable_split_cohort_vep = self.set_stage_runnable(
                 stage=stage_split_cohort_vep,
                 runnable=runnable_split_cohort_vep)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             executable_split_cohort_vep.dependencies.append(runnable_annotate_cohort_vep.name)
 
             if use_cache:
@@ -5396,7 +5368,7 @@ class VariantCallingGATK(Analysis):
 
         # file_path_summary = FilePathSummary(prefix=self.get_prefix_summary(cohort_name=self.cohort_name))
 
-        # Create a bsf.procedure.Runnable and bsf.process.Executable for summarising the cohort.
+        # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for summarising the cohort.
 
         runnable_summary = self.add_runnable_consecutive(
             runnable=ConsecutiveRunnable(
@@ -5408,7 +5380,7 @@ class VariantCallingGATK(Analysis):
         executable_summary = self.set_stage_runnable(
             stage=stage_summary,
             runnable=runnable_summary)
-        # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+        # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or bsf.process.Executable.name objects.
         for runnable_diagnose_sample in runnable_diagnose_sample_list:
             executable_summary.dependencies.append(runnable_diagnose_sample.name)
 
@@ -5437,7 +5409,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_somatic_gather = run_somatic_scatter_gather(comparison_key=comparison_name)
 
-            # Create a bsf.procedure.Runnable for processing the somatic calls.
+            # Create a bsf.procedure.ConsecutiveRunnable for processing the somatic calls.
 
             runnable_somatic = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
@@ -5449,9 +5421,10 @@ class VariantCallingGATK(Analysis):
             executable_somatic = self.set_stage_runnable(
                 stage=stage_somatic,
                 runnable=runnable_somatic)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             executable_somatic.dependencies.append(runnable_somatic_gather.name)
-            # For the moment, this bsf.procedure.Runnable has no bsf.process.RunnableStep objects assigned.
+            # For the moment, this bsf.procedure.ConsecutiveRunnable has no bsf.process.RunnableStep objects assigned.
             # It is purely needed for accessing FilePath objects in the report() method below.
             # Never submit the corresponding executable.
             executable_somatic.submit = False
@@ -5471,7 +5444,8 @@ class VariantCallingGATK(Analysis):
             executable_annotate_somatic_snpeff = self.set_stage_runnable(
                 stage=stage_annotate_somatic_snpeff,
                 runnable=runnable_annotate_somatic_snpeff)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             executable_annotate_somatic_snpeff.dependencies.append(runnable_somatic_gather.name)
 
             file_path_annotate_somatic_snpeff = self.get_file_path_annotate_somatic_snpeff(
@@ -5485,7 +5459,8 @@ class VariantCallingGATK(Analysis):
             executable_annotate_somatic_vep = self.set_stage_runnable(
                 stage=stage_annotate_somatic_vep,
                 runnable=runnable_annotate_somatic_vep)
-            # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+            # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+            # bsf.process.Executable.name objects.
             executable_annotate_somatic_vep.dependencies.append(runnable_somatic_gather.name)
 
             file_path_annotate_somatic_vep = self.get_file_path_annotate_somatic_vep(
@@ -5511,7 +5486,8 @@ class VariantCallingGATK(Analysis):
                 executable_split_somatic_snpeff = self.set_stage_runnable(
                     stage=stage_split_somatic_snpeff,
                     runnable=runnable_split_somatic_snpeff)
-                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+                # bsf.process.Executable.name objects.
                 executable_split_somatic_snpeff.dependencies.append(runnable_annotate_somatic_snpeff.name)
 
                 if use_cache:
@@ -5572,7 +5548,8 @@ class VariantCallingGATK(Analysis):
                 executable_split_somatic_vep = self.set_stage_runnable(
                     stage=stage_split_somatic_vep,
                     runnable=runnable_split_somatic_vep)
-                # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
+                # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
+                # bsf.process.Executable.name objects.
                 executable_split_somatic_vep.dependencies.append(runnable_annotate_somatic_vep.name)
 
                 if use_cache:
@@ -5910,8 +5887,7 @@ class VariantCallingGATK(Analysis):
 
             # Write a HTML document.
 
-            str_list = list()
-            """ @type str_list: list[str] """
+            str_list: List[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -6585,8 +6561,7 @@ class VariantCallingGATK(Analysis):
             """Private function to create a UCSC Track Hub.
             """
 
-            str_list = list()
-            """ @type str_list: list[str] """
+            str_list: List[str] = list()
 
             # Group via UCSC super tracks.
 
