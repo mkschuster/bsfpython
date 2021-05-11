@@ -105,10 +105,10 @@ if name_space.sequence_items:
                 print('File exists already:', file_path)
             else:
                 blob_properties = azure_block_blob_download(
-                    file_path=file_path,
                     azure_blob_service_client=azure_blob_service_client,
                     container=name_space.container,
                     blob=experiment_name + '/' + sequence_item + suffix,
+                    file_path=file_path,
                     max_concurrency=name_space.threads)
 
                 print('Azure Blob name:', blob_properties.name)
@@ -127,10 +127,10 @@ if name_space.irf_items:
                 print('File exists already:', file_path)
             else:
                 blob_properties = azure_block_blob_download(
-                    file_path=file_path,
                     azure_blob_service_client=azure_blob_service_client,
                     container=name_space.container,
                     blob=irf_item + suffix,
+                    file_path=file_path,
                     max_concurrency=name_space.threads)
 
                 print('Azure Blob name:', blob_properties.name)

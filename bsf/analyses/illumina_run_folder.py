@@ -74,6 +74,8 @@ class IlluminaRunFolderArchive(Analysis):
     @type cloud_container: str | None
     @ivar cloud_path_prefix: Blob file path prefix
     @type cloud_path_prefix: str | None
+    @ivar cloud_concurrency: Maximum number of network connections
+    @type cloud_concurrency: int | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     """
@@ -251,6 +253,7 @@ class IlluminaRunFolderArchive(Analysis):
             cloud_account=None,
             cloud_container=None,
             cloud_path_prefix=None,
+            cloud_concurrency=None,
             force=None):
         """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
 
@@ -305,6 +308,8 @@ class IlluminaRunFolderArchive(Analysis):
         @type cloud_container: str | None
         @param cloud_path_prefix: Blob file path prefix
         @type cloud_path_prefix: str | None
+        @param cloud_concurrency: Maximum number of network connections
+        @type cloud_concurrency: int | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         """
@@ -334,6 +339,7 @@ class IlluminaRunFolderArchive(Analysis):
         self.cloud_account = cloud_account
         self.cloud_container = cloud_container
         self.cloud_path_prefix = cloud_path_prefix
+        self.cloud_concurrency = cloud_concurrency
         self.force = force
 
         return
@@ -396,6 +402,10 @@ class IlluminaRunFolderArchive(Analysis):
         option = 'cloud_path_prefix'
         if configuration.config_parser.has_option(section=section, option=option):
             self.cloud_path_prefix = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cloud_concurrency'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_concurrency = configuration.config_parser.getint(section=section, option=option)
 
         option = 'force'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -504,6 +514,11 @@ class IlluminaRunFolderArchive(Analysis):
 
         if not self.project_name:
             self.project_name = '_'.join((self.experiment_name, irf.run_information.flow_cell))
+
+        # Check that the cloud concurrency value (maximum number of network connections) is an integer.
+
+        if not self.cloud_concurrency:
+            self.cloud_concurrency = 1
 
         super(IlluminaRunFolderArchive, self).run()
 
@@ -864,7 +879,8 @@ class IlluminaRunFolderArchive(Analysis):
                 account_name=self.cloud_account,
                 container_name=self.cloud_container,
                 source_path=archive_file_path,
-                target_path=target_path)
+                target_path=target_path,
+                max_concurrency=self.cloud_concurrency)
             runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
             # Upload the MD5 checksum file.
@@ -874,7 +890,8 @@ class IlluminaRunFolderArchive(Analysis):
                 account_name=self.cloud_account,
                 container_name=self.cloud_container,
                 source_path=archive_file_path + '.md5',
-                target_path=target_path + '.md5')
+                target_path=target_path + '.md5',
+                max_concurrency=self.cloud_concurrency)
             runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
         return

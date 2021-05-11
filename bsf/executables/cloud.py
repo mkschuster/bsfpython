@@ -47,6 +47,10 @@ class RunnableStepAzureBlockBlob(RunnableStep):
     @type source_path: str | None
     @ivar target_path: Target (blob) file path
     @type target_path: str | None
+    @ivar max_concurrency: Maximum number of I{Microsoft Azure Storage Blob Service} network connections
+    @type max_concurrency: int
+    @ivar logging_enable: Enable I{Microsoft Azure Storage Blob Service} logging via the Python C{logger} module
+    @type logging_enable: bool
     """
 
     def __init__(
@@ -69,7 +73,9 @@ class RunnableStepAzureBlockBlob(RunnableStep):
             account_name=None,
             container_name=None,
             source_path=None,
-            target_path=None):
+            target_path=None,
+            max_concurrency=4,
+            logging_enable=False):
         """Initialise a C{bsf.executables.cloud.RunnableStepAzureBlockBlob} object.
 
         @param name: Name
@@ -113,6 +119,10 @@ class RunnableStepAzureBlockBlob(RunnableStep):
         @type source_path: str | None
         @param target_path: Target (blob) file path
         @type target_path: str | None
+        @param max_concurrency: Maximum number of I{Microsoft Azure Storage Blob Service} network connections
+        @type max_concurrency: int
+        @param logging_enable: Enable I{Microsoft Azure Storage Blob Service} logging via the Python C{logger} module
+        @type logging_enable: bool
         """
         super(RunnableStepAzureBlockBlob, self).__init__(
             name=name,
@@ -135,6 +145,8 @@ class RunnableStepAzureBlockBlob(RunnableStep):
         self.container_name = container_name
         self.source_path = source_path
         self.target_path = target_path
+        self.max_concurrency = max_concurrency
+        self.logging_enable = logging_enable
 
         return
 
@@ -155,7 +167,9 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
             file_path=self.source_path,
             azure_blob_service_client=get_azure_blob_service_client(account_name=self.account_name),
             container=self.container_name,
-            blob=self.target_path)
+            blob=self.target_path,
+            max_concurrency=self.max_concurrency,
+            logging_enable=self.logging_enable)
 
         print('Azure Blob name:', blob_properties.name)
         print('Azure Blob size:', blob_properties.size)
@@ -178,10 +192,12 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
         @rtype: list[str] | None
         """
         blob_properties = azure_block_blob_download(
-            file_path=self.source_path,
             azure_blob_service_client=get_azure_blob_service_client(account_name=self.account_name),
             container=self.container_name,
-            blob=self.target_path)
+            blob=self.target_path,
+            file_path=self.source_path,
+            max_concurrency=self.max_concurrency,
+            logging_enable=self.logging_enable)
 
         print('Azure Blob name:', blob_properties.name)
         print('Azure Blob size:', blob_properties.size)
@@ -237,6 +253,21 @@ if __name__ == '__main__':
         required=True,
         type=str)
 
+    argument_parser.add_argument(
+        '--maximum-concurrency',
+        default=4,
+        dest='max_concurrency',
+        help='Maximum number of network connections [4]',
+        required=False,
+        type=int)
+
+    argument_parser.add_argument(
+        '--enable-logging',
+        action='store_true',
+        dest='logging_enable',
+        help='Enable logging [False]',
+        required=False)
+
     name_space = argument_parser.parse_args()
 
     if name_space.action == 'upload':
@@ -245,7 +276,9 @@ if __name__ == '__main__':
             account_name=name_space.account_name,
             container_name=name_space.container_name,
             source_path=name_space.source_path,
-            target_path=name_space.target_path)
+            target_path=name_space.target_path,
+            max_concurrency=name_space.max_conurrency,
+            logging_enable=name_space.logging_enable)
 
         runnable_step.run(debug=name_space.debug)
 
@@ -255,6 +288,8 @@ if __name__ == '__main__':
             account_name=name_space.account_name,
             container_name=name_space.container_name,
             source_path=name_space.source_path,
-            target_path=name_space.target_path)
+            target_path=name_space.target_path,
+            max_concurrency=name_space.max_conurrency,
+            logging_enable=name_space.logging_enable)
 
         runnable_step.run(debug=name_space.debug)

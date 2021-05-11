@@ -1297,6 +1297,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     @type cloud_account: str | None
     @ivar cloud_container: I{Microsoft Azure Blob Service} container name
     @type cloud_container: str | None
+    @ivar cloud_concurrency: Maximum number of network connections
+    @type cloud_concurrency: int | None
     """
 
     name = 'Picard IlluminaMultiplexSam Analysis'
@@ -1371,7 +1373,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             vendor_quality_filter=None,
             compression_level=None,
             cloud_account=None,
-            cloud_container=None):
+            cloud_container=None,
+            cloud_concurrency=None):
         """Initialise a C{bsf.analyses.picard.IlluminaMultiplexSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -1433,6 +1436,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @type cloud_account: str | None
         @param cloud_container: I{Microsoft Azure Blob Service} container name
         @type cloud_container: str | None
+        @param cloud_concurrency: Maximum number of network connections
+        @type cloud_concurrency: int | None
         """
         super(IlluminaMultiplexSam, self).__init__(
             configuration=configuration,
@@ -1463,6 +1468,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         self.compression_level = compression_level
         self.cloud_account = cloud_account
         self.cloud_container = cloud_container
+        self.cloud_concurrency = cloud_concurrency
 
         return
 
@@ -1526,6 +1532,10 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         option = 'cloud_container'
         if configuration.config_parser.has_option(section=section, option=option):
             self.cloud_container = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cloud_concurrency'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_concurrency = configuration.config_parser.getint(section=section, option=option)
 
         return
 
@@ -1614,6 +1624,11 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         if self.vendor_quality_filter is None:
             self.vendor_quality_filter = VendorQualityFilter.get_vendor_quality_filter(
                 flow_cell_type=irf.run_parameters.get_flow_cell_type)
+
+        # Check that the cloud concurrency value (maximum number of network connections) is an integer.
+
+        if not self.cloud_concurrency:
+            self.cloud_concurrency = 1
 
         # Call the run method of the super class after the project_name has been defined.
 
@@ -1750,7 +1765,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                     account_name=self.cloud_account,
                     container_name=self.cloud_container,
                     source_path=file_path_lane.archive_bam,
-                    target_path=file_path_lane.cloud_bam)
+                    target_path=file_path_lane.cloud_bam,
+                    max_concurrency=self.cloud_concurrency)
                 runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
                 # Upload the MD5 checksum file from its archive location.
@@ -1759,7 +1775,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                     account_name=self.cloud_account,
                     container_name=self.cloud_container,
                     source_path=file_path_lane.archive_md5,
-                    target_path=file_path_lane.cloud_md5)
+                    target_path=file_path_lane.cloud_md5,
+                    max_concurrency=self.cloud_concurrency)
                 runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
