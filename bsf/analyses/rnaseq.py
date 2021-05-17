@@ -4432,8 +4432,8 @@ class DESeq(Analysis):
                 design_row_dict = design_dict[design_name]
                 design_prefix = '_'.join((self.prefix, design_row_dict['design']))
                 for plot_instance in design_row_dict['plot_aes'].split('|'):
-                    ggplot_geom, ggplot_aes_list = plot_instance.split(':')
-                    plot_path = '__'.join((ggplot_geom[5:], ggplot_aes_list.replace(',', '_').replace('=', '_')))
+                    plot_path = plot_instance.replace('geom_', '').replace(';', '__').translate(
+                        str.maketrans(':=,', '___'))
                     str_list.append('<tr>\n')
                     # Design
                     str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
@@ -4455,7 +4455,6 @@ class DESeq(Analysis):
                                             width='80')))
                             str_list.append('</td>\n')
                     # Heatmap plots
-                    plot_path = '_'.join(map(lambda x: x.split('=')[1], ggplot_aes_list.split(',')))
                     plot_type = 'heatmap'
                     for model_type in ('blind', 'model'):
                         plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
