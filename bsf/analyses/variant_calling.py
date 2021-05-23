@@ -3886,8 +3886,9 @@ class VariantCallingGATK(Analysis):
                     name='align_lane_bwa',
                     program='bwa',
                     sub_command=Command(program='mem'))
+                # NOTE: The variant_calling_align_lane stage does not follow the standard.
                 # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.ConsecutiveRunnable,
-                # it gets serialised into the pickler_file.
+                # it gets serialised into a separate pickler_file.
 
                 # Read configuration sections
                 # [bsf.analyses.variant_calling.VariantCallingGATK.align_lane_bwa]
@@ -3962,31 +3963,31 @@ class VariantCallingGATK(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    stage_align_lane.name + '_' + paired_reads_name + '.pkl')
+                    stage_align_lane.name + '_' + paired_reads_name + '_run_bwa.pkl')
                 with open(file=pickler_path, mode='wb') as pickler_file:
                     pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
                     pickler.dump(pickler_dict_align_lane)
 
-                # Create a bsf_run_bwa.py job to run the pickled object.
+                # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for aligning each read group.
 
-                executable_align_lane = stage_align_lane.add_executable(
-                    executable=Executable(
-                        name='_'.join((stage_align_lane.name, paired_reads_name)),
-                        program='bsf_run_bwa.py'))
+                runnable_align_lane = self.add_runnable_consecutive(
+                    runnable=ConsecutiveRunnable(
+                        name=self.get_prefix_align_lane(paired_reads_name=paired_reads_name),
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        debug=self.debug))
+                executable_align_lane = self.set_stage_runnable(
+                    stage=stage_align_lane,
+                    runnable=runnable_align_lane)
 
-                # Only submit this bsf.process.Executable if the final result file does not exist.
-                if (os.path.exists(os.path.join(self.genome_directory, file_path_alignment.aligned_md5)) and
-                        os.path.getsize(os.path.join(self.genome_directory, file_path_alignment.aligned_md5))):
-                    executable_align_lane.submit = False
-                # Check also for existence of a new-style bsf.procedure.ConsecutiveRunnable status file.
-                if os.path.exists(os.path.join(
-                        stage_align_lane.working_directory,
-                        '_'.join((stage_align_lane.name, paired_reads_name, 'completed.txt')))):
-                    executable_align_lane.submit = False
+                # Run the pickled object via legacy script 'bsf_run_bwa.py'.
 
-                # Set executable_align_lane options.
-                executable_align_lane.add_option_long(key='pickler_path', value=pickler_path)
-                executable_align_lane.add_option_long(key='debug', value=str(self.debug))
+                runnable_step = RunnableStep(name='run_bwa', program='bsf_run_bwa.py')
+                runnable_align_lane.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step.add_option_long(key='pickler_path', value=pickler_path)
+                runnable_step.add_option_long(key='debug', value=str(self.debug))
 
                 ###################################
                 # Step 2: Process per read group. #
