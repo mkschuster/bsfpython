@@ -1373,27 +1373,25 @@ class Tuxedo(Analysis):
             else:  # tophat2 is the default case.
                 # Create a Tophat Runnable per Sample.name.
 
-                # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
-
-                prefix_run_tophat = self.get_prefix_run_tophat(sample_name=sample.name)
-
                 file_path_run_tophat = self.get_file_path_run_tophat(sample_name=sample.name)
 
-                # runnable_run_tophat = self.add_runnable(
-                #         runnable=ConsecutiveRunnable(
-                #                 name=self.get_prefix_rnaseq_run_tophat(sample_name=sample.name),
-                #                 working_directory=self.genome_directory,
-                #                 debug=self.debug))
-                # executable_run_tophat = self.set_stage_runnable(
-                #         stage=stage_run_tophat,
-                #         runnable=runnable_run_tophat)
-                #
+                runnable_run_tophat = self.add_runnable_consecutive(
+                    runnable=ConsecutiveRunnable(
+                        name=self.get_prefix_run_tophat(sample_name=sample.name),
+                        working_directory=self.genome_directory,
+                        debug=self.debug))
+                executable_run_tophat = self.set_stage_runnable(
+                    stage=stage_run_tophat,
+                    runnable=runnable_run_tophat)
+
+                # NOTE: The rnaseq_run_tophat stage does not follow the standard.
+                # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.ConsecutiveRunnable,
+                # it gets serialised into a separate pickler_file.
                 # Create a new Tophat bsf.process.RunnableStep.
 
                 runnable_step = RunnableStep(
                     name='tophat2',
                     program='tophat2')
-                # runnable_run_tophat.add_runnable_step(runnable_step=runnable_step)
 
                 # Read configuration section [bsf.analyses.rnaseq.Tuxedo.tophat2]
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
@@ -1409,8 +1407,7 @@ class Tuxedo(Analysis):
 
                 runnable_step.add_option_long(key='num-threads', value=str(stage_run_tophat.threads))
 
-                # TODO: These really are properties of the Reads, PairedReads or Sample objects
-                # rather than an Analysis.
+                # TODO: These really are properties of the Reads, PairedReads or Sample objects rather than an Analysis.
                 if self.insert_size and self.read_length:
                     runnable_step.add_option_long(
                         key='mate-inner-dist',
@@ -1467,36 +1464,22 @@ class Tuxedo(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    stage_run_tophat.name + '_' + sample.name + '.pkl')
+                    stage_run_tophat.name + '_' + sample.name + '_run_tophat.pkl')
+
                 with open(file=pickler_path, mode='wb') as pickler_file:
                     pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
                     pickler.dump(pickler_dict_run_tophat)
 
-                executable_run_tophat = stage_run_tophat.add_executable(
-                    executable=Executable(
-                        name=prefix_run_tophat,
-                        program='bsf_run_rnaseq_tophat.py'))
-                # Set dependencies on previous Runnable or bsf.process.Executable objects.
-                # None.
-
-                # Set rnaseq_run_tophat options.
-                executable_run_tophat.add_option_long(key='pickler_path', value=pickler_path)
-                executable_run_tophat.add_option_long(key='debug', value=str(self.debug))
-
-                # Only submit this bsf.process.Executable if the 'align_summary.txt' file does not exist.
-                file_path_temporary = os.path.join(self.genome_directory, file_path_run_tophat.align_summary)
-                if os.path.exists(file_path_temporary) and os.path.getsize(file_path_temporary) > 0:
-                    executable_run_tophat.submit = False
-
-                # TODO: End of code block.
+                runnable_step = RunnableStep(name='run_tophat2', program='bsf_run_rnaseq_tophat.py')
+                runnable_run_tophat.add_runnable_step(runnable_step=runnable_step)
+                runnable_step.add_option_long(key='pickler_path', value=pickler_path)
+                runnable_step.add_option_long(key='debug', value=str(self.debug))
 
                 # Create a process_tophat Runnable per sample.name.
 
-                prefix_process_tophat = self.get_prefix_process_tophat(sample_name=sample.name)
-
                 runnable_process_tophat = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
-                        name=prefix_process_tophat,
+                        name=self.get_prefix_process_tophat(sample_name=sample.name),
                         working_directory=self.genome_directory,
                         debug=self.debug))
                 executable_process_tophat = self.set_stage_runnable(
@@ -1535,13 +1518,11 @@ class Tuxedo(Analysis):
 
             # Create a run_cufflinks Runnable per Sample name.
 
-            prefix_run_cufflinks = self.get_prefix_run_cufflinks(sample_name=sample.name)
-
             file_path_cufflinks = self.get_file_path_run_cufflinks(sample_name=sample.name)
 
             runnable_run_cufflinks = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
-                    name=prefix_run_cufflinks,
+                    name=self.get_prefix_run_cufflinks(sample_name=sample.name),
                     working_directory=self.genome_directory,
                     debug=self.debug))
             # Set dependencies for subsequent Runnable or bsf.process.Executable objects.
@@ -1755,11 +1736,9 @@ class Tuxedo(Analysis):
         # Create one process_cufflinks bsf.process.Executable to process all sub-directories.
 
         if len(runnable_run_cufflinks_list):
-            prefix_process_cufflinks = self.get_prefix_process_cufflinks()
-
             runnable_process_cufflinks = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
-                    name=prefix_process_cufflinks,
+                    name=self.get_prefix_process_cufflinks(),
                     working_directory=self.genome_directory,
                     debug=self.debug))
             executable_process_cufflinks = self.set_stage_runnable(
@@ -2356,11 +2335,9 @@ class Tuxedo(Analysis):
                         annotation_dict=cuffdiff_cuffnorm_alignments_dict)
                     runnable_step_run_cuffdiff.arguments.append(file_path_run_cuffdiff.alignments_tsv)
 
-                prefix_process_cuffdiff = self.get_prefix_process_cuffdiff(comparison_name=comparison_name)
-
                 runnable_process_cuffdiff = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
-                        name=prefix_process_cuffdiff,
+                        name=self.get_prefix_process_cuffdiff(comparison_name=comparison_name),
                         working_directory=self.genome_directory,
                         debug=self.debug))
                 executable_process_cuffdiff = self.set_stage_runnable(
@@ -4432,8 +4409,8 @@ class DESeq(Analysis):
                 design_row_dict = design_dict[design_name]
                 design_prefix = '_'.join((self.prefix, design_row_dict['design']))
                 for plot_instance in design_row_dict['plot_aes'].split('|'):
-                    ggplot_geom, ggplot_aes_list = plot_instance.split(':')
-                    plot_path = '__'.join((ggplot_geom[5:], ggplot_aes_list.replace(',', '_').replace('=', '_')))
+                    plot_path = plot_instance.replace('geom_', '').replace(';', '__').translate(
+                        str.maketrans(':=,', '___'))
                     str_list.append('<tr>\n')
                     # Design
                     str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
@@ -4455,7 +4432,6 @@ class DESeq(Analysis):
                                             width='80')))
                             str_list.append('</td>\n')
                     # Heatmap plots
-                    plot_path = '_'.join(map(lambda x: x.split('=')[1], ggplot_aes_list.split(',')))
                     plot_type = 'heatmap'
                     for model_type in ('blind', 'model'):
                         plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
