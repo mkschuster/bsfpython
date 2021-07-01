@@ -1788,7 +1788,7 @@ class RunFolder(object):
 
         if rta in (
                 '1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.61', '1.18.64',  # HiSeq 2000
-                '1.18.54',  # Miseq
+                '1.18.54', '1.18.54.4',  # Miseq
         ):
             _entry_name = 'config.xml'
 
