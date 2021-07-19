@@ -1283,10 +1283,10 @@ class RunnableStepChangeMode(RunnableStep):
 
         # Change the mode of directories and files simultaneously, but only if the mode is not None.
 
-        for file_path, directory_name_list, file_name_list in os.walk(top=self.file_path, topdown=True):
+        for directory_path, directory_name_list, file_name_list in os.walk(top=self.file_path):
             # Change the mode of the file_path.
             if int_mode_directory is not None:
-                os.chmod(file_path, int_mode_directory)
+                os.chmod(directory_path, int_mode_directory)
             # Change the mode of each directory name.
             # This is redundant, because each sub-directory will also appear as a file_path once.
             # if int_mode_directory is not None:
@@ -1295,7 +1295,7 @@ class RunnableStepChangeMode(RunnableStep):
             # Change the mode of each file name.
             if int_mode_file is not None:
                 for file_name in file_name_list:
-                    os.chmod(os.path.join(file_path, file_name), int_mode_file)
+                    os.chmod(os.path.join(directory_path, file_name), int_mode_file)
 
         return None
 
