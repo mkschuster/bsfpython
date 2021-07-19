@@ -30,13 +30,138 @@
 #  The LTFS content file lists run folder names and a comma-separated list of LTO barcode labels
 #  in tab-separated value (TSV) format.
 #
-import fnmatch
+import json
+import logging
 import os
+import re
 from argparse import ArgumentParser
 from typing import Dict, List
 
+# The LTFS dict uses IRF keys and list value data of LTFS volume names.
+ltfs_dict: Dict[str, List[str]] = dict()
+
+
+def read_ltfs_archive(archive_file_path):
+    """Read an LTFS archive file in tab-separated value (TSV) format.
+
+    @param archive_file_path: File path
+    @type archive_file_path: str
+    """
+    if os.path.exists(archive_file_path):
+        with open(file=archive_file_path, mode='rt') as text_io:
+            for line_str in text_io:
+                line_list = line_str.split()
+                if line_list[0] not in ltfs_dict:
+                    ltfs_dict[line_list[0]] = list()
+                tape_list = ltfs_dict[line_list[0]]
+                for tape_id in line_list[1].split(','):
+                    if tape_id not in tape_list:
+                        tape_list.append(tape_id)
+
+    return
+
+
+def write_ltfs_archive(archive_file_path):
+    """Write an LTFS archive file in tab-separated value (TSV) format.
+
+    @param archive_file_path: File path
+    @type archive_file_path: str
+    """
+    with open(file=archive_file_path, mode='wt') as text_io:
+        for irf_file_name in sorted(ltfs_dict):
+            print(irf_file_name, ','.join(sorted(ltfs_dict[irf_file_name])), sep='\t', file=text_io)
+
+    return
+
+
+def process_json_files(top_directory_path):
+    """Process JSON files with LTFS virtual extended attributes (VEA).
+
+    @param top_directory_path: Directory path
+    @type top_directory_path: str
+    """
+    re_pattern = re.compile(pattern=name_space.json_pattern)
+
+    for directory_path, directory_name_list, file_name_list in os.walk(top=top_directory_path):
+        logging.debug("directory_path: '%s'", directory_path)
+        logging.debug("directory_name_list: '%s'", directory_name_list)
+        logging.debug("file_name_list: '%s'", file_name_list)
+
+        for file_name in file_name_list:
+            re_match = re_pattern.search(string=file_name)
+            if re_match is None:
+                logging.debug("Excluding: '%s'", file_name)
+                continue
+
+            # The tape name could be parsed from the fle name via a regular expression, or better, retrieved from
+            # the corresponding LTFS virtual extended attribute (VEA).
+            # volume_name = re_match.group(1)
+            with open(file=os.path.join(directory_path, file_name), mode='rt') as text_io:
+                vea_dict = json.load(fp=text_io)
+
+                volume_name = vea_dict['volume']['ltfs.volumeName']
+
+                for vea_object_dict in vea_dict['objects']:
+                    file_name = vea_object_dict['file.path']
+
+                    if file_name not in ltfs_dict:
+                        ltfs_dict[file_name] = list()
+
+                    tape_list = ltfs_dict[file_name]
+
+                    if volume_name not in tape_list:
+                        tape_list.append(volume_name)
+
+    return
+
+
+def process_ltfscp_files(top_directory_path):
+    """Process LTFSCP log files, particularly the 'ILT30505I' informational entry.
+
+    @param top_directory_path: Directory path
+    @type top_directory_path: str
+    """
+    re_pattern = re.compile(pattern=name_space.ltfscp_pattern)
+
+    for directory_path, directory_name_list, file_name_list in os.walk(top=top_directory_path):
+        logging.debug("directory_path: '%s'", directory_path)
+        logging.debug("directory_name_list: '%s'", directory_name_list)
+        logging.debug("file_name_list: '%s'", file_name_list)
+
+        for file_name in file_name_list:
+            re_match = re_pattern.search(string=file_name)
+            if re_match is None:
+                logging.debug("Excluding: '%s'", file_name)
+                continue
+
+            # Parse teh volume name from the file name (e.g., BS0048L6_log.txt)
+            volume_name = re_match.group(1)
+
+            with open(file=os.path.join(directory_path, file_name), mode='rt') as input_file:
+                for line_str in input_file:
+                    # ILT30505I Copy /scratch/lab_bsf/archive_irf/BS0048L6/BSF_0648_H7WC2BBXY_3.bam to
+                    #   /mnt/ltfs/BSF_0648_H7WC2BBXY_3.bam
+                    if not line_str.startswith('ILT30505I'):
+                        continue
+
+                    line_list = line_str.split()
+                    base_name = line_list[2].split('/')[-1]
+
+                    logging.debug("File name: '%s'", base_name)
+
+                    if base_name not in ltfs_dict:
+                        ltfs_dict[base_name] = list()
+
+                    tape_list = ltfs_dict[base_name]
+
+                    if volume_name not in tape_list:
+                        tape_list.append(volume_name)
+
+    return
+
+
 argument_parser = ArgumentParser(
-    description='LTFS archive collection and update script.')
+    description='Update an LTFS archive file')
 
 argument_parser.add_argument(
     'directory_path',
@@ -44,15 +169,25 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--pattern',
-    default='*_log.txt',
-    help='wildcard pattern (glob) [*_log.txt]',
+    '--json-pattern',
+    default='^([0-9A-Z]{6,6}L[5-6])\\.json$',
+    dest='json_pattern',
+    help='JSON file name regular expression [^([0-9A-Z]{6,6}L[5-6])\\.json$]',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--ltfscp-pattern',
+    default='^([0-9A-Z]{6,6}L[5-6])_log\\.txt$',
+    dest='ltfscp_pattern',
+    help='LTFSCP file name regular expression [^([0-9A-Z]{6,6}L[5-6])_log\\.txt$]',
+    required=False,
     type=str)
 
 argument_parser.add_argument(
     '--file-path',
     dest='file_path',
-    help='Existing LTO content file path to update',
+    help='LTFS archive file path',
     required=True,
     type=str)
 
@@ -65,58 +200,22 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-# The LTFS dict uses IRF keys and list value data of LTFS tapes.
-ltfs_dict: Dict[str, List[str]] = dict()
+if name_space.debug:
+    if name_space.debug > 1:
+        logging.basicConfig(level=logging.DEBUG)
+    elif name_space.debug > 0:
+        logging.basicConfig(level=logging.INFO)
 
 # Read the initial LTFS content file that needs updating.
+read_ltfs_archive(archive_file_path=name_space.file_path)
 
-if os.path.exists(name_space.file_path):
-    with open(file=name_space.file_path, mode='rt') as input_file:
-        for line_str in input_file:
-            line_list = line_str.split()
-            if line_list[0] not in ltfs_dict:
-                ltfs_dict[line_list[0]] = list()
-            tape_list = ltfs_dict[line_list[0]]
-            for tape_id in line_list[1].split(','):
-                if tape_id not in tape_list:
-                    tape_list.append(tape_id)
+# Process JSON files if a pattern was provided.
+if name_space.json_pattern:
+    process_json_files(top_directory_path=name_space.directory_path)
 
-# Iterate through the directory path to find new LTFS log files.
+# Process LTFSCP files if a pattern was provided.
+if name_space.ltfscp_pattern:
+    process_ltfscp_files(top_directory_path=name_space.directory_path)
 
-for file_path, directory_name_list, file_name_list in os.walk(top=name_space.directory_path, topdown=True):
-    if name_space.debug > 0:
-        print('file_path:', file_path)
-        print('directory_name_list:', directory_name_list)
-        print('file_name_list:', file_name_list)
-        print()
-
-    for file_name in file_name_list:
-        if not fnmatch.fnmatch(file_name, name_space.pattern):
-            continue
-
-        # BS0048L6_log.txt
-        tape_name = file_name[:-8]
-        with open(file=os.path.join(file_path, file_name), mode='rt') as input_file:
-            for line_str in input_file:
-                # ILT30505I Copy /scratch/lab_bsf/archive_irf/BS0048L6/BSF_0648_H7WC2BBXY_3.bam to
-                #   /mnt/ltfs/BSF_0648_H7WC2BBXY_3.bam
-                if not line_str.startswith('ILT30505I'):
-                    continue
-
-                line_list = line_str.split()
-                base_name = line_list[2].split('/')[-1]
-
-                if name_space.debug > 0:
-                    print('File name:', base_name)
-
-                if base_name not in ltfs_dict:
-                    ltfs_dict[base_name] = list()
-                tape_list = ltfs_dict[base_name]
-                if tape_name not in tape_list:
-                    tape_list.append(tape_name)
-
-# Write the updated LTFS content file.
-
-with open(file=name_space.file_path, mode='wt') as output_file:
-    for irf_file_name in sorted(ltfs_dict):
-        print(irf_file_name, ','.join(sorted(ltfs_dict[irf_file_name])), sep='\t', file=output_file)
+# Write the updated LTFS content file back to its original location.
+write_ltfs_archive(archive_file_path=name_space.file_path)
