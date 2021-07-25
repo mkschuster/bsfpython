@@ -33,113 +33,23 @@ import logging
 import os
 import re
 from argparse import ArgumentParser
-from typing import Dict, Tuple
+
+from bsf.md5sum import MD5Sum, MD5SumArchive
 
 
-def split_md5sum_line(md5sum_str):
-    """Split a line of a md5sum file into check_sum, check_mode (i.e. ' ' for text or '*' for binary) and file name.
-
-    @param md5sum_str: md5sum string
-    @type md5sum_str: str
-    @return: Tuple of check_sum, check_mode and file_name
-    @rtype: (str, str, str)
-    """
-    md5sum_str = md5sum_str.strip()
-
-    if ' ' in md5sum_str:
-        _index_int = md5sum_str.index(' ')
-
-        # The MD5 check sum lies up until the index location.
-        _check_sum = md5sum_str[:_index_int]
-
-        # The check mode marker for text (' ') or binary ('*') lies after the index location.
-        _check_mode = md5sum_str[_index_int + 1:_index_int + 2]
-
-        # The file name excluding the marker follows the index location + 1.
-        _file_name = md5sum_str[_index_int + 2:]
-    else:
-        _check_sum = md5sum_str
-        _check_mode = '*'
-        _file_name = ''
-
-    return _check_sum, _check_mode, _file_name
-
-
-md5_dict: Dict[str, Tuple[str, str]] = dict()
-
-
-def add_md5_entry(entry_file_name, entry_check_sum, entry_check_mode):
-    """Add an dm5sum entry to the global md5sum Python C{dict} object.
-
-    @param entry_file_name: File name
-    @type entry_file_name: str
-    @param entry_check_sum: Check sum
-    @type entry_check_sum: str
-    @param entry_check_mode: Check mode
-    @type entry_check_mode: str
-    """
-    if entry_file_name in md5_dict and md5_dict[entry_file_name][0] != entry_check_sum:
-        logging.warning("Non-matching check sum '%s' for file name '%s'", entry_check_sum, entry_file_name)
-    else:
-        md5_dict[entry_file_name] = (entry_check_sum, entry_check_mode)
-
-    return
-
-
-def read_md5sum_archive(archive_file_path):
-    """Read a MD5 sum archive file.
-
-    @param archive_file_path: File path
-    @type archive_file_path: str
-    """
-    if os.path.exists(archive_file_path):
-        with open(file=archive_file_path, mode='rt') as input_file:
-            for line_str in input_file:
-                md5_check_sum, md5_check_mode, md5_file_name = split_md5sum_line(md5sum_str=line_str)
-
-                logging.debug("md5_check_sum:  '%s'", md5_check_sum)
-                logging.debug("md5_check_mode: '%s'", md5_check_mode)
-                logging.debug("md5_file_name:  '%s'", md5_file_name)
-
-                if md5_file_name:
-                    add_md5_entry(
-                        entry_check_sum=md5_check_sum,
-                        entry_file_name=md5_file_name,
-                        entry_check_mode=md5_check_mode)
-                else:
-                    raise Exception('The md5sum file ' + repr(name_space.file_path) +
-                                    " does not obey the standard 'MD5SUM *file_path' format.")
-
-    return
-
-
-def write_md5sum_archive(archive_file_path):
-    """Write a MD5 sum archive file.
-
-    @param archive_file_path: File path
-    @type archive_file_path: str
-    """
-    with open(file=archive_file_path, mode='wt') as text_io:
-        for md5_file_name in sorted(md5_dict):
-            md5_check_sum = md5_dict[md5_file_name][0]
-            md5_check_mode = md5_dict[md5_file_name][1]
-
-            # Adjust the mode to binary for certain files.
-            for suffix in ('.bam', '.gz'):
-                if md5_file_name.endswith(suffix):
-                    md5_check_mode = '*'
-
-            print(md5_check_sum, md5_check_mode + md5_file_name, sep=' ', file=text_io)
-
-    return
-
-
-def process_md5_files():
+def process_md5_files(md5sum_archive, directory_path, file_pattern):
     """Process individual MD5 sum files.
-    """
-    re_pattern = re.compile(pattern=name_space.file_pattern)
 
-    for directory_path, directory_name_list, file_name_list in os.walk(top=name_space.directory_path):
+    @param md5sum_archive:
+    @type md5sum_archive: MD5SumArchive
+    @param directory_path: Directory file path
+    @type directory_path: str
+    @param file_pattern: File pattern regular expression
+    @type file_pattern: str
+    """
+    re_pattern = re.compile(pattern=file_pattern)
+
+    for directory_path, directory_name_list, file_name_list in os.walk(top=directory_path):
         logging.debug("directory_path: '%s'", directory_path)
         logging.debug("directory_name_list: '%s'", directory_name_list)
         logging.debug("file_name_list: '%s'", file_name_list)
@@ -151,22 +61,20 @@ def process_md5_files():
 
             with open(file=os.path.join(directory_path, file_name), mode='rt') as text_io:
                 for line_str in text_io:
-                    md5_check_sum, md5_check_mode, md5_file_name = split_md5sum_line(md5sum_str=line_str)
+                    md5sum = MD5Sum.from_line(md5sum_str=line_str)
 
-                    if not md5_file_name:
+                    if not md5sum.file_path:
                         # In case the md5sum file does not specify a file name (e.g. Picard MD5 sum files),
                         # use the file name without its '.md5' suffix.
                         if file_name.endswith('.md5'):
-                            md5_file_name = file_name[:-4]
+                            md5sum.file_path = file_name[:-4]
                         else:
                             raise Exception('Unexpected suffix of (Picard) md5sum file: ' + repr(file_name))
 
-                    md5_file_name = os.path.basename(md5_file_name)
+                    # Archive just the base name of the file path.
+                    md5sum.file_path = os.path.basename(md5sum.file_path)
 
-                    add_md5_entry(
-                        entry_check_sum=md5_check_sum,
-                        entry_file_name=md5_file_name,
-                        entry_check_mode=md5_check_mode)
+                    md5sum_archive.add_md5sum(md5sum=md5sum)
 
     return
 
@@ -208,8 +116,11 @@ if name_space.debug:
     elif name_space.debug > 0:
         logging.basicConfig(level=logging.INFO)
 
-read_md5sum_archive(archive_file_path=name_space.file_path)
+archive_object = MD5SumArchive.from_file_path(file_path=name_space.file_path)
 
-process_md5_files()
+process_md5_files(
+    md5sum_archive=archive_object,
+    directory_path=name_space.directory_path,
+    file_pattern=name_space.file_pattern)
 
-write_md5sum_archive(archive_file_path=name_space.file_path)
+archive_object.to_file_path()
