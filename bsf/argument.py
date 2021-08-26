@@ -79,7 +79,7 @@ class Argument(object):
         @rtype: Argument
         """
         # Test for a >>>class.key = value<<< INI file option construct.
-        if key.index('.') > 0:
+        if '.' in key:
             key_list = key.split(sep='.')
             if key_list[0] in __all__:
                 argument_class: Type = getattr(sys.modules[__name__], key_list[0])
