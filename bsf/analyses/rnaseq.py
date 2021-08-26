@@ -3605,6 +3605,10 @@ class DESeq(Analysis):
     @type comparison_path: str | None
     @ivar contrast_path: Contrast file path
     @type contrast_path: str | None
+    @ivar threshold_padj: Threshold for p-adjusted values
+    @type threshold_padj: float | none
+    @ivar threshold_log2fc: Threshold for log2 fold-change values
+    @type threshold_log2fc: float | None
     """
 
     name = 'DESeq RNA-seq Analysis'
@@ -3667,7 +3671,9 @@ class DESeq(Analysis):
             transcriptome_version=None,
             transcriptome_gtf=None,
             comparison_path=None,
-            contrast_path=None):
+            contrast_path=None,
+            threshold_padj=None,
+            threshold_log2fc=None):
         """Initialise a C{bsf.analyses.rnaseq.DESeq} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -3704,6 +3710,10 @@ class DESeq(Analysis):
         @type comparison_path: str | None
         @param contrast_path: Contrast file path
         @type contrast_path: str | None
+        @param threshold_padj: Threshold for p-adjusted values
+        @type threshold_padj: float | none
+        @param threshold_log2fc: Threshold for log2 fold-change values
+        @type threshold_log2fc: float | None
         """
 
         super(DESeq, self).__init__(
@@ -3726,6 +3736,8 @@ class DESeq(Analysis):
         self.transcriptome_gtf = transcriptome_gtf
         self.comparison_path = comparison_path
         self.contrast_path = contrast_path
+        self.threshold_padj = threshold_padj
+        self.threshold_log2fc = threshold_log2fc
 
         return
 
@@ -3759,6 +3771,14 @@ class DESeq(Analysis):
         option = 'ctr_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.contrast_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'threshold_padj'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.threshold_padj = configuration.config_parser.getfloat(section=section, option=option)
+
+        option = 'threshold_log2fc'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.threshold_log2fc = configuration.config_parser.getfloat(section=section, option=option)
 
         return
 
@@ -3986,6 +4006,12 @@ class DESeq(Analysis):
                 runnable_step.add_option_long(key='design-name', value=design_name)
                 runnable_step.add_option_long(key='threads', value=str(stage_results.threads))
 
+                if self.threshold_padj is not None:
+                    runnable_step.add_option_long(key='padj-threshold', value=str(self.threshold_padj))
+
+                if self.threshold_log2fc is not None:
+                    runnable_step.add_option_long(key='lfc-threshold', value=str(self.threshold_log2fc))
+
                 runnable_step = RunnableStep(
                     name='enrichr',
                     program='bsf_rnaseq_deseq_enrichr.R')
@@ -4172,6 +4198,11 @@ class DESeq(Analysis):
             # Contrast table.
 
             str_list.append('<h2 id="contrasts">Contrasts</h2>\n')
+            if self.threshold_padj is not None:
+                str_list.append('<p>')
+                str_list.append('Significant genes are defined as having an adjusted p-value below the threshold (')
+                str_list.append(str(self.threshold_padj))
+                str_list.append(').</p>\n')
             str_list.append('\n')
 
             str_list.append('<table id="contrasts_table">\n')

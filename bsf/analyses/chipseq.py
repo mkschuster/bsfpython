@@ -36,7 +36,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.connector import ConnectorFile
 from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
-from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
+from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory, RunnableStepLink
 from bsf.standards import Configuration, StandardFilePath, Genome, Transcriptome
 
 
@@ -523,8 +523,10 @@ class ChIPSeq(Analysis):
     @type name: str
     @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-    @type replicate_grouping: bool
+    @cvar skip_alignment_sieve: Skip the DeepTools alignment sieve
+    @type skip_alignment_sieve: bool
+    @ivar replicate_grouping: Group all replicates into a single process
+    @type replicate_grouping: bool | None
     @ivar comparison_path: Comparison file path
     @type comparison_path: str | None
     @ivar genome_black_list: Genome black list file path
@@ -551,6 +553,7 @@ class ChIPSeq(Analysis):
 
     name = 'ChIP-seq Analysis'
     prefix = 'chipseq'
+    skip_alignment_sieve = True
 
     @classmethod
     def get_stage_name_alignment(cls):
@@ -714,7 +717,7 @@ class ChIPSeq(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            replicate_grouping=True,
+            replicate_grouping=None,
             comparison_path=None,
             genome_black_list=None,
             genome_fasta_path=None,
@@ -754,7 +757,7 @@ class ChIPSeq(Analysis):
         @type collection: Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[Sample]
-        @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+        @param replicate_grouping: Group all replicates into a single process
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
         @type comparison_path: str | None
@@ -800,7 +803,6 @@ class ChIPSeq(Analysis):
         if replicate_grouping is None:
             self.replicate_grouping = True
         else:
-            assert isinstance(replicate_grouping, bool)
             self.replicate_grouping = replicate_grouping
 
         self.comparison_path = comparison_path
@@ -1065,35 +1067,50 @@ class ChIPSeq(Analysis):
                 self.set_stage_runnable(stage=stage_alignment, runnable=runnable_alignment)
                 # No dependencies at this stage.
 
-                # Add a RunnableStep for the deepTools alignmentSieve tool.
+                if self.skip_alignment_sieve:
+                    # Add RunnableStepLink objects for symbolic links for BAI and BAM files.
 
-                runnable_step = RunnableStep(
-                    name='alignment_sieve',
-                    program='alignmentSieve')
-                runnable_alignment.add_runnable_step(runnable_step=runnable_step)
+                    runnable_alignment.add_runnable_step(
+                        runnable_step=RunnableStepLink(
+                            name='link_bam',
+                            source_path=Bowtie2.get_file_path_sample(sample_name=sample.name).sample_bam,
+                            target_path=file_path_alignment.sample_bam))
 
-                runnable_step.add_option_long(
-                    key='bam',
-                    value=Bowtie2.get_file_path_sample(sample_name=sample.name).sample_bam)
-                runnable_step.add_option_long(key='outFile', value=file_path_alignment.sample_bam)
-                runnable_step.add_option_long(key='numberOfProcessors', value=str(stage_alignment.threads))
-                runnable_step.add_option_long(key='filterMetrics', value=file_path_alignment.filter_metrics_tsv)
-                runnable_step.add_option_long(key='blackListFileName', value=self.genome_black_list)
+                    runnable_alignment.add_runnable_step(
+                        runnable_step=RunnableStepLink(
+                            name='link_bai',
+                            source_path=Bowtie2.get_file_path_sample(sample_name=sample.name).sample_bai,
+                            target_path=file_path_alignment.sample_bai))
+                else:
+                    # Add a RunnableStep for the deepTools alignmentSieve tool.
 
-                # Index the resulting filtered BAM file.
+                    runnable_step = RunnableStep(
+                        name='alignment_sieve',
+                        program='alignmentSieve')
+                    runnable_alignment.add_runnable_step(runnable_step=runnable_step)
 
-                runnable_step = RunnableStep(
-                    name='samtools_index',
-                    program='samtools',
-                    sub_command=Command(program='index'))
-                runnable_alignment.add_runnable_step(runnable_step=runnable_step)
+                    runnable_step.add_option_long(
+                        key='bam',
+                        value=Bowtie2.get_file_path_sample(sample_name=sample.name).sample_bam)
+                    runnable_step.add_option_long(key='outFile', value=file_path_alignment.sample_bam)
+                    runnable_step.add_option_long(key='numberOfProcessors', value=str(stage_alignment.threads))
+                    runnable_step.add_option_long(key='filterMetrics', value=file_path_alignment.filter_metrics_tsv)
+                    runnable_step.add_option_long(key='blackListFileName', value=self.genome_black_list)
 
-                sub_command = runnable_step.sub_command
+                    # Index the resulting filtered BAM file.
 
-                sub_command.add_switch_short(key='b')
-                sub_command.add_option_short(key='@', value=str(stage_alignment.threads))
+                    runnable_step = RunnableStep(
+                        name='samtools_index',
+                        program='samtools',
+                        sub_command=Command(program='index'))
+                    runnable_alignment.add_runnable_step(runnable_step=runnable_step)
 
-                sub_command.arguments.append(file_path_alignment.sample_bam)
+                    sub_command = runnable_step.sub_command
+
+                    sub_command.add_switch_short(key='b')
+                    sub_command.add_option_short(key='@', value=str(stage_alignment.threads))
+
+                    sub_command.arguments.append(file_path_alignment.sample_bam)
 
                 # Add a RunnableStep for the deepTools bamCoverage tool.
 
@@ -1491,9 +1508,9 @@ class ChIPSeq(Analysis):
         def run_create_diff_bind_jobs():
             """Create Bioconductor DiffBind jobs.
             """
-            # First, organise the ChIPSeqComparison objects by comparison name.
+            # Firstly, organise the ChIPSeqComparison objects by comparison name.
             for comparison_dict in self._comparison_dict.values():
-                # Second, organise the ChIPSeqComparison objects by factor.
+                # Secondly, organise the ChIPSeqComparison objects by factor.
                 for chipseq_comparison in comparison_dict.values():
                     if not chipseq_comparison.diff_bind:
                         continue
@@ -1600,6 +1617,12 @@ class ChIPSeq(Analysis):
                     runnable_step.add_option_long(
                         key='sample-annotation',
                         value=file_path_diff_bind.sample_annotation_sheet)
+                    runnable_step.add_option_long(
+                        key='black-list',
+                        value=self.genome_black_list)
+                    runnable_step.add_option_long(
+                        key='genome-version',
+                        value=self.genome_version)
 
                     # Add a RunnableStep for Bioconductor ChIPpeakAnno
 
@@ -1752,7 +1775,11 @@ class ChIPSeq(Analysis):
 
             str_list: List[str] = list()
 
-            str_list.append('<h1 id="chipseq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
+
+            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+            str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
             str_list.append('<p>\n')
@@ -1761,8 +1788,17 @@ class ChIPSeq(Analysis):
             str_list.append('<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a>')
             str_list.append('</strong>,\n')
             str_list.append('before peaks are called with ')
-            str_list.append('<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 1.4</a>\n')
-            str_list.append('on a treatment and control sample pair.\n')
+            str_list.append('<a href="https://macs3-project.github.io/MACS/">MACS 1.4</a>\n')
+            str_list.append('on an enrichment and background sample pair.\n')
+            str_list.append('</p>\n')
+            str_list.append('\n')
+
+            str_list.append('<p id="bowtie2_report">\n')
+            str_list.append('Please see the ')
+            str_list.append('<a href="' + Bowtie2.prefix + '_report.html">')
+            str_list.append(self.project_name + ' ' + Bowtie2.name)
+            str_list.append('</a> report for quality plots and ')
+            str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
             str_list.append('</p>\n')
             str_list.append('\n')
 
@@ -1861,7 +1897,11 @@ class ChIPSeq(Analysis):
 
             str_list: List[str] = list()
 
-            str_list.append('<h1 id="chipseq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
+
+            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+            str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
             str_list.append('<p>\n')
@@ -1870,7 +1910,7 @@ class ChIPSeq(Analysis):
             str_list.append('<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a>')
             str_list.append('</strong>,\n')
             str_list.append('before peaks are called with ')
-            str_list.append('<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 2</a>\n')
+            str_list.append('<a href="https://macs3-project.github.io/MACS/">MACS 2</a>\n')
             str_list.append('on an enrichment and background sample pair.\n')
             str_list.append('</p>\n')
             str_list.append('\n')
