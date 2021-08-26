@@ -32,7 +32,9 @@ C{bsf.argument.OptionPairShort} (-key=value).
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-from typing import List
+import sys
+
+from typing import List, Type
 
 __all__ = \
     'Argument', \
@@ -56,6 +58,15 @@ class Argument(object):
     def from_key_value(cls, key, value):
         """Create a C{bsf.argument.Argument} from a key and value argument pair.
 
+        If the key starts with valid a bsf.argument class name, the corresponding object is initialised from
+        the key, which is separated by a dot from the class name and, if applicable for the class, the value.
+        class.key = value
+
+        This is particularly useful for STAR option --outSAMattributes NH HI NM MD XS AS that contains
+        a list of SAM tags that need splitting via class OptionMultiPairLong upon command line passing as list.
+        OptionMultiPairLong.outSAMattributes = NH HI NM MD XS AS
+
+        Legacy functionality:
         If the key starts with one or two hyphen and has no value associated, create a
         C{bsf.argument.SwitchShort} or C{bsf.argument.SwitchLong}, respectively.
         If the key is additionally associated with a value, create a C{bsf.argument.OptionShort} or
@@ -67,6 +78,19 @@ class Argument(object):
         @return: C{bsf.argument.Argument}
         @rtype: Argument
         """
+        # Test for a >>>class.key = value<<< INI file option construct.
+        if key.index('.') > 0:
+            key_list = key.split(sep='.')
+            if key_list[0] in __all__:
+                argument_class: Type = getattr(sys.modules[__name__], key_list[0])
+
+                if argument_class.__name__ in ('Argument', 'Switch', 'SwitchLong', 'SwitchShort'):
+                    return argument_class(key=key_list[1])
+                else:
+                    return argument_class(key=key_list[1], value=value)
+
+        # Legacy functionality below.
+
         if key.startswith('--'):
             # Long switch, option or option pair ...
             str_position = key.find('=')
