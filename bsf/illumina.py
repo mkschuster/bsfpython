@@ -683,7 +683,7 @@ class RunParameters(object):
             if element is not None:
                 return element.text
         else:
-            return
+            return ''
 
     @property
     def get_run_parameters_version(self):
@@ -731,8 +731,8 @@ class RunParameters(object):
         @return: Flow cell barcode
         @rtype: str
         """
-        return self.xml_paths_to_text(xml_paths=(
-            'Setup/Barcode', 'Barcode', 'FlowCellSerial', 'RfidsInfo/FlowCellSerialBarcode'))
+        return self.xml_paths_to_text(
+            xml_paths=('Setup/Barcode', 'Barcode', 'FlowCellSerial', 'RfidsInfo/FlowCellSerialBarcode'))
 
     @property
     def get_flow_cell_type(self):
@@ -745,8 +745,8 @@ class RunParameters(object):
         @return: Flow cell chemistry type
         @rtype: str
         """
-        return self.xml_paths_to_text(xml_paths=(
-            'Setup/Flowcell', 'ReagentKitVersion', 'Chemistry', 'RfidsInfo/FlowCellMode'))
+        return self.xml_paths_to_text(
+            xml_paths=('Setup/Flowcell', 'ReagentKitVersion', 'Chemistry', 'RfidsInfo/FlowCellMode'))
 
     @property
     def get_index_type(self):
@@ -856,6 +856,17 @@ class RunParameters(object):
         @rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/ApplicationVersion', 'ApplicationVersion'))
+
+    @property
+    def get_keep_intensities(self):
+        """Get the flag whether intensity files are kept.
+
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<KeepIntensityFiles>}
+            - I{MiSeq}:   I{<RunParameters>/<Setup>/<KeepIntensityFiles>}
+        @return: Keep intensity files flag
+        @rtype: str
+        """
+        return self.xml_paths_to_text(xml_paths=('Setup/KeepIntensityFiles',))
 
 
 class XMLConfiguration(object):

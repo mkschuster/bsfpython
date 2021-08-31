@@ -53,6 +53,19 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--threads',
+    default=1,
+    help='Maximum number of concurrent download threads',
+    required=False,
+    type=int)
+
+argument_parser.add_argument(
+    '--retain-path',
+    action='store_true',
+    dest='retain_path',
+    help='retain the local path in the blob path')
+
+argument_parser.add_argument(
     'files',
     help='file paths',
     nargs='+')
@@ -65,14 +78,37 @@ for file_path in name_space.files:
     if not os.path.isfile(path=file_path):
         raise Exception('File path ' + repr(file_path) + ' does not exist.')
 
-    print('Uploading blob file path:', file_path)
+    if name_space.retain_path:
+        # The local path needs rewriting into a URL schema.
+        path_list = []
+        drive_str, path_str = os.path.splitdrive(p=file_path)
+        while 1:
+            path_str, folder_str = os.path.split(path_str)
 
-    blob_properties = azure_block_blob_upload(
-        file_path=file_path,
-        azure_blob_service_client=azure_blob_service_client,
-        container=name_space.container)
+            if folder_str != '':
+                path_list.append(folder_str)
+            elif path_str != '':
+                path_list.append(path_str)
+            else:
+                break
 
-    print('  Azure Blob name:', blob_properties.name)
-    print('  Azure Blob size:', blob_properties.size)
-    print('  Azure Blob ETag:', blob_properties.etag)
-    print('  Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
+        path_list.reverse()
+
+        blob_path = '/'.join(path_list)
+    else:
+        blob_path = None
+
+    print('Uploading local path:', repr(file_path), 'blob path:', repr(blob_path))
+
+    if name_space.debug == 0:
+        blob_properties = azure_block_blob_upload(
+            file_path=file_path,
+            azure_blob_service_client=azure_blob_service_client,
+            container=name_space.container,
+            blob=blob_path,
+            max_concurrency=name_space.threads)
+
+        print('  Azure Blob name:', blob_properties.name)
+        print('  Azure Blob size:', blob_properties.size)
+        print('  Azure Blob ETag:', blob_properties.etag)
+        print('  Azure Blob Last Modified:', blob_properties.last_modified.isoformat())

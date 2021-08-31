@@ -77,7 +77,10 @@ field_names = [
     'application_version',
     'rta_version',
     'picard_read_structure',
+    'lane_count',
+    'keep_intensities',
 ]
+
 annotation_sheet = AnnotationSheet(
     file_path=name_space.output_file,
     header=True,
@@ -91,16 +94,19 @@ irf_pattern = re.compile(pattern=r'^[0-9]{6,6}_.*(?:_sav)?$')
 for file_name in file_name_list:
     if name_space.debug:
         print('File name:', repr(file_name))
+
     # Process just entries that obey the Illumina Run Folder pattern.
     match = re.search(pattern=irf_pattern, string=file_name)
     if not match:
         print('No match:', repr(file_name))
         continue
+
     file_path = os.path.join(name_space.directory, file_name)
     if not (os.path.exists(os.path.join(file_path, 'runParameters.xml')) or
             os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
         print('Directory ' + repr(file_name) + ' not an Illumina Run Folder')
         continue
+
     # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
     # that result from a broken FhGFS file system.
     try:
@@ -114,7 +120,6 @@ for file_name in file_name_list:
             print('\t'.join((file_name, '?', '?', '?')))
         continue
 
-    root_node = irf.run_parameters.element_tree.getroot()
     annotation_sheet.row_dicts.append({
         'experiment': irf.run_parameters.get_experiment_name,
         'experiment_name': '_'.join((irf.run_parameters.get_experiment_name,
@@ -124,6 +129,8 @@ for file_name in file_name_list:
         'application_version': irf.run_parameters.get_application_version,
         'rta_version': irf.run_parameters.get_real_time_analysis_version,
         'picard_read_structure': irf.run_information.get_picard_read_structure,
+        'lane_count': irf.run_information.flow_cell_layout.lane_count,
+        'keep_intensities': irf.run_parameters.get_keep_intensities,
     })
 
 annotation_sheet.to_file_path()
