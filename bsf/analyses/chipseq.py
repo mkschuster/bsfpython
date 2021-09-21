@@ -275,12 +275,30 @@ class FilePathPeakCalling(FilePath):
     @type summits_bb: str
     @ivar summits_bbi: Peak summits bigBedInfo
     @type summits_bbi: str
+    @ivar broad_peaks_bed: Broad peaks BED
+    @type broad_peaks_bed: str
+    @ivar broad_peaks_bb: Broad peaks bigBed
+    @type broad_peaks_bb: str
+    @ivar broad_peaks_bbi: Broad peaks bigBedInfo
+    @type broad_peaks_bbi: str
+    @ivar gapped_peaks_bed: Gapped peaks BED
+    @type gapped_peaks_bed: str
+    @ivar gapped_peaks_bb: Gapped peaks bigBed
+    @type gapped_peaks_bb: str
+    @ivar gapped_peaks_bbi: Gapped peaks bigBedInfo
+    @type gapped_peaks_bbi: str
     @ivar narrow_peaks_bed: Narrow peaks BED
     @type narrow_peaks_bed: str
     @ivar narrow_peaks_bb: Narrow peaks bigBed
     @type narrow_peaks_bb: str
     @ivar narrow_peaks_bbi: Narrow peaks bigBedInfo
     @type narrow_peaks_bbi: str
+    @ivar peaks_broad: MACS peaks broadPeak
+    @type peaks_broad: str
+    @ivar peaks_gapped: MACS peaks gappedPeak
+    @type peaks_gapped: str
+    @ivar peaks_narrow: MACS peaks narrowPeak
+    @type peaks_narrow: str
     @ivar peaks_tsv: MACS2 peaks tab-separated value (TSV)
     @type peaks_tsv: str
     @ivar peaks_xls: MACS2 peaks tab-separated value (TSV)
@@ -325,6 +343,18 @@ class FilePathPeakCalling(FilePath):
         self.comparison_subtract_bdg = os.path.join(prefix, '_'.join((prefix, 'subtract.bdg')))
         self.comparison_subtract_bw = os.path.join(prefix, '_'.join((prefix, 'subtract.bw')))
         self.comparison_subtract_bwi = os.path.join(prefix, '_'.join((prefix, 'subtract_bwi.txt')))
+
+        self.peaks_broad = os.path.join(prefix, '_'.join((prefix, 'peaks.broadPeak')))
+
+        self.broad_peaks_bed = os.path.join(prefix, '_'.join((prefix, 'broad_peaks.bed')))
+        self.broad_peaks_bb = os.path.join(prefix, '_'.join((prefix, 'broad_peaks.bb')))
+        self.broad_peaks_bbi = os.path.join(prefix, '_'.join((prefix, 'broad_peaks_bbi.txt')))
+
+        self.peaks_gapped = os.path.join(prefix, '_'.join((prefix, 'peaks.gappedPeak')))
+
+        self.gapped_peaks_bed = os.path.join(prefix, '_'.join((prefix, 'gapped_peaks.bed')))
+        self.gapped_peaks_bb = os.path.join(prefix, '_'.join((prefix, 'gapped_peaks.bb')))
+        self.gapped_peaks_bbi = os.path.join(prefix, '_'.join((prefix, 'gapped_peaks_bbi.txt')))
 
         self.peaks_narrow = os.path.join(prefix, '_'.join((prefix, 'peaks.narrowPeak')))
 
@@ -387,6 +417,8 @@ class FilePathDiffBind(FilePath):
         self.regions_pdf = os.path.join(prefix, prefix + '_peak_set_regions.pdf')
         self.regions_png = os.path.join(prefix, prefix + '_peak_set_regions.png')
         self.regions_tsv = os.path.join(prefix, prefix + '_peak_set_regions.tsv')
+        self.peak_set_bed = os.path.join(prefix, prefix + '_peak_set.bed')
+        self.peak_set_bb = os.path.join(prefix, prefix + '_peak_set.bb')
 
         return
 
@@ -1162,8 +1194,6 @@ class ChIPSeq(Analysis):
                     else:
                         chipseq_comparison_key_list.append(chipseq_comparison.get_key())
 
-                    factor = chipseq_comparison.factor.upper()
-
                     t_file_path_list = list()
                     for t_sample in chipseq_comparison.t_samples:
                         t_file_path_list.append(self.get_file_path_alignment(sample_name=t_sample.name).sample_bam)
@@ -1203,15 +1233,18 @@ class ChIPSeq(Analysis):
                     # Read RunnableStep options from configuration sections:
                     # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak]
                     # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak]
-                    self.set_runnable_step_configuration(runnable_step=runnable_step)
+                    # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak.{factor}]
+                    self.set_runnable_step_configuration(runnable_step=runnable_step, tag=chipseq_comparison.factor)
 
-                    runnable_step.add_option_multi_long(
+                    sub_command = runnable_step.sub_command
+
+                    sub_command.add_option_multi_long(
                         key='treatment',
                         value=' '.join(t_file_path_list))
 
                     if c_file_path_list:
                         # Control (input) samples are optional.
-                        runnable_step.add_option_multi_long(
+                        sub_command.add_option_multi_long(
                             key='control',
                             value=' '.join(c_file_path_list))
 
@@ -1219,52 +1252,15 @@ class ChIPSeq(Analysis):
                     # the resulting R script has them set too. Hence the R script has to be started
                     # from the genome_directory. However, the R script needs re-writing anyway, because
                     # it would be better to use the PNG rather than the PDF device for plotting.
-                    runnable_step.sub_command.add_option_long(
+                    sub_command.sub_command.add_option_long(
                         key='name',
                         value=file_path_peak_calling.name_prefix)
 
                     # The 'gsize' option has to be specified via the configuration.ini file in section
                     # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak].
-                    runnable_step.add_switch_long(key='single-profile')
-                    runnable_step.add_switch_long(key='call-subpeaks')
-                    runnable_step.add_switch_long(key='wig')
-
-                    if factor == 'H3K4ME1':
-                        pass
-                    elif factor == 'H3K4ME2':
-                        pass
-                    elif factor == 'H3K4ME3':
-                        pass  # Default settings from above.
-                    elif factor == 'H3K9AC':
-                        pass
-                    elif factor == 'H3K9ME3':
-                        pass
-                    elif factor == 'H3K27AC':
-                        pass
-                    elif factor == 'H3K27ME1':
-                        pass
-                    elif factor == 'H3K27ME2':
-                        pass
-                    elif factor == 'H3K27ME3':
-                        pass
-                    elif factor == 'H3K36ME3':
-                        # Parameter setting for H3K36me3 according to Nature Protocols (2012)
-                        # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
-                        runnable_step.add_switch_long(key='nomodel')
-                        runnable_step.add_option_long(key='shiftsize', value='73')
-                        runnable_step.add_option_long(key='pvalue', value='1e-3')
-                    elif factor == 'H3K56AC':
-                        pass
-                    elif factor == 'H4K16AC':
-                        pass
-                    elif factor == 'OTHER':
-                        pass
-                    else:
-                        warnings.warn(
-                            'Unable to set MACS14 parameters for unknown factor ' + repr(factor) + '.\n' +
-                            'Please use default factor ' + repr(self.factor_default) +
-                            ' or adjust Python code if necessary.',
-                            UserWarning)
+                    sub_command.add_switch_long(key='single-profile')
+                    sub_command.add_switch_long(key='call-subpeaks')
+                    sub_command.add_switch_long(key='wig')
 
                     # Add a RunnableStep to process MACS14 output.
 
@@ -1297,7 +1293,6 @@ class ChIPSeq(Analysis):
                     else:
                         chipseq_comparison_key_list.append(chipseq_comparison.get_key())
 
-                    factor = chipseq_comparison.factor.upper()
                     prefix_peak_calling = chipseq_comparison.get_prefix_peak_calling()
 
                     file_path_peak_calling = chipseq_comparison.get_file_path_peak_calling()
@@ -1341,15 +1336,18 @@ class ChIPSeq(Analysis):
                     # Read RunnableStep options from configuration sections:
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak]
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak.callpeak]
-                    self.set_runnable_step_configuration(runnable_step=runnable_step)
+                    # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak.callpeak.{factor}]
+                    self.set_runnable_step_configuration(runnable_step=runnable_step, tag=chipseq_comparison.factor)
 
-                    runnable_step.sub_command.add_option_multi_long(
+                    sub_command = runnable_step.sub_command
+
+                    sub_command.add_option_multi_long(
                         key='treatment',
                         value=' '.join(t_file_path_list))
 
                     if c_file_path_list:
                         # The control (input) samples are optional.
-                        runnable_step.sub_command.add_option_multi_long(
+                        sub_command.add_option_multi_long(
                             key='control',
                             value=' '.join(c_file_path_list))
                     # --format ["AUTO"]
@@ -1361,21 +1359,22 @@ class ChIPSeq(Analysis):
 
                     # Output arguments
                     # --outdir [.]
+                    sub_command.add_option_long(
+                        key='outdir',
+                        value=file_path_peak_calling.output_directory)
                     # --name ["NA"]
                     # MACS2 can cope with directories specified in the --name option, but
                     # the resulting R script has them set too. Hence the R script has to be started
                     # from the genome_directory. However, the R script needs re-writing anyway, because
                     # it would be better to use the PNG rather than the PDF device for plotting.
-                    runnable_step.sub_command.add_option_long(
-                        key='name',
-                        value=file_path_peak_calling.name_prefix)
+                    sub_command.add_option_long(key='name', value=prefix_peak_calling)
 
                     # --bdg [False]
-                    runnable_step.sub_command.add_switch_long(key='bdg')
+                    sub_command.add_switch_long(key='bdg')
                     # --verbose [2]
                     # --trackline [False]
                     # --SPMR [False]
-                    runnable_step.sub_command.add_switch_long(key='SPMR')
+                    sub_command.add_switch_long(key='SPMR')
 
                     # Shifting model arguments
                     # --nomodel [False]
@@ -1392,7 +1391,7 @@ class ChIPSeq(Analysis):
                     # --ratio [ignore]
                     # --down-sample [False]
                     # --seed [null]
-                    runnable_step.sub_command.add_option_long(
+                    sub_command.add_option_long(
                         key='tempdir',
                         value=runnable_peak_calling.temporary_directory_path(absolute=False))
                     # --nolambda [null]
@@ -1411,46 +1410,6 @@ class ChIPSeq(Analysis):
                     # Other options
                     # --buffer-size [100000]
 
-                    if factor == 'H3K4ME1':
-                        pass
-                    elif factor == 'H3K4ME2':
-                        pass
-                    elif factor == 'H3K4ME3':
-                        pass  # Default settings from above.
-                    elif factor == 'H3K9AC':
-                        pass
-                    elif factor == 'H3K9ME3':
-                        pass
-                    elif factor == 'H3K27AC':
-                        pass
-                    elif factor == 'H3K27ME1':
-                        pass
-                    elif factor == 'H3K27ME2':
-                        pass
-                    elif factor == 'H3K27ME3':
-                        pass
-                    elif factor == 'H3K36ME3':
-                        # Parameter setting for H3K36me3 according to Nature Protocols (2012)
-                        # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
-                        runnable_step.sub_command.add_switch_long(key='nomodel')
-                        # The shiftsize option is no longer supported in MACS 2.1.0
-                        # runnable_step.add_option_long(key='shiftsize', value='73')
-                        runnable_step.sub_command.add_option_long(
-                            key='pvalue',
-                            value='1e-3')
-                    elif factor == 'H3K56AC':
-                        pass
-                    elif factor == 'H4K16AC':
-                        pass
-                    elif factor == 'OTHER':
-                        pass
-                    else:
-                        warnings.warn(
-                            'Unable to set MACS2 parameters for unknown factor ' + repr(factor) + '.\n' +
-                            'Please use default factor ' + repr(self.factor_default) +
-                            ' or adjust Python code if necessary.',
-                            UserWarning)
-
                     # Add a RunnableStep to compare bedGraph files.
 
                     runnable_step = RunnableStep(
@@ -1464,31 +1423,30 @@ class ChIPSeq(Analysis):
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_bdg_cmp.bdgcmp]
                     self.set_runnable_step_configuration(runnable_step=runnable_step)
 
+                    sub_command = runnable_step.sub_command
+
                     # --tfile
-                    runnable_step.sub_command.add_option_long(
+                    sub_command.add_option_long(
                         key='tfile',
                         value=file_path_peak_calling.treatment_bdg)
 
                     # --cfile
-                    runnable_step.sub_command.add_option_long(
+                    sub_command.add_option_long(
                         key='cfile',
                         value=file_path_peak_calling.control_bdg)
 
                     # --scaling-factor [1.0]
                     # --pseudocount [0.0]
-                    runnable_step.sub_command.add_option_long(key='pseudocount', value='0.00001')
+                    sub_command.add_option_long(key='pseudocount', value='0.00001')
 
                     # --method [ppois] i.e. Poisson Pvalue -log10(pvalue), which yields data on a logarithmic scale
-                    runnable_step.sub_command.add_option_multi_long(
-                        key='method',
-                        value='ppois subtract logFE')
+                    sub_command.add_option_multi_long(key='method', value='ppois subtract logFE')
 
                     # --outdir [.]
+                    sub_command.add_option_long(key='outdir', value=file_path_peak_calling.output_directory)
                     # --o-prefix [null]
-                    runnable_step.sub_command.add_option_long(
-                        key='o-prefix',
-                        value=file_path_peak_calling.name_prefix)
-                    # --ofile
+                    sub_command.add_option_long(key='o-prefix', value=prefix_peak_calling)
+                    # --ofile [] Mutually exclusive with --o-prefix, must correspond to --method.
 
                     # Add a RunnableStep to process MACS2 output.
 
@@ -1661,6 +1619,23 @@ class ChIPSeq(Analysis):
                     runnable_step.add_option_long(
                         key='threads',
                         value=str(stage_diff_bind.threads))
+
+                    # Add a RunnableStep to run UCSC bedSort on the DiffBind consensus peak set.
+
+                    runnable_step = RunnableStep(name='bed_sort', program='bedSort')
+
+                    runnable_step.arguments.append(file_path_diff_bind.peak_set_bed)
+                    runnable_step.arguments.append(file_path_diff_bind.peak_set_bed)
+
+                    # Add a RunnableStep to run UCSC BedToBigBed on the DiffBind consensus peak set.
+
+                    runnable_step = RunnableStep(name='bed_to_big_bed', program='bedToBigBed')
+
+                    runnable_step.add_option_pair_short(key='type', value='bed6')
+
+                    runnable_step.arguments.append(file_path_diff_bind.peak_set_bed)
+                    runnable_step.arguments.append(self.genome_sizes_path)
+                    runnable_step.arguments.append(file_path_diff_bind.peak_set_bb)
 
             return
 
@@ -2609,15 +2584,15 @@ class ChIPSeq(Analysis):
             str_list_5.append('sortOrder comparison=+ factor=+\n')
             str_list_5.append('\n')
 
-            # 6. Composite track "peaks" (bigBed)
+            # 6. Composite track "narrow_peaks" (bigBed)
 
             str_list_6: List[str] = list()
 
             # Common track settings
-            str_list_6.append('track peaks\n')
+            str_list_6.append('track narrow_peaks\n')
             str_list_6.append('type bigBed 6+4\n')
-            str_list_6.append('shortLabel ChIP Peaks\n')
-            str_list_6.append('longLabel ChIP Peaks\n')
+            str_list_6.append('shortLabel ChIP Narrow Peaks\n')
+            str_list_6.append('longLabel ChIP Narrow Peaks\n')
             # str_list_6.append('html ...\n')
             str_list_6.append('visibility hide\n')
             # Common optional track settings
@@ -2657,6 +2632,78 @@ class ChIPSeq(Analysis):
             str_list_7.append('sortOrder comparison=+ factor=+\n')
             str_list_7.append('\n')
 
+            # 8. Composite track "broad_peaks" (bigBed)
+
+            str_list_8: List[str] = list()
+
+            # Common track settings
+            str_list_8.append('track broad_peaks\n')
+            str_list_8.append('type bigBed 6+3\n')
+            str_list_8.append('shortLabel ChIP Broad Peaks\n')
+            str_list_8.append('longLabel ChIP Broad Peaks\n')
+            # str_list_8.append('html ...\n')
+            str_list_8.append('visibility hide\n')
+            # Common optional track settings
+            # bigBed - Item or region track settings
+            # Composite track settings
+            str_list_8.append('compositeTrack on\n')
+            str_list_8.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+            str_list_8.append('centerLabelsDense on\n')
+            # str_list_8.append('dragAndDrop subTracks\n')
+            str_list_8.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+            str_list_8.append('subGroup2 factor Factor' + factor_str + '\n')
+            str_list_8.append('dimensions dimX=comparison dimY=factor\n')
+            str_list_8.append('sortOrder comparison=+ factor=+\n')
+            str_list_8.append('\n')
+
+            # 9. Composite track "broad_peaks" (bigBed)
+
+            str_list_9: List[str] = list()
+
+            # Common track settings
+            str_list_9.append('track gapped_peaks\n')
+            str_list_9.append('type bigBed 12+3\n')
+            str_list_9.append('shortLabel ChIP Gapped Peaks\n')
+            str_list_9.append('longLabel ChIP Gapped Peaks\n')
+            # str_list_9.append('html ...\n')
+            str_list_9.append('visibility hide\n')
+            # Common optional track settings
+            # bigBed - Item or region track settings
+            # Composite track settings
+            str_list_9.append('compositeTrack on\n')
+            str_list_9.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+            str_list_9.append('centerLabelsDense on\n')
+            # str_list_9.append('dragAndDrop subTracks\n')
+            str_list_9.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+            str_list_9.append('subGroup2 factor Factor' + factor_str + '\n')
+            str_list_9.append('dimensions dimX=comparison dimY=factor\n')
+            str_list_9.append('sortOrder comparison=+ factor=+\n')
+            str_list_9.append('\n')
+
+            # 10. Composite track "consensus_peaks" (bigBed)
+
+            str_list_10: List[str] = list()
+
+            # Common track settings
+            str_list_10.append('track consensus_peaks\n')
+            str_list_10.append('type bigBed 6\n')
+            str_list_10.append('shortLabel ChIP Consensus Peaks\n')
+            str_list_10.append('longLabel ChIP Consensus Peaks\n')
+            # str_list_10.append('html ...\n')
+            str_list_10.append('visibility hide\n')
+            # Common optional track settings
+            # bigBed - Item or region track settings
+            # Composite track settings
+            str_list_10.append('compositeTrack on\n')
+            str_list_10.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+            str_list_10.append('centerLabelsDense on\n')
+            # str_list_10.append('dragAndDrop subTracks\n')
+            str_list_10.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+            str_list_10.append('subGroup2 factor Factor' + factor_str + '\n')
+            str_list_10.append('dimensions dimX=comparison dimY=factor\n')
+            str_list_10.append('sortOrder comparison=+ factor=+\n')
+            str_list_10.append('\n')
+
             # Add UCSC trackDB entries for each comparison.
 
             for comparison_name in sorted(self._comparison_dict):
@@ -2691,7 +2738,7 @@ class ChIPSeq(Analysis):
                         # str_list_3.append('  html ...\n')
                         str_list_3.append('  visibility full\n')
                         # Common optional track settings
-                        str_list_3.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_3.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigWig - Signal graphing track settings
                         # Composite track settings
                         str_list_3.append('  parent background on\n')
@@ -2712,7 +2759,7 @@ class ChIPSeq(Analysis):
                         # str_list_4.append('  html ...\n')
                         str_list_4.append('  visibility full\n')
                         # Common optional track settings
-                        str_list_4.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_4.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigWig - Signal graphing track settings
                         # Composite track settings
                         str_list_4.append('  parent enrichment on\n')
@@ -2733,7 +2780,7 @@ class ChIPSeq(Analysis):
                         # str_list_5.append('  html ...\n')
                         str_list_5.append('  visibility full\n')
                         # Common optional track settings
-                        str_list_5.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_5.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigWig - Signal graphing track settings
                         str_list_5.append('  alwaysZero off\n')
                         str_list_5.append('  autoScale off\n')
@@ -2770,7 +2817,7 @@ class ChIPSeq(Analysis):
                         # str_list_5.append('  html ...\n')
                         str_list_5.append('  visibility full\n')
                         # Common optional track settings
-                        str_list_5.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_5.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigWig - Signal graphing track settings
                         str_list_5.append('  alwaysZero off\n')
                         str_list_5.append('  autoScale off\n')
@@ -2807,7 +2854,7 @@ class ChIPSeq(Analysis):
                         # str_list_5.append('  html ...\n')
                         str_list_5.append('  visibility full\n')
                         # Common optional track settings
-                        str_list_5.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_5.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigWig - Signal graphing track settings
                         str_list_5.append('  alwaysZero off\n')
                         str_list_5.append('  autoScale off\n')
@@ -2835,18 +2882,18 @@ class ChIPSeq(Analysis):
                     if os.path.exists(
                             os.path.join(self.genome_directory, file_path_peak_calling.narrow_peaks_bb)):
                         # Common track settings
-                        str_list_6.append('  track ' + prefix_short + '_peaks\n')
+                        str_list_6.append('  track ' + prefix_short + '_narrow_peaks\n')
                         str_list_6.append('  type bigBed 6+4\n')
-                        str_list_6.append('  shortLabel ' + prefix_short + '_peaks\n')
-                        str_list_6.append('  longLabel ChIP peaks ' + prefix_long + '\n')
+                        str_list_6.append('  shortLabel ' + prefix_short + '_narrow_peaks\n')
+                        str_list_6.append('  longLabel ChIP narrow peaks ' + prefix_long + '\n')
                         str_list_6.append('  bigDataUrl ' + file_path_peak_calling.narrow_peaks_bb + '\n')
                         # str_list_6.append('  html ...\n')
                         str_list_6.append('  visibility squish\n')
                         # Common optional track settings
-                        str_list_6.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_6.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigBed - Item or region track settings
                         # Composite track settings
-                        str_list_6.append('  parent peaks on\n')
+                        str_list_6.append('  parent narrow_peaks on\n')
                         str_list_6.append('  subGroups comparison=' + comparison_name + ' factor=' + factor_name + '\n')
                         str_list_6.append('  \n')
 
@@ -2863,12 +2910,52 @@ class ChIPSeq(Analysis):
                         # str_list_7.append('  html ...\n')
                         str_list_7.append('  visibility squish\n')
                         # Common optional track settings
-                        str_list_7.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                        str_list_7.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                         # bigBed - Item or region track settings
                         # Composite track settings
                         str_list_7.append('  parent summits on\n')
                         str_list_7.append('  subGroups comparison=' + comparison_name + ' factor=' + factor_name + '\n')
                         str_list_7.append('  \n')
+
+                    # Add a "broad_peaks" sub-track for each NAME_broad_peaks.bd file.
+
+                    if os.path.exists(
+                            os.path.join(self.genome_directory, file_path_peak_calling.broad_peaks_bb)):
+                        # Common track settings
+                        str_list_8.append('  track ' + prefix_short + '_broad_peaks\n')
+                        str_list_8.append('  type bigBed 6+3\n')
+                        str_list_8.append('  shortLabel ' + prefix_short + '_broad_peaks\n')
+                        str_list_8.append('  longLabel ChIP broad peaks ' + prefix_long + '\n')
+                        str_list_8.append('  bigDataUrl ' + file_path_peak_calling.broad_peaks_bb + '\n')
+                        # str_list_8.append('  html ...\n')
+                        str_list_8.append('  visibility squish\n')
+                        # Common optional track settings
+                        str_list_8.append('  color ' + self.get_colour(factor=factor_name) + '\n')
+                        # bigBed - Item or region track settings
+                        # Composite track settings
+                        str_list_8.append('  parent broad_peaks on\n')
+                        str_list_8.append('  subGroups comparison=' + comparison_name + ' factor=' + factor_name + '\n')
+                        str_list_8.append('  \n')
+
+                    # Add a "gapped_peaks" sub-track for each NAME_gapped_peaks.bd file.
+
+                    if os.path.exists(
+                            os.path.join(self.genome_directory, file_path_peak_calling.gapped_peaks_bb)):
+                        # Common track settings
+                        str_list_8.append('  track ' + prefix_short + '_gapped_peaks\n')
+                        str_list_8.append('  type bigBed 12+3\n')
+                        str_list_8.append('  shortLabel ' + prefix_short + '_gapped_peaks\n')
+                        str_list_8.append('  longLabel ChIP gapped peaks ' + prefix_long + '\n')
+                        str_list_8.append('  bigDataUrl ' + file_path_peak_calling.gapped_peaks_bb + '\n')
+                        # str_list_8.append('  html ...\n')
+                        str_list_8.append('  visibility squish\n')
+                        # Common optional track settings
+                        str_list_8.append('  color ' + self.get_colour(factor=factor_name) + '\n')
+                        # bigBed - Item or region track settings
+                        # Composite track settings
+                        str_list_8.append('  parent gapped_peaks on\n')
+                        str_list_8.append('  subGroups comparison=' + comparison_name + ' factor=' + factor_name + '\n')
+                        str_list_8.append('  \n')
 
             # Add UCSC trackDB entries for each alignment.
 
@@ -2886,7 +2973,7 @@ class ChIPSeq(Analysis):
                 # str_list_1.append('  html ...\n')
                 str_list_1.append('  visibility hide\n')
                 # Common optional track settings
-                # str_list_1.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                # str_list_1.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                 # bam - Compressed Sequence Alignment track settings
                 # Composite track settings
                 str_list_1.append('  parent alignment on\n')
@@ -2904,7 +2991,7 @@ class ChIPSeq(Analysis):
                 # str_list_2.append('  html ...\n')
                 str_list_2.append('  visibility full\n')
                 # Common optional track settings
-                # str_list_2.append('  color ' + self.get_colour(factor=factor_name.upper()) + '\n')
+                # str_list_2.append('  color ' + self.get_colour(factor=factor_name) + '\n')
                 # bigWig - Signal graphing track settings
                 str_list_2.append('  alwaysZero off\n')
                 str_list_2.append('  autoScale off\n')
@@ -2923,8 +3010,54 @@ class ChIPSeq(Analysis):
                 str_list_2.append('  parent coverage on\n')
                 str_list_2.append('  \n')
 
+            for comparison_name in sorted(self._factor_dict):
+                for factor_name in sorted(self._factor_dict[comparison_name]):
+                    if self.debug > 0:
+                        print('chipseq factor_name:', factor_name)
+
+                    # No comparison for less than two items.
+                    if len(self._factor_dict[comparison_name][factor_name]) < 2:
+                        continue
+
+                    prefix_diff_bind = self.get_prefix_diff_bind(
+                        comparison_name=comparison_name,
+                        factor_name=factor_name)
+
+                    file_path_diff_bind = FilePathDiffBind(prefix=prefix_diff_bind)
+
+                    prefix_short = '_'.join((comparison_name, factor_name))
+
+                    if os.path.exists(
+                            os.path.join(self.genome_directory, file_path_diff_bind.peak_set_bb)):
+                        # Common track settings
+                        str_list_10.append('  track ' + prefix_diff_bind + '_consensus_peaks\n')
+                        str_list_10.append('  type bigBed 6\n')
+                        str_list_10.append('  shortLabel ' + prefix_short + '_consensus_peaks\n')
+                        str_list_10.append('  longLabel ChIP consensus peaks ' + prefix_short + '\n')
+                        str_list_10.append('  bigDataUrl ' + file_path_diff_bind.peak_set_bb + '\n')
+                        # str_list_10.append('  html ...\n')
+                        str_list_10.append('  visibility squish\n')
+                        # Common optional track settings
+                        str_list_10.append('  color ' + self.get_colour(factor=factor_name) + '\n')
+                        # bigBed - Item or region track settings
+                        # Composite track settings
+                        str_list_10.append('  parent consensus_peaks on\n')
+                        str_list_10.append('  subGroups comparison=' + comparison_name +
+                                           ' factor=' + factor_name + '\n')
+                        str_list_10.append('  \n')
+
             self.ucsc_hub_to_file(
-                content=str_list_1 + str_list_2 + str_list_3 + str_list_4 + str_list_5 + str_list_6 + str_list_7)
+                content=str_list_1 +
+                str_list_2 +
+                str_list_3 +
+                str_list_4 +
+                str_list_5 +
+                str_list_6 +
+                str_list_7 +
+                str_list_8 +
+                str_list_9 +
+                str_list_10
+            )
 
             return
 

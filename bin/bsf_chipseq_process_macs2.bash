@@ -105,19 +105,72 @@ done
 #
 # prefix_peaks.bed         Obsolete since MACS 2.1.0
 # prefix_summits.bed
+# prefix_peaks.broadPeak   Linked to prefix_broad_peaks.bed symbolically.
+# prefix_peaks.gappedPeak  Linked to prefix_gapped_peaks.bed symbolically.
 # prefix_peaks.narrowPeak  Linked to prefix_narrow_peaks.bed symbolically.
+
+if [[ -f "${prefix}/${prefix}_peaks.broadPeak" && ! -L "${prefix}/${prefix}_broad_peaks.bed" ]]; then
+  ln -s "${prefix}_peaks.broadPeak" "${prefix}/${prefix}_broad_peaks.bed" || exit 1
+fi
+
+if [[ -f "${prefix}/${prefix}_peaks.gappedPeak" && ! -L "${prefix}/${prefix}_gapped_peaks.bed" ]]; then
+  ln -s "${prefix}_peaks.gappedPeak" "${prefix}/${prefix}_gapped_peaks.bed" || exit 1
+fi
 
 if [[ -f "${prefix}/${prefix}_peaks.narrowPeak" && ! -L "${prefix}/${prefix}_narrow_peaks.bed" ]]; then
   ln -s "${prefix}_peaks.narrowPeak" "${prefix}/${prefix}_narrow_peaks.bed" || exit 1
+fi
+
+if [[ -f "${prefix}/${prefix}_peaks.xls" && ! -L "${prefix}/${prefix}_peaks.tsv" ]]; then
   ln -s "${prefix}_peaks.xls" "${prefix}/${prefix}_peaks.tsv" || exit 1
 fi
 
 # Convert peak BED files into bigBed format.
-# UCSC bigNarrowPeak AutoSql file taken from:
-# https://genome-source.gi.ucsc.edu/gitlist/kent.git/blob/master/src/hg/lib/bigNarrowPeak.as
+# UCSC AutoSql files taken from:
+# https://genome-source.gi.ucsc.edu/gitlist/kent.git/blob/master/src/hg/lib/encode/broadPeak.as
+# https://genome-source.gi.ucsc.edu/gitlist/kent.git/blob/master/src/hg/lib/encode/gappedPeak.as
+# https://genome-source.gi.ucsc.edu/gitlist/kent.git/blob/master/src/hg/lib/encode/narrowPeak.as
 
-cat >"${prefix}/${prefix}_ucsc_big_narrow_peak.as" <<EOF
-table bigNarrowPeak
+cat >"${prefix}/${prefix}_ucsc_broad_peak.as" <<EOF
+table broadPeak
+"BED6+3 Peaks of signal enrichment based on pooled, normalized (interpreted) data."
+(
+    string chrom;        "Reference sequence chromosome or scaffold"
+    uint   chromStart;   "Start position in chromosome"
+    uint   chromEnd;     "End position in chromosome"
+    string name;	 "Name given to a region (preferably unique). Use . if no name is assigned."
+    uint   score;        "Indicates how dark the peak will be displayed in the browser (0-1000)"
+    char[1]   strand;     "+ or - or . for unknown"
+    float  signalValue;  "Measurement of average enrichment for the region"
+    float  pValue;       "Statistical significance of signal value (-log10). Set to -1 if not used."
+    float  qValue;       "Statistical significance with multiple-test correction applied (FDR -log10). Set to -1 if not used."
+)
+EOF
+
+cat >"${prefix}/${prefix}_ucsc_gapped_peak.as" <<EOF
+table gappedPeak
+"This format is used to provide called regions of signal enrichment based on pooled, normalized (interpreted) data where the regions may be spliced or incorporate gaps in the genomic sequence. It is a BED12+3 format."
+(
+    string chrom;         "Reference sequence chromosome or scaffold"
+    uint chromStart;      "Pseudogene alignment start position"
+    uint chromEnd;        "Pseudogene alignment end position"
+    string name;          "Name of pseudogene"
+    uint score;           "Score of pseudogene with gene (0-1000)"
+    char[1] strand;       "+ or - or . for unknown"
+    uint thickStart;      "Start of where display should be thick (start codon)"
+    uint thickEnd;        "End of where display should be thick (stop codon)"
+    uint reserved;        "Always zero for now"
+    int blockCount;       "Number of blocks"
+    int[blockCount] blockSizes; "Comma separated list of block sizes"
+    int[blockCount] chromStarts; "Start positions relative to chromStart"
+    float  signalValue;    "Measurement of average enrichment for the region"
+    float  pValue;         "Statistical significance of signal value (-log10). Set to -1 if not used."
+    float  qValue;         "Statistical significance with multiple-test correction applied (FDR). Set to -1 if not used."
+)
+EOF
+
+cat >"${prefix}/${prefix}_ucsc_narrow_peak.as" <<EOF
+table narrowPeak
 "BED6+4 Peaks of signal enrichment based on pooled, normalized (interpreted) data."
 (
     string  chrom;       "Reference sequence chromosome or scaffold"
@@ -133,7 +186,7 @@ table bigNarrowPeak
 )
 EOF
 
-cat >"${prefix}/${prefix}_ucsc_big_summits.as" <<EOF
+cat >"${prefix}/${prefix}_ucsc_peak_summit.as" <<EOF
 table bigPeakSummit
 "BED4+1 Peak summits of signal enrichment based on pooled, normalized (interpreted) data."
 (
@@ -148,7 +201,7 @@ EOF
 # The BED format specification requires that the fifth field is an integer score between 0 and 1000,
 # which is largely met by MACS2. Use a Perl one-liner to cut scores at 1000.
 
-declare -a suffixes=('peaks' 'summits' 'narrow_peaks')
+declare -a suffixes=('peaks' 'summits' 'broad_peaks' 'gapped_peaks' 'narrow_peaks')
 
 for suffix in "${suffixes[@]}"; do
   if [[ -s "${prefix}/${prefix}_${suffix}.bed" && ! -s "${prefix}/${prefix}_${suffix}.bb" ]]; then
@@ -167,12 +220,20 @@ for suffix in "${suffixes[@]}"; do
       declare cl=''
       cl+='bedToBigBed'
       case ${suffix} in
+      broad_peaks)
+        cl+=" -as=${prefix}/${prefix}_ucsc_broad_peak.as"
+        cl+=" -type=bed6+3"
+        ;;
+      gapped_peaks)
+        cl+=" -as=${prefix}/${prefix}_ucsc_gapped_peak.as"
+        cl+=' -type=bed12+3'
+        ;;
       narrow_peaks)
-        cl+=" -as=${prefix}/${prefix}_ucsc_big_narrow_peak.as"
+        cl+=" -as=${prefix}/${prefix}_ucsc_narrow_peak.as"
         cl+=' -type=bed6+4'
         ;;
       summits)
-        cl+=" -as=${prefix}/${prefix}_ucsc_big_summits.as"
+        cl+=" -as=${prefix}/${prefix}_ucsc_peak_summit.as"
         cl+=' -type=bed4+1'
         ;;
       esac
@@ -188,16 +249,30 @@ for suffix in "${suffixes[@]}"; do
   fi
 done
 
-rm "${prefix}/${prefix}_ucsc_big_narrow_peak.as" || exit 1
-rm "${prefix}/${prefix}_ucsc_big_summits.as" || exit 1
+rm "${prefix}/${prefix}_ucsc_broad_peak.as" || exit 1
+rm "${prefix}/${prefix}_ucsc_gapped_peak.as" || exit 1
+rm "${prefix}/${prefix}_ucsc_narrow_peak.as" || exit 1
+rm "${prefix}/${prefix}_ucsc_peak_summit.as" || exit 1
+
+# Change into the comparison-specific sub-directory.
+
+cd "${prefix}" || exit 1
+
+# Convert the model Rscript into a model PDF document.
 
 if [[ -f "${prefix}/${prefix}_model.r" ]]; then
   Rscript "${prefix}/${prefix}_model.r"
 fi
 
+# Use ImageMagick "convert" to convert the model PDF into two PNG files.
+
 if [[ -f "${prefix}/${prefix}_model.pdf" ]]; then
   convert "${prefix}/${prefix}_model.pdf" "${prefix}/${prefix}_model.png"
 fi
+
+# Change back to the old working directory, the genome directory.
+
+cd "${OLDPWD}" || exit 1
 
 if [[ -d "${temporary_directory}" ]]; then
   rm -R "${temporary_directory}" || exit 1

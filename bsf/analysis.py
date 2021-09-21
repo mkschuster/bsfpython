@@ -520,13 +520,16 @@ class Analysis(object):
 
         return
 
-    def set_runnable_step_configuration(self, runnable_step):
+    def set_runnable_step_configuration(self, runnable_step, tag=None):
         """Set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
 
         This method reads configuration section(s)
         "Analysis.__class__.__name__"."RunnableStep.name"[."Command.name"]*
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: RunnableStep
+        @param tag: Optional tag appended to the last sub-C{Command} of this C{RunnableStep}
+            This is useful to configure ChIP-seq peak calling by the ChIP factor (e.g., H3K27me3).
+        @type tag: str | None
         """
 
         def _set_configuration(command, section):
@@ -549,7 +552,13 @@ class Analysis(object):
 
             command.set_configuration(configuration=self.configuration, section=section)
 
-            if command.sub_command is not None:
+            if command.sub_command is None:
+                # If no more sub-Command is available, check for a final tag and configure it directly.
+                if tag:
+                    section += '.' + tag
+                    command.set_configuration(configuration=self.configuration, section=section)
+            else:
+                # If a sub-Command is available, recurse.
                 _set_configuration(command=command.sub_command, section=section)
 
             return
