@@ -53,6 +53,13 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--standard-blob-tier',
+    dest='standard_blob_tier',
+    help='Microsoft Azure Standard Blob Tier name (i.e., Archive, Cool or Hot)',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
     '--threads',
     default=1,
     help='Maximum number of concurrent download threads',
@@ -106,6 +113,7 @@ for file_path in name_space.files:
             azure_blob_service_client=azure_blob_service_client,
             container=name_space.container,
             blob=blob_path,
+            standard_blob_tier=name_space.standard_blob_tier,
             max_concurrency=name_space.threads)
 
         print('  Azure Blob name:', blob_properties.name)

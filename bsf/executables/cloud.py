@@ -153,7 +153,114 @@ class RunnableStepAzureBlockBlob(RunnableStep):
 
 class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
     """The C{bsf.executables.cloud.RunnableStepAzureBlockBlobUpload} class uploads file paths as block blobs.
+
+    @ivar standard_blob_tier: I{Microsoft Azure Storage Blob Service} Python C{str} standard blob tier
+        enumerated value (i.e., Archive, Cool, Hot)
+    @type standard_blob_tier: str | None
     """
+
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            sub_process=None,
+            obsolete_file_path_list=None,
+            account_name=None,
+            container_name=None,
+            source_path=None,
+            target_path=None,
+            max_concurrency=4,
+            logging_enable=False,
+            standard_blob_tier=None):
+        """Initialise a C{bsf.executables.cloud.RunnableStepAzureBlockBlob} object.
+
+        @param name: Name
+        @type name: str | None
+        @param program: Program
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str] | None
+        @param sub_command: Subordinate C{bsf.process.Command}
+        @type sub_command: Command | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: Connector | None
+        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
+            properties in the context of C{bsf.analysis.Stage} dependencies
+        @type dependencies: list[Executable.name] | None
+        @param hold: Hold on job scheduling
+        @type hold: str | None
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str | None
+        @param process_name: Process name
+        @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: Popen | None
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{bsf.process.RunnableStep}
+        @type obsolete_file_path_list: list[str] | None
+        @param account_name: I{Microsoft Azure Storage Account} name
+        @type account_name: str
+        @param container_name: I{Microsoft Azure Storage Blob Service} container name
+        @type container_name: str
+        @param source_path: Source (local) file path
+        @type source_path: str | None
+        @param target_path: Target (blob) file path
+        @type target_path: str | None
+        @param max_concurrency: Maximum number of I{Microsoft Azure Storage Blob Service} network connections
+        @type max_concurrency: int
+        @param logging_enable: Enable I{Microsoft Azure Storage Blob Service} logging via the Python C{logger} module
+        @type logging_enable: bool
+        @param standard_blob_tier: I{Microsoft Azure Storage Blob Service} Python C{str} standard blob tier
+            enumerated value (i.e., Archive, Cool, Hot)
+        @type standard_blob_tier: str | None
+        """
+        super(RunnableStepAzureBlockBlobUpload, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            sub_process=sub_process,
+            obsolete_file_path_list=obsolete_file_path_list,
+            account_name=account_name,
+            container_name=container_name,
+            source_path=source_path,
+            target_path=target_path,
+            max_concurrency=max_concurrency,
+            logging_enable=logging_enable
+        )
+
+        self.standard_blob_tier = standard_blob_tier
+
+        return
 
     def run(self, debug=0):
         """Run a C{bsf.executables.cloud.RunnableStepAzureBlockBlobUpload}.
@@ -168,6 +275,7 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
             azure_blob_service_client=get_azure_blob_service_client(account_name=self.account_name),
             container=self.container_name,
             blob=self.target_path,
+            standard_blob_tier=self.standard_blob_tier,
             max_concurrency=self.max_concurrency,
             logging_enable=self.logging_enable)
 

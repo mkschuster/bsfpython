@@ -28,7 +28,10 @@ import json
 import os
 from typing import Dict, IO, Union
 
-from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient, ContainerProperties, BlobProperties
+from azure.storage.blob import BlobServiceClient, \
+    ContainerClient, ContainerProperties, \
+    BlobClient, BlobProperties, \
+    StandardBlobTier
 
 from bsf.standards import Secrets
 
@@ -182,6 +185,7 @@ def azure_block_blob_upload(
         azure_blob_service_client: BlobServiceClient,
         container: Union[ContainerProperties, str],
         blob: Union[BlobProperties, str, None] = None,
+        standard_blob_tier: Union[StandardBlobTier, str, None] = None,
         max_concurrency: int = 4,
         logging_enable: bool = False) -> BlobProperties:
     """Upload a block blob into a I{Microsoft Azure Storage Account} I{Container}.
@@ -194,6 +198,9 @@ def azure_block_blob_upload(
     @type container: ContainerProperties | str
     @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
     @type blob: BlobProperties | str | None
+    @param standard_blob_tier: C{azure.storage.blob.StandardBlobTier} object or Python C{str} standard blob tier
+        enumerated value (i.e., Archive, Cool, Hot)
+    @type standard_blob_tier: StandardBlobTier | str | None
     @param max_concurrency: Maximum number of network connections
     @type max_concurrency: int
     @param logging_enable: Enable logging via the Python C{logger} module
@@ -211,11 +218,20 @@ def azure_block_blob_upload(
 
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
+    # If the standard_blob_tier option was passed in as str object,
+    # it needs converting into a StandardBlobTier object unless it was an empty str.
+    if isinstance(standard_blob_tier, str):
+        if standard_blob_tier:
+            standard_blob_tier = StandardBlobTier(value=standard_blob_tier.title())
+        else:
+            standard_blob_tier = None
+
     with open(file=file_path, mode='rb') as binary_io:
         # The blob_type option defaults to azure.storage.blob.BlobType.BlockBlob
         # The retries_total option cannot be used in the upload_blob() call.
         azure_blob_client.upload_blob(
             data=binary_io,
+            standard_blob_tier=standard_blob_tier,
             max_concurrency=max_concurrency,
             logging_enable=logging_enable)
 
