@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #  Copyright 2013 - 2021 Michael K. Schuster
 #
