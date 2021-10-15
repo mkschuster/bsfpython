@@ -800,6 +800,15 @@ class Analysis(object):
         if genome_version is None:
             return str_list
 
+        description = Genome.get_description(genome_version=genome_version)
+        if description:
+            str_list.append('<p>')
+            str_list.append('<strong>Genome:</strong> ')
+            str_list.append(description)
+            str_list.append('</p>\n')
+
+            return str_list
+
         species = Genome.get_species(genome_version=genome_version)
         # Without species information, the description is not useful.
         if species is None:
@@ -833,6 +842,15 @@ class Analysis(object):
         str_list: List[str] = list()
 
         if transcriptome_version is None:
+            return str_list
+
+        description = Transcriptome.get_description(transcriptome_version=transcriptome_version)
+        if description:
+            str_list.append('<p>')
+            str_list.append('<strong>Transcriptome:</strong> ')
+            str_list.append(description)
+            str_list.append('</p>\n')
+
             return str_list
 
         species = Transcriptome.get_species(transcriptome_version=transcriptome_version)
