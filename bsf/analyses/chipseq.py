@@ -2010,21 +2010,24 @@ class ChIPSeq(Analysis):
                     str_list.append('</td>\n')
                     # Peak Model
                     str_list.append('<td>')
-                    str_list.append('<a href="' + file_path_peak_calling.model_pdf + '">')
-                    str_list.append('<img')
-                    str_list.append(' alt="MACS2 peak model for treatment ' + chipseq_comparison.t_name + '"')
-                    str_list.append(' src="' + file_path_peak_calling.model_0_png + '"')
-                    str_list.append(' height="80" width="80" />')
-                    str_list.append('</a>')
+                    if os.path.exists(path=os.path.join(self.genome_directory, file_path_peak_calling.model_pdf)):
+                        str_list.append('<a href="' + file_path_peak_calling.model_pdf + '">')
+                        str_list.append('<img')
+                        str_list.append(' alt="MACS2 peak model for treatment ' + chipseq_comparison.t_name + '"')
+                        str_list.append(' src="' + file_path_peak_calling.model_0_png + '"')
+                        str_list.append(' height="80" width="80" />')
+                        str_list.append('</a>')
                     str_list.append('</td>')
                     # Cross-Correlation
                     str_list.append('<td>')
-                    str_list.append('<a href="' + file_path_peak_calling.model_pdf + '">')
-                    str_list.append('<img')
-                    str_list.append(' alt="MACS2 cross-correlation for treatment ' + chipseq_comparison.t_name + '"')
-                    str_list.append(' src="' + file_path_peak_calling.model_1_png + '"')
-                    str_list.append(' height="80" width="80" />')
-                    str_list.append('</a>')
+                    if os.path.exists(path=os.path.join(self.genome_directory, file_path_peak_calling.model_pdf)):
+                        str_list.append('<a href="' + file_path_peak_calling.model_pdf + '">')
+                        str_list.append('<img')
+                        str_list.append(' alt="MACS2 cross-correlation for treatment ' +
+                                        chipseq_comparison.t_name + '"')
+                        str_list.append(' src="' + file_path_peak_calling.model_1_png + '"')
+                        str_list.append(' height="80" width="80" />')
+                        str_list.append('</a>')
                     str_list.append('</td>')
 
                     # R Model
@@ -3047,16 +3050,18 @@ class ChIPSeq(Analysis):
                         str_list_10.append('  \n')
 
             self.ucsc_hub_to_file(
-                content=str_list_1 +
-                str_list_2 +
-                str_list_3 +
-                str_list_4 +
-                str_list_5 +
-                str_list_6 +
-                str_list_7 +
-                str_list_8 +
-                str_list_9 +
-                str_list_10
+                content=(
+                        str_list_1 +
+                        str_list_2 +
+                        str_list_3 +
+                        str_list_4 +
+                        str_list_5 +
+                        str_list_6 +
+                        str_list_7 +
+                        str_list_8 +
+                        str_list_9 +
+                        str_list_10
+                )
             )
 
             return
