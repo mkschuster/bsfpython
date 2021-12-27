@@ -3427,7 +3427,7 @@ class SamToFastq(Analysis):
                     # Apply some sanity checks.
 
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
-                        raise Exception('PairedReads object with a reads_2, but no reads_2 object.')
+                        raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
 
                     reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):
