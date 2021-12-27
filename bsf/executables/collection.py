@@ -162,7 +162,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
             file_type='',
             name='sample_annotation_sheet',
             sas_path=self.file_path_old,
-            debug=debug)
+            sas_prefix=None)
 
         if debug > 0:
             print('Initial Collection:')

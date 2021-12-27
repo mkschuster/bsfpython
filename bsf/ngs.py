@@ -25,15 +25,17 @@ A package of classes and methods modelling next-generation sequencing (NGS) data
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+import logging
 import os
 import re
 import stat
-import warnings
-from weakref import ReferenceType
 from typing import Callable, Dict, List, Optional
+from weakref import ReferenceType
 
 from bsf.annotation import AnnotationSheet
 from bsf.standards import Configuration
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class NextGenerationBase(object):
@@ -102,6 +104,20 @@ class NextGenerationBase(object):
             and self.file_type == other.file_type \
             and self.annotation_dict == other.annotation_dict
 
+    def __repr__(self):
+        """Return a printable representation of a C{bsf.ngs.NextGenerationBase} object.
+
+        @return: Printable representation
+        @rtype: str
+        """
+        return \
+            f'NextGenerationBase(' \
+            f'name={self.name!r} ' \
+            f'file_path={self.file_path!r} ' \
+            f'file_type={self.file_type!r} ' \
+            f'annotation_dict={self.annotation_dict!r}' \
+            f')'
+
     def add_annotation(self, key, value):
         """Add an annotation value under a key.
 
@@ -135,21 +151,20 @@ class NextGenerationBase(object):
         @type prefix: str | None
         """
         pattern = self.__class__.__name__
-        if prefix:
-            pattern = prefix + ' ' + pattern
 
-        re_pattern = re.compile(pattern=pattern)
+        if prefix:
+            pattern = ' '.join((prefix, pattern))
 
         for key in list(key_list):
-            # Only match the pattern at the start of the string.
-            re_match = re.match(pattern=re_pattern, string=key)
-            if re_match is not None:
-                key_list.remove(re_match.string)
-                # Capture the string from the end of the match to the end of the string and strip white space.
-                annotation_key = re_match.string[re_match.end(0):].strip()
-                if annotation_key and row_dict[re_match.string]:
-                    # Exclude empty keys and values.
-                    self.add_annotation(key=annotation_key, value=row_dict[re_match.string])
+            if key.startswith(pattern):
+                key_list.remove(key)
+                # Strip an eventual prefix and the class name from the annotation key.
+                annotation_key = key[len(pattern):].strip()
+                annotation_value = row_dict[key]
+
+                # Exclude empty annotation keys and empty annotation values.
+                if annotation_key and annotation_value:
+                    self.add_annotation(key=annotation_key, value=annotation_value)
 
         return
 
@@ -178,7 +193,7 @@ class Reads(NextGenerationBase):
         For a I{file_type} I{CASAVA}, C{bsf.ngs.Reads.file_path} obeys a I{SampleName_Index_Lane_Read_Chunk} schema,
         so that C{bsf.ngs.Reads.name}, C{bsf.ngs.Reads.barcode}, C{bsf.ngs.Reads.lane}, C{bsf.ngs.Reads.read} and
         C{bsf.ngs.Reads.chunk} can be populated automatically.
-        For I{file_type} I{External}, the attributes need populating manually.
+        For I{file_type} I{External}, the instance variables need populating manually.
         @param file_path: File path
         @type file_path: str
         @param file_type: File type
@@ -215,7 +230,7 @@ class Reads(NextGenerationBase):
                 chunk=component_list[-1],
                 weak_reference_paired_reads=None)
         else:
-            raise Exception('Unsupported file_type: ' + repr(file_type))
+            raise Exception(f'Unsupported file_type: {file_type!r}')
 
     def __init__(
             self,
@@ -288,13 +303,28 @@ class Reads(NextGenerationBase):
     def __bool__(self):
         """Test C{bsf.ngs.Reads} objects for non-zero.
 
-        @return: C{True} if non-zero, i.e file_path or name are meaningfully defined.
+        @return: C{True} if non-zero, i.e., file_path or name are meaningfully defined.
         @rtype: bool
         """
-        if self.file_path and self.name:
-            return True
-        else:
-            return False
+        return bool(self.file_path and self.name)
+
+    def __repr__(self):
+        """Return a printable representation of a C{bsf.ngs.Reads} object.
+
+        @return: Printable representation
+        @rtype: str
+        """
+        return \
+            f'Reads(' \
+            f'name={self.name!r} ' \
+            f'file_path={self.file_path!r} ' \
+            f'file_type={self.file_type!r} ' \
+            f'annotation_dict={self.annotation_dict!r} ' \
+            f'barcode={self.barcode!r} ' \
+            f'lane={self.lane!r} ' \
+            f'read={self.read!r} ' \
+            f'chunk={self.chunk!r}' \
+            f')'
 
     def trace(self, level):
         """Trace a C{bsf.ngs.Reads} object.
@@ -308,18 +338,18 @@ class Reads(NextGenerationBase):
 
         str_list: List[str] = list()
 
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  weak_reference_paired_reads: {!r}\n'.format(indent, self.weak_reference_paired_reads))
-        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
-        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        str_list.append(f'{indent}{self.__class__!r}\n')
+        str_list.append(f'{indent}  weak_reference_paired_reads: {self.weak_reference_paired_reads!r}\n')
+        str_list.append(f'{indent}  name:      {self.name!r}\n')
+        str_list.append(f'{indent}  file_path: {self.file_path!r}\n')
+        str_list.append(f'{indent}  file_type: {self.file_type!r}\n')
+        str_list.append(f'{indent}  annotation_dict:\n')
         for annotation_key in sorted(self.annotation_dict):
-            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
-        str_list.append('{}  barcode:   {!r}\n'.format(indent, self.barcode))
-        str_list.append('{}  lane:      {!r}\n'.format(indent, self.lane))
-        str_list.append('{}  read:      {!r}\n'.format(indent, self.read))
-        str_list.append('{}  chunk:     {!r}\n'.format(indent, self.chunk))
+            str_list.append(f'{indent}    {annotation_key!r} {self.annotation_dict[annotation_key]!r}\n')
+        str_list.append(f'{indent}  barcode:   {self.barcode!r}\n')
+        str_list.append(f'{indent}  lane:      {self.lane!r}\n')
+        str_list.append(f'{indent}  read:      {self.read!r}\n')
+        str_list.append(f'{indent}  chunk:     {self.chunk!r}\n')
 
         return str_list
 
@@ -366,8 +396,11 @@ class Reads(NextGenerationBase):
         return True
 
     def match_paired(self, reads):
-        """Match paired C{bsf.ngs.Reads} objects, by relaxing matching criteria.
+        """Test that two C{bsf.ngs.Reads} objects are compatible to form a PairedReads object.
 
+        For a I{file_type} of I{CASAVA}, all Reads instance variables need to be equal,
+        except 'read' (i.e., R1 or R2) and 'file_path', which also contains the 'read' information.
+        Hence, matching criteria need relaxing with respect to C{Reads.__eq__}.
         @param reads: Second C{bsf.ngs.Reads} object
         @type reads: Reads
         @return: C{True} if both objects match, C{False} otherwise
@@ -376,14 +409,12 @@ class Reads(NextGenerationBase):
         assert isinstance(reads, Reads)
 
         if self.file_type == 'CASAVA':
-
-            # All CASAVA Reads attributes need to be equal,
-            # with the exception of the read (R1 or R2) and
-            # the file_path, which also contains the reads
-            # information.
-
             if self.name != reads.name:
                 return False
+
+            # Do not compare the 'file_path' instance variable.
+            if self.file_path != reads.file_path:
+                pass
 
             if self.file_type != reads.file_type:
                 return False
@@ -394,7 +425,9 @@ class Reads(NextGenerationBase):
             if self.lane != reads.lane:
                 return False
 
-            # Do not compare the read instance variable.
+            # Do not compare the 'read' instance variable.
+            if self.read != reads.read:
+                pass
 
             if self.chunk != reads.chunk:
                 return False
@@ -402,9 +435,6 @@ class Reads(NextGenerationBase):
             return True
         else:
             # It is difficult to match PairedReads outside of CASAVA conventions.
-            warnings.warn(
-                'Matching of paired Reads objects for file_type other than CASAVA not implemented yet.',
-                UserWarning)
 
             return True
 
@@ -447,7 +477,7 @@ class PairedReads(NextGenerationBase):
 
         For the C{bsf.ngs.Reads.file_type} I{CASAVA} the reads object will be
         automatically assigned on the basis of the C{bsf.ngs.Reads.read}
-        attribute (i.e. I{R1} or I{R2}).
+        instance variable (i.e. I{R1} or I{R2}).
         Upon initialisation of this C{bsf.ngs.PairedReads} object, weak references (C{weakref.ReferenceType})
         are set in the C{bsf.ngs.Reads} objects.
         @param name: Name
@@ -477,7 +507,7 @@ class PairedReads(NextGenerationBase):
             C{bsf.ngs.Reads} object.
         """
         if (reads_1 and reads_2) and (not reads_1.match_paired(reads=reads_2)):
-            raise Exception('The Reads objects do not match.')
+            raise Exception('The Reads objects are not compatible to form a PairedReads object.')
 
         super(PairedReads, self).__init__(
             name=name,
@@ -498,7 +528,7 @@ class PairedReads(NextGenerationBase):
                     self.reads_2 = reads_1
                     reads_1.weak_reference_paired_reads = ReferenceType(self)
                 else:
-                    raise Exception('Unknown Reads read attribute: ' + repr(reads_1.read))
+                    raise Exception(f'Unexpected reads_1.read value {reads_1.read!r} for CASAVA.')
             else:
                 # Other file types go here ...
                 self.reads_1 = reads_1
@@ -513,7 +543,7 @@ class PairedReads(NextGenerationBase):
                     self.reads_2 = reads_2
                     reads_2.weak_reference_paired_reads = ReferenceType(self)
                 else:
-                    raise Exception('Unknown Reads read attribute: ' + repr(reads_2.read))
+                    raise Exception(f'Unexpected reads_2.read value {reads_2.read!r} for CASAVA.')
             else:
                 # Other file types go here ...
                 self.reads_2 = reads_2
@@ -550,6 +580,26 @@ class PairedReads(NextGenerationBase):
             and self.index_2 == other.index_2 \
             and self.read_group == other.read_group
 
+    def __repr__(self):
+        """Return a printable representation of a C{bsf.ngs.PairedReads} object.
+
+        @return: Printable representation
+        @rtype: str
+        """
+        return \
+            f'PairedReads(' \
+            f'name={self.name!r} ' \
+            f'file_path={self.file_path!r} ' \
+            f'file_type={self.file_type!r} ' \
+            f'annotation_dict={self.annotation_dict!r} ' \
+            f'reads_1={self.reads_1!r} ' \
+            f'reads_2={self.reads_2!r} ' \
+            f'exclude={self.exclude!r} ' \
+            f'index_1={self.index_1!r} ' \
+            f'index_2={self.index_2!r} ' \
+            f'read_group={self.read_group!r}' \
+            f')'
+
     def trace(self, level):
         """Trace a C{bsf.ngs.PairedReads} object.
 
@@ -562,20 +612,20 @@ class PairedReads(NextGenerationBase):
 
         str_list: List[str] = list()
 
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample))
-        str_list.append('{}  name:       {!r}\n'.format(indent, self.name))
-        str_list.append('{}  file_path:  {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type:  {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        str_list.append(f'{indent}{self.__class__!r}\n')
+        str_list.append(f'{indent}  weak_reference_sample: {self.weak_reference_sample!r}\n')
+        str_list.append(f'{indent}  name:       {self.name!r}\n')
+        str_list.append(f'{indent}  file_path:  {self.file_path!r}\n')
+        str_list.append(f'{indent}  file_type:  {self.file_type!r}\n')
+        str_list.append(f'{indent}  annotation_dict:\n')
         for annotation_key in sorted(self.annotation_dict):
-            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
-        str_list.append('{}  reads_1:    {!r}\n'.format(indent, self.reads_1))
-        str_list.append('{}  reads_2:    {!r}\n'.format(indent, self.reads_2))
-        str_list.append('{}  index_1:    {!r}\n'.format(indent, self.index_1))
-        str_list.append('{}  index_2:    {!r}\n'.format(indent, self.index_2))
-        str_list.append('{}  exclude:    {!r}\n'.format(indent, self.exclude))
-        str_list.append('{}  read_group: {!r}\n'.format(indent, self.read_group))
+            str_list.append(f'{indent}    {annotation_key!r} {self.annotation_dict[annotation_key]!r}\n')
+        str_list.append(f'{indent}  reads_1:    {self.reads_1!r}\n')
+        str_list.append(f'{indent}  reads_2:    {self.reads_2!r}\n')
+        str_list.append(f'{indent}  index_1:    {self.index_1!r}\n')
+        str_list.append(f'{indent}  index_2:    {self.index_2!r}\n')
+        str_list.append(f'{indent}  exclude:    {self.exclude!r}\n')
+        str_list.append(f'{indent}  read_group: {self.read_group!r}\n')
 
         if self.reads_1 is not None:
             str_list.extend(self.reads_1.trace(level=level + 1))
@@ -588,42 +638,45 @@ class PairedReads(NextGenerationBase):
         """Add a C{bsf.ngs.Reads} object.
 
         For a C{bsf.ngs.Reads.file_type} I{CASAVA} the C{bsf.ngs.Reads} object can be automatically
-        assigned on the basis of the C{bsf.ngs.Reads.read} attribute (i.e. I{R1} or I{R2}).
+        assigned on the basis of the C{bsf.ngs.Reads.read} instance variable (i.e. I{R1} or I{R2}).
         @param reads: C{bsf.ngs.Reads}
         @type reads: Reads
         @return: C{True} upon success, C{False} otherwise
         @rtype: bool
+        @see: C{bsf.ngs.Sample.add_reads}
         """
-        # For CASAVA projects, reads are automatically added to either
-        # reads_1 or reads_2 according to the file name.
-        # Returns True upon success, False otherwise.
-
         assert isinstance(reads, Reads)
 
         if self.reads_1 is not None:
             if not self.reads_1.match_paired(reads=reads):
+                # logger.warning(
+                #     f'The Reads object is not compatible with the PairedReads.reads_1 object. '
+                #     f'reads: {reads!r} '
+                #     f'paired_reads.reads_1: {self.reads_1!r}'
+                # )
                 return False
 
             if self.reads_1.file_type == 'CASAVA':
                 if reads.read == 'R1':
                     raise Exception(
-                        'PairedReads reads_1 has already been defined.\n' +
-                        '  reads_1: ' + repr(self.reads_1.file_path) + '\n' +
-                        '  reads:   ' + repr(reads.file_path))
+                        'PairedReads.reads_1 has already been defined.\n'
+                        f'  reads_1: {self.reads_1.file_path!r}\n'
+                        f'  reads:   {reads.file_path!r}'
+                    )
                 elif reads.read == 'R2':
                     self.reads_2 = reads
                     reads.weak_reference_paired_reads = ReferenceType(self)
                     return True
                 else:
-                    raise Exception('Unknown Reads read attribute: ' + repr(reads.read))
-            else:
-                # Other file types go here ...
-                warnings.warn(
-                    'Method not implemented for file types other than CASAVA.',
-                    UserWarning)
+                    raise Exception(f'Unexpected Reads.read value {reads.read!r} for CASAVA.')
 
         if self.reads_2 is not None:
             if not self.reads_2.match_paired(reads=reads):
+                # logger.warning(
+                #     f'The Reads object is not compatible with the PairedReads.reads_2 object. '
+                #     f'reads: {reads!r} '
+                #     f'paired_reads.reads_2: {self.reads_2!r}'
+                # )
                 return False
 
             if self.reads_2.file_type == 'CASAVA':
@@ -633,16 +686,12 @@ class PairedReads(NextGenerationBase):
                     return True
                 elif reads.read == 'R2':
                     raise Exception(
-                        'PairedReads reads_2 has already been defined.\n' +
-                        '  reads_2: ' + repr(self.reads_2.file_path) + '\n' +
-                        '  reads:   ' + repr(reads.file_path))
+                        'PairedReads.reads_2 has already been defined.\n'
+                        f'  reads_2: {self.reads_2.file_path!r}\n'
+                        f'  reads:   {reads.file_path!r}'
+                    )
                 else:
-                    raise Exception('Unknown Reads read attribute: ' + repr(reads.read))
-            else:
-                # Other file types go here ...
-                warnings.warn(
-                    'Method not implemented for file types other than CASAVA.',
-                    UserWarning)
+                    raise Exception(f'Unexpected Reads.read value {reads.read!r} for CASAVA.')
 
         return False
 
@@ -669,9 +718,9 @@ class PairedReads(NextGenerationBase):
         if not self.reads_1.match(reads=paired_reads.reads_1):
             return False
 
-        if (self.reads_2 is not None and paired_reads.reads_2 is not None) \
-                and not self.reads_2.match(reads=paired_reads.reads_2):
-            return False
+        if (self.reads_2 is not None) and (paired_reads.reads_2 is not None):
+            if not self.reads_2.match(reads=paired_reads.reads_2):
+                return False
 
         return True
 
@@ -679,7 +728,7 @@ class PairedReads(NextGenerationBase):
         """Get the name of a C{bsf.ngs.PairedReads} object.
 
         For the C{bsf.ngs.Reads.file_type} I{CASAVA} the name is a concatenation of the
-        C{bsf.ngs.Reads.name}, C{bsf.ngs.Reads.barcode} and C{bsf.ngs.Reads.lane} attributes,
+        C{bsf.ngs.Reads.name}, C{bsf.ngs.Reads.barcode} and C{bsf.ngs.Reads.lane} instance variables,
         preferentially derived from the first C{bsf.ngs.Reads} object in the
         C{bsf.ngs.PairedReads} object.
         If the I{full} parameter is set, C{bsf.ngs.Reads.read} and C{bsf.ngs.Reads.chunk} are also added.
@@ -734,6 +783,7 @@ class Sample(NextGenerationBase):
         @type file_type: str
         @return: C{bsf.ngs.Sample}
         @rtype: Sample
+        @see: C{bsf.ngs.Project.from_file_path}
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -759,47 +809,7 @@ class Sample(NextGenerationBase):
                     continue
                 sample.add_reads(reads=Reads.from_file_path(file_path=file_path, file_type=file_type))
         else:
-            raise Exception('Unsupported file_type: ' + repr(file_type))
-
-        return sample
-
-    @classmethod
-    def from_samples(cls, sample1, sample2):
-        """Create a merged C{bsf.ngs.Sample} from two C{bsf.ngs.Sample} objects.
-
-        @param sample1: C{bsf.ngs.Sample}
-        @type sample1: Sample
-        @param sample2: C{bsf.ngs.Sample}
-        @type sample2: Sample
-        @return: C{bsf.ngs.Sample}
-        @rtype: Sample
-        """
-        assert isinstance(sample1, Sample)
-        assert isinstance(sample2, Sample)
-
-        if sample1.name != sample2.name:
-            warnings.warn(
-                'Merged Sample objects ' +
-                repr(sample1.name) + ' and ' + repr(sample2.name) +
-                ' should have the same name.',
-                UserWarning)
-
-        # A file_path does not make sense for merged Sample objects.
-
-        sample = cls(file_type=sample1.file_type, name=sample1.name)
-
-        # Merge the PairedReads objects from both Sample objects,
-        # but check, if the PairedReads objects are not already there.
-        # The "in" membership operator in "x in y" is equivalent to "any(x is e or x == e for e in y)" so that the
-        # PairedReads.__eq__() method gets called in case the identity operator "is" yields False.
-
-        for paired_reads in sample1.paired_reads_list:
-            if paired_reads not in sample.paired_reads_list:
-                sample.add_paired_reads(paired_reads=paired_reads)
-
-        for paired_reads in sample2.paired_reads_list:
-            if paired_reads not in sample.paired_reads_list:
-                sample.add_paired_reads(paired_reads=paired_reads)
+            raise Exception(f'Unsupported file_type: {file_type!r}')
 
         return sample
 
@@ -846,6 +856,21 @@ class Sample(NextGenerationBase):
 
         return
 
+    def __repr__(self):
+        """Return a printable representation of a C{bsf.ngs.Sample} object.
+
+        @return: Printable representation
+        @rtype: str
+        """
+        return \
+            f'Sample(' \
+            f'name={self.name!r} ' \
+            f'file_path={self.file_path!r} ' \
+            f'file_type={self.file_type!r} ' \
+            f'annotation_dict={self.annotation_dict!r} ' \
+            f'paired_reads_list={self.paired_reads_list!r}' \
+            f')'
+
     def trace(self, level):
         """Trace a C{bsf.ngs.Sample} object.
 
@@ -858,15 +883,15 @@ class Sample(NextGenerationBase):
 
         str_list: List[str] = list()
 
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  weak_reference_project: {!r}\n'.format(indent, self.weak_reference_project))
-        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
-        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        str_list.append(f'{indent}{self.__class__!r}\n')
+        str_list.append(f'{indent}  weak_reference_project: {self.weak_reference_project!r}\n')
+        str_list.append(f'{indent}  name:      {self.name!r}\n')
+        str_list.append(f'{indent}  file_path: {self.file_path!r}\n')
+        str_list.append(f'{indent}  file_type: {self.file_type!r}\n')
+        str_list.append(f'{indent}  annotation_dict:\n')
         for annotation_key in sorted(self.annotation_dict):
-            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
-        str_list.append('{}  paired_reads:\n'.format(indent))
+            str_list.append(f'{indent}    {annotation_key!r} {self.annotation_dict[annotation_key]!r}\n')
+        str_list.append(f'{indent}  paired_reads:\n')
         for paired_reads in self.paired_reads_list:
             str_list.extend(paired_reads.trace(level=level + 1))
 
@@ -881,7 +906,7 @@ class Sample(NextGenerationBase):
         @rtype: bool
         """
         # When Sample objects get merged, the file_path does no longer make sense.
-        # Hence cope with empty file paths here ...
+        # Hence, cope with empty file paths here ...
 
         if self is sample:
             return True
@@ -939,6 +964,7 @@ class Sample(NextGenerationBase):
 
         @param reads: C{bsf.ngs.Reads}
         @type reads: Reads
+        @see: C{bsf.ngs.Sample.from_file_path} for CASAVA
         """
         assert isinstance(reads, Reads)
 
@@ -1041,6 +1067,7 @@ class Project(NextGenerationBase):
         @type file_type: str
         @return: C{bsf.ngs.Project}
         @rtype: Project
+        @see: C{bsf.ngs.ProcessedRunFolder.from_file_path} for CASAVA
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -1064,11 +1091,11 @@ class Project(NextGenerationBase):
                 re_match = re_pattern.search(string=file_name)
                 if stat.S_ISDIR(file_mode) and re_match is not None:
                     if re_match.group(1) in project.sample_dict:
-                        raise Exception('Sample with name ' + repr(re_match.group(1)) + ' already exists.')
+                        raise Exception(f'Sample with name {re_match.group(1)!r} already exists.')
                     else:
                         project.add_sample(sample=Sample.from_file_path(file_path=file_path, file_type=file_type))
         else:
-            raise Exception('Unsupported file_type: ' + repr(file_type))
+            raise Exception(f'Unsupported file_type: {file_type!r}')
 
         return project
 
@@ -1130,15 +1157,15 @@ class Project(NextGenerationBase):
 
         str_list: List[str] = list()
 
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  weak_reference_prf: {!r}\n'.format(indent, self.weak_reference_prf))
-        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
-        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        str_list.append(f'{indent}{self.__class__!r}\n')
+        str_list.append(f'{indent}  weak_reference_prf: {self.weak_reference_prf!r}\n')
+        str_list.append(f'{indent}  file_path: {self.file_path!r}\n')
+        str_list.append(f'{indent}  file_type: {self.file_type!r}\n')
+        str_list.append(f'{indent}  name:      {self.name!r}\n')
+        str_list.append(f'{indent}  annotation_dict:\n')
         for annotation_key in sorted(self.annotation_dict):
-            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
-        str_list.append('{}  sample_dict:\n'.format(indent))
+            str_list.append(f'{indent}    {annotation_key!r} {self.annotation_dict[annotation_key]!r}\n')
+        str_list.append(f'{indent}  sample_dict:\n')
         for sample_name in sorted(self.sample_dict):
             str_list.extend(self.sample_dict[sample_name].trace(level=level + 1))
 
@@ -1250,7 +1277,7 @@ class ProcessedRunFolder(NextGenerationBase):
 
         For the I{file_type} I{CASAVA}, the C{bsf.ngs.ProcessedRunFolder.name}, C{bsf.ngs.ProcessedRunFolder.prefix},
         C{bsf.ngs.ProcessedRunFolder.flow_cell} and C{bsf.ngs.ProcessedRunFolder.version}
-        attributes can be automatically parsed from the I{file_path}, while
+        instance variables can be automatically parsed from the I{file_path}, while
         C{bsf.ngs.Project} objects can be automatically discovered.
         @param file_path: File path
         @type file_path: str
@@ -1297,14 +1324,14 @@ class ProcessedRunFolder(NextGenerationBase):
                 re_match = re_pattern.search(string=file_name)
                 if stat.S_ISDIR(file_mode) and re_match is not None:
                     if re_match.group(1) in prf.project_dict:
-                        raise Exception('Project with name ' + repr(re_match.group(1)) + ' already exists.')
+                        raise Exception(f'Project with name {re_match.group(1)!r} already exists.')
                     else:
                         prf.add_project(project=Project.from_file_path(file_path=file_path, file_type=file_type))
         elif file_type == 'External':
             # Create a new, minimal ProcessedRunFolder.
             prf = cls(file_path=file_path, file_type=file_type, name=file_name)
         else:
-            raise Exception('Unsupported file_type: ' + repr(file_type))
+            raise Exception(f'Unsupported file_type: {file_type!r}')
 
         return prf
 
@@ -1377,18 +1404,18 @@ class ProcessedRunFolder(NextGenerationBase):
 
         str_list: List[str] = list()
 
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  weak_reference_collection: {!r}\n'.format(indent, self.weak_reference_collection))
-        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
-        str_list.append('{}  prefix:    {!r}\n'.format(indent, self.prefix))
-        str_list.append('{}  flow_cell: {!r}\n'.format(indent, self.flow_cell))
-        str_list.append('{}  version:   {!r}\n'.format(indent, self.version))
-        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        str_list.append(f'{indent}{self.__class__!r}\n')
+        str_list.append(f'{indent}  weak_reference_collection: {self.weak_reference_collection!r}\n')
+        str_list.append(f'{indent}  file_path: {self.file_path!r}\n')
+        str_list.append(f'{indent}  file_type: {self.file_type!r}\n')
+        str_list.append(f'{indent}  name:      {self.name!r}\n')
+        str_list.append(f'{indent}  prefix:    {self.prefix!r}\n')
+        str_list.append(f'{indent}  flow_cell: {self.flow_cell!r}\n')
+        str_list.append(f'{indent}  version:   {self.version!r}\n')
+        str_list.append(f'{indent}  annotation_dict:\n')
         for annotation_key in sorted(self.annotation_dict):
-            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
-        str_list.append('{}  project_dict:\n'.format(indent))
+            str_list.append(f'{indent}    {annotation_key!r} {self.annotation_dict[annotation_key]!r}\n')
+        str_list.append(f'{indent}  project_dict:\n')
         for project_name in sorted(self.project_dict):
             str_list.extend(self.project_dict[project_name].trace(level=level + 1))
 
@@ -1463,10 +1490,10 @@ class Collection(NextGenerationBase):
     _paired_reads_function_dict = None
 
     @classmethod
-    def from_sas_path(cls, file_path, file_type, name, sas_path, sas_prefix=None, debug=0):
+    def from_sas_path(cls, file_path, file_type, name, sas_path, sas_prefix=None):
         """Construct a C{bsf.ngs.Collection} from a C{bsf.ngs.SampleAnnotationSheet} file path.
 
-        @param file_path: File path
+        @param file_path: File path as prefix for relative file paths in the SampleAnnotationSheet
         @type file_path: str
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str
@@ -1477,23 +1504,18 @@ class Collection(NextGenerationBase):
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
         @type sas_prefix: str | None
-        @param debug: Debug level
-        @type debug: int
         @return: C{bsf.ngs.Collection}
         @rtype: Collection
         """
-        sas = SampleAnnotationSheet.from_file_path(file_path=sas_path)
-
         return cls.from_sas(
             file_path=file_path,
             file_type=file_type,
             name=name,
-            sas=sas,
-            sas_prefix=sas_prefix,
-            debug=debug)
+            sas=SampleAnnotationSheet.from_file_path(file_path=sas_path),
+            sas_prefix=sas_prefix)
 
     @classmethod
-    def from_sas(cls, file_path, file_type, name, sas, sas_prefix=None, debug=0):
+    def from_sas(cls, file_path, file_type, name, sas, sas_prefix=None):
         """Construct a C{bsf.ngs.Collection} from a C{bsf.ngs.SampleAnnotationSheet}.
 
         This method creates C{bsf.ngs.Reads}, C{bsf.ngs.PairedReads}, C{bsf.ngs.Sample}, C{bsf.ngs.Project} and
@@ -1516,7 +1538,7 @@ class Collection(NextGenerationBase):
             - Reads2 Name: Same as Reads1 Name
             - Group: C{bsf.ngs.Sample} objects can be grouped for further analysis in
                 e.g. RNA-Seq or ChIP-Seq experiments.
-        @param file_path: File path
+        @param file_path: File path as prefix for relative file paths in the SampleAnnotationSheet
         @type file_path: str
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str
@@ -1527,8 +1549,6 @@ class Collection(NextGenerationBase):
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', '[Point N ]Sample', ...)
         @type sas_prefix: str | None
-        @param debug: Debug level
-        @type debug: int
         @return: C{bsf.ngs.Collection}
         @rtype: Collection
         """
@@ -1654,6 +1674,13 @@ class Collection(NextGenerationBase):
             @return: C{bsf.ngs.Sample}
             @rtype: Sample
             """
+            module_logger.debug(
+                f'process_sample('
+                f'project={project!r}, '
+                f'sample={sample!r}'
+                f')'
+            )
+
             _key = 'Sample Name'
             if sas_prefix:
                 _key = sas_prefix + ' ' + _key
@@ -1681,6 +1708,11 @@ class Collection(NextGenerationBase):
 
             sample.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
 
+            module_logger.debug(
+                f'process_sample final: '
+                f'sample={sample!r}'
+            )
+
             return sample
 
         def process_reads(reads, suffix, default_path):
@@ -1699,7 +1731,7 @@ class Collection(NextGenerationBase):
             @rtype: Reads | None
             """
 
-            def calculate_status(new, old):
+            def process_reads_status(new, old):
                 """Calculate a comparison status.
 
                 1 << 0 (1): new defined
@@ -1726,7 +1758,7 @@ class Collection(NextGenerationBase):
 
                 return status
 
-            def process_new_reads(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_new(_reads, _reads_file, _reads_name, _file_type):
                 """Private function to process (i.e. initialise) a new C{bsf.ngs.Reads} object.
 
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
@@ -1740,13 +1772,18 @@ class Collection(NextGenerationBase):
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype: Reads | None
                 """
-                if debug > 0:
-                    print('process_new_reads file:', repr(_reads_file))
-                    print('process_new_reads name:', repr(_reads_name))
+                module_logger.debug(
+                    f'process_reads_new('
+                    f'_reads={_reads!r}, '
+                    f'_reads_file={_reads_file!r}, '
+                    f'_reads_name={_reads_name!r}, '
+                    f'_file_type={_file_type!r}'
+                    f')'
+                )
 
                 return Reads(name=_reads_name, file_path=_reads_file, file_type=_file_type)
 
-            def process_new_reads_file(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_new_file(_reads, _reads_file, _reads_name, _file_type):
                 """Private function to process (i.e. initialise) a new C{bsf.ngs.Reads} object with file_path only.
 
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
@@ -1760,13 +1797,18 @@ class Collection(NextGenerationBase):
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype: Reads | None
                 """
-                if debug > 0:
-                    print('process_new_reads_file file:', repr(_reads_file))
-                    print('process_new_reads_file name:', repr(_reads_name))
+                module_logger.debug(
+                    f'process_reads_new_file('
+                    f'_reads={_reads!r}, '
+                    f'_reads_file={_reads_file!r}, '
+                    f'_reads_name={_reads_name!r}, '
+                    f'_file_type={_file_type!r}'
+                    f')'
+                )
 
                 return Reads(name=None, file_path=_reads_file, file_type=_file_type)
 
-            def process_new_reads_name(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_new_name(_reads, _reads_file, _reads_name, _file_type):
                 """Private function to process (i.e. initialise) a new C{bsf.ngs.Reads} object with 'name' only.
 
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
@@ -1780,13 +1822,18 @@ class Collection(NextGenerationBase):
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype: Reads | None
                 """
-                if debug > 0:
-                    print('process_new_reads_name file:', repr(_reads_file))
-                    print('process_new_reads_name name:', repr(_reads_name))
+                module_logger.debug(
+                    f'process_reads_new_name('
+                    f'_reads={_reads!r}, '
+                    f'_reads_file={_reads_file!r}, '
+                    f'_reads_name={_reads_name!r}, '
+                    f'_file_type={_file_type!r}'
+                    f')'
+                )
 
                 return Reads(name=_reads_name, file_path=None, file_type=_file_type)
 
-            def process_old_reads(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_old(_reads, _reads_file, _reads_name, _file_type):
                 """Private function to process (i.e. complete) an old C{bsf.ngs.Reads} object.
 
                 @param _reads: Current C{bsf.ngs.Reads} or C{None} object
@@ -1800,6 +1847,15 @@ class Collection(NextGenerationBase):
                 @return: New C{bsf.ngs.Reads} or C{None} object
                 @rtype: Reads | None
                 """
+                module_logger.debug(
+                    f'process_reads_old('
+                    f'_reads={_reads!r}, '
+                    f'_reads_file={_reads_file!r}, '
+                    f'_reads_name={_reads_name!r}, '
+                    f'_file_type={_file_type!r}'
+                    f')'
+                )
+
                 if _reads is None:
                     return
 
@@ -1814,6 +1870,14 @@ class Collection(NextGenerationBase):
 
                 return _reads
 
+            module_logger.debug(
+                f'process_reads('
+                f'reads={reads!r}, '
+                f'suffix={suffix!r}, '
+                f'default_path={default_path!r}'
+                f')'
+            )
+
             # Cache the Python dict of function pointers as populating the dict is most likely expensive.
 
             if cls._reads_function_dict is None:
@@ -1821,80 +1885,80 @@ class Collection(NextGenerationBase):
                     # File | Name
                     # ION ION  (Identical|Old|New)
                     # 000 000  (0) -> old Reads (nothing new)
-                    0: process_old_reads,
+                    0: process_reads_old,
                     # 000 001  (1) -> new Reads (new name)
-                    1: process_new_reads,
+                    1: process_reads_new,
                     # 000 010  (2) -> old Reads (old name)
-                    2: process_old_reads,
+                    2: process_reads_old,
                     # 000 011  (3) -> new Reads (new name)
-                    3: process_new_reads,
+                    3: process_reads_new,
                     # 000 100  (4) -> impossible (old and new names not defined, but identical)
                     # 000 101  (5) -> impossible (old name not defined but identical)
                     # 000 110  (6) -> impossible (new name not defined but identical)
                     # 000 111  (7) -> old Reads (identical old and new name)
-                    7: process_old_reads,
+                    7: process_reads_old,
                     # 001 000  (8) -> new Reads (new file)
-                    8: process_new_reads,
+                    8: process_reads_new,
                     # 001 001  (9) -> new Reads (new file and new name)
-                    9: process_new_reads,
+                    9: process_reads_new,
                     # 001 010 (10) -> old Reads (new file - old name)
-                    10: process_old_reads,
+                    10: process_reads_old,
                     # 001 011 (11) -> new Reads (new file and new name - old name)
-                    11: process_new_reads,
+                    11: process_reads_new,
                     # 001 100 (12) -> impossible (old and new names not defined, but identical)
                     # 001 101 (13) -> impossible (old name not defined, but identical)
                     # 001 110 (14) -> impossible (new name not defined, but identical)
                     # 001 111 (15) -> new Reads file (new file - identical old and new name)
-                    15: process_new_reads_file,
+                    15: process_reads_new_file,
                     # 010 000 (16) -> old Reads (old file)
-                    16: process_old_reads,
+                    16: process_reads_old,
                     # 010 001 (17) -> old Reads (old file, new name)
-                    17: process_old_reads,
+                    17: process_reads_old,
                     # 010 010 (18) -> old Reads (old file, old name)
-                    18: process_old_reads,
+                    18: process_reads_old,
                     # 010 011 (19) -> new Reads (new name)
-                    19: process_new_reads,
+                    19: process_reads_new,
                     # 010 100 (20) -> impossible (names not defined, but identical)
                     # 010 101 (21) -> impossible (old name not defined but identical)
                     # 010 110 (22) -> impossible (new name not defined but identical)
                     # 010 111 (23) -> old Reads (old file, old name, new identical name)
-                    23: process_old_reads,
+                    23: process_reads_old,
                     # 011 000 (24) -> new Reads (new file)
-                    24: process_new_reads,
+                    24: process_reads_new,
                     # 011 001 (25) -> new Reads (new file and new name)
-                    25: process_new_reads,
+                    25: process_reads_new,
                     # 011 010 (26) -> new Reads (new file)
-                    26: process_new_reads,
+                    26: process_reads_new,
                     # 011 011 (27) -> new Reads (new file and new name)
-                    27: process_new_reads,
+                    27: process_reads_new,
                     # 011 100 (28) -> impossible (names not defined, but supposedly identical)
                     # 011 101 (29) -> impossible (old name not defined, but supposedly identical)
                     # 011 110 (30) -> impossible (new name not defined, but supposedly identical)
                     # 011 111 (31) -> new Reads file (new file, identical names)
-                    31: process_new_reads_file,
+                    31: process_reads_new_file,
                     # 100 XXX (32-39) -> impossible (no files, but supposedly identical)
                     # 101 XXX (40-47) -> impossible (no old file, but supposedly identical)
                     # 110 XXX (48-55) -> impossible (no new file, but supposedly identical)
                     # 111 000 (56) -> old Reads (same old and new files)
-                    56: process_old_reads,
+                    56: process_reads_old,
                     # 111 001 (57) -> new Reads name (same file, but new name)
-                    57: process_new_reads_name,
+                    57: process_reads_new_name,
                     # 111 010 (58) -> old Reads (identical file, old name)
-                    58: process_old_reads,
+                    58: process_reads_old,
                     # 111 011 (59) -> new Reads name (identical file, but new name)
-                    59: process_new_reads_name,
+                    59: process_reads_new_name,
                     # 111 100 (60) -> impossible (names not defined, but supposedly identical)
                     # 111 101 (61) -> impossible (old name not defined, but supposedly identical)
                     # 111 110 (62) -> impossible (new name not defined, but supposedly identical)
                     # 111 111 (63) -> old Reads (all values defined and identical)
-                    63: process_old_reads,
+                    63: process_reads_old,
                 }
 
             reads_file: Optional[str] = None
             reads_name: Optional[str] = None
 
             # Reads{suffix} File
-            _key = 'Reads' + suffix + ' File'
+            _key = f'Reads{suffix} File'
             if sas_prefix:
                 _key = sas_prefix + ' ' + _key
 
@@ -1908,7 +1972,7 @@ class Collection(NextGenerationBase):
                         default_path=default_path)
 
             # Reads{suffix} Name
-            _key = 'Reads' + suffix + ' Name'
+            _key = f'Reads{suffix} Name'
             if sas_prefix:
                 _key = sas_prefix + ' ' + _key
 
@@ -1921,22 +1985,29 @@ class Collection(NextGenerationBase):
 
             reads_status = 0
             if reads is None:
-                reads_status |= calculate_status(new=reads_file, old=None) << 3
-                reads_status |= calculate_status(new=reads_name, old=None)
+                reads_status |= process_reads_status(new=reads_file, old=None) << 3
+                reads_status |= process_reads_status(new=reads_name, old=None)
             else:
-                reads_status |= calculate_status(new=reads_file, old=reads.file_path) << 3
-                reads_status |= calculate_status(new=reads_name, old=reads.name)
+                reads_status |= process_reads_status(new=reads_file, old=reads.file_path) << 3
+                reads_status |= process_reads_status(new=reads_name, old=reads.name)
 
-            if debug > 0:
-                print('process_reads file:', repr(suffix), repr(reads_file))
-                print('process_reads name:', repr(suffix), repr(reads_name))
-                print('process_reads status:', repr(suffix), reads_status)
-
-            return cls._reads_function_dict[reads_status](
+            reads_new = cls._reads_function_dict[reads_status](
                 _reads=reads,
                 _reads_file=reads_file,
                 _reads_name=reads_name,
                 _file_type=file_type)
+
+            module_logger.debug(
+                f'process_reads final: '
+                f'suffix: {suffix!r} '
+                f'Reads: {reads!r} '
+                f'reads_file: {reads_file!r} '
+                f'reads_name: {reads_name!r} '
+                f'reads_status: {reads_status!r} '
+                f'reads_new: {reads_new!r}'
+            )
+
+            return reads_new
 
         def process_paired_reads(sample, paired_reads, default_path):
             """Get or create a C{bsf.ngs.PairedReads} object.
@@ -1956,7 +2027,7 @@ class Collection(NextGenerationBase):
             @rtype: PairedReads | None
             """
 
-            def calculate_status(new, old):
+            def process_paired_reads_status(new, old):
                 """Calculate a comparison status.
 
                 2**0 1: new defined
@@ -1982,7 +2053,7 @@ class Collection(NextGenerationBase):
 
                 return status
 
-            def process_new_paired_reads(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_new(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
                 """Private function to process (i.e. initialise) a new C{bsf.ngs.PairedReads} object.
 
                 @param _sample: C{bsf.ngs.Sample} object
@@ -1998,12 +2069,15 @@ class Collection(NextGenerationBase):
                 @return: C{bsf.ngs.PairedReads} or C{None} object
                 @rtype: PairedReads | None
                 """
-                if debug > 0:
-                    if _reads_1 is not None:
-                        print('process_new_paired_reads Reads_1.name:', repr(_reads_1.name))
-                    if _reads_2 is not None:
-                        print('process_new_paired_reads Reads_2.name:', repr(_reads_2.name))
-                    print('process_new_paired_reads Sample.name:', repr(_sample.name))
+                module_logger.debug(
+                    f'process_paired_reads_new('
+                    f'_sample.name={_sample.name!r}, '
+                    f'_pairedReads={_paired_reads!r}, '
+                    f'_file_type={_file_type!r}, '
+                    f'_reads_1={_reads_1!r}, '
+                    f'_reads_2={_reads_2!r}'
+                    f')'
+                )
 
                 _paired_reads = PairedReads(file_type=_file_type, reads_1=_reads_1, reads_2=_reads_2)
 
@@ -2011,7 +2085,7 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
-            def process_new_paired_reads_1(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_new_1(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
                 """Private function to process (i.e. initialise) a new C{bsf.ngs.PairedReads} object with only reads_1.
 
                 @param _sample: C{bsf.ngs.Sample} object
@@ -2027,12 +2101,14 @@ class Collection(NextGenerationBase):
                 @return: C{bsf.ngs.PairedReads} or C{None} object
                 @rtype: PairedReads | None
                 """
-                if debug > 0:
-                    if _reads_1 is not None:
-                        print('process_new_paired_reads_1 Reads_1.name:', repr(_reads_1.name))
-                    if _reads_2 is not None:
-                        print('process_new_paired_reads_1 Reads_2.name:', repr(_reads_2.name))
-                    print('process_new_paired_reads_1 Sample.name:', repr(_sample.name))
+                module_logger.debug(
+                    f'process_paired_reads_new_1('
+                    f'_sample.name={_sample.name!r}, '
+                    f'_pairedReads={_paired_reads!r}, '
+                    f'_reads_1={_reads_1!r}, '
+                    f'_reads_2={_reads_2!r}'
+                    f')'
+                )
 
                 _paired_reads = PairedReads(file_type=_file_type, reads_1=_reads_1, reads_2=None)
 
@@ -2040,7 +2116,7 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
-            def process_new_paired_reads_2(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_new_2(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
                 """Private function to process (i.e. initialise) a new C{bsf.ngs.PairedReads} object with only reads_2.
 
                 @param _sample: C{bsf.ngs.Sample} object
@@ -2056,12 +2132,14 @@ class Collection(NextGenerationBase):
                 @return: C{bsf.ngs.PairedReads} or C{None} object
                 @rtype: PairedReads | None
                 """
-                if debug > 0:
-                    if _reads_1 is not None:
-                        print('process_new_paired_reads_1 Reads_1.name:', repr(_reads_1.name))
-                    if _reads_2 is not None:
-                        print('process_new_paired_reads_1 Reads_2.name:', repr(_reads_2.name))
-                    print('process_new_paired_reads_1 Sample.name:', repr(_sample.name))
+                module_logger.debug(
+                    f'process_paired_reads_new_2('
+                    f'_sample.name={_sample.name!r}, '
+                    f'_paired_reads={_paired_reads!r}, '
+                    f'_reads_1={_reads_1!r}, '
+                    f'_reads_2={_reads_2!r}'
+                    f')'
+                )
 
                 _paired_reads = PairedReads(file_type=_file_type, reads_1=None, reads_2=_reads_2)
 
@@ -2069,7 +2147,7 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
-            def process_old_paired_reads(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_old(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
                 """Private function to process (i.e. complete) an old C{bsf.ngs.PairedReads} object.
 
                 @param _sample: C{bsf.ngs.Sample} object
@@ -2085,6 +2163,15 @@ class Collection(NextGenerationBase):
                 @return: C{bsf.ngs.PairedReads} or C{None} object
                 @rtype: PairedReads | None
                 """
+                module_logger.debug(
+                    f'process_paired_reads_old('
+                    f'_sample.name={_sample.name!r}, '
+                    f'_paired_reads={_paired_reads!r}, '
+                    f'_reads_1={_reads_1!r}, '
+                    f'_reads_2={_reads_2!r}'
+                    f')'
+                )
+
                 if _paired_reads is None:
                     return
 
@@ -2099,81 +2186,90 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
+            module_logger.debug(
+                f'process_paired_reads('
+                f'sample.name={sample.name!r}, '
+                f'paired_reads={paired_reads!r}, '
+                f'default_path={default_path!r}'
+                f')'
+            )
+
             # Cache the Python dict of function pointers as populating the dict is most likely expensive.
+
             if cls._paired_reads_function_dict is None:
                 cls._paired_reads_function_dict = {
                     # Reads1 | Reads2
                     # ION ION  (Identical|Old|New)
                     # 000 000  (0) -> old PairedReads (nothing new)
-                    0: process_old_paired_reads,
+                    0: process_paired_reads_old,
                     # 000 001  (1) -> new PairedReads (new Reads2 object)
-                    1: process_new_paired_reads,
+                    1: process_paired_reads_new,
                     # 000 010  (2) -> old PairedReads (old Reads2 object)
-                    2: process_old_paired_reads,
+                    2: process_paired_reads_old,
                     # 000 011  (3) -> new PairedReads (old and new Reads2 objects, not identical)
-                    3: process_new_paired_reads,
+                    3: process_paired_reads_new,
                     # 000 100  (4) -> impossible (old and new Reads2 objects not defined, but supposedly identical)
                     # 000 101  (5) -> impossible (old Reads2 object not defined but supposedly identical)
                     # 000 110  (6) -> impossible (new Reads2 object not defined but supposedly identical)
                     # 000 111  (7) -> old PairedReads (identical old and new Reads2 object)
-                    7: process_old_paired_reads,
+                    7: process_paired_reads_old,
                     # 001 000  (8) -> new PairedReads (new Reads1 object)
-                    8: process_new_paired_reads,
+                    8: process_paired_reads_new,
                     # 001 001  (9) -> new PairedReads (new Reads1 and new Reads2 objects)
-                    9: process_new_paired_reads,
+                    9: process_paired_reads_new,
                     # 001 010 (10) -> old PairedReads (new Reads1 and old Reads2 objects)
-                    10: process_old_paired_reads,
+                    10: process_paired_reads_old,
                     # 001 011 (11) -> new PairedReads (new Reads1 and new Reads2 - old Reads2 objects)
-                    11: process_new_paired_reads,
-                    # 001 100 (12) -> impossible (old and new Reads2 not defined, but supoosedly identical)
+                    11: process_paired_reads_new,
+                    # 001 100 (12) -> impossible (old and new Reads2 not defined, but supposedly identical)
                     # 001 101 (13) -> impossible (old Reads2 not defined, but supposedly identical)
                     # 001 110 (14) -> impossible (new Reads2 not defined, but supposedly identical)
                     # 001 111 (15) -> new PairedReads1 (new Reads1 - identical old and new Reads2 objects)
-                    15: process_new_paired_reads_1,
+                    15: process_paired_reads_new_1,
                     # 010 000 (16) -> old PairedReads (old Reads1 object)
-                    16: process_old_paired_reads,
+                    16: process_paired_reads_old,
                     # 010 001 (17) -> old PairedReads (old Reads1 object - new Reads2 object)
-                    17: process_old_paired_reads,
+                    17: process_paired_reads_old,
                     # 010 010 (18) -> old PairedReads (old Reads1 object - old Reads2 object)
-                    18: process_old_paired_reads,
+                    18: process_paired_reads_old,
                     # 010 011 (19) -> new PairedReads (new Reads2 object)
-                    19: process_new_paired_reads,
+                    19: process_paired_reads_new,
                     # 010 100 (20) -> impossible (Reads2 object not defined, but supposedly identical)
                     # 010 101 (21) -> impossible (old Reads2 object not defined but supposedly identical)
                     # 010 110 (22) -> impossible (new Reads2 object not defined but supposedly identical)
                     # 010 111 (23) -> old PairedReads (old Reads1, old Reads2, new identical Reads2 object)
-                    23: process_old_paired_reads,
+                    23: process_paired_reads_old,
                     # 011 000 (24) -> new PairedReads (new Reads1 object)
-                    24: process_new_paired_reads,
+                    24: process_paired_reads_new,
                     # 011 001 (25) -> new PairedReads (new Reads1 and new Reads2 objects)
-                    25: process_new_paired_reads,
+                    25: process_paired_reads_new,
                     # 011 010 (26) -> new PairedReads (new Reads1 object)
-                    26: process_new_paired_reads,
+                    26: process_paired_reads_new,
                     # 011 011 (27) -> new PairedReads (new Reads1 and new Reads2 objects)
-                    27: process_new_paired_reads,
+                    27: process_paired_reads_new,
                     # 011 100 (28) -> impossible (Reads2 not defined, but supposedly identical)
                     # 011 101 (29) -> impossible (old Reads2 not defined, but supposedly identical)
                     # 011 110 (30) -> impossible (new Reads2 not defined, but supposedly identical)
                     # 011 111 (31) -> new PairedReads1 (different Reads1, identical Reads2)
                     # NOTE: In process_reads() an Exception gets raised.
-                    31: process_new_paired_reads_1,
+                    31: process_paired_reads_new_1,
                     # 100 XXX (32-39) -> impossible (no Reads1, but supposedly identical)
                     # 101 XXX (40-47) -> impossible (no old Reads1, but supposedly identical)
                     # 110 XXX (48-55) -> impossible (no new Reads1, but supposedly identical)
                     # 111 000 (56) -> old PairedReads (same old and new Reads1)
-                    56: process_old_paired_reads,
+                    56: process_paired_reads_old,
                     # 111 001 (57) -> New PairedReads2 (same Reads1, but new Reads2)
                     # NOTE: In process_reads() an Exception gets raised.
-                    57: process_new_paired_reads_2,
+                    57: process_paired_reads_new_2,
                     # 111 010 (58) -> old PairedReads (identical Reads1, old Reads2)
-                    58: process_old_paired_reads,
+                    58: process_paired_reads_old,
                     # 111 011 (59) -> new PairedReads2 (identical Reads1, but different Reads2 objects)
-                    59: process_new_paired_reads_2,
+                    59: process_paired_reads_new_2,
                     # 111 100 (60) -> impossible (Reads2 objects not defined, but supposedly identical)
                     # 111 101 (61) -> impossible (old Reads2 not defined, but supposedly identical)
                     # 111 110 (62) -> impossible (new Reads2 not defined, but supposedly identical)
                     # 111 111 (63) -> old PairedReads (all objects defined and identical)
-                    63: process_old_paired_reads,
+                    63: process_paired_reads_old,
                 }
 
             paired_reads_status = 0
@@ -2181,32 +2277,22 @@ class Collection(NextGenerationBase):
             if paired_reads is None:
                 reads_1 = process_reads(reads=None, suffix='1', default_path=default_path)
                 reads_2 = process_reads(reads=None, suffix='2', default_path=default_path)
-                paired_reads_status |= calculate_status(new=reads_1, old=None) << 3
-                paired_reads_status |= calculate_status(new=reads_2, old=None)
+                paired_reads_status |= process_paired_reads_status(new=reads_1, old=None) << 3
+                paired_reads_status |= process_paired_reads_status(new=reads_2, old=None)
             else:
                 reads_1 = process_reads(reads=paired_reads.reads_1, suffix='1', default_path=default_path)
                 reads_2 = process_reads(reads=paired_reads.reads_2, suffix='2', default_path=default_path)
-                paired_reads_status |= calculate_status(new=reads_1, old=paired_reads.reads_1) << 3
-                paired_reads_status |= calculate_status(new=reads_2, old=paired_reads.reads_2)
+                paired_reads_status |= process_paired_reads_status(new=reads_1, old=paired_reads.reads_1) << 3
+                paired_reads_status |= process_paired_reads_status(new=reads_2, old=paired_reads.reads_2)
 
-            if debug > 0:
-                if reads_1 is not None:
-                    print('process_paired_reads Reads_1.name:', repr(reads_1.name))
-                if reads_2 is not None:
-                    print('process_paired_reads Reads_2.name:', repr(reads_2.name))
-                print('process_paired_reads status:', paired_reads_status)
-
-            paired_reads = cls._paired_reads_function_dict[paired_reads_status](
+            paired_reads_new = cls._paired_reads_function_dict[paired_reads_status](
                 _sample=sample,
                 _paired_reads=paired_reads,
                 _file_type=file_type,
                 _reads_1=reads_1,
                 _reads_2=reads_2)
 
-            if debug > 0:
-                print('')
-
-            if paired_reads is None:
+            if paired_reads_new is None:
                 # If a PairedReads object is not defined at this stage it cannot be annotated.
                 # Remove all PairedReads strings from the key list.
                 _key = 'PairedReads'
@@ -2216,6 +2302,7 @@ class Collection(NextGenerationBase):
                 for _component in list(key_list):
                     if _component.startswith(_key):
                         key_list.remove(_component)
+                        module_logger.warning(f'Dismissed PairedReads annotation key: {_component}')
 
                 return
 
@@ -2225,11 +2312,9 @@ class Collection(NextGenerationBase):
 
             if _key in row_dict:
                 key_list.remove(_key)
-                _value = row_dict[_key].lower()  # Set to lower case for matching.
+                _value = row_dict[_key]
                 if _value:
-                    paired_reads.exclude = sas.get_boolean(row_dict=row_dict, key=_key)
-                else:
-                    paired_reads.exclude = False
+                    paired_reads_new.exclude = sas.get_boolean(row_dict=row_dict, key=_key)
 
             _key = 'PairedReads Index 1'
             if sas_prefix:
@@ -2239,7 +2324,7 @@ class Collection(NextGenerationBase):
                 key_list.remove(_key)
                 _value = row_dict[_key]
                 if _value:
-                    paired_reads.index_1 = _value
+                    paired_reads_new.index_1 = _value
 
             _key = 'PairedReads Index 2'
             if sas_prefix:
@@ -2249,7 +2334,7 @@ class Collection(NextGenerationBase):
                 key_list.remove(_key)
                 _value = row_dict[_key]
                 if _value:
-                    paired_reads.index_2 = _value
+                    paired_reads_new.index_2 = _value
 
             _key = 'PairedReads ReadGroup'
             if sas_prefix:
@@ -2259,19 +2344,27 @@ class Collection(NextGenerationBase):
                 _value = row_dict[_key]
                 key_list.remove(_key)
                 if _value:
-                    paired_reads.read_group = _value
+                    paired_reads_new.read_group = _value
 
-            paired_reads.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
+            paired_reads_new.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
 
-            return paired_reads
+            module_logger.debug(
+                f'process_paired_reads final: '
+                f'Sample.name: {sample.name!r} '
+                f'Reads_1: {reads_1!r} '
+                f'Reads_2: {reads_2!r} '
+                f'status: {paired_reads_status!r} '
+                f'paired_reads_new: {paired_reads_new!r}'
+            )
+
+            return paired_reads_new
 
         assert isinstance(sas, SampleAnnotationSheet)
 
         current_collection = cls(file_path=file_path, file_type=file_type, name=name)
 
         for row_dict in sas.row_dicts:
-            if debug > 0:
-                print('from_sas row_dict:', repr(row_dict))
+            module_logger.debug(f'from_sas: row_dict={row_dict!r}')
 
             # Generate a Python list of key objects since the list is subsequently modified.
             key_list = [key for key in row_dict]
@@ -2285,8 +2378,7 @@ class Collection(NextGenerationBase):
                 default_path=current_collection.file_path)
 
             if len(key_list):
-                warnings.warn('Unexpected keys in sample annotation sheet: ' + repr(key_list) +
-                              '\nRow: ' + repr(row_dict), UserWarning)
+                module_logger.warning(f'Unexpected keys in SampleAnnotationSheet: {key_list!r} Row: {row_dict!r}')
 
         # Quench empty default objects that are a consequence of empty lines in the sample annotation sheet.
         # Use a less efficient list() constructor here to allow for modification of the dict object while iterating.
@@ -2377,23 +2469,22 @@ class Collection(NextGenerationBase):
 
         str_list: List[str] = list()
 
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
-        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        str_list.append(f'{indent}{self.__class__!r}\n')
+        str_list.append(f'{indent}  name:      {self.name!r}\n')
+        str_list.append(f'{indent}  file_path: {self.file_path!r}\n')
+        str_list.append(f'{indent}  file_type: {self.file_type!r}\n')
+        str_list.append(f'{indent}  annotation_dict:\n')
         for annotation_key in sorted(self.annotation_dict):
-            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
-        str_list.append('{}  processed_run_folder_dict:\n'.format(indent))
+            str_list.append(f'{indent}    {annotation_key!r} {self.annotation_dict[annotation_key]!r}\n')
+        str_list.append(f'{indent}  processed_run_folder_dict:\n')
         for prf_name in sorted(self.processed_run_folder_dict):
             str_list.extend(self.processed_run_folder_dict[prf_name].trace(level=level + 1))
-        str_list.append('{}  sample_group_dict:\n'.format(indent))
+        str_list.append(f'{indent}  sample_group_dict:\n')
         for sample_group_name in sorted(self.sample_group_dict):
-            str_list.append('{}    group: {!r}\n'.format(indent, sample_group_name))
+            str_list.append(f'{indent}    group: {sample_group_name!r}\n')
             # List all Sample objects of this Python list object.
             for sample in self.sample_group_dict[sample_group_name]:
-                str_list.append('{}      Sample name: {!r} file_path: {!r}\n'.format(
-                    indent, sample.name, sample.file_path))
+                str_list.append(f'{indent}      Sample name: {sample.name!r} file_path: {sample.file_path!r}\n')
 
         return str_list
 
