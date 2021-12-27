@@ -72,7 +72,7 @@ class Analysis(object):
     @type cache_directory: str | None
     @ivar input_directory: Input directory
     @type input_directory: str | None
-    @ivar output_directory: Output directory, user-specified including a genome version sub-directory
+    @ivar output_directory: Output directory, user-specified including a genome version subdirectory
     @type output_directory: str | None
     @ivar project_directory: Project-specific directory
     @type project_directory: str | None
@@ -655,16 +655,14 @@ class Analysis(object):
         # This allows analyses run against more than one directory and
         # simplifies UCSC Genome Browser track hub creation.
 
-        # FIXME: The Analysis(project_directory) option is ignored.
-        # Change the project_directory instance variable into a private (i.e. _project_directory) instance variable.
-        # Then, access via @property get_project_directory.
-        self.project_directory = os.path.join(self.output_directory, self.project_name)
+        self.project_directory = self.configuration.get_absolute_path(
+            file_path=self.project_directory,
+            default_path=os.path.join(self.output_directory, self.project_name))
 
-        # FIXME: The Analysis(genome_directory) option is ignored.
-        # Change the genome_directory instance variable into a private (i.e. _genome_directory) instance variable.
-        # Then, access via @property get_genome_directory.
         if self.genome_version:
-            self.genome_directory = os.path.join(self.project_directory, self.genome_version)
+            self.genome_directory = self.configuration.get_absolute_path(
+                file_path=self.genome_directory,
+                default_path=os.path.join(self.project_directory, self.genome_version))
         else:
             self.genome_directory = self.project_directory
 
