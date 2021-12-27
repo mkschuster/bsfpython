@@ -1623,6 +1623,7 @@ class ChIPSeq(Analysis):
                     # Add a RunnableStep to run UCSC bedSort on the DiffBind consensus peak set.
 
                     runnable_step = RunnableStep(name='bed_sort', program='bedSort')
+                    runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.arguments.append(file_path_diff_bind.peak_set_bed)
                     runnable_step.arguments.append(file_path_diff_bind.peak_set_bed)
@@ -1630,6 +1631,7 @@ class ChIPSeq(Analysis):
                     # Add a RunnableStep to run UCSC BedToBigBed on the DiffBind consensus peak set.
 
                     runnable_step = RunnableStep(name='bed_to_big_bed', program='bedToBigBed')
+                    runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_option_pair_short(key='type', value='bed6')
 
