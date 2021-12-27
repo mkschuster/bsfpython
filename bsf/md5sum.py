@@ -28,6 +28,8 @@ A package of classes and methods modelling a repository of GNU md5sum informatio
 import logging
 import os
 
+module_logger = logging.getLogger(name=__name__)
+
 
 class MD5Sum(object):
     """The C{MD5Sum} object represents one GNU md5sum entry.
@@ -130,12 +132,17 @@ class MD5SumArchive(object):
         """
         # Check if a file_path instance variable is set.
         if not md5sum.file_path:
-            logging.warning("Missing file_path instance variable for check sum '%s'", md5sum.check_sum)
+            module_logger.warning(f"Missing 'file_path' instance variable for 'check_sum' {md5sum.check_sum!r}.")
+            return False
+
+        # Check if a check_sum instance variable is set.
+        if not md5sum.check_sum:
+            module_logger.warning(f"Missing 'check_sum' instance variable for 'file_path' {md5sum.file_path!r}.")
             return False
 
         # Check if no other check_sum value is set for this file_path.
         if md5sum.file_path in self.md5sum_dict and self.md5sum_dict[md5sum.file_path].check_sum != md5sum.check_sum:
-            logging.warning("Non-matching check sum '%s' for file path '%s'", md5sum.check_sum, md5sum.file_path)
+            module_logger.warning(f'Non-matching check sum {md5sum.check_sum!r} for file path {md5sum.file_path!r}.')
             return False
 
         self.md5sum_dict[md5sum.file_path] = md5sum
@@ -166,15 +173,20 @@ class MD5SumArchive(object):
                 for line_str in input_file:
                     md5sum = MD5Sum.from_line(md5sum_str=line_str)
 
-                    logging.debug("md5_file_path:  '%s'", md5sum.file_path)
-                    logging.debug("md5_check_sum:  '%s'", md5sum.check_sum)
-                    logging.debug("md5_check_mode: '%s'", md5sum.check_mode)
+                    module_logger.debug(
+                        f'read_md5sum_archive: '
+                        f'md5_file_path: {md5sum.file_path!r} '
+                        f'md5_check_sum: {md5sum.check_sum!r} '
+                        f'md5_check_mode: {md5sum.check_mode!r}'
+                    )
 
                     if not self.add_md5sum(md5sum=md5sum):
-                        raise Exception('The md5sum archive file ' + repr(file_path) +
-                                        " does not obey the standard 'MD5SUM *file_path' format.")
+                        raise Exception(
+                            f'The md5sum archive file {file_path!r} '
+                            "does not obey the standard 'MD5SUM *file_path' format."
+                        )
         else:
-            logging.warning("The md5sum archive does not exists: '%s'", file_path)
+            module_logger.warning(f'The md5sum archive {file_path!r} does not exists.')
 
         return
 
@@ -187,7 +199,7 @@ class MD5SumArchive(object):
         @return: C{MD5SumArchive}
         @rtype: MD5SumArchive
         """
-        logging.debug("Reading MD5SumArchive from file path: '%s'", file_path)
+        module_logger.debug(f'Reading MD5SumArchive from file path: {file_path!r}')
 
         if not file_path:
             raise Exception('Require a valid file_path option.')
@@ -206,7 +218,7 @@ class MD5SumArchive(object):
         if not file_path:
             file_path = self.file_path
 
-        logging.debug("Writing MD5SumArchive to file path: '%s'", file_path)
+        module_logger.debug(f'Writing MD5SumArchive to file path: {file_path!r}')
 
         with open(file=file_path, mode='wt') as text_io:
             for md5_file_name in sorted(self.md5sum_dict):
