@@ -179,8 +179,8 @@ class Configuration(object):
                 file_path_list.append(temporary_path)
 
         # Since ConfigParser options are used as command line options,
-        # they have to be case sensitive.
-        # Hence, override optionxform() with str().
+        # they have to be case-sensitive.
+        # Hence, override method optionxform() with str().
 
         config_parser = ConfigParser()
         config_parser.optionxform = str
