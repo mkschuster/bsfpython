@@ -50,9 +50,9 @@ from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaArc
 class PicardIlluminaRunFolder(Analysis):
     """The C{bsf.analyses.picard.PicardIlluminaRunFolder} class of Picard Analyses acting on Illumina Run Folders.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | None
@@ -289,7 +289,7 @@ class PicardIlluminaRunFolder(Analysis):
         else:
             self.intensity_directory = os.path.join(self.run_directory, 'Data', 'Intensities')
 
-        # Check that the Intensities directory exists.
+        # Check that the "Intensities" directory exists.
 
         if not os.path.isdir(self.intensity_directory):
             raise Exception(
@@ -300,7 +300,7 @@ class PicardIlluminaRunFolder(Analysis):
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
-        # automatically prepend the Intensities directory path.
+        # automatically prepend the "Intensities" directory path.
 
         if self.basecalls_directory:
             self.basecalls_directory = self.configuration.get_absolute_path(
@@ -417,7 +417,7 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
                 'LIBRARY_NAME': self.row_dicts[0]['LIBRARY_NAME'],
             })
 
-        # Further adjust the IlluminaBaseCallsToSamSheet and remove any BARCODE_N columns not represented
+        # Adjust the IlluminaBaseCallsToSamSheet and remove any BARCODE_N columns not represented
         # in the barcode length list.
         for index in range(0, 1 + 1):
             if barcode_length_tuple[index] == 0:
@@ -501,7 +501,7 @@ class FilePathExtractIlluminaLane(FilePath):
         """
         super(FilePathExtractIlluminaLane, self).__init__(prefix=prefix)
 
-        # Non-standard Non-standard project_name_lane prefix
+        # Non-standard project_name_lane prefix
         self.prefix_lane = '_'.join((project_name, lane))
 
         self.output_directory = self.prefix_lane + '_output'
@@ -522,9 +522,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
     The analysis is based on Picard I{ExtractIlluminaBarcodes} and Picard I{IlluminaBasecallsToSam}.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @ivar samples_directory: BSF samples directory
     @type samples_directory: str | None
@@ -1023,7 +1023,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 # MINIMUM_QUALITY [2]
                 # The minimum quality (after transforming 0s to 1s) expected from reads.
                 # If qualities are lower than this value, an error is thrown.The default of 2 is what the
-                # Illumina's spec describes as the minimum, but in practice the value has been observed lower.
+                # Illumina specification describes as the minimum, but in practice the value has been observed lower.
                 # COMPRESS_OUTPUTS [false]
                 runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='true')
                 # NUM_PROCESSORS [1]
@@ -1157,7 +1157,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 directory_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            # Move the samples directory into the experiment directory.
+            # Move the sample directory into the experiment directory.
 
             runnable_step = RunnableStepMove(
                 name='move_samples_directory',
@@ -1591,7 +1591,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             if not self.sequencing_centre:
                 raise Exception('The ' + self.name + "requires a 'sequencing_centre' configuration option.")
 
-        # Define the sequences directory in which to create the experiment directory.
+        # Define the sequence directory in which to create the experiment directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # An absolute path cannot be prepended.
@@ -2634,7 +2634,7 @@ class IlluminaDemultiplexSam(Analysis):
                 directory_path=experiment_directory)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            # Move the samples directory into the experiment directory.
+            # Move the sample directory into the experiment directory.
 
             runnable_step = RunnableStepMove(
                 name='move_project_lane_samples_directory',
@@ -2746,9 +2746,9 @@ class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
 class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
     """The C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} class represents Picard CollectHiSeqXPfFailMetrics.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     """
 
@@ -2850,9 +2850,9 @@ class FilePathDownsampleSamReadGroup(FilePath):
 class DownsampleSam(Analysis):
     """The C{bsf.analyses.picard.DownsampleSam} class represents the logic to run the Picard DownsampleSam analysis.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
     @type java_archive_picard: str | None
@@ -3172,9 +3172,9 @@ class FilePathSamToFastqProject(FilePath):
 class SamToFastq(Analysis):
     """The C{bsf.analyses.picard.SamToFastq} class represents the logic to run the Picard SamToFastq analysis.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar stage_name_read_group: C{bsf.analysis.Stage.name} for read group-specific C{bsf.procedure.Runnable} objects
     @type stage_name_read_group: str

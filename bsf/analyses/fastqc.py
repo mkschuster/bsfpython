@@ -65,11 +65,11 @@ class FilePathFastQCReadGroup(FilePath):
 
 
 class FastQC(Analysis):
-    """BSF FastQC-specific Quality Assessment C{bsf.analysis.Analysis} sub-class.
+    """BSF FastQC-specific Quality Assessment C{bsf.analysis.Analysis} subclass.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     """
 

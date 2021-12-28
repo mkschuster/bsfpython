@@ -39,7 +39,7 @@ class FilePath(object):
     """The C{bsf.procedure.FilePath} class represents formalised file path information for the
     C{bsf.procedure.Runnable} class.
 
-    Each C{bsf.procedure.Runnable} class is expected to define its corresponding C{bsf.procedure.FilePath} sub-class.
+    Each C{bsf.procedure.Runnable} class is expected to define its corresponding C{bsf.procedure.FilePath} subclass.
 
     @ivar prefix: File path prefix
     @type prefix: str
@@ -523,7 +523,7 @@ class Runnable(object):
 
 class ConsecutiveRunnable(Runnable):
     """The C{bsf.procedure.ConsecutiveRunnable} represents a procedure of consecutively running
-    C{bsf.process.RunnableStep} or sub-classes thereof.
+    C{bsf.process.RunnableStep} or subclasses thereof.
 
     @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
     @type runnable_step_list: list[RunnableStep]

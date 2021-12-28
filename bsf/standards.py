@@ -291,7 +291,7 @@ class BaseSection(object):
 
     @classmethod
     def get(cls, option=None):
-        """Get the value for a configuration option in the section defined by the sub-class section class variable.
+        """Get the value for a configuration option in the section defined by the subclass section class variable.
 
         This method is a re-implementation of the C{configparser.ConfigParser.get()} method that returns C{None}
         upon non-existing sections or options.
@@ -317,7 +317,7 @@ class BaseSection(object):
 
     @classmethod
     def getboolean(cls, option=None):
-        """Get the value for a configuration option in the section defined by the sub-class section class variable.
+        """Get the value for a configuration option in the section defined by the subclass section class variable.
 
         This method is a re-implementation of the C{configparser.ConfigParser.getboolean()} method that returns C{None}
         upon non-existing sections or options.
@@ -376,7 +376,7 @@ class BaseSectionVersion(object):
 
     @classmethod
     def get_section(cls, version=None):
-        """Get the the section defined by the sub-class section class variable and a version.
+        """Get the section defined by the subclass section class variable and a version.
 
         @param version: Version
         @type version: str | None
@@ -390,7 +390,7 @@ class BaseSectionVersion(object):
 
     @classmethod
     def get(cls, option=None, version=None):
-        """Get the value for a configuration option in the section defined by the sub-class section class variable.
+        """Get the value for a configuration option in the section defined by the subclass section class variable.
 
         @param option: Configuration option
         @type option: str | None
@@ -598,11 +598,11 @@ class EnsemblVEP(BaseSectionVersion):
 
     @classmethod
     def get_sql_user(cls, genome_version=None):
-        """Get the SQL database user name.
+        """Get the SQL database username.
 
         @param genome_version: Genome assembly version
         @type genome_version: str | None
-        @return: SQL database user name
+        @return: SQL database username
         @rtype: str | None
         """
         return cls.get(option='sql_user', version=genome_version)
@@ -701,7 +701,7 @@ class Genome(BaseSectionVersion):
 
         @param genome_version: Genome assembly version
         @type genome_version: str | None
-        @return: Back list file path
+        @return: (ENCODE) Black list file path
         @rtype: str | None
         """
         return cls.get(option='black_list', version=genome_version)
@@ -723,7 +723,7 @@ class Genome(BaseSectionVersion):
 
         @param genome_version: Genome assembly version
         @type genome_version: str | None
-        @return: Effective size
+        @return: Effective genome size
         @rtype: str | None
         """
         return cls.get(option='effective_size', version=genome_version)
@@ -736,7 +736,7 @@ class Genome(BaseSectionVersion):
         THe NCBI uses fna for nucleotide FASTA files.
         @param genome_version: Genome assembly version
         @type genome_version: str | None
-        @return: Description
+        @return: FASTA suffix
         @rtype: str | None
         """
         return cls.get(option='fasta_suffix', version=genome_version)
@@ -926,7 +926,7 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_cache(cls):
-        """Get the (absolute) cache directory path locally on the compute node (e.g. /dev/shm).
+        """Get the cache directory path locally on a compute-node (e.g. /dev/shm).
 
         @return: Cache directory path
         @rtype: str | None
@@ -935,7 +935,7 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_home(cls):
-        """Get the (absolute) Home directory path.
+        """Get the home directory path.
 
         @return: Home directory path
         @rtype: str | None
@@ -985,40 +985,40 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_sequences(cls, absolute=True):
-        """Get the Sequences directory path.
+        """Get the sequence directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Sequences directory path
+        @return: Sequence directory path
         @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='sequences'))
 
     @classmethod
     def get_samples(cls, absolute=True):
-        """Get the Samples directory path.
+        """Get the sample directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Samples directory path
+        @return: Sample directory path
         @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='samples'))
 
     @classmethod
     def get_projects(cls, absolute=True):
-        """Get the Analysis Projects directory path.
+        """Get the project directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Analysis projects directory path
+        @return: Project directory path
         @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='projects'))
 
     @classmethod
     def get_public_html(cls, absolute=True):
-        """Get the Web Server directory path.
+        """Get the web server directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
@@ -1029,22 +1029,22 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_template_scripts(cls, absolute=True):
-        """Get the template scripts directory path.
+        """Get the template script directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Template scripts directory path
+        @return: Template script directory path
         @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='template_scripts'))
 
     @classmethod
     def get_resource(cls, absolute=True):
-        """Get the Resources directory path.
+        """Get the resource directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Resources directory path
+        @return: Resource directory path
         @rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='resources'))
@@ -1070,13 +1070,13 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_genome(cls, genome_version=None, absolute=True):
-        """Get the Genome resource directory path.
+        """Get a genome resource directory path.
 
         @param genome_version: The genome version (e.g. mm10, ...)
         @type genome_version: str | None
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Genome directory path
+        @return: Genome resource directory path
         @rtype: str | None
         """
         file_path = cls.get_expanded_directory(option='genomes')
@@ -1088,11 +1088,11 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_genome_black_list(cls, genome_version):
-        """Get the Genome black list file path.
+        """Get a genome black list resource file path.
 
         @param genome_version: The genome version (e.g. mm10, ...)
         @type genome_version: str | None
-        @return: Genome black list file path
+        @return: Genome black list resource file path
         @rtype: str | None
         """
         black_list_file_path = Genome.get_black_list(genome_version=genome_version)
@@ -1168,7 +1168,7 @@ class StandardFilePath(BaseSection):
         @type genome_index: str | None
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: Genome FASTA resource file path
+        @return: Genome FASTA index resource file path
         @rtype: str
         """
         return cls.get_resource_genome_fasta(
@@ -1178,7 +1178,7 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_transcriptome(cls, transcriptome_version=None, absolute=True):
-        """Get the transcriptome resource directory path.
+        """Get a transcriptome resource directory path.
 
         @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
         @type transcriptome_version: str | None
@@ -1275,7 +1275,7 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_gatk_bundle(cls, genome_version=None, gatk_bundle_version=None, absolute=True):
-        """Get the GATK Bundle resource directory path.
+        """Get a GATK bundle resource directory path.
 
         @param genome_version: The genome version (e.g. b37, ...)
         @type genome_version: str | None
@@ -1283,7 +1283,7 @@ class StandardFilePath(BaseSection):
         @type gatk_bundle_version: str | None
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: GATK Bundle resource directory path
+        @return: GATK bundle resource directory path
         @rtype: str | None
         """
         file_path = cls.get_expanded_directory(option='gatk_bundle')
@@ -1331,11 +1331,11 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_snpeff_data(cls, absolute=True):
-        """Get the snpEff Data resource directory path.
+        """Get the snpEff data resource directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: snpEff Data resource directory path
+        @return: snpEff data resource directory path
         @rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='snpeff_data'))
@@ -1353,7 +1353,7 @@ class Index(BaseSection):
 
 
 class Operator(BaseSection):
-    """The C{bsf.standards.Operator} class models operator defaults.
+    """The C{bsf.standards.Operator} class models the operator's defaults.
 
     The defaults are read from the [operator] section of the global configuration file.
 
@@ -1511,7 +1511,7 @@ class VendorQualityFilter(BaseSection):
     """The C{bsf.standards.VendorQualityFilter} class models (SAM) Vendor Quality Filter defaults.
 
     The defaults are read from the [VendorQualityFilter] section of the global configuration file.
-    For each flow cell type a boolean specifies whether vendor quality filtering should be applied or not.
+    For each flow cell type, a boolean value specifies whether vendor quality filtering should be applied or not.
 
     @cvar section: C{configparser.ConfigParser} section
     @type section: str

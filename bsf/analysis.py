@@ -50,9 +50,9 @@ class Analysis(object):
     It consists of one or more C{bsf.analysis.Stage} objects that may run one or more
     C{bsf.process.Executable} or C{bsf.process.RunnableStep} objects (programs).
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar ucsc_name_hub: UCSC Genome Browser Track Hub "hub" file name
     @type ucsc_name_hub: str
@@ -429,7 +429,7 @@ class Analysis(object):
             print('Stage configuration section:', repr(section))
 
         # A "bsf.analysis.Analysis.Stage.name" or "bsf.analyses.*.Stage.name" section specifies defaults
-        # for a particular Stage of an Analysis or sub-class, respectively.
+        # for a particular Stage of an Analysis or subclass, respectively.
 
         section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage', stage.name))
         stage.set_configuration(configuration=self.configuration, section=section)
@@ -705,7 +705,7 @@ class Analysis(object):
     def report(self):
         """Create a C{bsf.analysis.Analysis} report.
 
-        The method must be implemented in a sub-class.
+        The method must be implemented in a subclass.
         """
         warnings.warn(
             "The 'report' method must be implemented in the sub-class.",
@@ -736,7 +736,7 @@ class Analysis(object):
 
     @staticmethod
     def get_html_anchor(prefix, suffix, text):
-        """Create a HTML anchor element with a relative reference path.
+        """Create an HTML anchor element with a relative reference path.
 
         <a href="prefix/prefix_suffix">text</a>
         @param prefix: Prefix
@@ -752,7 +752,7 @@ class Analysis(object):
 
     @staticmethod
     def get_html_image(prefix, suffix, text, height=None, width=None):
-        """Create a HTML image element with a relative source path.
+        """Create an HTML image element with a relative source path.
 
         <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
         @param prefix: Prefix
@@ -878,7 +878,7 @@ class Analysis(object):
             creator=None,
             source=None,
             title=None):
-        """Get the header section of a XHTML 1.0 document.
+        """Get the header section of an XHTML 1.0 document.
 
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
             defaults to XHTML 1.0 Strict
@@ -958,7 +958,7 @@ class Analysis(object):
             url_protocol=None,
             url_host_name=None,
             title=None):
-        """Get the footer section of a XHTML 1.0 document.
+        """Get the footer section of an XHTML 1.0 document.
 
         @param contact: Institution contact e-mail address,
             defaults to C{bsf.standards.Operator.get_contact()}
@@ -1012,7 +1012,7 @@ class Analysis(object):
 
         str_list.append('<br class="footer" />\n')
         if contact:
-            # The e-mail address outside of an URL still needs HTML quoting.
+            # The e-mail address outside a URL still needs HTML quoting.
             # After URL quoting, nothing critical needing HTML escaping should be left.
             str_list.append(
                 'Contact: <a href="mailto:' + urllib.parse.quote(string=contact) +
@@ -1037,7 +1037,7 @@ class Analysis(object):
             institution=None,
             url_protocol=None,
             url_host_name=None):
-        """Get a report as a XHTML 1.0 document.
+        """Get a report as an XHTML 1.0 document.
 
         The method automatically concatenates the
         XHTML header C{bsf.analysis.Analysis.get_html_header}, the XHTML content and the
@@ -1104,7 +1104,7 @@ class Analysis(object):
             institution=None,
             url_protocol=None,
             url_host_name=None):
-        """Write a XHTML 1.0 report I{prefix_report.html} file into the C{bsf.analysis.Analysis.genome_directory}.
+        """Write an XHTML 1.0 report I{prefix_report.html} file into the C{bsf.analysis.Analysis.genome_directory}.
 
         The method automatically concatenates the
         XHTML header C{bsf.analysis.Analysis.get_html_header}, the XHTML content and the
@@ -1189,9 +1189,9 @@ class Analysis(object):
     def create_public_project_link(self, sub_directory=None):
         """Create a symbolic link from the public HTML directory to the project directory if not already there.
 
-        The link will be placed in the specified sub directory and contain
+        The link will be placed in the specified subdirectory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
-        If not specified, the sub directory defaults to the value of C{bsf.standards.URL.get_relative_projects()}.
+        If not specified, the subdirectory defaults to the value of C{bsf.standards.URL.get_relative_projects()}.
 
         @param sub_directory: C{bsf.analysis.Analysis}-specific directory
         @type sub_directory: str
@@ -1212,7 +1212,7 @@ class Analysis(object):
                 'Please check the optional sub-directory name ' + repr(sub_directory) + '.')
 
         # The target_path consists of the absolute public_html directory,
-        # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
+        # the analysis-specific subdirectory, the project name and a 128 bit hexadecimal UUID string.
 
         target_path = os.path.join(html_path, '_'.join((self.project_name, uuid.uuid4().hex)))
 
@@ -1363,7 +1363,7 @@ class Analysis(object):
         return self.ucsc_track_url(options_dict=options_dict)
 
     def ucsc_hub_html_anchor(self, link_path):
-        """Return a XHTML 1.0 anchor element to automatically attach a UCSC Genome Browser Track Hub.
+        """Return an XHTML 1.0 anchor element to automatically attach a UCSC Genome Browser Track Hub.
 
         @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
         @type link_path: str
@@ -1484,7 +1484,7 @@ class Analysis(object):
     def ucsc_hub_to_file(self, content, prefix=None):
         """Write UCSC Genome Browser Track Hub files to disk.
 
-        The method writes a I{prefix_hub.txt} and a I{prefix_genomes.txt} file into the
+        The method writes I{prefix_hub.txt} and I{prefix_genomes.txt} files into the
         C{bsf.analysis.Analysis.project_directory}, above the C{bsf.analysis.Analysis.genome_directory}, as well as a
         I{prefix_tracks.txt} file into the C{bsf.analysis.Analysis.genome_directory}.
 

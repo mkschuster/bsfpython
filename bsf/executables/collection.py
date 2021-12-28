@@ -4,9 +4,9 @@
 
 A package of classes and methods to prune a sample annotation sheet.
 
-Reads objects not associated with (FASTQ or BAM) files get deleted from their corresponding PairedReads objects.
+All Reads objects not associated with (FASTQ or BAM) files get deleted from their corresponding PairedReads objects.
 A Reads object is retained, if a file with a size equal to or larger than the configured minimum file size or
-an (empty) status file (*.truncated) exists in the file system. Files smaller then the configured minimum file size
+an (empty) status file (*.truncated) exists in the file system. Files smaller than the configured minimum file size
 are automatically deleted.
 """
 #  Copyright 2013 - 2021 Michael K. Schuster

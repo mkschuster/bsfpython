@@ -296,9 +296,9 @@ class FilePathSummary(FilePath):
 class Aligner(Analysis):
     """The C{bsf.analyses.aligner.Aligner} class represents the logic to run a (short read) aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment
@@ -398,42 +398,42 @@ class Aligner(Analysis):
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
-        """Get a C{FilePathAlign} object from this or a sub-class.
+        """Get a C{FilePathAlign} object from this or a subclass.
 
         @param paired_reads_name: C{bsf.ngs.PairedReads.name}
         @type paired_reads_name: str
-        @return: C{FilePathAlign} or sub-class object
+        @return: C{FilePathAlign} or subclass object
         @rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
     def get_file_path_read_group(cls, read_group_name):
-        """Get a C{FilePathReadGroup} object from this or a sub-class.
+        """Get a C{FilePathReadGroup} object from this or a subclass.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: C{FilePathReadGroup} or sub-class object
+        @return: C{FilePathReadGroup} or subclass object
         @rtype: FilePathReadGroup
         """
         return FilePathReadGroup(prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     @classmethod
     def get_file_path_sample(cls, sample_name):
-        """Get a C{FilePathSample} object from this or a sub-class.
+        """Get a C{FilePathSample} object from this or a subclass.
 
         @param sample_name: C{bsf.ngs.Sample.name}
         @type sample_name: str
-        @return: C{FilePathSample} or sub-class object
+        @return: C{FilePathSample} or subclass object
         @rtype: FilePathSample
         """
         return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
     @classmethod
     def get_file_path_summary(cls):
-        """Get a C{FilePathSummary} object from this or a sub-class.
+        """Get a C{FilePathSummary} object from this or a subclass.
 
-        @return: C{FilePathSummary} or sub-class object
+        @return: C{FilePathSummary} or subclass object
         @rtype: FilePathSummary
         """
         return FilePathSummary(prefix=cls.get_prefix_summary())
@@ -1328,7 +1328,7 @@ class Aligner(Analysis):
         return
 
     def report_html_sample(self):
-        """Create a HTML Sample table.
+        """Create an HTML Sample table.
 
         @return: Python C{list} of Python C{str} objects
         @rtype: list[str]
@@ -1504,7 +1504,7 @@ class Aligner(Analysis):
         return str_list
 
     def report(self):
-        """Create a HTML report and a UCSC Genome Browser Track Hub.
+        """Create an HTML report and a UCSC Genome Browser Track Hub.
         """
         # Create a symbolic link containing the project name and a UUID.
         # This code only needs the public URL.

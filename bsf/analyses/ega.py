@@ -53,11 +53,11 @@ class FilePathEGACryptorReadGroup(FilePath):
 
 
 class EGACryptor(Analysis):
-    """The C{EGACryptor} C{bsf.analysis.Analysis} class models a EGA Cryptor.
+    """The C{EGACryptor} C{bsf.analysis.Analysis} class models an EGA Cryptor.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     """
 

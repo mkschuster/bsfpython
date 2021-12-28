@@ -119,7 +119,7 @@ if not os.path.isabs(project_directory):
     if not os.path.isdir(project_directory):
 
         # If the absolute directory path still does not exist,
-        # scan the projects directory for an entry that begins with the project name.
+        # scan the project directory for an entry that begins with the project name.
 
         project_name = scan_projects(project_name_local=name_space.project)
 

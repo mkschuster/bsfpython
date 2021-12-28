@@ -111,9 +111,9 @@ class Bowtie1(Aligner):
 class Bowtie2(Aligner):
     """The C{bsf.analyses.bowtie.Bowtie2} class represents the logic to run the Bowtie2 aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment

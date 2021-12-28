@@ -58,7 +58,7 @@ class Argument(object):
     def from_key_value(cls, key, value):
         """Create a C{bsf.argument.Argument} from a key and value argument pair.
 
-        If the key starts with valid a bsf.argument class name, the corresponding object is initialised from
+        If the key starts with a valid "bsf.argument" class name, the corresponding object is initialised from
         the key, which is separated by a dot from the class name and, if applicable for the class, the value.
         class.key = value
 

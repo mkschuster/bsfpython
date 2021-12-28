@@ -785,7 +785,7 @@ class IlluminaToBam(Analysis):
         Convert an Illumina flow cell into lane-specific archive BAM files.
 
         To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
-        library name (LB) and sample name (SM) to 'flow cell identifier.lane'.
+        library name (LB) and sample name (SM) to '<flow cell identifier>.<lane>'.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
         """
         # Define an Illumina Run Folder directory.
@@ -826,7 +826,7 @@ class IlluminaToBam(Analysis):
         else:
             intensity_directory = os.path.join(self.run_directory, 'Data', 'Intensities')
 
-        # Check that the Intensities directory exists.
+        # Check that the "Intensities" directory exists.
 
         if not os.path.isdir(intensity_directory):
             raise Exception(
@@ -836,7 +836,7 @@ class IlluminaToBam(Analysis):
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
-        # automatically prepend the Intensities directory path.
+        # automatically prepend the "Intensities" directory path.
 
         if self.basecalls_directory:
             basecalls_directory = self.configuration.get_absolute_path(
@@ -875,7 +875,7 @@ class IlluminaToBam(Analysis):
                 raise Exception("An 'IlluminaToBam' analysis requires a "
                                 "'sequencing_centre' configuration option.")
 
-        # Define the sequences directory in which to create the experiment directory.
+        # Define the "Sequences" directory in which to create the experiment directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # An absolute path cannot be prepended.
@@ -1833,7 +1833,7 @@ class BamIndexDecoder(Analysis):
                     directory_path=experiment_directory)
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                # Move the samples directory into the experiment directory.
+                # Move the sample directory into the experiment directory.
 
                 runnable_step = RunnableStepMove(
                     name='move_samples_directory',
@@ -1912,7 +1912,7 @@ class BamIndexDecoder(Analysis):
                     directory_path=experiment_directory)
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                # Move the samples directory into the experiment directory.
+                # Move the sample directory into the experiment directory.
 
                 runnable_step = RunnableStepMove(
                     name='move_samples_directory',
@@ -1920,7 +1920,7 @@ class BamIndexDecoder(Analysis):
                     target_path=experiment_directory)
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                # Add a symbolic link to the BSF Sequence Archive file within the samples directory.
+                # Add a symbolic link to the BSF Sequence Archive file within the sample directory.
 
                 experiment_samples_directory = os.path.join(experiment_directory, file_path_lane.samples_directory)
 

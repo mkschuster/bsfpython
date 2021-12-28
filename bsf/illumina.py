@@ -1630,7 +1630,7 @@ class RunFolder(object):
                     for surface in range(0 + 1, fcl.surface_count + 1):
                         for swath in range(0 + 1, fcl.swath_count + 1):
                             for tile in range(0 + 1, fcl.tile_count + 1):
-                                # Not all tiles have to exists especially after catastrophic events during the
+                                # Not all tiles have to exist, especially after catastrophic events during the
                                 # cluster generation step.
                                 tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                                 if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
@@ -1705,7 +1705,7 @@ class RunFolder(object):
                 for surface in range(0 + 1, fcl.surface_count + 1):
                     for swath in range(0 + 1, fcl.swath_count + 1):
                         for tile in range(0 + 1, fcl.tile_count + 1):
-                            # Not all tiles have to exists especially after catastrophic events during the
+                            # Not all tiles have to exist, especially after catastrophic events during the
                             # cluster generation step.
                             tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
@@ -1751,7 +1751,7 @@ class RunFolder(object):
                 '1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.61', '1.18.64',  # HiSeq 2000
                 '1.18.54',  # MiSeq Control Software 2.5.0.5 (MiSeq)
         ):
-            # With the exception of RTA 1.18.54.4 (MiSeq) and RTA 2.5.2 (HiSeq 3000/4000),
+            # Except RTA 1.18.54.4 (MiSeq) and RTA 2.5.2 (HiSeq 3000/4000),
             # all other HiSeq and MiSeq RTAs have
             # IRF/Data/Intensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
             for lane in range(0 + 1, fcl.lane_count + 1):
@@ -1799,7 +1799,7 @@ class RunFolder(object):
 
         if rta in (
                 '1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.61', '1.18.64',  # HiSeq 2000
-                '1.18.54', '1.18.54.4',  # Miseq
+                '1.18.54', '1.18.54.4',  # MiSeq
         ):
             _entry_name = 'config.xml'
 
@@ -2168,7 +2168,7 @@ class RunFolder(object):
                     for surface in range(0 + 1, fcl.surface_count + 1):
                         for swath in range(0 + 1, fcl.swath_count + 1):
                             for tile in range(0 + 1, fcl.tile_count + 1):
-                                # Not all tiles have to exists especially after catastrophic events during the
+                                # Not all tiles have to exist, especially after catastrophic events during the
                                 # cluster generation step.
                                 tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                                 if self._is_missing_image_analysis_tile(lane=lane, tile=tile_name):
@@ -2202,7 +2202,7 @@ class RunFolder(object):
                         '2.4.11',  # NextSeq 500/550
                 ):
                     # Exclude the MiSeq, NextSeq 500/550 and HiSeq 1000/1500/2000/2500 instruments,
-                    # as they do no longer store cycle-specific sub directories with
+                    # as they do no longer store cycle-specific subdirectories with
                     # cluster intensity files (*.cif), error map (*.errorMap) and
                     # full width at half maximum (*.FWHMMap) files.
                     for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
@@ -2221,7 +2221,7 @@ class RunFolder(object):
                         for surface in range(0 + 1, fcl.surface_count + 1):
                             for swath in range(0 + 1, fcl.swath_count + 1):
                                 for tile in range(0 + 1, fcl.tile_count + 1):
-                                    # Not all tiles have to exists especially after catastrophic events during the
+                                    # Not all tiles have to exist, especially after catastrophic events during the
                                     # cluster generation step.
                                     tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                                     if self._is_missing_image_analysis_tile(lane=lane, tile=tile_name):
@@ -2368,7 +2368,7 @@ class RunFolder(object):
     def _check_data(self, directory_dict, directory_path, debug=0):
         """Check the IRF/Data/ directory.
 
-        @param directory_dict: Ptyhon C{dict} of Illumina Run Folder I{IRF/} entries
+        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
         @type directory_dict: dict[str, int]
         @param directory_path: Illumina Run Folder I{IRF/} path
         @type directory_path: str
@@ -2924,7 +2924,7 @@ class RunFolder(object):
         return
 
     def check(self, debug=0):
-        """Check an Illumina Run Folder with regards to its internal directory and file structure.
+        """Check an Illumina Run Folder in regard to its internal directory and file structure.
 
         Both, missing and additional files are printed to STDOUT.
         @param debug: Integer debugging level

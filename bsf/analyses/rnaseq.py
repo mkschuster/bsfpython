@@ -1124,7 +1124,7 @@ class Tuxedo(Analysis):
             else:
                 # Without a comparison file path, simply add a comparison 'global' with a SampleGroup 'global'
                 # with all Sample objects from the Collection.
-                # This means that most pipeline stages with the exception of Cuffdiff can run.
+                # This means that most pipeline stages except Cuffdiff can run.
                 self.sample_list.extend(self.collection.get_all_samples(exclude=True))
                 self._comparison_dict['global'] = [SampleGroup(
                     name='global',
@@ -1214,7 +1214,7 @@ class Tuxedo(Analysis):
 
         super(Tuxedo, self).run()
 
-        # Method configuration with regards to Cuffquant and Cuffdiff.
+        # Method configuration regarding Cuffquant and Cuffdiff.
         run_cuffquant_before_cuffdiff = False
 
         run_read_comparisons()
@@ -1302,7 +1302,7 @@ class Tuxedo(Analysis):
                 StandardFilePath.get_resource_transcriptome_index(
                     transcriptome_version=self.transcriptome_version,
                     transcriptome_index='tophat2'),
-                self.transcriptome_version,  # Tophat puts the transcriptome index into a sub directory.
+                self.transcriptome_version,  # Tophat puts the transcriptome index into a subdirectory.
                 self.transcriptome_version)  # Tophat uses a transcriptome prefix to lookup index files.
 
             self.transcriptome_gtf = StandardFilePath.get_resource_transcriptome_gtf(
@@ -1733,7 +1733,7 @@ class Tuxedo(Analysis):
                 target_path=file_path_cufflinks.transcripts_gtf_link_target)
             runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
 
-        # Create one process_cufflinks bsf.process.Executable to process all sub-directories.
+        # Create one process_cufflinks bsf.process.Executable to process all subdirectories.
 
         if len(runnable_run_cufflinks_list):
             runnable_process_cufflinks = self.add_runnable_consecutive(
@@ -1991,7 +1991,7 @@ class Tuxedo(Analysis):
                     cuffmerge_transcript_gtf_list.append(
                         os.path.join('_'.join(('rnaseq_cufflinks', sample.name)), 'transcripts.gtf') + '\n')
 
-                    # Wait for each Cufflinks PairedReads to finish, before Cuffmerge can run.
+                    # Wait for all Cufflinks instances to finish, before Cuffmerge can run.
 
                     executable_run_cuffmerge.dependencies.append(
                         self.get_prefix_run_cufflinks(sample_name=sample.name))
@@ -2196,7 +2196,7 @@ class Tuxedo(Analysis):
                 # Add the Cuffmerge GTF file as first Cuffnorm argument.
                 runnable_step_cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
 
-                # Add an abundances annotation file as second Cuffnorm argument.
+                # Add an abundance annotation file as second Cuffnorm argument.
                 # Writing a Cuffnorm abundances TSV file requires an absolute path,
                 # because the working directory is not set at the current stage of job submission.
                 run_write_annotation(
@@ -2380,7 +2380,7 @@ class Tuxedo(Analysis):
         """
 
         def report_html():
-            """Private function to create a HTML report.
+            """Private function to create an HTML report.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -2649,7 +2649,7 @@ class Tuxedo(Analysis):
                     str_list.append('</td>\n')
                     str_list.append('</tr>\n')
                 else:
-                    # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
+                    # The Cufflinks tool creates genes.fpkm_tracking, isoforms.fpkm_tracking,
                     # skipped.gtf and transcripts.gtf.
 
                     path_prefix = 'rnaseq_cufflinks_' + sample.name
@@ -3591,11 +3591,11 @@ class FilePathDESeq(FilePath):
 
 
 class DESeq(Analysis):
-    """DESeq RNASeq C{bsf.analysis.Analysis} sub-class.
+    """DESeq RNASeq C{bsf.analysis.Analysis} subclass.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
@@ -4049,7 +4049,7 @@ class DESeq(Analysis):
                     prefix + '_' + suffix))
 
         def report_html():
-            """Private function to create a HTML report.
+            """Private function to create an HTML report.
             """
 
             # Create a symbolic link containing the project name and a UUID.
@@ -4092,7 +4092,7 @@ class DESeq(Analysis):
 
             # Likelihood Ratio Testing (LRT) Table
 
-            # Read the designs table as a backup, in case the design-specific LRT summary table is not available.
+            # Read the design table as a backup, in case the design-specific LRT summary table is not available.
             # Exclude designs if requested.
 
             design_sheet = AnnotationSheet.from_file_path(

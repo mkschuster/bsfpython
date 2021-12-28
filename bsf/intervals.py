@@ -262,7 +262,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
 
     if natural:
         # The intervals are just the natural sequence regions.
-        # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ LN).
+        # Thus, the start coordinate is always 1 and the end coordinate is the sequence length (@SQ LN).
         # 1 2 3 ... 7 8 9
         # start = 1
         # end = 9

@@ -1020,7 +1020,7 @@ def submit(stage, debug=0):
                 command=executable.command_str())
             job_submission_adaptor.insert(object_instance=job_submission)
 
-        # Only store a ProcessSLURM, if an bsf.process.Executable has been submitted into SLURM.
+        # Only store a ProcessSLURM, if a bsf.process.Executable has been submitted into SLURM.
 
         if executable.process_identifier:
             process_slurm = process_slurm_adaptor.select_by_job_id(job_id=executable.process_identifier)

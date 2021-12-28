@@ -78,7 +78,7 @@ class VULGAR(object):
         ) = vulgar_str.split(' ', 9)
 
         triplet_list = triplet_str.split(' ')
-        # Further split into triplets by means of a list comprehension.
+        # Further, split into triplets by means of a list comprehension.
         self.triplet_list = [triplet_list[i: i + 3] for i in range(0, len(triplet_list), 3)]
 
         return self
@@ -157,7 +157,7 @@ class VULGAR(object):
 
 
 def parse_alignment_file(file_path):
-    """Parse an Exonerate alignment file.
+    """Parse an alignment file.
 
     @param file_path: Alignment file path
     @type file_path: str

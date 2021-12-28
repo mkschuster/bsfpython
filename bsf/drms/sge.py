@@ -268,7 +268,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # Since group is a reserved word in SQL this had to be renamed to sge_group.
                 ('sge_group', 'TEXT'),
                 # owner
-                # Owner of the Grid Engine job.
+                # The owner of the Grid Engine job.
                 ('owner', 'TEXT'),
                 # job_name
                 # Job name.
@@ -280,8 +280,8 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # An account string as specified by the qsub(1) or qalter(1) -A option.
                 ('account', 'TEXT'),
                 # priority
-                # Priority value assigned to the job, corresponding to the priority parameter in the queue configuration
-                # (see queue_conf(5)).
+                # The priority value assigned to the job,
+                # corresponding to the priority parameter in the queue configuration (see queue_conf(5)).
                 ('priority', 'TEXT'),
                 # submission_time
                 # Submission time.
@@ -328,7 +328,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # ru_nvcsw
                 # ru_nivcsw
                 # These entries follow the contents of the standard Unix rusage structure as described in getrusage(2).
-                # Depending on the operating system where the job was executed, some of the fields may be 0.
+                # Depending on the operating system where the job was executed, some fields may be 0.
                 #
                 # project
                 # The project which was assigned to the job.
@@ -361,7 +361,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # This contains a space-separated pseudo options list for the sub, with components as follows:
                 #
                 #   -U user_list
-                #       An owner/group ACL list composed from host_conf(5), sge_pe(5),
+                #       An owner/group ACL list composed of host_conf(5), sge_pe(5),
                 #       And queue_conf(5) user_lists/xuser_lists entries.
                 #       Entries from sge_conf(5) are not considered since they can
                 #       only cause a job to be accepted/rejected at submit time.
@@ -371,7 +371,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 #       Like -U, but for project/xproject entries.
                 #
                 #   -u owner
-                #       The owner's user name, if it was referenced in any RQS (see sge_resource_quota(5)).
+                #       The owner's username, if it was referenced in any RQS (see sge_resource_quota(5)).
                 #       Omitted if there was no such reference.
                 #
                 #   -q queue_list
@@ -441,7 +441,7 @@ def submit(stage, debug=0):
         @param _file_handle: File handle (i.e. pipe)
         @type _file_handle: io.TextIOWrapper
         @param _thread_lock: Thread lock
-        @type _thread_lock: threading.lock
+        @type _thread_lock: threading.Lock
         @param _debug: Debug level
         @type _debug: int
         @param _executable: C{bsf.process.Executable}

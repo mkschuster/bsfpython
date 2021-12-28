@@ -111,11 +111,11 @@ class FilePathSummary(AlignerFilePathSummary):
 
 
 class Star(Aligner):
-    """STAR C{bsf.analyses.aligner.Aligner} sub-class.
+    """STAR C{bsf.analyses.aligner.Aligner} subclass.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment
@@ -144,20 +144,20 @@ class Star(Aligner):
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
-        """Get a C{FilePathAlign} object from this or a sub-class.
+        """Get a C{FilePathAlign} object from this or a subclass.
 
         @param paired_reads_name: C{bsf.ngs.PairedReads.name}
         @type paired_reads_name: str
-        @return: C{FilePathAlign} or sub-class object
+        @return: C{FilePathAlign} or subclass object
         @rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
     def get_file_path_summary(cls):
-        """Get a C{FilePathSummary} object from this or a sub-class.
+        """Get a C{FilePathSummary} object from this or a subclass.
 
-        @return: C{FilePathSummary} or sub-class object
+        @return: C{FilePathSummary} or subclass object
         @rtype: FilePathSummary
         """
         return FilePathSummary(prefix=cls.get_prefix_summary())
@@ -442,7 +442,7 @@ class Star(Aligner):
         return
 
     def report(self):
-        """Create a HTML report and a UCSC Genome Browser Track Hub.
+        """Create an HTML report and a UCSC Genome Browser Track Hub.
         """
         # Create a symbolic link containing the project name and a UUID.
         # This code only needs the public URL.

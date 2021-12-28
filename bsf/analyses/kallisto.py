@@ -61,11 +61,11 @@ class FilePathSample(FilePath):
 
 
 class Kallisto(Analysis):
-    """Kallisto C{bsf.analysis.Analysis} sub-class.
+    """Kallisto C{bsf.analysis.Analysis} subclass.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
@@ -106,11 +106,11 @@ class Kallisto(Analysis):
 
     @classmethod
     def get_file_path_sample(cls, sample_name):
-        """Get a C{FilePathSample} object from this or a sub-class.
+        """Get a C{FilePathSample} object from this or a subclass.
 
         @param sample_name: C{bsf.ngs.Sample.name}
         @type sample_name: str
-        @return: C{FilePathSample} or sub-class object
+        @return: C{FilePathSample} or subclass object
         @rtype: FilePathSample
         """
         return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))

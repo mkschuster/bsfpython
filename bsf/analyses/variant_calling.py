@@ -1953,9 +1953,9 @@ class VariantCallingGATK(Analysis):
             """Private function to read variant quality score recalibration (VQSR) configuration information.
 
             Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
-            resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of
+            resources that are to be used in the VQSR procedure. Each option needs to correspond to a subsection of
             the C{configparser.ConfigParser} in C{bsf.standards.Configuration.config_parser}.
-            Each sub-section needs options 'known', 'training', 'truth', 'prior' and 'file_path'.
+            Each subsection needs options 'known', 'training', 'truth', 'prior' and 'file_path'.
             @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
             @type vqsr_resources_dict: dict[str, dict[str, str]] | None
             @param variation_type: Variation type I{indel} or I{snp}
@@ -1967,7 +1967,7 @@ class VariantCallingGATK(Analysis):
                 raise Exception("Variation type has to be 'indel' or 'snp', not " + repr(variation_type) + '.')
 
             # The vqsr_resources_indel|snp options of the current configuration section hold a comma-separated list
-            # of resources that should correspond to a sub-section in the configuration file.
+            # of resources that should correspond to a subsection in the configuration file.
             vqsr_option = '_'.join(('vqsr_resources', variation_type))
             if config_parser.has_option(section=section, option=vqsr_option):
                 if vqsr_resources_dict is None:
@@ -4803,7 +4803,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='analysis_type', value='DiagnoseTargets')
                 # Optional Inputs
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
-                # The Diagnose Targets analysis is run on the target intervals, only.
+                # The DiagnoseTargets analysis is run on the target intervals, only.
                 # This will not include excluded intervals, such as decoy sequences.
                 runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
@@ -4834,8 +4834,8 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='analysis_type', value='QualifyMissingIntervals')
                 # Optional Inputs
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
-                # The Qualify Missing Intervals analysis is run only on the missing intervals
-                # of the Diagnose Targets analysis above, regardless.
+                # The QualifyMissingIntervals analysis is run only on the missing intervals
+                # of the DiagnoseTargets analysis above, regardless.
                 # This will not include excluded intervals, such as decoy sequences.
                 runnable_step.add_gatk_option(key='intervals', value=file_path_diagnose_sample.missing_intervals)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
@@ -4896,7 +4896,6 @@ class VariantCallingGATK(Analysis):
         # GATK CombineGVCFs for each cohort and each sample (merge_cohort_gatk_combine_gvcfs)
         # GATK CombineGVCFs for each cohort                 (merge_cohort_gatk_combine_gvcfs)
         #
-        # The cohorts to merge in need to be configurable and it would be essential,
         # How should sample names be checked before the merge to avoid clashes?
         # Should sample annotation sheets be read or can the combined GVCF file be read in
         # to extract the actual sample names?
@@ -4940,7 +4939,7 @@ class VariantCallingGATK(Analysis):
         if self.accessory_cohort_gvcfs:  # not None and not empty
             # If accessory cohorts are defined, initialise a new Python dict of Python str cohort name key and
             # Python list of bsf.procedure.ConsecutiveRunnable value data. Initialise the list with the last
-            # bsf.procedure.ConsecutiveRunnable object and extend with the the list of accessory cohort file names.
+            # bsf.procedure.ConsecutiveRunnable object and extend with the list of accessory cohort file names.
             # The run_merge_cohort_scatter_gather() method can cope with bsf.procedure.ConsecutiveRunnable or
             # str objects.
             cohort_key = '_'.join((self.cohort_name, 'accessory'))
@@ -5634,7 +5633,7 @@ class VariantCallingGATK(Analysis):
             return
 
         def report_link():
-            """Private function to create simpler symbolic links in structured sub-directories.
+            """Private function to create simpler symbolic links in structured subdirectories.
 
             The simplified symbolic links facilitate file system browsing.
             """
@@ -5879,7 +5878,7 @@ class VariantCallingGATK(Analysis):
             return
 
         def report_html():
-            """Private function to create a HTML report.
+            """Private function to create an HTML report.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()

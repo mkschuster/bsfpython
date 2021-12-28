@@ -459,7 +459,7 @@ class IlluminaRunFolderArchive(Analysis):
             default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         # The Illumina Run Folder name would also be available from the bsf.illumina.RunFolder.get_name property below,
-        # but using the file path provides more flexibility outside of the fixed runParameters.xml configuration file.
+        # but using the file path provides more flexibility aside the fixed runParameters.xml configuration file.
 
         run_name = os.path.basename(self.run_directory)
 
@@ -472,7 +472,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Check whether the Illumina Run Folder is complete.
         # Check whether the IRF/RTAComplete.txt file exists in the Illumina Run Folder
         # to prevent archiving and deleting of an incomplete folder.
-        # Alternatively, require force to start archiving.
+        # Alternatively, require the force instance variable to start archiving.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
             raise RunFolderNotComplete(
@@ -542,7 +542,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Check whether Picard ExtractIlluminaBarcodes has written any
         # s_<lane>_<tile>_barcode.txt(.gz) files into the BaseCalls directory.
-        # Keeping them is rather pointless and they should be removed.
+        # Keeping them is rather pointless, and they should be removed.
         # http://picard.sourceforge.net/command-line-overview.shtml#ExtractIlluminaBarcodes
 
         # Reset all file permissions on the Illumina Run Folder.
@@ -716,11 +716,11 @@ class IlluminaRunFolderArchive(Analysis):
                 # but just excluded from archiving the folder, those dependencies are no longer required.
                 # archive_folder_dependencies.append(executable_intensities.name)
 
-                # Record an exclude pattern with the relative path to lane and cycle-specific
+                # Record an exclude-pattern with the relative path to lane and cycle-specific
                 # cluster intensity file (*.cif) directories. On the HiSeq 2000 platform, the lane directories
                 # contain cluster locations (*.clocs) files that are essential in base call extraction and
                 # need archiving with the IRF/Data/Intensities/BaseCalls folder.
-                # By default GNU Tar treats exclusion members as globbing patterns.
+                # By default, GNU Tar treats exclusion members as globbing patterns.
                 exclude_intensities_patterns.append(
                     os.path.join(
                         os.path.basename(self.run_directory),
@@ -925,9 +925,9 @@ class IlluminaRunFolderRestore(Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
     Illumina Run Folder from a format suitable for magnetic tape libraries.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int

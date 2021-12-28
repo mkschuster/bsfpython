@@ -62,7 +62,7 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--threads',
     default=1,
-    help='Maximum number of concurrent download threads',
+    help='maximum number of concurrent download threads',
     required=False,
     type=int)
 

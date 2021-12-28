@@ -183,9 +183,9 @@ class ChIPSeqComparison(object):
         return ChIPSeq.get_prefix_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
     def get_file_path_peak_calling(self):
-        """Get a C{FilePathPeakCalling} object from this or a sub-class.
+        """Get a C{FilePathPeakCalling} object from this or a subclass.
 
-        @return: C{FilePathPeakCalling} or sub-class object
+        @return: C{FilePathPeakCalling} or subclass object
         @rtype: FilePathPeakCalling
         """
         return ChIPSeq.get_file_path_peak_calling(t_name=self.t_name, c_name=self.c_name)
@@ -689,13 +689,13 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_file_path_peak_calling(cls, t_name, c_name):
-        """Get a C{FilePathPeakCalling} object from this or a sub-class.
+        """Get a C{FilePathPeakCalling} object from this or a subclass.
 
         @param t_name: C{bsf.ngs.Sample.name}
         @type t_name: str
         @param c_name: C{bsf.ngs.Sample.name}
         @type c_name: str
-        @return: C{FilePathPeakCalling} or sub-class object
+        @return: C{FilePathPeakCalling} or subclass object
         @rtype: FilePathPeakCalling
         """
         return FilePathPeakCalling(
@@ -705,13 +705,13 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_file_path_chipqc(cls, comparison_name, factor_name):
-        """Get a C{FilePathChIPQC} object from this or a sub-class.
+        """Get a C{FilePathChIPQC} object from this or a subclass.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
         @param factor_name: Factor name
         @type factor_name: str
-        @return: C{FilePathChIPQC} or sub-class object
+        @return: C{FilePathChIPQC} or subclass object
         @rtype: FilePathChIPQC
         """
         return FilePathChIPQC(
@@ -721,13 +721,13 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_file_path_diff_bind(cls, comparison_name, factor_name):
-        """Get a C{FilePathDiffBind} object from this or a sub-class.
+        """Get a C{FilePathDiffBind} object from this or a subclass.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
         @param factor_name: Factor name
         @type factor_name: str
-        @return: C{FilePathDiffBind} or sub-class object
+        @return: C{FilePathDiffBind} or subclass object
         @rtype: FilePathDiffBind
         """
         return FilePathDiffBind(
@@ -1187,7 +1187,7 @@ class ChIPSeq(Analysis):
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
-                    # Since a particular peak calling pair may exists in more than one comparison group,
+                    # Since a particular peak calling pair may exist in more than one comparison group,
                     # make sure only unique pairs get submitted.
                     if chipseq_comparison.get_key() in chipseq_comparison_key_list:
                         continue
@@ -1249,7 +1249,7 @@ class ChIPSeq(Analysis):
                             value=' '.join(c_file_path_list))
 
                     # MACS14 can hopefully also cope with directories specified in the --name option, but
-                    # the resulting R script has them set too. Hence the R script has to be started
+                    # the resulting R script has them set too. Hence, the R script has to be started
                     # from the genome_directory. However, the R script needs re-writing anyway, because
                     # it would be better to use the PNG rather than the PDF device for plotting.
                     sub_command.sub_command.add_option_long(
@@ -1286,7 +1286,7 @@ class ChIPSeq(Analysis):
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
-                    # Since a particular peak calling pair may exists in more than one comparison group,
+                    # Since a particular peak calling pair may exist in more than one comparison group,
                     # make sure only unique pairs get submitted.
                     if chipseq_comparison.get_key() in chipseq_comparison_key_list:
                         continue
@@ -1364,7 +1364,7 @@ class ChIPSeq(Analysis):
                         value=file_path_peak_calling.output_directory)
                     # --name ["NA"]
                     # MACS2 can cope with directories specified in the --name option, but
-                    # the resulting R script has them set too. Hence the R script has to be started
+                    # the resulting R script has them set too. Hence, the R script has to be started
                     # from the genome_directory. However, the R script needs re-writing anyway, because
                     # it would be better to use the PNG rather than the PDF device for plotting.
                     sub_command.add_option_long(key='name', value=prefix_peak_calling)
@@ -1743,7 +1743,7 @@ class ChIPSeq(Analysis):
         # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
         def report_html_1():
-            """Private function to create a HTML report for MACS1.
+            """Private function to create an HTML report for MACS1.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -1865,7 +1865,7 @@ class ChIPSeq(Analysis):
             return
 
         def report_html_2():
-            """Private function to create a HTML report for MACS2.
+            """Private function to create an HTML report for MACS2.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -2310,7 +2310,7 @@ class ChIPSeq(Analysis):
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
-                    # Since a particular peak calling pair may exists in more than one comparison group,
+                    # Since a particular peak calling pair may exist in more than one comparison group,
                     # make sure only unique pairs get listed in the track database definition.
                     if chipseq_comparison.get_key() in chipseq_comparison_key_list:
                         continue

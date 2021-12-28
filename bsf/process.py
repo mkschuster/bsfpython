@@ -55,7 +55,7 @@ def get_timestamp():
 def map_connector(connector=None, executable_list=None):
     """Map a C{bsf.connector.Connector} object to a file handle.
 
-    @param connector: C{bsf.connector.Connector} object or sub-class thereof.
+    @param connector: C{bsf.connector.Connector} object or subclass thereof.
     @type connector: Connector | None
     @param executable_list: Python C{list} object of C{Executable} objects.
     @type executable_list: list[Executable] | None
@@ -323,7 +323,7 @@ class Command(object):
         return str_list
 
     def add_argument(self, argument, override):
-        """Add a C{bsf.argument.Argument} object or one of its sub-classes.
+        """Add a C{bsf.argument.Argument} object or one of its subclasses.
 
         @param argument: C{bsf.argument.Argument} object
         @type argument: Argument
@@ -497,7 +497,7 @@ class Command(object):
         return self.add_argument(argument=OptionMultiPairShort(key=key, value=value), override=override)
 
     def set_argument(self, argument, override):
-        """Set a C{bsf.argument.Argument} objects or one of its sub-classes.
+        """Set a C{bsf.argument.Argument} objects or one of its subclasses.
 
         @param argument: C{bsf.argument.Argument} object
         @type argument: Argument
@@ -936,7 +936,7 @@ class Executable(Command):
         @param sub_process: C{subprocess.Popen} object
         @type sub_process: Popen | None
         """
-        # Further constrain the name instance variable in the Executable class.
+        # Constrain the name instance variable in the Executable class.
 
         if not name:
             raise Exception(
@@ -1288,7 +1288,7 @@ class RunnableStepChangeMode(RunnableStep):
             if int_mode_directory is not None:
                 os.chmod(directory_path, int_mode_directory)
             # Change the mode of each directory name.
-            # This is redundant, because each sub-directory will also appear as a file_path once.
+            # This is redundant, because each subdirectory will also appear as a file_path once.
             # if int_mode_directory is not None:
             #     for directory_name in directory_name_list:
             #         os.chmod(os.path.join(file_path, directory_name), int_mode_directory)

@@ -128,7 +128,7 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--input-path',
     dest='input_path',
-    help='file path to a CADD format bgzip cpmpressed input file',
+    help='file path to a CADD format bgzip compressed input file',
     required=True)
 
 argument_parser.add_argument(

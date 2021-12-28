@@ -62,9 +62,9 @@ class FilePathAlign(AlignerFilePathAlign):
 class Hisat2(Aligner):
     """The C{bsf.analyses.hisat.Hisat2} class represents the logic to run a (short read) aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
     @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
     @type prefix: str
     @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
         that should be retained by Picard MergeBamAlignment
@@ -122,11 +122,11 @@ class Hisat2(Aligner):
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
-        """Get a C{FilePathAlign} object from this or a sub-class.
+        """Get a C{FilePathAlign} object from this or a subclass.
 
         @param paired_reads_name: C{bsf.ngs.PairedReads.name}
         @type paired_reads_name: str
-        @return: C{FilePathAlign} or sub-class object
+        @return: C{FilePathAlign} or subclass object
         @rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))

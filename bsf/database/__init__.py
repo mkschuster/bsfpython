@@ -372,7 +372,7 @@ class SQLiteTableInfoAdaptor(object):
 class DatabaseAdaptor(object):
     """C{bsf.database.DatabaseAdaptor} class representing as a super-class of object-specific table adaptors.
 
-    Instance variables should be overridden in sub-classes.
+    Instance variables should be overridden in subclasses.
 
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: DatabaseConnection
@@ -554,7 +554,7 @@ class DatabaseAdaptor(object):
         @type table_name_old: str
         @param table_name_new: New table name, defaults to table_name_altered.
         @type table_name_new: str
-        @return: SQL I{ALTER TABLE table RENAME TO table_name} statement
+        @return: SQL I{ALTER TABLE <table> RENAME TO <table_name>} statement
         @rtype: str
         """
         if not table_name_old:

@@ -37,9 +37,9 @@ class AnnotationSheet(object):
 
     This class is a bit unusual in that values of instance variables around the
     C{csv.DictReader} and C{csv.DictWriter} classes can be initialised from a corresponding set of class variables.
-    Therefore, sub-classes with fixed defaults can be defined, while generic objects can be initialised directly
+    Therefore, subclasses with fixed defaults can be defined, while generic objects can be initialised directly
     via the C{bsf.annotation.AnnotationSheet.__init__} method without the need to create a
-    C{bsf.annotation.AnnotationSheet} sub-class in code.
+    C{bsf.annotation.AnnotationSheet} subclass in code.
 
     @cvar _field_names: Python C{list} if field (column) names
     @type _field_names: list[str]
@@ -107,7 +107,7 @@ class AnnotationSheet(object):
     def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
         """Check for a column name and return its associated value, if any.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -141,7 +141,7 @@ class AnnotationSheet(object):
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only alphanumeric characters.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -175,7 +175,7 @@ class AnnotationSheet(object):
 
         Neither the column nor the value needs existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -195,7 +195,7 @@ class AnnotationSheet(object):
 
         The column, but not the value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -217,7 +217,7 @@ class AnnotationSheet(object):
 
         Both, the column and value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -240,7 +240,7 @@ class AnnotationSheet(object):
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only numeric characters.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -274,7 +274,7 @@ class AnnotationSheet(object):
 
         Neither the column nor the value needs existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -296,7 +296,7 @@ class AnnotationSheet(object):
 
         The column, but not the value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -318,7 +318,7 @@ class AnnotationSheet(object):
 
         Both, the column and value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -341,7 +341,7 @@ class AnnotationSheet(object):
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only valid IUPAC sequence characters.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -376,7 +376,7 @@ class AnnotationSheet(object):
 
         Neither the column nor the value needs existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -398,7 +398,7 @@ class AnnotationSheet(object):
 
         The column, but not the value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -420,7 +420,7 @@ class AnnotationSheet(object):
 
         Both, the column and value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -443,7 +443,7 @@ class AnnotationSheet(object):
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only valid IUPAC ambiguity sequence characters.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -478,7 +478,7 @@ class AnnotationSheet(object):
 
         Neither the column nor the value needs existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -500,7 +500,7 @@ class AnnotationSheet(object):
 
         The column, but not the value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -522,7 +522,7 @@ class AnnotationSheet(object):
 
         Both, the column and value need existing.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -545,7 +545,7 @@ class AnnotationSheet(object):
         Check that the particular column name key exists in the row dictionary and that
         its associated value has no leading underscore.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -573,7 +573,7 @@ class AnnotationSheet(object):
         Check that the particular column name key exists in the row dictionary and that
         its associated value has no trailing underscore.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -601,7 +601,7 @@ class AnnotationSheet(object):
         Check that the particular column name key exists in the row dictionary and that
         its associated value has not multiple underscore adjacent to each other.
 
-        @param row_number: Row number for warning messages
+        @param row_number: The row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str]
@@ -870,7 +870,7 @@ class AnnotationSheet(object):
     def sort(self):
         """Sort a C{bsf.annotation.AnnotationSheet}.
 
-        This method has to implemented in the sub-class,
+        This method has to implemented in the subclass,
         as it requires information about field-specific sorting.
         """
         warnings.warn(
@@ -899,7 +899,7 @@ class AnnotationSheet(object):
         return messages
 
     def adjust_field_names(self):
-        """Adjust the Python C{list} of Python C{str} field names to keys used in Python C{dict} (row) objects.
+        """Adjust the Python C{list} of Python C{str} field names to the keys used in Python C{dict} (row) objects.
         """
         field_names = list()
 

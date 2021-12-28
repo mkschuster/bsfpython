@@ -16,10 +16,10 @@ development of genomic medicine in [Vienna](http://en.wikipedia.org/wiki/Vienna)
 This Python library and the accompanying scripts are used for day-to-day analysis of
 next-generation sequencing data sets. The library consists of two main functions.
 
-The `Analysis` class and its sub-classes implement the logic required for submitting processes on a
+The `Analysis` class and its subclasses implement the logic required for submitting processes on a
 cluster login node.
 
-The `Runnable` class and its sub-classes implements the logic required to run processes on a
+The `Runnable` class and its subclasses implements the logic required to run processes on a
 cluster compute node via the common `bsf_runner.py` script.
 
 ## BSF Python General Configuration File
@@ -27,20 +27,20 @@ cluster compute node via the common `bsf_runner.py` script.
 General settings for the BSF Python library are configured via a `${HOME}/.bsfpython.ini` file
 in the user's home directory. This file is site-specific and its information allows for automatic
 discovery of raw (e.g. Illumina run folders) and pre-processed (e.g. de-multiplexed lanes and samples)
-NGS data. A template file [`template_bsfpython.ini`](doc/template_bsfpython.ini) can be found in the doc sub-directory. The template,
+NGS data. A template file [`template_bsfpython.ini`](doc/template_bsfpython.ini) can be found in the doc subdirectory. The template,
 which documents the configuration options and provides, as far as possible, sensible default settings,
 needs copying to `${HOME}/.bsfpython.ini` before editing accordingly.
 
 ## Analysis
 
 The BSF `Analysis` is central to the BSF pipeline infrastructure. It encapsulates both, logic and data
-for a multi-step analysis procedure. Specific Analysis objects are available, tailored to recurring
+for a multistep analysis procedure. Specific Analysis objects are available, tailored to recurring
 tasks.
 
 ## Analysis Configuration File
 
 BSF Analysis objects are initialised and configured via UNIX-style configuration (*.ini) files.
-Templates for these files are again provided in the doc sub-directory, document configuration options and
+Templates for these files are again provided in the doc subdirectory, document configuration options and
 provide, as far as possible, sensible default settings. Generally, only few configuration
 options need filling in. Most importantly, the location of sample annotation sheets and, depending on the
 analysis type, sample comparison sheets, need to be specified.
