@@ -27,6 +27,7 @@
       <w>cuffquant</w>
       <w>cvar</w>
       <w>dbsnp</w>
+      <w>deflater</w>
       <w>demultiplexing</w>
       <w>drms</w>
       <w>ensembl</w>
@@ -51,6 +52,7 @@
       <w>hapmap</w>
       <w>illumina</w>
       <w>indel</w>
+      <w>inflater</w>
       <w>introns</w>
       <w>isoform</w>
       <w>isoforms</w>
@@ -85,6 +87,7 @@
       <w>unstranded</w>
       <w>vqslod</w>
       <w>vqsr</w>
+      <w>weakref</w>
     </words>
   </dictionary>
 </component>
