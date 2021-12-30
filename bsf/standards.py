@@ -1028,6 +1028,17 @@ class StandardFilePath(BaseSection):
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='public_html'))
 
     @classmethod
+    def get_template_documents(cls, absolute=True):
+        """Get the template documents directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Template documents directory path
+        @rtype: str | None
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='template_documents'))
+
+    @classmethod
     def get_template_scripts(cls, absolute=True):
         """Get the template script directory path.
 

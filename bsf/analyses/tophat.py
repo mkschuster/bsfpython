@@ -141,6 +141,9 @@ class Tophat2(Aligner):
             output_directory=None,
             project_directory=None,
             genome_directory=None,
+            report_style_path=None,
+            report_header_path=None,
+            report_footer_path=None,
             e_mail=None,
             debug=0,
             stage_list=None,
@@ -174,6 +177,12 @@ class Tophat2(Aligner):
         @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
             normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
+        @param report_style_path: Report CSS file path
+        @type report_style_path: str | None
+        @param report_header_path: Report header HTML file path
+        @type report_header_path: str | None
+        @param report_footer_path: Report footer HTML file path
+        @type report_footer_path: str | None
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
@@ -213,6 +222,9 @@ class Tophat2(Aligner):
             output_directory=output_directory,
             project_directory=project_directory,
             genome_directory=genome_directory,
+            report_style_path=report_style_path,
+            report_header_path=report_header_path,
+            report_footer_path=report_footer_path,
             e_mail=e_mail,
             debug=debug,
             stage_list=stage_list,

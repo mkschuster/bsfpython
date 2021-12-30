@@ -78,6 +78,12 @@ class Analysis(object):
     @type project_directory: str | None
     @ivar genome_directory: Genome-specific directory
     @type genome_directory: str | None
+    @ivar report_style_path: Report CSS file path
+    @type report_style_path: str | None
+    @ivar report_header_path: Report header HTML file path
+    @type report_header_path: str | None
+    @ivar report_footer_path: Report footer HTML file path
+    @type report_footer_path: str | None
     @ivar sas_file: Sample Annotation Sheet (SAS) file path
     @type sas_file: str | None
     @ivar sas_prefix: A prefix to columns in a Sample Annotation Sheet
@@ -149,6 +155,9 @@ class Analysis(object):
             output_directory=None,
             project_directory=None,
             genome_directory=None,
+            report_style_path=None,
+            report_header_path=None,
+            report_footer_path=None,
             sas_file=None,
             sas_prefix=None,
             e_mail=None,
@@ -177,6 +186,12 @@ class Analysis(object):
         @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
             normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str | None
+        @param report_style_path: Report CSS file path
+        @type report_style_path: str | None
+        @param report_header_path: Report header HTML file path
+        @type report_header_path: str | None
+        @param report_footer_path: Report footer HTML file path
+        @type report_footer_path: str | None
         @param sas_file: Sample Annotation Sheet (SAS) file path
         @type sas_file: str | None
         @param sas_prefix: A prefix to columns in a Sample Annotation Sheet
@@ -210,6 +225,9 @@ class Analysis(object):
         self.output_directory = output_directory
         self.project_directory = project_directory
         self.genome_directory = genome_directory
+        self.report_style_path = report_style_path
+        self.report_header_path = report_header_path
+        self.report_footer_path = report_footer_path
         self.sas_file = sas_file
         self.sas_prefix = sas_prefix
         self.e_mail = e_mail
@@ -256,6 +274,9 @@ class Analysis(object):
         str_list.append('{}  input_directory: {!r}\n'.format(indent, self.input_directory))
         str_list.append('{}  output_directory: {!r}\n'.format(indent, self.output_directory))
         str_list.append('{}  genome_directory: {!r}\n'.format(indent, self.genome_directory))
+        str_list.append('{}  report_style_path: {!r}\n'.format(indent, self.report_style_path))
+        str_list.append('{}  report_header_path: {!r}\n'.format(indent, self.report_header_path))
+        str_list.append('{}  report_footer_path: {!r}\n'.format(indent, self.report_footer_path))
         str_list.append('{}  sas_file: {!r}\n'.format(indent, self.sas_file))
         str_list.append('{}  sas_prefix: {!r}\n'.format(indent, self.sas_prefix))
         str_list.append('{}  e_mail: {!r}\n'.format(indent, self.e_mail))
@@ -481,6 +502,18 @@ class Analysis(object):
         if configuration.config_parser.has_option(section=section, option=option):
             self.genome_version = configuration.config_parser.get(section=section, option=option)
 
+        option = 'report_style_path'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.report_style_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'report_header_path'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.report_header_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'report_footer_path'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.report_footer_path = configuration.config_parser.get(section=section, option=option)
+
         option = 'sas_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.sas_file = configuration.config_parser.get(section=section, option=option)
@@ -673,6 +706,21 @@ class Analysis(object):
                 if exception.errno != errno.EEXIST:
                     raise
 
+        if self.report_style_path:
+            self.report_style_path = self.configuration.get_absolute_path(
+                file_path=self.report_style_path,
+                default_path=StandardFilePath.get_template_documents(absolute=True))
+
+        if self.report_header_path:
+            self.report_header_path = self.configuration.get_absolute_path(
+                file_path=self.report_header_path,
+                default_path=StandardFilePath.get_template_documents(absolute=True))
+
+        if self.report_footer_path:
+            self.report_footer_path = self.configuration.get_absolute_path(
+                file_path=self.report_footer_path,
+                default_path=StandardFilePath.get_template_documents(absolute=True))
+
         if not self.e_mail:
             self.e_mail = Operator.get_e_mail()
             if not self.e_mail:
@@ -712,27 +760,6 @@ class Analysis(object):
             UserWarning)
 
         return
-
-    # @staticmethod
-    # def escape_url(url):
-    #     url = url.replace(' ', '%20')
-    #     url = url.replace('&', '%26')
-    #     url = url.replace('+', '%2B')
-    #     url = url.replace(';', '%3B')
-    #     url = url.replace('=', '%3D')
-    #     url = url.replace('?', '%3F')
-    #     return url
-    #
-    # @staticmethod
-    # def escape_html(html):
-    #     html = html.replace('&', '&amp;')
-    #     html = html.replace('<', '&lt;')
-    #     html = html.replace('>', '&gt;')
-    #     return html
-    #
-    # @staticmethod
-    # def escape_space(text):
-    #     return text.replace(' ', '%20')
 
     @staticmethod
     def get_html_anchor(prefix, suffix, text):
@@ -923,31 +950,40 @@ class Analysis(object):
         str_list.append('<html xmlns="http://www.w3.org/1999/xhtml">\n')
         str_list.append('<head>\n')
         str_list.append('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
-        # str_list.append('<link rel="stylesheet" href="/' +
-        #                 urllib.parse.quote(string=URL.get_relative_projects()) +
-        #                 '/bsfpython.css" type="text/css" />\n')
         str_list.append('<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n')
         str_list.append('<meta name="DC.Creator" content="' + html.escape(s=creator, quote=True) + '" />\n')
         str_list.append('<meta name="DC.Date" content="' + datetime.datetime.now().isoformat() + '" />\n')
         str_list.append('<meta name="DC.Source" content="' + html.escape(s=source, quote=True) + '" />\n')
         str_list.append('<meta name="DC.Title" content="' + html.escape(s=title, quote=True) + '" />\n')
         str_list.append('<style type="text/css">\n')
-        str_list.append('  .left    { text-align: left; }\n')
-        str_list.append('  .right   { text-align: right; }\n')
-        str_list.append('  .center  { text-align: center; }\n')
-        str_list.append('  .justify { text-align: justify; }\n')
-        str_list.append('  .start   { text-align: start; }\n')
-        str_list.append('  .end     { text-align: end; }\n')
-        str_list.append('  body { font-family: sans-serif; }\n')
-        str_list.append('  h1 { color: #40B9D4; }\n')
-        str_list.append('  a { color: #40B9D4; text-decoration: none; }\n')
-        str_list.append('  a:hover, a:focus { color: #2a6496; text-decoration: underline; }\n')
+
+        # If available, import a custom CSS document.
+        if self.report_style_path:
+            with open(file=self.report_style_path, mode='rt') as text_io:
+                str_list.extend(text_io)
+        else:
+            str_list.append('  .left    { text-align: left; }\n')
+            str_list.append('  .right   { text-align: right; }\n')
+            str_list.append('  .center  { text-align: center; }\n')
+            str_list.append('  .justify { text-align: justify; }\n')
+            str_list.append('  .start   { text-align: start; }\n')
+            str_list.append('  .end     { text-align: end; }\n')
+            str_list.append('  body { font-family: sans-serif; }\n')
+            str_list.append('  h1 { color: #40B9D4; }\n')
+            str_list.append('  a { color: #40B9D4; text-decoration: none; }\n')
+            str_list.append('  a:hover, a:focus { color: #2A6496; text-decoration: underline; }\n')
+
         str_list.append('</style>\n')
         str_list.append('<title>' + html.escape(s=title, quote=True) + '</title>\n')
         str_list.append('</head>\n')
         str_list.append('\n')
         str_list.append('<body>\n')
         str_list.append('\n')
+
+        # Include additional lines from an optional, Analysis-specific report header template.
+        if self.report_header_path:
+            with open(file=self.report_header_path, mode='rt') as text_io:
+                str_list.extend(text_io)
 
         return str_list
 
@@ -996,6 +1032,11 @@ class Analysis(object):
             title = ' '.join((self.project_name, self.name))
 
         str_list: List[str] = list()
+
+        # Include additional lines from an optional, Analysis-specific report footer template.
+        if self.report_footer_path:
+            with open(file=self.report_footer_path, mode='rt') as text_io:
+                str_list.extend(text_io)
 
         str_list.append('<hr class="footer" />\n')
         str_list.append('<p class="footer">\n')
@@ -1081,7 +1122,9 @@ class Analysis(object):
                 creator=creator,
                 source=source,
                 title=title))
+
         str_list.extend(content)
+
         str_list.extend(
             self.get_html_footer(
                 contact=contact,
@@ -1145,8 +1188,8 @@ class Analysis(object):
 
         with open(
                 file=os.path.join(self.genome_directory, '_'.join((prefix, 'report.html'))),
-                mode='wt') as output_file:
-            output_file.writelines(
+                mode='wt') as text_io:
+            text_io.writelines(
                 self.get_html_report(
                     content=content,
                     strict=strict,
@@ -1399,8 +1442,8 @@ class Analysis(object):
 
         with open(
                 file=os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_hub))),
-                mode='wt') as output_file:
-            output_file.writelines(str_list)
+                mode='wt') as text_io:
+            text_io.writelines(str_list)
 
         return
 
@@ -1422,8 +1465,8 @@ class Analysis(object):
 
         if os.path.exists(file_path):
             genome_version = None
-            with open(file=file_path, mode='rt') as input_file:
-                for line_str in input_file:
+            with open(file=file_path, mode='rt') as text_io:
+                for line_str in text_io:
                     line_str = line_str.strip()
                     if not line_str:
                         continue
@@ -1458,8 +1501,8 @@ class Analysis(object):
             str_list.append('trackDb ' + genome_version_dict[genome_version] + '\n')
             str_list.append('\n')
 
-        with open(file=file_path, mode='wt') as output_file:
-            output_file.writelines(str_list)
+        with open(file=file_path, mode='wt') as text_io:
+            text_io.writelines(str_list)
 
         return
 
@@ -1476,8 +1519,8 @@ class Analysis(object):
 
         with open(
                 file=os.path.join(self.genome_directory, '_'.join((prefix, self.ucsc_name_tracks))),
-                mode='wt') as output_file:
-            output_file.writelines(content)
+                mode='wt') as text_io:
+            text_io.writelines(content)
 
         return
 
@@ -1519,8 +1562,8 @@ class Analysis(object):
             minimum = None
             maximum = None
 
-            with open(file=file_path_absolute, mode='rt') as file_handle:
-                for line in file_handle:
+            with open(file=file_path_absolute, mode='rt') as text_io:
+                for line in text_io:
                     if line.startswith('min:'):
                         line_list = line.split()
                         minimum = line_list[1].strip()
