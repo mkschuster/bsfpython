@@ -1501,9 +1501,9 @@ class Tuxedo(Analysis):
                 executable_process_tophat.dependencies.append(executable_run_tophat.name)
 
                 # TODO: Switch from an external Bash script to a set of Runnable and RunnableStep objects.
-                # Since the Bash script includes Perl code to reset the BED score field to 0, rather than
-                # re-scale it properly, it would be good to write a new bsf.runnables.process_tophat module
-                # to implement this in Python code.
+                #  Since the Bash script includes Perl code to reset the BED score field to 0, rather than
+                #  re-scale it properly, it would be good to write a new bsf.runnables.process_tophat module
+                #  to implement this in Python code.
 
                 runnable_step = RunnableStep(
                     name='process_tophat',
@@ -2121,8 +2121,8 @@ class Tuxedo(Analysis):
 
                     # Write Monocle annotation.
                     # FIXME: ReadGroup versus Sample level
-                    # Depending on the replicate_grouping instance variable, the abundance file can be on
-                    # the read_group or sample level, while Monocle annotation will always be on the sample level.
+                    #  Depending on the replicate_grouping instance variable, the abundance file can be on
+                    #  the read_group or sample level, while Monocle annotation will always be on the sample level.
                     monocle_row_dict: Dict[str, str] = {
                         'file': file_path_run_cuffquant.abundances,
                         # 'sample_name' is used by Monocle in the plot_cell_clusters() function internally.
@@ -2704,9 +2704,9 @@ class Tuxedo(Analysis):
                         text='Isoforms (Symbols)'))
                     str_list.append('</td>\n')
 
-                    # TODO: The aligned BAM and BAI files and the unaligned BAM file are currently non standard.
-                    # The files have a 'rnaseq_tophat_' prefix, but are in the 'rnaseq_cufflinks_' directory.
-                    # This will be resolved when the process_tophat step gets re-engineered.
+                    # TODO: The aligned BAM and BAI files and the unaligned BAM file are currently non-standard.
+                    #  The files have a 'rnaseq_tophat_' prefix, but are in the 'rnaseq_cufflinks_' directory.
+                    #  This will be resolved when the process_tophat step gets re-engineered.
 
                     # Aligned BAM file
                     str_list.append('<td class="center">')
@@ -3460,7 +3460,7 @@ class Tuxedo(Analysis):
                     # Common track settings
                     str_list.append('track ' + sample.name + '_coverage\n')
                     # TODO: The bigWig type must declare the expected signal range.
-                    # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
+                    #  The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
                     str_list.append('type bigWig\n')
                     str_list.append('shortLabel ' + sample.name + '_coverage\n')
                     str_list.append('longLabel ' + sample.name + ' TopHat RNA-seq alignment coverage\n')
@@ -4034,7 +4034,7 @@ class DESeq(Analysis):
                     runnable_step.add_option_long(key='padj-threshold', value=str(self.threshold_padj))
 
                 if self.threshold_log2fc is not None:
-                    runnable_step.add_option_long(key='lfc-threshold', value=str(self.threshold_log2fc))
+                    runnable_step.add_option_long(key='l2fc-threshold', value=str(self.threshold_log2fc))
 
                 runnable_step = RunnableStep(
                     name='enrichr',
@@ -4042,6 +4042,12 @@ class DESeq(Analysis):
                 runnable_results.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_option_long(key='design-name', value=design_name)
+
+                if self.threshold_padj is not None:
+                    runnable_step.add_option_long(key='padj-threshold', value=str(self.threshold_padj))
+
+                if self.threshold_log2fc is not None:
+                    runnable_step.add_option_long(key='l2fc-threshold', value=str(self.threshold_log2fc))
 
                 runnable_step = RunnableStep(
                     name='heatmap',
