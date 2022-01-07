@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Illumina Run Folder Analysis module.
-
-A package of classes and methods supporting analyses to archive and restore Illumina Run Folders.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -25,6 +22,10 @@ A package of classes and methods supporting analyses to archive and restore Illu
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Illumina Run Folder Analysis module.
+
+A package of classes and methods supporting analyses to archive and restore Illumina Run Folders.
+"""
 import os
 from typing import List
 

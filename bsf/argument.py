@@ -1,16 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Argument module.
-
-A package of classes and methods to model C{bsf.process.Command} arguments, i.e.
-C{bsf.argument.SwitchLong} (--key),
-C{bsf.argument.SwitchShort} (-k),
-C{bsf.argument.OptionLong} (--key value),
-C{bsf.argument.OptionShort} (-k value),
-C{bsf.argument.OptionPair} (key=value),
-C{bsf.argument.OptionPairLong} (--key=value) and
-C{bsf.argument.OptionPairShort} (-key=value).
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,6 +22,17 @@ C{bsf.argument.OptionPairShort} (-key=value).
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Argument module.
+
+A package of classes and methods to model C{bsf.process.Command} arguments, i.e.
+C{bsf.argument.SwitchLong} (--key),
+C{bsf.argument.SwitchShort} (-k),
+C{bsf.argument.OptionLong} (--key value),
+C{bsf.argument.OptionShort} (-k value),
+C{bsf.argument.OptionPair} (key=value),
+C{bsf.argument.OptionPairLong} (--key=value) and
+C{bsf.argument.OptionPairShort} (-key=value).
+"""
 import sys
 
 from typing import List, Type

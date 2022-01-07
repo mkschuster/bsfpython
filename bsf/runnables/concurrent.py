@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Generic ConcurrentRunnable module.
-
-A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConcurrentRunnable}.
-Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
-restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -27,6 +22,12 @@ restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Generic ConcurrentRunnable module.
+
+A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConcurrentRunnable}.
+Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
+restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
+"""
 import os
 
 from bsf.procedure import ConcurrentRunnable

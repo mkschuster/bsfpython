@@ -1,15 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""NGS Collection module.
-
-A package of classes and methods to prune a sample annotation sheet.
-
-All Reads objects not associated with (FASTQ or BAM) files get deleted from their corresponding PairedReads objects.
-A Reads object is retained, if a file with a size equal to or larger than the configured minimum file size or
-an (empty) status file (*.truncated) exists in the file system. Files smaller than the configured minimum file size
-are automatically deleted.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -31,6 +23,15 @@ are automatically deleted.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""NGS Collection module.
+
+A package of classes and methods to prune a sample annotation sheet.
+
+All Reads objects not associated with (FASTQ or BAM) files get deleted from their corresponding PairedReads objects.
+A Reads object is retained, if a file with a size equal to or larger than the configured minimum file size or
+an (empty) status file (*.truncated) exists in the file system. Files smaller than the configured minimum file size
+are automatically deleted.
+"""
 import os
 import sys
 from argparse import ArgumentParser

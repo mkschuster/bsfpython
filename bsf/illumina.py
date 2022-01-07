@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Illumina module.
-
-A package of classes and methods modelling data directories and files
-specific for Illumina sequencing systems.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -26,6 +22,11 @@ specific for Illumina sequencing systems.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Illumina module.
+
+A package of classes and methods modelling data directories and files
+specific for Illumina sequencing systems.
+"""
 import datetime
 import os
 import warnings

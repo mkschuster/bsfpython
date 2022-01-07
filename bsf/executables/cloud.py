@@ -1,11 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Microsoft Azure cloud module.
-
-A package of classes and functions to transfer files to and from the
-Microsoft Azure Storage Blob Service.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -27,6 +23,11 @@ Microsoft Azure Storage Blob Service.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Microsoft Azure cloud module.
+
+A package of classes and functions to transfer files to and from the
+Microsoft Azure Storage Blob Service.
+"""
 from argparse import ArgumentParser
 from subprocess import Popen
 

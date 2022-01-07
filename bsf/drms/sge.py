@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Son of Grid Engine (SGE) DRMS module.
-
-A package of methods supporting the Son of Grid Engine (SGE) system as
-Distributed Resource Management System (DRMS) module
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -26,6 +22,11 @@ Distributed Resource Management System (DRMS) module
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Son of Grid Engine (SGE) DRMS module.
+
+A package of methods supporting the Son of Grid Engine (SGE) system as
+Distributed Resource Management System (DRMS) module
+"""
 import errno
 import os
 import re

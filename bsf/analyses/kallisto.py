@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Kallisto Analysis module.
-
-A package of classes and methods supporting Kallisto analyses.
-See https://pachterlab.github.io/kallisto/manual
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -26,6 +22,11 @@ See https://pachterlab.github.io/kallisto/manual
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Kallisto Analysis module.
+
+A package of classes and methods supporting Kallisto analyses.
+See https://pachterlab.github.io/kallisto/manual
+"""
 import os
 import sys
 import warnings

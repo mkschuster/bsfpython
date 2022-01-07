@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Connector module.
-
-A package of classes and methods modelling inter-process connectors.
-"""
-
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -26,6 +22,10 @@ A package of classes and methods modelling inter-process connectors.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Connector module.
+
+A package of classes and methods modelling inter-process connectors.
+"""
 from threading import Thread
 
 __all__ = \

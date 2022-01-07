@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-"""NGS module.
-
-A package of classes and methods modelling next-generation sequencing (NGS) data directories and files.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -25,6 +22,10 @@ A package of classes and methods modelling next-generation sequencing (NGS) data
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""NGS module.
+
+A package of classes and methods modelling next-generation sequencing (NGS) data directories and files.
+"""
 import logging
 import os
 import re

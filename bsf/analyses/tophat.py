@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Tophat Analysis module.
-
-A package of classes and methods supporting the Tophat aligner.
-"""
-#  Copyright 2013 - 2021 Michael K. Schuster
+#
+#  Copyright 2013 - 2022 Michael K. Schuster
 #
 #  Biomedical Sequencing Facility (BSF), part of the genomics core facility
 #  of the Research Center for Molecular Medicine (CeMM) of the
@@ -25,12 +22,17 @@ A package of classes and methods supporting the Tophat aligner.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+"""Tophat Analysis module.
+
+A package of classes and methods supporting the Tophat aligner.
+"""
 import os
 
 from bsf.analyses.aligner import Aligner, \
     FilePathAlign as AlignerFilePathAlign, \
     FilePathSample
 from bsf.connector import ConnectorFile
+from bsf.executables.bed import RunnableStepRescaleScore
 from bsf.procedure import ConcurrentRunnable
 from bsf.process import RunnableStep, RunnableStepLink
 from bsf.standards import Configuration, Index, StandardFilePath, Transcriptome
@@ -39,7 +41,6 @@ from bsf.standards import Configuration, Index, StandardFilePath, Transcriptome
 class FilePathAlign(AlignerFilePathAlign):
     """The C{bsf.analyses.tophat.FilePathAlign} class models file paths at the alignment stage.
 
-    Attributes:
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
     @type aligned_sam: str
     @ivar unaligned_bam: Unaligned binary alignment map (BAM) file path
@@ -48,6 +49,24 @@ class FilePathAlign(AlignerFilePathAlign):
     @type align_summary_txt_link_source: str
     @ivar align_summary_txt_link_target: Alignment summary link target
     @type align_summary_txt_link_target: str
+    @ivar deletions_raw: Raw Tophat2 deletions (BED)
+    @type deletions_raw: str
+    @ivar deletions_bed: Deletions (BED)
+    @type deletions_bed: str
+    @ivar deletions_bb: Deletions (bigBED)
+    @type deletions_bb: str
+    @ivar insertions_raw: Raw Tophat2 insertions (BED)
+    @type insertions_raw: str
+    @ivar insertions_bed: Insertions (BED)
+    @type insertions_bed: str
+    @ivar insertions_bb: Insertions (bigBED)
+    @type insertions_bb: str
+    @ivar junctions_raw: Raw Tophat2 junctions (BED)
+    @type junctions_raw: str
+    @ivar junctions_bed: Junctions (BED)
+    @type junctions_bed: str
+    @ivar junctions_bb: Junctions (bigBED)
+    @type junctions_bb: str
     """
 
     def __init__(self, prefix):
@@ -63,8 +82,20 @@ class FilePathAlign(AlignerFilePathAlign):
 
         self.unaligned_bam = os.path.join(prefix, 'unmapped.bam')
 
-        self.align_summary_txt_link_source = os.path.join(prefix, 'align_summary.txt')
+        self.align_summary_txt_link_source = 'align_summary.txt'
         self.align_summary_txt_link_target = os.path.join(prefix, '_'.join((prefix, 'align_summary.txt')))
+
+        self.deletions_raw = os.path.join(prefix, 'deletions.bed')
+        self.deletions_bed = os.path.join(prefix, '_'.join((prefix, 'deletions.bed')))
+        self.deletions_bb = os.path.join(prefix, '_'.join((prefix, 'deletions.bb')))
+
+        self.insertions_raw = os.path.join(prefix, 'insertions.bed')
+        self.insertions_bed = os.path.join(prefix, '_'.join((prefix, 'insertions.bed')))
+        self.insertions_bb = os.path.join(prefix, '_'.join((prefix, 'insertions.bb')))
+
+        self.junctions_raw = os.path.join(prefix, 'junctions.bed')
+        self.junctions_bed = os.path.join(prefix, '_'.join((prefix, 'junctions.bed')))
+        self.junctions_bb = os.path.join(prefix, '_'.join((prefix, 'junctions.bb')))
 
         return
 
@@ -378,11 +409,80 @@ class Tophat2(Aligner):
 
         # Link the align_summary_txt file.
 
-        runnable_step = RunnableStepLink(
-            name='link_align_summary_txt',
-            source_path=file_path_align.align_summary_txt_link_source,
-            target_path=file_path_align.align_summary_txt_link_target)
-        runnable_align.add_runnable_step_epilogue(runnable_step=runnable_step)
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStepLink(
+                name='link_align_summary_txt',
+                source_path=file_path_align.align_summary_txt_link_source,
+                target_path=file_path_align.align_summary_txt_link_target))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStepRescaleScore(
+                name='rescale_deletions',
+                file_path_old=file_path_align.deletions_raw,
+                file_path_new=file_path_align.deletions_bed,
+                keep_header_lines=False))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStep(
+                name='sort_deletions',
+                program='sortBed',
+                arguments=[file_path_align.deletions_bed, file_path_align.deletions_bed]))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStep(
+                name='bed_to_bb_deletions',
+                program='bedToBigBed',
+                arguments=[
+                    file_path_align.deletions_bed,
+                    StandardFilePath.get_resource_genome_fasta_index(genome_version=self.genome_version),
+                    file_path_align.deletions_bb],
+                obsolete_file_path_list=[file_path_align.deletions_bed]))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStepRescaleScore(
+                name='rescale_insertions',
+                file_path_old=file_path_align.insertions_raw,
+                file_path_new=file_path_align.insertions_bed,
+                keep_header_lines=False))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStep(
+                name='sort_insertions',
+                program='sortBed',
+                arguments=[file_path_align.insertions_bed, file_path_align.insertions_bed]))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStep(
+                name='bed_to_bb_insertions',
+                program='bedToBigBed',
+                arguments=[
+                    file_path_align.insertions_bed,
+                    StandardFilePath.get_resource_genome_fasta_index(genome_version=self.genome_version),
+                    file_path_align.insertions_bb],
+                obsolete_file_path_list=[file_path_align.insertions_bed]))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStepRescaleScore(
+                name='rescale_junctions',
+                file_path_old=file_path_align.junctions_raw,
+                file_path_new=file_path_align.junctions_bed,
+                keep_header_lines=False))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStep(
+                name='sort_junctions',
+                program='sortBed',
+                arguments=[file_path_align.junctions_bed, file_path_align.junctions_bed]))
+
+        runnable_align.add_runnable_step_epilogue(
+            runnable_step=RunnableStep(
+                name='bed_to_bb_junctions',
+                program='bedToBigBed',
+                arguments=[
+                    file_path_align.junctions_bed,
+                    StandardFilePath.get_resource_genome_fasta_index(genome_version=self.genome_version),
+                    file_path_align.junctions_bb],
+                obsolete_file_path_list=[file_path_align.junctions_bed]))
 
         return
 
