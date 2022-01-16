@@ -123,7 +123,6 @@ else:
     print(analysis.name)
     print('Project name:      ', analysis.project_name)
     print('Input directory:   ', analysis.input_directory)
-    print('Output directory:  ', analysis.output_directory)
     print('Project directory: ', analysis.project_directory)
     print('Genome directory:  ', analysis.genome_directory)
 

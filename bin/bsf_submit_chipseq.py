@@ -73,7 +73,6 @@ print(analysis.name)
 print('Project name:      ', analysis.project_name)
 print('Genome version:    ', analysis.genome_version)
 print('Input directory:   ', analysis.input_directory)
-print('Output directory:  ', analysis.output_directory)
 print('Project directory: ', analysis.project_directory)
 print('Genome directory:  ', analysis.genome_directory)
 
