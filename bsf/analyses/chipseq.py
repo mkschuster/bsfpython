@@ -2436,291 +2436,34 @@ class ChIPSeq(Analysis):
                 factor_str += ' ' + factor + '=' + factor
 
             # 1. Composite track "alignment" (BAM)
-
             str_list_1: List[str] = list()
 
-            # Common track settings
-            str_list_1.append('track alignment\n')
-            str_list_1.append('type bam\n')
-            str_list_1.append('shortLabel QC Alignment\n')
-            str_list_1.append('longLabel ChIP Read Alignment\n')
-            # str_list_1.append('html ...\n')
-            str_list_1.append('visibility hide\n')
-            # Common optional track settings
-            # bam/cram - Compressed Sequence Alignment track settings
-            # Composite track settings
-            str_list_1.append('compositeTrack on\n')
-            str_list_1.append('allButtonPair on\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_1.append('centerLabelsDense on\n')
-            # str_list_1.append('dragAndDrop subTracks\n')
-            str_list_1.append('\n')
-
             # 2. Composite track "coverage" (bigWig)
-
             str_list_2: List[str] = list()
 
-            # Common track settings
-            str_list_2.append('track coverage\n')
-            str_list_2.append('type bigWig\n')
-            str_list_2.append('shortLabel QC Coverage\n')
-            str_list_2.append('longLabel Normalised ChIP Read Alignment Coverage\n')
-            # str_list_2.append('html ...\n')
-            str_list_2.append('visibility hide\n')
-            # Common optional track settings
-            # bigWig - Signal graphing track settings
-            str_list_2.append('alwaysZero off\n')
-            str_list_2.append('autoScale off\n')
-            str_list_2.append('graphTypeDefault bar\n')
-            str_list_2.append('maxHeightPixels 100:60:20\n')
-            # str_list_2.append('maxWindowToQuery 10000000\n')
-            str_list_2.append('smoothingWindow 5\n')
-            # str_list_2.append('transformFunc NONE\n')
-            str_list_2.append('viewLimits 0:15\n')
-            str_list_2.append('viewLimitsMax 0:40\n')
-            str_list_2.append('windowingFunction maximum\n')
-            # str_list_2.append('yLineMark <#>\n')
-            # str_list_2.append('yLineOnOff on \n')
-            # str_list_2.append('gridDefault on\n')
-            # Composite track settings
-            str_list_2.append('compositeTrack on\n')
-            str_list_2.append('allButtonPair on\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_2.append('centerLabelsDense on\n')
-            # str_list_2.append('dragAndDrop subTracks\n')
-            str_list_2.append('\n')
-
             # 3. Composite track "background" (bigWig)
-
             str_list_3: List[str] = list()
 
-            # Common track settings
-            str_list_3.append('track background\n')
-            str_list_3.append('type bigWig\n')
-            str_list_3.append('shortLabel QC Background\n')
-            str_list_3.append('longLabel ChIP Background Signal\n')
-            # str_list_3.append('html ...\n')
-            str_list_3.append('visibility hide\n')
-            # Common optional track settings
-            # bigWig - Signal graphing track settings
-            str_list_3.append('alwaysZero off\n')
-            str_list_3.append('autoScale off\n')
-            str_list_3.append('graphTypeDefault bar\n')
-            str_list_3.append('maxHeightPixels 100:60:20\n')
-            # str_list_3.append('maxWindowToQuery 10000000\n')
-            str_list_3.append('smoothingWindow 5\n')
-            # str_list_3.append('transformFunc NONE\n')
-            str_list_3.append('viewLimits 0:15\n')
-            str_list_3.append('viewLimitsMax 0:40\n')
-            str_list_3.append('windowingFunction maximum\n')
-            # str_list_3.append('yLineMark <#>\n')
-            # str_list_3.append('yLineOnOff on \n')
-            # str_list_3.append('gridDefault on\n')
-            # Composite track settings
-            str_list_3.append('compositeTrack on\n')
-            str_list_3.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_3.append('centerLabelsDense on\n')
-            # str_list_3.append('dragAndDrop subTracks\n')
-            str_list_3.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_3.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_3.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_3.append('sortOrder comparison=+ factor=+\n')
-            str_list_3.append('\n')
-
             # 4. Composite track "enrichment" (bigWig)
-
             str_list_4: List[str] = list()
 
-            # Common track settings
-            str_list_4.append('track enrichment\n')
-            str_list_4.append('type bigWig\n')
-            str_list_4.append('shortLabel QC Enrichment\n')
-            str_list_4.append('longLabel ChIP Enrichment Signal\n')
-            # str_list_4.append('html ...\n')
-            str_list_4.append('visibility hide\n')
-            # Common optional track settings
-            # bigWig - Signal graphing track settings
-            str_list_4.append('alwaysZero off\n')
-            str_list_4.append('autoScale off\n')
-            str_list_4.append('graphTypeDefault bar\n')
-            str_list_4.append('maxHeightPixels 100:60:20\n')
-            # str_list_4.append('maxWindowToQuery 10000000\n')
-            str_list_4.append('smoothingWindow 5\n')
-            # str_list_4.append('transformFunc NONE\n')
-            str_list_4.append('viewLimits 0:15\n')
-            str_list_4.append('viewLimitsMax 0:40\n')
-            str_list_4.append('windowingFunction maximum\n')
-            # str_list_4.append('yLineMark <#>\n')
-            # str_list_4.append('yLineOnOff on \n')
-            # str_list_4.append('gridDefault on\n')
-            # Composite track settings
-            str_list_4.append('compositeTrack on\n')
-            str_list_4.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_4.append('centerLabelsDense on\n')
-            # str_list_4.append('dragAndDrop subTracks\n')
-            str_list_4.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_4.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_4.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_4.append('sortOrder comparison=+ factor=+\n')
-            str_list_4.append('\n')
-
             # 5. Composite track "intensity" (bigWig)
-
             str_list_5: List[str] = list()
 
-            # Common track settings
-            str_list_5.append('track intensity\n')
-            str_list_5.append('type bigWig\n')
-            str_list_5.append('shortLabel ChIP Intensity\n')
-            str_list_5.append('longLabel ChIP Intensity\n')
-            # str_list_5.append('html ...\n')
-            str_list_5.append('visibility hide\n')
-            # Common optional track settings
-            # bigWig - Signal graphing track settings
-            str_list_5.append('alwaysZero off\n')
-            str_list_5.append('autoScale off\n')
-            str_list_5.append('graphTypeDefault bar\n')
-            str_list_5.append('maxHeightPixels 100:60:20\n')
-            # str_list_5.append('maxWindowToQuery 10000000\n')
-            str_list_5.append('smoothingWindow 5\n')
-            # str_list_5.append('transformFunc NONE\n')
-            str_list_5.append('viewLimits 0:15\n')
-            str_list_5.append('viewLimitsMax 0:40\n')
-            str_list_5.append('windowingFunction maximum\n')
-            # str_list_5.append('yLineMark <#>\n')
-            # str_list_5.append('yLineOnOff on \n')
-            # str_list_5.append('gridDefault on\n')
-            # Composite track settings
-            str_list_5.append('compositeTrack on\n')
-            str_list_5.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_5.append('centerLabelsDense on\n')
-            # str_list_5.append('dragAndDrop subTracks\n')
-            str_list_5.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_5.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_5.append('subGroup3 scale Scale' +
-                              ' ppois=Poisson_pvalue logfe=Log10_fold_enrichment subtract=Subtraction\n')
-            str_list_5.append('dimensions dimX=comparison dimY=factor dimA=scale\n')
-            str_list_5.append('filterComposite dimA\n')
-            str_list_5.append('sortOrder comparison=+ factor=+\n')
-            str_list_5.append('\n')
-
             # 6. Composite track "narrow_peaks" (bigBed)
-
             str_list_6: List[str] = list()
 
-            # Common track settings
-            str_list_6.append('track narrow_peaks\n')
-            str_list_6.append('type bigBed 6+4\n')
-            str_list_6.append('shortLabel ChIP Narrow Peaks\n')
-            str_list_6.append('longLabel ChIP Narrow Peaks\n')
-            # str_list_6.append('html ...\n')
-            str_list_6.append('visibility hide\n')
-            # Common optional track settings
-            # bigBed - Item or region track settings
-            # Composite track settings
-            str_list_6.append('compositeTrack on\n')
-            str_list_6.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_6.append('centerLabelsDense on\n')
-            # str_list_6.append('dragAndDrop subTracks\n')
-            str_list_6.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_6.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_6.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_6.append('sortOrder comparison=+ factor=+\n')
-            str_list_6.append('\n')
-
             # 7. Composite track "summits" (bigBed)
-
             str_list_7: List[str] = list()
 
-            # Common track settings
-            str_list_7.append('track summits\n')
-            str_list_7.append('type bigBed 4+1\n')
-            str_list_7.append('shortLabel ChIP Summits\n')
-            str_list_7.append('longLabel ChIP Summits\n')
-            # str_list_7.append('html ...\n')
-            str_list_7.append('visibility hide\n')
-            # Common optional track settings
-            # bigBed - Item or region track settings
-            # Composite track settings
-            str_list_7.append('compositeTrack on\n')
-            str_list_7.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_7.append('centerLabelsDense on\n')
-            # str_list_7.append('dragAndDrop subTracks\n')
-            str_list_7.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_7.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_7.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_7.append('sortOrder comparison=+ factor=+\n')
-            str_list_7.append('\n')
-
             # 8. Composite track "broad_peaks" (bigBed)
-
             str_list_8: List[str] = list()
 
-            # Common track settings
-            str_list_8.append('track broad_peaks\n')
-            str_list_8.append('type bigBed 6+3\n')
-            str_list_8.append('shortLabel ChIP Broad Peaks\n')
-            str_list_8.append('longLabel ChIP Broad Peaks\n')
-            # str_list_8.append('html ...\n')
-            str_list_8.append('visibility hide\n')
-            # Common optional track settings
-            # bigBed - Item or region track settings
-            # Composite track settings
-            str_list_8.append('compositeTrack on\n')
-            str_list_8.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_8.append('centerLabelsDense on\n')
-            # str_list_8.append('dragAndDrop subTracks\n')
-            str_list_8.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_8.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_8.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_8.append('sortOrder comparison=+ factor=+\n')
-            str_list_8.append('\n')
-
             # 9. Composite track "broad_peaks" (bigBed)
-
             str_list_9: List[str] = list()
 
-            # Common track settings
-            str_list_9.append('track gapped_peaks\n')
-            str_list_9.append('type bigBed 12+3\n')
-            str_list_9.append('shortLabel ChIP Gapped Peaks\n')
-            str_list_9.append('longLabel ChIP Gapped Peaks\n')
-            # str_list_9.append('html ...\n')
-            str_list_9.append('visibility hide\n')
-            # Common optional track settings
-            # bigBed - Item or region track settings
-            # Composite track settings
-            str_list_9.append('compositeTrack on\n')
-            str_list_9.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_9.append('centerLabelsDense on\n')
-            # str_list_9.append('dragAndDrop subTracks\n')
-            str_list_9.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_9.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_9.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_9.append('sortOrder comparison=+ factor=+\n')
-            str_list_9.append('\n')
-
             # 10. Composite track "consensus_peaks" (bigBed)
-
             str_list_10: List[str] = list()
-
-            # Common track settings
-            str_list_10.append('track consensus_peaks\n')
-            str_list_10.append('type bigBed 6\n')
-            str_list_10.append('shortLabel ChIP Consensus Peaks\n')
-            str_list_10.append('longLabel ChIP Consensus Peaks\n')
-            # str_list_10.append('html ...\n')
-            str_list_10.append('visibility hide\n')
-            # Common optional track settings
-            # bigBed - Item or region track settings
-            # Composite track settings
-            str_list_10.append('compositeTrack on\n')
-            str_list_10.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
-            str_list_10.append('centerLabelsDense on\n')
-            # str_list_10.append('dragAndDrop subTracks\n')
-            str_list_10.append('subGroup1 comparison Comparison' + comparison_str + '\n')
-            str_list_10.append('subGroup2 factor Factor' + factor_str + '\n')
-            str_list_10.append('dimensions dimX=comparison dimY=factor\n')
-            str_list_10.append('sortOrder comparison=+ factor=+\n')
-            str_list_10.append('\n')
 
             # Add UCSC trackDB entries for each comparison.
 
@@ -3064,20 +2807,316 @@ class ChIPSeq(Analysis):
                                            ' factor=' + factor_name + '\n')
                         str_list_10.append('  \n')
 
-            self.ucsc_hub_to_file(
-                content=(
-                        str_list_1 +
-                        str_list_2 +
-                        str_list_3 +
-                        str_list_4 +
-                        str_list_5 +
-                        str_list_6 +
-                        str_list_7 +
-                        str_list_8 +
-                        str_list_9 +
-                        str_list_10
-                )
-            )
+            str_list: List[str] = list()
+
+            # 1. Composite track "alignment" (BAM)
+            if str_list_1:
+                # Common track settings
+                str_list.append('track alignment\n')
+                str_list.append('type bam\n')
+                str_list.append('shortLabel QC Alignment\n')
+                str_list.append('longLabel ChIP Read Alignment\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bam/cram - Compressed Sequence Alignment track settings
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair on\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_1)
+
+            del str_list_1
+
+            # 2. Composite track "coverage" (bigWig)
+            if str_list_2:
+                # Common track settings
+                str_list.append('track coverage\n')
+                str_list.append('type bigWig\n')
+                str_list.append('shortLabel QC Coverage\n')
+                str_list.append('longLabel Normalised ChIP Read Alignment Coverage\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigWig - Signal graphing track settings
+                str_list.append('alwaysZero off\n')
+                str_list.append('autoScale off\n')
+                str_list.append('graphTypeDefault bar\n')
+                str_list.append('maxHeightPixels 100:60:20\n')
+                # str_list.append('maxWindowToQuery 10000000\n')
+                str_list.append('smoothingWindow 5\n')
+                # str_list.append('transformFunc NONE\n')
+                str_list.append('viewLimits 0:15\n')
+                str_list.append('viewLimitsMax 0:40\n')
+                str_list.append('windowingFunction maximum\n')
+                # str_list.append('yLineMark <#>\n')
+                # str_list.append('yLineOnOff on \n')
+                # str_list.append('gridDefault on\n')
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair on\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_2)
+
+            del str_list_2
+
+            # 3. Composite track "background" (bigWig)
+            if str_list_3:
+                # Common track settings
+                str_list.append('track background\n')
+                str_list.append('type bigWig\n')
+                str_list.append('shortLabel QC Background\n')
+                str_list.append('longLabel ChIP Background Signal\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigWig - Signal graphing track settings
+                str_list.append('alwaysZero off\n')
+                str_list.append('autoScale off\n')
+                str_list.append('graphTypeDefault bar\n')
+                str_list.append('maxHeightPixels 100:60:20\n')
+                # str_list.append('maxWindowToQuery 10000000\n')
+                str_list.append('smoothingWindow 5\n')
+                # str_list.append('transformFunc NONE\n')
+                str_list.append('viewLimits 0:15\n')
+                str_list.append('viewLimitsMax 0:40\n')
+                str_list.append('windowingFunction maximum\n')
+                # str_list.append('yLineMark <#>\n')
+                # str_list.append('yLineOnOff on \n')
+                # str_list.append('gridDefault on\n')
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_3)
+
+            del str_list_3
+
+            # 4. Composite track "enrichment" (bigWig)
+            if str_list_4:
+                # Common track settings
+                str_list.append('track enrichment\n')
+                str_list.append('type bigWig\n')
+                str_list.append('shortLabel QC Enrichment\n')
+                str_list.append('longLabel ChIP Enrichment Signal\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigWig - Signal graphing track settings
+                str_list.append('alwaysZero off\n')
+                str_list.append('autoScale off\n')
+                str_list.append('graphTypeDefault bar\n')
+                str_list.append('maxHeightPixels 100:60:20\n')
+                # str_list.append('maxWindowToQuery 10000000\n')
+                str_list.append('smoothingWindow 5\n')
+                # str_list.append('transformFunc NONE\n')
+                str_list.append('viewLimits 0:15\n')
+                str_list.append('viewLimitsMax 0:40\n')
+                str_list.append('windowingFunction maximum\n')
+                # str_list.append('yLineMark <#>\n')
+                # str_list.append('yLineOnOff on \n')
+                # str_list.append('gridDefault on\n')
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_4)
+
+            del str_list_4
+
+            # 5. Composite track "intensity" (bigWig)
+            if str_list_5:
+                # Common track settings
+                str_list.append('track intensity\n')
+                str_list.append('type bigWig\n')
+                str_list.append('shortLabel ChIP Intensity\n')
+                str_list.append('longLabel ChIP Intensity\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigWig - Signal graphing track settings
+                str_list.append('alwaysZero off\n')
+                str_list.append('autoScale off\n')
+                str_list.append('graphTypeDefault bar\n')
+                str_list.append('maxHeightPixels 100:60:20\n')
+                # str_list_5.append('maxWindowToQuery 10000000\n')
+                str_list.append('smoothingWindow 5\n')
+                # str_list.append('transformFunc NONE\n')
+                str_list.append('viewLimits 0:15\n')
+                str_list.append('viewLimitsMax 0:40\n')
+                str_list.append('windowingFunction maximum\n')
+                # str_list.append('yLineMark <#>\n')
+                # str_list.append('yLineOnOff on \n')
+                # str_list.append('gridDefault on\n')
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('subGroup3 scale Scale' +
+                                ' ppois=Poisson_pvalue logfe=Log10_fold_enrichment subtract=Subtraction\n')
+                str_list.append('dimensions dimX=comparison dimY=factor dimA=scale\n')
+                str_list.append('filterComposite dimA\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_5)
+
+            del str_list_5
+
+            # 6. Composite track "narrow_peaks" (bigBed)
+            if str_list_6:
+                # Common track settings
+                str_list.append('track narrow_peaks\n')
+                str_list.append('type bigBed 6+4\n')
+                str_list.append('shortLabel ChIP Narrow Peaks\n')
+                str_list.append('longLabel ChIP Narrow Peaks\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigBed - Item or region track settings
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_6)
+
+            del str_list_6
+
+            # 7. Composite track "summits" (bigBed)
+            if str_list_7:
+                # Common track settings
+                str_list.append('track summits\n')
+                str_list.append('type bigBed 4+1\n')
+                str_list.append('shortLabel ChIP Summits\n')
+                str_list.append('longLabel ChIP Summits\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigBed - Item or region track settings
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_7)
+
+            del str_list_7
+
+            # 8. Composite track "broad_peaks" (bigBed)
+            if str_list_8:
+                # Common track settings
+                str_list.append('track broad_peaks\n')
+                str_list.append('type bigBed 6+3\n')
+                str_list.append('shortLabel ChIP Broad Peaks\n')
+                str_list.append('longLabel ChIP Broad Peaks\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigBed - Item or region track settings
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_8)
+
+            del str_list_8
+
+            # 9. Composite track "broad_peaks" (bigBed)
+            if str_list_9:
+                # Common track settings
+                str_list.append('track gapped_peaks\n')
+                str_list.append('type bigBed 12+3\n')
+                str_list.append('shortLabel ChIP Gapped Peaks\n')
+                str_list.append('longLabel ChIP Gapped Peaks\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigBed - Item or region track settings
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_9)
+
+            del str_list_9
+
+            # 10. Composite track "consensus_peaks" (bigBed)
+            if str_list_10:
+                # Common track settings
+                str_list.append('track consensus_peaks\n')
+                str_list.append('type bigBed 6\n')
+                str_list.append('shortLabel ChIP Consensus Peaks\n')
+                str_list.append('longLabel ChIP Consensus Peaks\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+                # Common optional track settings
+                # bigBed - Item or region track settings
+                # Composite track settings
+                str_list.append('compositeTrack on\n')
+                str_list.append('allButtonPair off\n')  # Has to be "off" to allow for configuration via a matrix.
+                str_list.append('centerLabelsDense on\n')
+                # str_list.append('dragAndDrop subTracks\n')
+                str_list.append('subGroup1 comparison Comparison' + comparison_str + '\n')
+                str_list.append('subGroup2 factor Factor' + factor_str + '\n')
+                str_list.append('dimensions dimX=comparison dimY=factor\n')
+                str_list.append('sortOrder comparison=+ factor=+\n')
+                str_list.append('\n')
+
+                str_list.extend(str_list_10)
+
+            del str_list_10
+
+            self.ucsc_hub_to_file(content=str_list)
 
             return
 
