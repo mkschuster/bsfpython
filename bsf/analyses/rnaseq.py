@@ -3980,7 +3980,9 @@ class DESeq(Analysis):
 
                 # Search for design-specific contrasts upon which the results stage can be submitted.
                 for contrast_row_dict in contrast_sheet.row_dicts:
-                    if 'Design' in contrast_row_dict and contrast_row_dict['Design'] == design_name:
+                    if 'Design' in contrast_row_dict \
+                            and contrast_row_dict['Design'] == design_name \
+                            and not contrast_sheet.get_boolean(row_dict=contrast_row_dict, key='Exclude'):
                         has_contrasts = True
                         break
 
