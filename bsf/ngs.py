@@ -2303,7 +2303,11 @@ class Collection(NextGenerationBase):
                 for _component in list(key_list):
                     if _component.startswith(_key):
                         key_list.remove(_component)
-                        module_logger.warning(f'Dismissed PairedReads annotation key: {_component}')
+                        if row_dict[_component]:
+                            module_logger.warning(
+                                f'Dismissed PairedReads annotation '
+                                f'key: {_component} '
+                                f'value: {row_dict[_component]!r}')
 
                 return
 
