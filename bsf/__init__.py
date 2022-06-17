@@ -22,8 +22,6 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""BSF module.
-
-A package of classes and methods specific to the Biomedical Sequencing Facility (BSF).
-Reference: http://www.biomedical-sequencing.at/
+"""The :py:mod:`bsf` module provides classes specific to the
+`Biomedical Sequencing Facility (BSF) <http://biomedical-sequencing.at/>`_.
 """

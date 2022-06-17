@@ -22,9 +22,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Annotation module.
-
-A package of classes and methods modelling Comma-Separated Value (CSV) and Tab-Separated Value (TSV) annotation files.
+"""The :py:mod:`bsf.annotation` module provides classes modelling
+Comma-Separated Value (CSV) and
+Tab-Separated Value (TSV) annotation files.
 """
 import re
 import warnings
@@ -34,40 +34,29 @@ from typing import Callable, Dict, List, Optional
 
 
 class AnnotationSheet(object):
-    """The C{bsf.annotation.AnnotationSheet} class represents comma-separated value (CSV) files.
+    """The :py:class:`bsf.annotation.AnnotationSheet` class represents comma-separated value (CSV) files.
 
     This class is a bit unusual in that values of instance variables around the
-    C{csv.DictReader} and C{csv.DictWriter} classes can be initialised from a corresponding set of class variables.
+    :py:class:`csv.DictReader` and :py:class:`csv.DictWriter` classes can be initialised from a corresponding set
+    of class variables.
     Therefore, subclasses with fixed defaults can be defined, while generic objects can be initialised directly
-    via the C{bsf.annotation.AnnotationSheet.__init__} method without the need to create a
-    C{bsf.annotation.AnnotationSheet} subclass in code.
+    via the :py:meth:`bsf.annotation.AnnotationSheet.__init__` method without the need to create a
+    :py:class:`bsf.annotation.AnnotationSheet` subclass in code.
 
-    @cvar _field_names: Python C{list} if field (column) names
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{Callable} value data
-    @type _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]]
-    @ivar file_path: File path
-    @type file_path: str | None
-    @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type file_type: str
-    @ivar name: Name
-    @type name: str | None
-    @ivar field_names: Python C{list} of Python C{str} (field name) objects
-    @type field_names: list[str]
-    @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{Callable} value data
-    @type test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]]
-    @ivar row_dicts: Python C{list} of Python C{dict} objects
-    @type row_dicts: list[dict[str, str]]
-    @ivar _csv_reader_file: C{io.TextIO}
-    @type _csv_reader_file: io.TextIO | None
-    @ivar _csv_reader_object: C{csv.DictReader}
-    @type _csv_reader_object: DictReader | None
-    @ivar _csv_writer_file: C{io.TextIO}
-    @type _csv_writer_file: io.TextIO | None
-    @ivar _csv_writer_object: C{csv.DictWriter}
-    @type _csv_writer_object: DictWriter | None
+    :ivar file_path: A file path.
+    :type file_path: str | None
+    :ivar file_type: A file type (i.e., :literal:`excel` or :literal:`excel-tab`
+        defined in the :py:class:`csv.Dialect` class).
+    :type file_type: str
+    :ivar name: A name.
+    :type name: str | None
+    :ivar field_names: A Python :py:class:`list` object of Python :py:class:`str` (field name) objects.
+    :type field_names: list[str]
+    :ivar test_methods: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
+        Python :py:class:`list` of Python :py:class:`Callable` value objects.
+    :type test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]]
+    :ivar row_dicts: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
+    :type row_dicts: list[dict[str, str]]
     """
 
     # Regular expression for non-alphanumeric characters
@@ -85,14 +74,14 @@ class AnnotationSheet(object):
     # Regular expression for multiple underscore characters
     _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
 
-    # File type (i.e. 'excel' or 'excel-tab' defined in the csv.Dialect class)
+    # File type (i.e., 'excel' or 'excel-tab' defined in the csv.Dialect class)
     _file_type = 'excel'
 
     # Header line exists
     _header_line = True
 
     # Python list of Python str (field name) objects
-    _field_names = list()
+    _field_names: List[str] = list()
 
     # Python dict of Python str (field name) key data and
     # Python list of Python typing.Callable value data
@@ -108,18 +97,19 @@ class AnnotationSheet(object):
     def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
         """Check for a column name and return its associated value, if any.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @param require_column: Require the column_name to be defined in the row_dict
-        @type require_column: bool
-        @param require_value: Require a value, which also implies requiring the column_name
-        @type require_value: bool
-        @return: Python C{tuple} of Python C{str} (warning message) and Python C{str} (column value)
-        @rtype: (str, str)
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :param require_column: Require the column_name to be defined in the row_dict.
+        :type require_column: bool
+        :param require_value: Require a value, which also implies requiring the column_name.
+        :type require_value: bool
+        :return: A Python :py:class:`tuple` of Python :py:class:`str` (warning message) and
+            Python :py:class:`str` (column value) objects.
+        :rtype: (str, str)
         """
         message = str()
 
@@ -137,23 +127,23 @@ class AnnotationSheet(object):
 
     @classmethod
     def _check_alphanumeric(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
-        """Validate a particular column value as I{alphanumeric}.
+        """Validate a particular column value as :literal:`alphanumeric`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only alphanumeric characters.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @param require_column: Require the column_name to be defined in the row_dict
-        @type require_column: bool
-        @param require_value: Require a value, which also implies requiring the column_name.
-        @type require_value: bool
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :param require_column: Require the column_name to be defined in the row_dict.
+        :type require_column: bool
+        :param require_value: Require a value, which also implies requiring the column_name.
+        :type require_value: bool
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -172,18 +162,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_alphanumeric(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{alphanumeric}.
+        """Validate a particular column value as :literal:`alphanumeric`.
 
         Neither the column nor the value needs existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_alphanumeric(
             row_number=row_number,
@@ -192,18 +182,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_alphanumeric_column(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{alphanumeric}.
+        """Validate a particular column value as :literal:`alphanumeric`.
 
         The column, but not the value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_alphanumeric(
             row_number=row_number,
@@ -214,18 +204,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_alphanumeric_value(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{alphanumeric}.
+        """Validate a particular column value as :literal:`alphanumeric`.
 
         Both, the column and value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_alphanumeric(
             row_number=row_number,
@@ -236,23 +226,23 @@ class AnnotationSheet(object):
 
     @classmethod
     def _check_numeric(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
-        """Validate a particular column value as I{numeric}.
+        """Validate a particular column value as :literal:`numeric`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only numeric characters.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @param require_column: Require the column_name to be defined in the row_dict
-        @type require_column: bool
-        @param require_value: Require a value, which also implies requiring the column_name.
-        @type require_value: bool
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :param require_column: Require the column_name to be defined in the row_dict.
+        :type require_column: bool
+        :param require_value: Require a value, which also implies requiring the column_name.
+        :type require_value: bool
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -271,18 +261,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_numeric(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{numeric}.
+        """Validate a particular column value as :literal:`numeric`.
 
         Neither the column nor the value needs existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_numeric(
             row_number=row_number,
@@ -293,18 +283,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_numeric_column(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{numeric}.
+        """Validate a particular column value as :literal:`numeric`.
 
         The column, but not the value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_numeric(
             row_number=row_number,
@@ -315,18 +305,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_numeric_value(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{numeric}.
+        """Validate a particular column value as :literal:`numeric`.
 
         Both, the column and value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_numeric(
             row_number=row_number,
@@ -337,23 +327,23 @@ class AnnotationSheet(object):
 
     @classmethod
     def _check_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
-        """Validate a particular column value as I{IUPAC sequence}.
+        """Validate a particular column value as :literal:`IUPAC sequence`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only valid IUPAC sequence characters.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @param require_column: Require the column_name to be defined in the row_dict
-        @type require_column: bool
-        @param require_value: Require a value
-        @type require_value: bool
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :param require_column: Require the column_name to be defined in the row_dict.
+        :type require_column: bool
+        :param require_value: Require a value.
+        :type require_value: bool
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -373,18 +363,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{IUPAC sequence}.
+        """Validate a particular column value as :literal:`IUPAC sequence`.
 
         Neither the column nor the value needs existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_sequence(
             row_number=row_number,
@@ -395,18 +385,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence_column(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{IUPAC sequence}.
+        """Validate a particular column value as :literal:`IUPAC sequence`.
 
         The column, but not the value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_sequence(
             row_number=row_number,
@@ -417,18 +407,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence_value(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{IUPAC sequence}.
+        """Validate a particular column value as :literal:`IUPAC sequence`.
 
         Both, the column and value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_sequence(
             row_number=row_number,
@@ -439,23 +429,23 @@ class AnnotationSheet(object):
 
     @classmethod
     def _check_ambiguous_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
-        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+        """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only valid IUPAC ambiguity sequence characters.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @param require_column: Require the column_name to be defined in the row_dict
-        @type require_column: bool
-        @param require_value: Require a value
-        @type require_value: bool
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :param require_column: Require the column_name to be defined in the row_dict.
+        :type require_column: bool
+        :param require_value: Require a value.
+        :type require_value: bool
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -475,18 +465,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_ambiguous_sequence(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+        """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         Neither the column nor the value needs existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_ambiguous_sequence(
             row_number=row_number,
@@ -497,18 +487,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_ambiguous_sequence_column(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+        """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         The column, but not the value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_ambiguous_sequence(
             row_number=row_number,
@@ -519,18 +509,18 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_ambiguous_sequence_value(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+        """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         Both, the column and value need existing.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         return cls._check_ambiguous_sequence(
             row_number=row_number,
@@ -541,19 +531,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_underscore_leading(cls, row_number, row_dict, column_name):
-        """Validate a particular column value for I{leading underscore characters}.
+        """Validate a particular column value for :literal:`leading underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
         its associated value has no leading underscore.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -569,19 +559,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_underscore_trailing(cls, row_number, row_dict, column_name):
-        """Validate a particular column value for I{trailing underscore characters}.
+        """Validate a particular column value for :literal:`trailing underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
         its associated value has no trailing underscore.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -597,19 +587,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_underscore_multiple(cls, row_number, row_dict, column_name):
-        """Validate a particular column value for I{multiple underscore characters}.
+        """Validate a particular column value for :literal:`multiple underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
         its associated value has not multiple underscore adjacent to each other.
 
-        @param row_number: The row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
+        :param row_number: A current row number for warning messages.
+        :type row_number: int
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param column_name: A column name.
+        :type column_name: str
+        :return: Warning messages.
+        :rtype: str
         """
         messages, column_value = cls.check_column_value(
             row_number=row_number,
@@ -626,20 +616,23 @@ class AnnotationSheet(object):
 
     @classmethod
     def from_file_path(cls, file_path=None, file_type=None, name=None):
-        """Construct a C{bsf.annotation.AnnotationSheet} from a comma-separated value (CSV) file.
+        """Construct a :py:class:`bsf.annotation.AnnotationSheet` from a comma-separated value (CSV) file.
 
-        This method reads the whole CSV file at once and stores a Python C{list} of Python C{dict} objects
-        representing each row. For large files, the C{bsf.annotation.AnnotationSheet.csv_reader_open},
-        C{bsf.annotation.AnnotationSheet.csv_reader_next} and
-        C{bsf.annotation.AnnotationSheet.csv_reader_close} methods should be called explicitly.
-        @param file_path: File path
-        @type file_path: str
-        @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
-        @type file_type: str
-        @param name: Name
-        @type name: str
-        @return: C{bsf.annotation.AnnotationSheet}
-        @rtype: AnnotationSheet
+        This method reads the whole CSV file at once and stores a Python :py:class:`list` of
+        Python :py:class:`dict` objects representing each row.
+        For large files, the :py:meth:`bsf.annotation.AnnotationSheet.csv_reader_open`,
+        :py:meth:`bsf.annotation.AnnotationSheet.csv_reader_next` and
+        :py:meth:`bsf.annotation.AnnotationSheet.csv_reader_close` methods should be called explicitly.
+
+        :param file_path: A file path.
+        :type file_path: str
+        :param file_type: A file type (i.e., :literal:`excel` or :literal:`excel_tab` defined in the
+            :py:class:`csv.Dialect` class).
+        :type file_type: str
+        :param name: A name.
+        :type name: str
+        :return: A :py:class:`bsf.annotation.AnnotationSheet` object.
+        :rtype: AnnotationSheet
         """
         annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
 
@@ -661,23 +654,24 @@ class AnnotationSheet(object):
             field_names=None,
             test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]] = None,
             row_dicts=None):
-        """Initialise a C{bsf.annotation.AnnotationSheet} object.
+        """Initialise a :py:class:`bsf.annotation.AnnotationSheet` object.
 
-        @param file_path: File path
-        @type file_path: str | None
-        @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
-        @type file_type: str | None
-        @param name: Name | None
-        @type name: str | None
-        @param header: Header line
-        @type header: bool | None
-        @param field_names: Python C{list} of Python C{str} (field name) objects
-        @type field_names: list[str] | None
-        @param test_methods: Python C{dict} of Python C{str} (field name) key data and
-            Python C{list} of Python C{Callable} value data
-        @type test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]]
-        @param row_dicts: Python C{list} of Python C{dict} objects
-        @type row_dicts: list[dict[str, str]] | None
+        :param file_path: A file path.
+        :type file_path: str | None
+        :param file_type: A file type (i.e., :literal:`excel` or :literal:`excel_tab` defined in the
+            :py:class:`csv.Dialect` class).
+        :type file_type: str | None
+        :param name: A name.
+        :type name: str | None
+        :param header: A header line exists.
+        :type header: bool | None
+        :param field_names: A Python :py:class:`list` object of Python :py:class:`str` (field name) objects.
+        :type field_names: list[str] | None
+        :param test_methods: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
+        Python :py:class:`list` of Python :py:class:`Callable` value objects.
+        :type test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]]
+        :param row_dicts: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
+        :type row_dicts: list[dict[str, str]] | None
         """
         super(AnnotationSheet, self).__init__()
 
@@ -722,12 +716,12 @@ class AnnotationSheet(object):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.annotation.SampleAnnotationSheet} object.
+        """Trace a :py:class:`bsf.annotation.SampleAnnotationSheet` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -749,8 +743,8 @@ class AnnotationSheet(object):
         return str_list
 
     def csv_reader_open(self):
-        """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading
-        and initialise a Python C{csv.DictReader} object.
+        """Open a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
+        for reading and initialise a Python :py:class:`csv.DictReader` object.
         """
         if not self.file_path:
             raise Exception('Cannot read an AnnotationSheet without a valid file_name.')
@@ -787,15 +781,16 @@ class AnnotationSheet(object):
         return
 
     def csv_reader_next(self):
-        """Read the next line of a CSV file linked to a C{bsf.annotation.AnnotationSheet} object.
+        """Read the next line of a CSV file linked to a :py:class:`bsf.annotation.AnnotationSheet` object.
 
-        @return: Python C{dict} of column key and row value data
-        @rtype: dict[str, str]
+        :return: A Python :py:class:`dict` of column key and row value data.
+        :rtype: dict[str, str]
         """
         return self._csv_reader_object.next()
 
     def csv_reader_close(self):
-        """Close a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading.
+        """Close a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
+        for reading.
         """
         self._csv_reader_object = None
         self._csv_reader_file.close()
@@ -804,8 +799,9 @@ class AnnotationSheet(object):
         return
 
     def csv_writer_open(self):
-        """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for writing,
-        initialise a Python C{csv.DictWriter} object and write the header line if one has been defined.
+        """Open a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
+        for writing, initialise a Python :py:class:`csv.DictWriter` object and write the header line
+        if one has been defined.
         """
         if not self.file_path:
             raise Exception('Cannot write an AnnotationSheet without a valid file_name.')
@@ -832,17 +828,18 @@ class AnnotationSheet(object):
         return
 
     def csv_writer_next(self, row_dict):
-        """Write the next line of a CSV file linked to a C{bsf.annotation.AnnotationSheet} object.
+        """Write the next line of a CSV file linked to a :py:class:`bsf.annotation.AnnotationSheet` object.
 
-        @param row_dict: Row Python C{dict}
-        @type row_dict: dict[str, str]
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictWriter` object.
+        :type row_dict: dict[str, str]
         """
         self._csv_writer_object.writerow(rowdict=row_dict)
 
         return
 
     def csv_writer_close(self):
-        """Close a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for writing.
+        """Close a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
+        for writing.
         """
         self._csv_writer_object = None
         self._csv_writer_file.close()
@@ -851,14 +848,14 @@ class AnnotationSheet(object):
         return
 
     def get_boolean(self, row_dict, key):
-        """Get the Boolean state of a cell of an C{AnnotationSheet}.
+        """Get the Boolean state of a cell of an :py:class:`AnnotationSheet` object.
 
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str]
-        @param key: Key
-        @param key: str
-        @return: Boolean
-        @rtype: bool | None
+        :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
+        :type row_dict: dict[str, str]
+        :param key: A key.
+        :param key: str
+        :return: A Python :py:class:`bool` object.
+        :rtype: bool | None
         """
         if key in row_dict:
             value = row_dict[key].lower()
@@ -869,7 +866,7 @@ class AnnotationSheet(object):
                                  ' of AnnotationSheet ' + repr(self.name) + ' is not a boolean.')
 
     def sort(self):
-        """Sort a C{bsf.annotation.AnnotationSheet}.
+        """Sort a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         This method has to implemented in the subclass,
         as it requires information about field-specific sorting.
@@ -881,10 +878,10 @@ class AnnotationSheet(object):
         return
 
     def validate(self):
-        """Validate a C{bsf.annotation.AnnotationSheet}.
+        """Validate a :py:class:`bsf.annotation.AnnotationSheet` object.
 
-        @return: Warning messages
-        @rtype: str
+        :return: Warning messages.
+        :rtype: str
         """
         messages = str()
         row_number = 0
@@ -900,7 +897,8 @@ class AnnotationSheet(object):
         return messages
 
     def adjust_field_names(self):
-        """Adjust the Python C{list} of Python C{str} field names to the keys used in Python C{dict} (row) objects.
+        """Adjust the Python :py:class:`list` object of Python :py:class:`str` (field name) objects to the keys used in
+        Python :py:class:`dict` (row) objects.
         """
         field_names = list()
 
@@ -916,10 +914,11 @@ class AnnotationSheet(object):
         return
 
     def to_file_path(self, adjust_field_names=None):
-        """Write a C{bsf.annotation.AnnotationSheet} to a file path.
+        """Write a :py:class:`bsf.annotation.AnnotationSheet` object to a file path.
 
-        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
-        @type adjust_field_names: bool
+        :param adjust_field_names: Clear and adjust the Python :py:class:`list` of
+            Python :py:class:`str` (field name) objects.
+        :type adjust_field_names: bool
         """
         if adjust_field_names:
             self.adjust_field_names()

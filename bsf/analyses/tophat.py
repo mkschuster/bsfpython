@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Tophat Analysis module.
-
-A package of classes and methods supporting the Tophat aligner.
+"""The :py:mod:`bsf.analyses.tophat` module provides classes and methods supporting the Tophat aligner.
 """
 import os
 
@@ -39,41 +37,41 @@ from bsf.standards import Configuration, Index, StandardFilePath, Transcriptome
 
 
 class FilePathAlign(AlignerFilePathAlign):
-    """The C{bsf.analyses.tophat.FilePathAlign} class models file paths at the alignment stage.
+    """The :py:class:`bsf.analyses.tophat.FilePathAlign` class models file paths at the alignment stage.
 
-    @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
-    @type aligned_sam: str
-    @ivar unaligned_bam: Unaligned binary alignment map (BAM) file path
-    @type unaligned_bam: str
-    @ivar align_summary_txt_link_source: Alignment summary link source
-    @type align_summary_txt_link_source: str
-    @ivar align_summary_txt_link_target: Alignment summary link target
-    @type align_summary_txt_link_target: str
-    @ivar deletions_raw: Raw Tophat2 deletions (BED)
-    @type deletions_raw: str
-    @ivar deletions_bed: Deletions (BED)
-    @type deletions_bed: str
-    @ivar deletions_bb: Deletions (bigBED)
-    @type deletions_bb: str
-    @ivar insertions_raw: Raw Tophat2 insertions (BED)
-    @type insertions_raw: str
-    @ivar insertions_bed: Insertions (BED)
-    @type insertions_bed: str
-    @ivar insertions_bb: Insertions (bigBED)
-    @type insertions_bb: str
-    @ivar junctions_raw: Raw Tophat2 junctions (BED)
-    @type junctions_raw: str
-    @ivar junctions_bed: Junctions (BED)
-    @type junctions_bed: str
-    @ivar junctions_bb: Junctions (bigBED)
-    @type junctions_bb: str
+    :ivar aligned_sam: An aligned sequence alignment map (SAM) file path.
+    :type aligned_sam: str
+    :ivar unaligned_bam: An unaligned binary alignment map (BAM) file path.
+    :type unaligned_bam: str
+    :ivar align_summary_txt_link_source: An alignment summary link source file pth.
+    :type align_summary_txt_link_source: str
+    :ivar align_summary_txt_link_target: An alignment summary link target file path.
+    :type align_summary_txt_link_target: str
+    :ivar deletions_raw: A raw Tophat2 deletions (BED) file path.
+    :type deletions_raw: str
+    :ivar deletions_bed: A deletions (BED) file path.
+    :type deletions_bed: str
+    :ivar deletions_bb: A deletions (bigBED) fil epath.
+    :type deletions_bb: str
+    :ivar insertions_raw: A raw Tophat2 insertions (BED) file path.
+    :type insertions_raw: str
+    :ivar insertions_bed: An insertions (BED) file path.
+    :type insertions_bed: str
+    :ivar insertions_bb: An insertions (bigBED) file path.
+    :type insertions_bb: str
+    :ivar junctions_raw: A raw Tophat2 junctions (BED) file path.
+    :type junctions_raw: str
+    :ivar junctions_bed: A junctions (BED) file path.
+    :type junctions_bed: str
+    :ivar junctions_bb: A junctions (bigBED) file path.
+    :type junctions_bb: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.tophat.FilePathAlign} object.
+        """Initialise a :py:class:`bsf.analyses.tophat.FilePathAlign` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -101,31 +99,25 @@ class FilePathAlign(AlignerFilePathAlign):
 
 
 class Tophat2(Aligner):
-    """Tophat2 C{bsf.analyses.aligner.Aligner} subclass.
+    """The :py:class:`bsf.analyses.tophat.Tophat2` models the Tophat2 spliced aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
-        that should be retained by Picard MergeBamAlignment
-    @type sam_attributes_to_retain_list: list[str]
-    @ivar insert_size: The insert size
-    @type insert_size: int | None
-    @ivar insert_size_sd: The insert size standard deviation
-    @type insert_size_sd: int | None
-    @ivar read_length: The read length
-    @type read_length: int | None
-    @ivar library_type: The Tophat2 library type (i.e. 'fr-unstranded', 'fr-firststrand' or 'fr-secondstrand')
-    @type library_type: str | None
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
-    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
-    @type transcriptome_gtf: str | None
-    @ivar transcriptome_index: Transcriptome index directory path
-    @type transcriptome_index: str
-    @ivar threads_number: Number of threads
-    @type threads_number: int | None
+    :ivar insert_size: An insert size.
+    :type insert_size: int | None
+    :ivar insert_size_sd: An insert size standard deviation.
+    :type insert_size_sd: int | None
+    :ivar read_length: A read length.
+    :type read_length: int | None
+    :ivar library_type: A Tophat2 library type
+        (i.e., :literal:`fr-unstranded`, :literal:`fr-firststrand` or :literal:`fr-secondstrand`).
+    :type library_type: str | None
+    :ivar transcriptome_version: A transcriptome version.
+    :type transcriptome_version: str | None
+    :ivar transcriptome_gtf: A transcriptome annotation GTF file path.
+    :type transcriptome_gtf: str | None
+    :ivar transcriptome_index: A transcriptome index directory path.
+    :type transcriptome_index: str
+    :ivar threads_number: A number of threads.
+    :type threads_number: int | None
     """
 
     name = 'Tophat2 Analysis'
@@ -154,12 +146,12 @@ class Tophat2(Aligner):
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
-        """Get a C{FilePathAlign} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.tophat.FilePathAlign` object from this or a subclass.
 
-        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
-        @type paired_reads_name: str
-        @return: C{FilePathAlign} or subclass object
-        @rtype: FilePathAlign
+        :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
+        :type paired_reads_name: str
+        :return: A :py:class:`bsf.analyses.tophat.FilePathAlign` object or a subclass thereof.
+        :rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
@@ -190,60 +182,59 @@ class Tophat2(Aligner):
             transcriptome_gtf=None,
             transcriptome_index=None,
             threads_number=None):
-        """Initialise a C{bsf.analyses.tophat.Tophat2} object.
+        """Initialise a :py:class:`bsf.analyses.tophat.Tophat2` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param skip_mark_duplicates: Mark duplicates
-        @type skip_mark_duplicates: bool | None
-        @param java_archive_picard: Picard tools Java Archive (JAR) file path
-        @type java_archive_picard: str | None
-        @param insert_size: The insert size
-        @type insert_size: int | None
-        @param insert_size_sd: The insert size standard deviation
-        @type insert_size_sd: int | None
-        @param read_length: The read length
-        @type read_length: int | None
-        @param library_type: The Tophat2 library type (i.e. 'fr-unstranded', 'fr-firststrand' or 'fr-secondstrand')
-        @type library_type: str | None
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @param transcriptome_gtf: Transcriptome annotation GTF file path
-        @type transcriptome_gtf: str | None
-        @param transcriptome_index: Transcriptome index directory path
-        @type transcriptome_index: str
-        @param threads_number: Number of threads
-        @type threads_number: int | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
+        :type skip_mark_duplicates: bool | None
+        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :type java_archive_picard: str | None
+        :param insert_size: An insert size.
+        :type insert_size: int | None
+        :param insert_size_sd: An insert size standard deviation.
+        :type insert_size_sd: int | None
+        :param read_length: A read length.
+        :type read_length: int | None
+        :param library_type: A Tophat2 library type
+            (i.e., :literal:`fr-unstranded`, :literal:`fr-firststrand` or :literal:`fr-secondstrand`).
+        :type library_type: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :param transcriptome_gtf: A transcriptome annotation GTF file path.
+        :type transcriptome_gtf: str | None
+        :param transcriptome_index: A transcriptome index directory path.
+        :type transcriptome_index: str
+        :param threads_number: A number of threads.
+        :type threads_number: int | None
         """
         super(Tophat2, self).__init__(
             configuration=configuration,
@@ -282,14 +273,15 @@ class Tophat2(Aligner):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.tophat.Tophat2} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.tophat.Tophat2` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(Tophat2, self).set_configuration(configuration=configuration, section=section)
 
@@ -330,16 +322,17 @@ class Tophat2(Aligner):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more Tophat2-specific C{RunnableStep} objects to the C{ConcurrentRunnable}.
+        """Add one or more Tophat2-specific :py:class:`bsf.process.RunnableStep` objects
+        to the :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: ConcurrentRunnable
-        @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: Stage
-        @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | None
-        @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | None
+        :param runnable_align: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable_align: ConcurrentRunnable
+        :param stage_align: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_align: Stage
+        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :type file_path_1: str | None
+        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
@@ -487,13 +480,13 @@ class Tophat2(Aligner):
         return
 
     def add_runnable_step_sample(self, runnable_sample, stage_sample):
-        """Add one or more Tophat2-specific C{bsf.process.RunnableStep} objects
-        to the C{bsf.procedure.ConsecutiveRunnable}.
+        """Add one or more Tophat2-specific :py:class:`bsf.process.RunnableStep` objects
+        to a :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @param runnable_sample: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_sample: ConsecutiveRunnable
-        @param stage_sample: C{bsf.analysis.Stage}
-        @type stage_sample: Stage
+        :param runnable_sample: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+        :type runnable_sample: ConsecutiveRunnable
+        :param stage_sample: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_sample: Stage
         """
         # NOTE: This method a copy of STAR.add_runnable_step_sample().
         file_path_sample = FilePathSample(prefix=runnable_sample.name)
@@ -522,8 +515,7 @@ class Tophat2(Aligner):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.tophat.Tophat2} analysis.
-
+        """Run a :py:class:`bsf.analyses.tophat.Tophat2` object.
         """
         # Check for the project name already here,
         # since the super class method has to be called later.

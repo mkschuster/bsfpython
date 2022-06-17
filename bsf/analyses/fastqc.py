@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""FastQC Analysis module.
-
-A package of classes and methods supporting the FastQC tool.
+"""The :py:mod:`bsf.analyses.fastqc` module provides classes supporting the FastQC tool.
 """
 import os
 import sys
@@ -39,21 +37,21 @@ from bsf.standards import Configuration
 
 
 class FilePathFastQCReadGroup(FilePath):
-    """The C{bsf.analyses.fastqc.FilePathFastQCReadGroup} models read group-specific FastQC file paths.
+    """The :py:class:`bsf.analyses.fastqc.FilePathFastQCReadGroup` class models read group-specific FastQC file paths.
 
-    @ivar archive: GNU Zip compressed archive
-    @type archive: str
-    @ivar report: FastQC HTML report
-    @type report: str
+    :ivar archive: A GNU Zip compressed archive.
+    :type archive: str
+    :ivar report: A FastQC HTML report.
+    :type report: str
     """
 
     def __init__(self, prefix, file_prefix):
-        """Initialise a C{bsf.analyses.fastqc.FilePathFastQCReadGroup} object.
+        """Initialise a :py:class:`bsf.analyses.fastqc.FilePathFastQCReadGroup` object.
 
-        @param prefix: Prefix
-        @type prefix: str
-        @param file_prefix: File prefix
-        @type file_prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
+        :param file_prefix: A file prefix.
+        :type file_prefix: str
         """
         super(FilePathFastQCReadGroup, self).__init__(prefix=prefix)
 
@@ -66,12 +64,7 @@ class FilePathFastQCReadGroup(FilePath):
 
 
 class FastQC(Analysis):
-    """BSF FastQC-specific Quality Assessment C{bsf.analysis.Analysis} subclass.
-
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
+    """The :py:class:`bsf.analyses.fastqc.FastQC` class provides the logic to run the FastQC Quality Assessment tool.
     """
 
     name = 'FastQC Analysis'
@@ -79,43 +72,43 @@ class FastQC(Analysis):
 
     @classmethod
     def get_stage_name_read_group(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param read_group_name: Read group name
-        @type read_group_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param read_group_name: A read group name.
+        :type read_group_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
     def get_file_path_read_group(cls, read_group_name, file_path):
-        """Get a C{FilePathFastQCReadGroup} object.
+        """Get a :py:class:`bsf.analyses.fastqc.FilePathFastQCReadGroup` object.
 
-        @param read_group_name: Read group name
-        @type read_group_name: str
-        @param file_path: File path (*.bam, *.fastq, *. fastq.gz, ...)
-        @type file_path: str
-        @return: C{FilePathFastQCReadGroup} object
-        @rtype: FilePathFastQCReadGroup
+        :param read_group_name: A read group name.
+        :type read_group_name: str
+        :param file_path: A file path (:literal:`*.bam`, :literal:`*.fastq`, :literal:`*.fastq.gz`, ...)
+        :type file_path: str
+        :return: A :py:class:`bsf.analyses.fastqc.FilePathFastQCReadGroup` object.
+        :rtype: FilePathFastQCReadGroup
         """
 
         def get_file_prefix(_file_path):
             """Private function to isolate a file prefix from '*.bam', '*.fastq', '*.fastq.gz', ... file paths.
 
-            @param _file_path: File path
-            @type _file_path: str
-            @return: File prefix
-            @rtype: str
+            :param _file_path: A file path.
+            :type _file_path: str
+            :return: A file prefix.
+            :rtype: str
             """
             root_path, extension = os.path.splitext(os.path.basename(_file_path))
 
@@ -145,40 +138,38 @@ class FastQC(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None):
-        """Initialise a C{bsf.analyses.fastqc.FastQC}.
+        """Initialise a :py:class:`bsf.analyses.fastqc.FastQC` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of BSF C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
         """
 
         super(FastQC, self).__init__(
@@ -203,14 +194,15 @@ class FastQC(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.fastqc.FastQC} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a :py:class:`bsf.analyses.fastqc.FastQC` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
 
         super(FastQC, self).set_configuration(configuration=configuration, section=section)
@@ -220,18 +212,20 @@ class FastQC(Analysis):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.fastqc.FastQC} C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analyses.fastqc.FastQC` object.
         """
 
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False
 
         def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+            """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
+            from a CSV file path.
 
-            This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.analysis.Analysis.sample_list} instance variable.
+            This implementation just adds all :py:class:`bsf.ngs.Sample` objects from the
+            :py:attr:`bsf.analysis.Analysis.collection` instance variable
+            (i.e., :py:class:`bsf.ngs.Collection` object) to the
+            :py:attr:`bsf.analysis.Analysis.sample_list` instance variable.
             """
 
             self.sample_list.extend(self.collection.get_all_samples())
@@ -307,7 +301,7 @@ class FastQC(Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.fastqc.FastQC} report in HTML format.
+        """Create a :literal:`XHTML 1.0` report.
         """
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False

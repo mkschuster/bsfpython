@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Connector module.
-
-A package of classes and methods modelling inter-process connectors.
+"""The :py:mod:`bsf.connector` module provides classes modelling inter-process connectors.
 """
 from threading import Thread
 
@@ -35,28 +33,28 @@ __all__ = \
 
 
 class Connector(object):
-    """The C{Connector} class represents an abstract super-class of inter-process connections.
+    """The :py:class:`bsf.connector.Connector` class represents an abstract super-class of inter-process connections.
     """
 
     pass
 
 
 class ConnectorFile(Connector):
-    """The C{ConnectorFile} class represents a C{file} connection.
+    """The :py:class:`bsf.connector.ConnectorFile` class represents a file.
 
-    @ivar file_path: File path
-    @type file_path: str
-    @ivar file_mode: File mode
-    @type file_mode: str
+    :ivar file_path: A file path.
+    :type file_path: str
+    :ivar file_mode: A file mode.
+    :type file_mode: str
     """
 
     def __init__(self, file_path, file_mode):
-        """Initialise a C{ConnectorFile} object.
+        """Initialise a :py:class:`bsf.connector.ConnectorFile` object.
 
-        @param file_path: File path
-        @type file_path: str
-        @param file_mode: File mode
-        @type file_mode: str
+        :param file_path: A file path.
+        :type file_path: str
+        :param file_mode: A file mode.
+        :type file_mode: str
         """
         super(ConnectorFile, self).__init__()
 
@@ -67,35 +65,39 @@ class ConnectorFile(Connector):
 
 
 class ConnectorPipe(Connector):
-    """The C{ConnectorPipe} class represents an abstract pipe.
+    """The :py:class:`bsf.connector.ConnectorPipe` class represents an abstract pipe.
     """
 
     pass
 
 
 class ConnectorPipeNamed(ConnectorFile):
-    """The C{ConnectorPipeNamed} class represents a named pipe.
+    """The :py:class:`bsf.connector.ConnectorPipeNamed` class represents a named pipe.
     """
 
     pass
 
 
 class ConcurrentProcess(Connector):
-    """The C{ConcurrentProcess} class represents a pipe to or from a concurrent process.
+    """The :py:class:`bsf.connector.ConcurrentProcess` class represents a pipe to or from a concurrent process.
 
-    @ivar name: C{bsf.process.Executable.name}
-    @type name: str
-    @ivar connection: Connection type 'stdin', 'stdout' or 'stderr'
-    @type connection: str
+    :ivar name: A name matching a :py:attr:`bsf.process.Executable.name` attribute of the
+        concurrent process to connect to.
+    :type name: str
+    :ivar connection: A connection type :literal:`stdin`, :literal:`stdout` or :literal:`stderr`,
+        representing the :py:data:`sys.stdin`, :py:data:`sys.stdout` and :py:data:`sys.stderr` streams.
+    :type connection: str
     """
 
     def __init__(self, name, connection):
-        """Initialise a C{ConcurrentProcess} object.
+        """Initialise a :py:class:`bsf.connector.ConcurrentProcess` object.
 
-        @param name: C{bsf.process.Executable.name}
-        @type name: str
-        @param connection: Connection type 'stdin', 'stdout' or 'stderr'
-        @type connection: str
+        :param name: A name matching a :py:attr:`bsf.process.Executable.name` attribute of the
+            concurrent process to connect to.
+        :type name: str
+        :param connection: A connection type :literal:`stdin`, :literal:`stdout` or :literal:`stderr`,
+            representing the :py:data:`sys.stdin`, :py:data:`sys.stdout` and :py:data:`sys.stderr` streams.
+        :type connection: str
         """
         super(ConcurrentProcess, self).__init__()
 
@@ -106,30 +108,35 @@ class ConcurrentProcess(Connector):
 
 
 class ElectronicSink(Connector):
-    """The C{ElectronicSink} class represents a C{file} connection to /dev/null.
+    """The :py:class:`bsf.connector.ElectronicSink` class represents a :py:class:`io.FileIO` connection to
+    :py:data:`os.devnull` via a Python :py:class:`subprocess.Popen` object and :py:data:`subprocess.DEVNULL`.
     """
 
     pass
 
 
 class StandardStream(Connector):
-    """The C{StandardStream} class represents a standard stream processed via C{threading.Thread}.
+    """The :py:class:`bsf.connector.StandardStream` class represents a standard stream processed via a
+    Python :py:class:`threading.Thread` object.
 
-    Standard streams (i.e. STDIN, STDOUT, STDERR) require processing via a C{threading.Thread} to prevent buffers from
-    filling up and subsequently sub-processes (C{subprocess.Popen}) from blocking.
+    Standard streams (i.e., :py:data:`sys.stdin`, :py:data:`sys.stdout` and :py:data:`sys.stderr`)
+    require processing via a
+    Python :py:class:`threading.Thread` object to prevent buffers from filling up and subsequently,
+    Python :py:class:`subprocess.Popen` sub-process from blocking.
 
-    @ivar file_path: File path
-    @type file_path: str | None
-    @ivar thread_callable: C{Callable} object for C{threading.Thread.target}
-    @type thread_callable: object | None
-    @ivar thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
-    @type thread_kwargs: dict[str, object] | None
-    @ivar thread_joins: Maximum number of attempts calling C{threading.Thread.join}
-    @type thread_joins: int
-    @ivar thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
-    @type thread_timeout: int
-    @ivar thread: C{threading.Thread} object
-    @type thread: Thread | None
+    :ivar file_path: A file path.
+    :type file_path: str | None
+    :ivar thread_callable: A :py:class:`typing.Callable` object for the :py:attr:`threading.Thread.target` attribute.
+    :type thread_callable: object | None
+    :ivar thread_kwargs: A Python :py:class:`dict` object of keyword arguments for the
+        :py:attr:`threading.Thread.kwargs` attribute.
+    :type thread_kwargs: dict[str, object] | None
+    :ivar thread_joins: A maximum number of attempts calling the :py:meth:`threading.Thread.join` method.
+    :type thread_joins: int
+    :ivar thread_timeout: A timeout in seconds for calling the :py:meth:`threading.Thread.join` method.
+    :type thread_timeout: int
+    :ivar thread: A :py:class:`threading.Thread` object.
+    :type thread: Thread | None
     """
 
     def __init__(
@@ -140,20 +147,21 @@ class StandardStream(Connector):
             thread_joins=10,
             thread_timeout=10,
             thread=None):
-        """Initialise a C{StandardStream} object.
+        """Initialise a :py:class:`bsf.connector.StandardStream` object.
 
-        @param file_path: File path
-        @type file_path: str | None
-        @param thread_callable: C{Callable} object for C{threading.Thread.target}
-        @type thread_callable: object | None
-        @param thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
-        @type thread_kwargs: dict[str, object] | None
-        @param thread_joins: Maximum number of attempts calling C{threading.Thread.join}
-        @type thread_joins: int
-        @param thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
-        @type thread_timeout: int
-        @param thread: C{threading.Thread} object
-        @type thread: Thread | None
+        :param file_path: A file path.
+        :type file_path: str | None
+        :param thread_callable: A :py:class:`Callable` object for :py:attr:`threading.Thread.target` attribute.
+        :type thread_callable: object | None
+        :param thread_kwargs: A Python :py:class:`dict` object of keyword arguments for the
+            :py:attr:`threading.Thread.kwargs` attribute.
+        :type thread_kwargs: dict[str, object] | None
+        :param thread_joins: A maximum number of attempts calling the :py:meth:`threading.Thread.join` method.
+        :type thread_joins: int
+        :param thread_timeout: A timeout in seconds for calling the :py:meth:`threading.Thread.join` method.
+        :type thread_timeout: int
+        :param thread: A :py:class:`threading.Thread` object.
+        :type thread: Thread | None
         """
         self.file_path = file_path
         self.thread_callable = thread_callable
@@ -166,21 +174,24 @@ class StandardStream(Connector):
 
 
 class StandardInputStream(StandardStream):
-    """The C{StandardInputStream} class represents a I{STDIN} stream processed via C{threading.Thread}.
+    """The :py:class:`bsf.connector.StandardInputStream` class represents a :py:data:`sys.stdin` stream processed
+    via a Python :py:class:`threading.Thread` object.
     """
 
     pass
 
 
 class StandardOutputStream(StandardStream):
-    """The C{StandardOutputStream} class represents a I{STDOUT} stream processed via C{threading.Thread}.
+    """The :py:class:`bsf.connector.StandardOutputStream` class represents a :py:data:`sys.stdout` stream processed
+    via a Python :py:class:`threading.Thread` object.
     """
 
     pass
 
 
 class StandardErrorStream(StandardStream):
-    """The C{StandardErrorStream} class represents a I{STDERR} stream processed via C{threading.Thread}.
+    """The :py:class:`bsf.connector.StandardErrorStream` class represents a :py:data:`sys.stderr` stream processed
+    via a Python :py:class:`threading.Thread` object.
     """
 
     pass

@@ -28,15 +28,15 @@ The sample annotation sheet file name should obey the schema `<project_name>_<ge
 - `Sample Group` A sample group this sample should be part of. Please note that this variable is used by the `bsf.analyses.rnaseq.Tuxedo`, but not the `bsf.analyses.rnaseq.DESeq` analysis.
 - `Sample Name` A (meaningful) sample name.
 - `PairedReads Exclude` for excluding particular `PairedReads` objects, equivalent to read groups in BAM files from a high-level analysis.
-  - `FALSE`to include a particular PairedReads object
-  - `TRUE` to exclude a particular PairedReads object
-- `PairedReads Flow Cell` The flow cell identifier including the experiment name, and the flow cell barcode (e.g. BSF_0000_AAAAACXX).
-- `PairedReads Flow Cell Lane` The `PairedReads Flow Cell` identifier from above and the lane number (e.g. BSF_0000_AAAAACXX_2).
+  - `FALSE` to include a particular PairedReads object
+  - `TRUE`  to exclude a particular PairedReads object
+- `PairedReads Flow Cell` The flow cell identifier including the experiment name, and the flow cell barcode (e.g., BSF_0000_AAAAACXX).
+- `PairedReads Flow Cell Lane` The `PairedReads Flow Cell` identifier from above and the lane number (e.g., BSF_0000_AAAAACXX_2).
 - `PairedReads Index 1` The index sequence of the i7 adapter.
 - `PairedReads Index 2` The index sequence of the i5 adapter.
 - `PairedReads Lane` The integer lane number.
 - `PairedReads ReadGroup`
-- `PairedReads Structure` The read structure in Picard format indicating the number of cycles for the first read, the first index read, the second index read, and the second read, if available (e.g. `51T8I` or `75T8I8I75T`).
+- `PairedReads Structure` The read structure in Picard format indicating the number of cycles for the first read, the first index read, the second index read, and the second read, if available (e.g., `51T8I` or `75T8I8I75T`).
 - `Reads1 Name` The logical name of the first read which will be used for file naming. 
 - `Reads1 File` The path to the file representing the first read in the case of FASTQ files, or the unaligned BAM file. Absolute paths are used verbatim, relative paths are prepended with the BSF sample archive path configured in the user-specific configuration file.
 - `Reads2 Name` Equivalent to `Reads1 Name`.
@@ -69,10 +69,10 @@ A __design annotation sheet__ in comma-separated value (CSV) format can specify 
 - `exclude` Exclude particular designs from reporting.
   - `FALSE` to include this design in the report
   - `TRUE` to exclude this design from the report
-- `full_formula` The full model formula for the Bioconductor DESeq2 analysis (e.g. `~ genotype * phenotype`).
-- `reduced_formulas` A string representation of one or more named, reduced formulas for likelihood ratio testing (LRT), separated by semicolons (e.g. `wo_genotype:~ phenotype;wo_phenotype:~ genotype;wo_interaction:~ genotype + phenotype`).
+- `full_formula` The full model formula for the Bioconductor DESeq2 analysis (e.g., `~ genotype * phenotype`).
+- `reduced_formulas` A string representation of one or more named, reduced formulas for likelihood ratio testing (LRT), separated by semicolons (e.g., `wo_genotype:~ phenotype;wo_phenotype:~ genotype;wo_interaction:~ genotype + phenotype`).
 - `factor_levels` A string representation to order the levels for one or more factors to properly set the reference for comparisons.
-- `plot_aes` A string representation of variables mapped to [ggplot2](https://ggplot2.tidyverse.org/) _Geoms_ and their _aesthetics_ for one or more plots. The plots are separated by pipe characters (`|`), the _geoms_ and a comma-separated list of aesthetics and variable pairs are separated by a colon (e.g. `geom_point:colour=total_counts|geom_point:colour=genotype,shape=phenotype`).
+- `plot_aes` A string representation of variables mapped to [ggplot2](https://ggplot2.tidyverse.org/) _Geoms_ and their _aesthetics_ for one or more plots. The plots are separated by pipe characters (`|`), the _geoms_ and a comma-separated list of aesthetics and variable pairs are separated by a colon (e.g., `geom_point:colour=total_counts|geom_point:colour=genotype,shape=phenotype`).
 
 ## Contrast Annotation Sheet
 

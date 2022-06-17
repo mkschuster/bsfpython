@@ -22,11 +22,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Generic ConcurrentRunnable module.
-
-A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConcurrentRunnable}.
-Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
-restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
+"""The :py:mod:`bsf.runnables.concurrent` module provides function to run
+:py:class:`bsf.process.RunnableStep` objects of a :py:class:`bsf.procedure.ConcurrentRunnable` object.
+Empty status files keep track of completed :py:class:`bsf.process.RunnableStep` objects and allow for
+restarting of the :py:class:`bsf.procedure.ConcurrentRunnable` object processing.
 """
 import os
 
@@ -35,17 +34,17 @@ from bsf.process import RunnableStep, run_executables
 
 
 def run(runnable):
-    """Run the the C{bsf.procedure.ConcurrentRunnable}.
+    """Run the :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-    @param runnable: C{bsf.procedure.ConcurrentRunnable}
-    @type runnable: ConcurrentRunnable
+    :param runnable: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+    :type runnable: ConcurrentRunnable
     """
 
     def _run_consecutively(runnable_step_list):
-        """Run a Python C{list} of C{bsf.process.RunnableStep} objects consecutively.
+        """Run a Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects consecutively.
 
-        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list: list[RunnableStep]
+        :param runnable_step_list: A Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects.
+        :type runnable_step_list: list[RunnableStep]
         """
         _exception = runnable.run_consecutively(runnable_step_list=runnable_step_list)
 

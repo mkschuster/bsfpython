@@ -23,10 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Variant Calling Format (VCF) Executables module.
-
-A package of classes and functions to split Ensembl VEP annotation in the CSQ field into VEP_* fields.
-http://www.ensembl.org/info/genome/variation/predicted_data.html#consequences
+"""The :py:mod:`bsf.executables.vcf` module provides classes and functions to split
+Ensembl VEP annotation in the :literal:`CSQ` field of Variant Calling Format (VCF)
+`output <http://www.ensembl.org/info/docs/tools/vep/vep_formats.html#vcfout>`_ into :literal:`VEP_*` fields.
 """
 import warnings
 from argparse import ArgumentParser
@@ -42,17 +41,17 @@ from bsf.process import Command, Executable, RunnableStep
 
 
 class RunnableStepCsqToVep(RunnableStep):
-    """The C{bsf.executables.vcf.RunnableStepCsqToVep} class expands Ensembl Variant Effect Predictor (VEP)
-    CSQ INFO annotation into a set of VEP_* INFO annotation.
+    """The :py:class:`bsf.executables.vcf.RunnableStepCsqToVep` class expands Ensembl Variant Effect Predictor (VEP)
+    :literal:`CSQ INFO` annotation into a set of :literal:`VEP_* INFO` annotation.
 
-    @ivar soc_path: Sequence Ontology term priority configuration (TSV) file path
-    @type soc_path: str | None
-    @ivar ofc_path: Output field configuration (TSV) file path
-    @type ofc_path: str | None
-    @ivar vcf_path_old: Old VCF file path
-    @type vcf_path_old: str | None
-    @ivar vcf_path_new: New VCF file path
-    @type vcf_path_new: str | None
+    :ivar soc_path: A Sequence Ontology term priority configuration (TSV) file path.
+    :type soc_path: str | None
+    :ivar ofc_path: An output field configuration (TSV) file path.
+    :type ofc_path: str | None
+    :ivar vcf_path_old: An old VCF file path.
+    :type vcf_path_old: str | None
+    :ivar vcf_path_new: A new VCF file path.
+    :type vcf_path_new: str | None
     """
 
     def __init__(
@@ -76,49 +75,52 @@ class RunnableStepCsqToVep(RunnableStep):
             ofc_path=None,
             vcf_path_old=None,
             vcf_path_new=None):
-        """Initialise a C{bsf.executables.vcf.RunnableStepCsqToVep}.
+        """Initialise a :py:class:`bsf.executables.vcf.RunnableStepCsqToVep` object.
 
-        @param name: Name
-        @type name: str | None
-        @param program: Program
-        @type program: str | None
-        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
-            Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} (program argument) objects
-        @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[Executable.name] | None
-        @param hold: Hold on job scheduling
-        @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
-        @type submit: bool
-        @param process_identifier: Process identifier
-        @type process_identifier: str | None
-        @param process_name: Process name
-        @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
-        @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str] | None
-        @param soc_path: Sequence Ontology term priority configuration (TSV) file path
-        @type soc_path: str | None
-        @param ofc_path: Output field configuration (TSV) file path
-        @type ofc_path: str | None
-        @param vcf_path_old: Old VCF file path
-        @type vcf_path_old: str | None
-        @param vcf_path_new: New VCF file path
-        @type vcf_path_new: str | None
+        :param name: A name.
+        :type name: str | None
+        :param program: A program.
+        :type program: str | None
+        :param options: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
+            Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
+        :type options: dict[Argument.key, list[Argument]] | None
+        :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
+        :type arguments: list[str] | None
+        :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
+        :type sub_command: Command | None
+        :param stdin: A standard input :literal:`STDIN` :py:class:`bsf.connector.Connector` object.
+        :type stdin: Connector | None
+        :param stdout: A standard output :literal:`STDOUT` :py:class:`bsf.connector.Connector` object.
+        :type stdout: Connector | None
+        :param stderr: A standard error :literal:`STDERR` :py:class:`bsf.connector.Connector` object.
+        :type stderr: Connector | None
+        :param dependencies: A Python :py:class:`list` object of
+            Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
+            in the context of :py:class:`bsf.analysis.Stage` dependencies.
+        :type dependencies: list[Executable.name] | None
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
+        :type submit: bool
+        :param process_identifier: A process identifier.
+        :type process_identifier: str | None
+        :param process_name: A process name.
+        :type process_name: str | None
+        :param sub_process: A :py:class:`subprocess.Popen` object.
+        :type sub_process: Popen | None
+        :param obsolete_file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (file path) objects
+            that can be removed after successfully completing the :py:meth:`bsf.process.RunnableStep.run` method.
+        :type obsolete_file_path_list: list[str] | None
+        :param soc_path: A Sequence Ontology term priority configuration (TSV) file path.
+        :type soc_path: str | None
+        :param ofc_path: An output field configuration (TSV) file path.
+        :type ofc_path: str | None
+        :param vcf_path_old: An old VCF file path.
+        :type vcf_path_old: str | None
+        :param vcf_path_new: A new VCF file path.
+        :type vcf_path_new: str | None
         """
         super(RunnableStepCsqToVep, self).__init__(
             name=name,
@@ -145,21 +147,24 @@ class RunnableStepCsqToVep(RunnableStep):
         return
 
     def run(self, debug=0):
-        """Run a C{bsf.executables.vcf.RunnableStepCsqToVep}.
+        """Run a :py:class:`bsf.executables.vcf.RunnableStepCsqToVep` object.
 
-        @param debug: Debug level
-        @type debug: int
-        @return: Python C{list} of Python C{str} (exception) objects
-        @rtype: list[str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
+        :rtype: list[str] | None
         """
 
         def initialise_allele_list(length):
-            """Initialise an empty Python C{list} of Python C{list} of Python C{str} objects.
+            """Initialise an empty Python :py:class:`list` object of Python :py:class:`list` object of
+            Python :py:class:`str` objects.
 
-            The list stores one Python C{list} object per allele and picked feature.
-            @param length: Length
-            @return: Python C{list} of Python C{list} of Python C{str} objects
-            @rtype: list[list[str]]
+            The Python :py:class:`list` object stores one Python :py:class:`list` object per allele and picked feature.
+
+            :param length: A length.
+            :return: A Python :py:class:`list` object of Python :py:class:`list` objects of
+                Python :py:class:`str` objects
+            :rtype: list[list[str]]
             """
             allele_list = list()
 
@@ -173,12 +178,12 @@ class RunnableStepCsqToVep(RunnableStep):
         def collate_allele_values(allele_list):
             """Collate the list of allele-specific values by selecting only the first list component.
 
-            @param allele_list: Python C{list} of allele-specific values
-            @type allele_list: list[str]
-            @return: First value
-            @rtype: str | None
+            :param allele_list: A Python :py:class:`list` object of
+                Python :py:class:`str` (allele-specific value) objects.
+            :type allele_list: list[str]
+            :return: A first value.
+            :rtype: str | None
             """
-
             if allele_list:
                 return allele_list[0]
             else:
@@ -187,10 +192,10 @@ class RunnableStepCsqToVep(RunnableStep):
         def get_consequence_index(consequence):
             """Get the SO index.
 
-            @param consequence: Consequence
-            @type consequence: str
-            @return: Consequence index
-            @rtype: int
+            :param consequence: A consequence.
+            :type consequence: str
+            :return: A consequence index.
+            :rtype: int
             """
             # print('get_consequence_index:', consequence)
             for _so_index, _so_string in enumerate(sequence_ontology_list):
@@ -399,7 +404,7 @@ class RunnableStepCsqToVep(RunnableStep):
             # Failing a PICK flag, in case the filter script has removed all, the most severe consequence gets picked.
             priority_list: List[Optional[int]] = list()
             for i in range(0, allele_length):
-                # VEP consequences can be '&' separated values (e.g. splice_region_variant&synonymous_variant).
+                # VEP consequences can be '&' separated values (e.g., splice_region_variant&synonymous_variant).
                 consequence_tuple_list: List[Tuple[int, str]] = list()
                 for index, vep_consequence in enumerate(vep_dict['VEP_Consequence'][i]):
                     for value in vep_consequence.split('&'):

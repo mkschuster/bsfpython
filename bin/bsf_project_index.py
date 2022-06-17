@@ -39,15 +39,17 @@ from bsf.standards import StandardFilePath
 
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
-    """Scan a directory recursively for *_report.html files and add them to a Python C{dict} of
-    directory_path key data and Python C{list} of report_type value data.
+    """Scan a directory recursively for *_report.html files and add them to a Python :py:class:`dict` object of
+    directory_path key data and Python :py:class:`list` object of report_type value data.
 
-    @param report_dict_local: Python C{dict} of directory_path key data and Python C{list} of report_type value data
-    @type report_dict_local: dict[str, list[str]]
-    @param directory_root: Directory root
-    @type directory_root: str
-    @param directory_path: Directory path
-    @type directory_path: str
+    :param report_dict_local: A Python :py:class:`dict` object of
+        Python :py:class:`str` (directory_path) key and
+        Python :py:class:`list` of Python :py:class:`str` (report_type) value objects.
+    :type report_dict_local: dict[str, list[str]]
+    :param directory_root: A directory root.
+    :type directory_root: str
+    :param directory_path: A directory path.
+    :type directory_path: str
     """
     if not directory_path:
         directory_path = '.'
@@ -72,14 +74,13 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
 
 
 def scan_projects(project_name_local):
-    """
-    Scan a public_html project directory for full project directory names to match the given prefix.
+    """Scan a public_html project directory for full project directory names to match the given prefix.
     Resolve something like BSA_0001 to BSA_0001_ASP14_40d0aa70bf854ac99599caf5a52a9aa3
 
-    @param project_name_local: Project name or prefix
-    @type project_name_local: str
-    @return: Full project directory name
-    @rtype: str | None
+    :param project_name_local: A project name or prefix.
+    :type project_name_local: str
+    :return: A full project directory name.
+    :rtype: str | None
     """
 
     directory_path = os.path.join(StandardFilePath.get_public_html(absolute=True), 'projects')
@@ -110,7 +111,7 @@ if not os.path.isabs(project_directory):
 
     # If the project is not an absolute path,
     # prepend the absolute public html directory.
-    # TODO: This does not deal with sub-directories i.e. public_html/projects correctly.
+    # TODO: This does not deal with sub-directories (i.e., public_html/projects) correctly.
 
     project_directory = os.path.join(
         StandardFilePath.get_public_html(absolute=True),

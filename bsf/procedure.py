@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Procedure module.
-
-A package of classes and methods modelling procedures.
+"""The :py:mod:`bsf.procedure` module provides classes modelling procedures.
 """
 import errno
 import os
@@ -37,20 +35,21 @@ from bsf.standards import Configuration
 
 
 class FilePath(object):
-    """The C{bsf.procedure.FilePath} class represents formalised file path information for the
-    C{bsf.procedure.Runnable} class.
+    """The :py:class:`bsf.procedure.FilePath` class represents formalised file path information for the
+    :py:class:`bsf.procedure.Runnable` class.
 
-    Each C{bsf.procedure.Runnable} class is expected to define its corresponding C{bsf.procedure.FilePath} subclass.
+    Each :py:class:`bsf.procedure.Runnable` class is expected to define its corresponding
+    :py:class:`bsf.procedure.FilePath` subclass.
 
-    @ivar prefix: File path prefix
-    @type prefix: str
+    :ivar prefix: A file path prefix.
+    :type prefix: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.procedure.FilePath}.
+        """Initialise a :py:class:`bsf.procedure.FilePath` object.
 
-        @param prefix: File path prefix
-        @type prefix: str
+        :param prefix: A file path prefix.
+        :type prefix: str
         """
         self.prefix = prefix
 
@@ -58,30 +57,33 @@ class FilePath(object):
 
 
 class Runnable(object):
-    """The C{bsf.procedure.Runnable} class represents one or more C{bsf.process.Executable} objects
-    for the I{Runner} script.
+    """The :py:class:`bsf.procedure.Runnable` class represents one or more :py:class:`bsf.process.Executable` objects
+    for the :literal:`Runner` script.
 
-    A C{bsf.procedure.Runnable} holds all information to run one or more C{bsf.process.Executable} objects through the
-    C{bsf.procedure.Runnable.runner_script}. It can be thought of a GNU Bash script that executes as set of
-    C{bsf.process.RunnableStep} objects reflecting commands of a GNU Bash script.
+    A :py:class:`bsf.procedure.Runnable` holds all information to run one or more :py:class:`bsf.process.Executable`
+    objects through the runner script in the :py:attr:`bsf.procedure.Runnable.runner_script` attribute.
+    It can be thought of a GNU Bash script that executes as set of :py:class:`bsf.process.RunnableStep` objects
+    reflecting commands of a GNU Bash script.
 
-    @cvar runner_script: Name of the I{Runner} script
-    @type runner_script: str
-    @ivar name: Name
-    @type name: str
-    @ivar working_directory: Working directory to write C{pickle.Pickler} files
-    @type working_directory: str
-    @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-        C{bsf.process.Executable} objects via the C{bsf.procedure.Runnable.runner_script}.
-    @type code_module: str
-    @ivar cache_directory: Cache directory
-    @type cache_directory: str | None
-    @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
-        Python C{str} (file_path) value data of files that will be copied into the
-        C{bsf.procedure.Runnable.cache_directory}
-    @type cache_path_dict: dict[str, str]
-    @ivar debug: Debug level
-    @type debug: int
+    :cvar runner_script: A global :literal:`Runner` script name.
+    :type runner_script: str
+    :ivar name: A name.
+    :type name: str
+    :ivar working_directory: A working directory for writing a :py:class:`pickle.Pickler` file.
+    :type working_directory: str
+    :ivar code_module: A name of a module, usually under the :py:mod:`bsf.runnables` module
+        that implements the logic required to run :py:class:`bsf.process.Executable` objects via the
+        :py:attr:`bsf.procedure.Runnable.runner_script`.
+    :type code_module: str
+    :ivar cache_directory: A cache directory path.
+    :type cache_directory: str | None
+    :ivar cache_path_dict: A Python :py:class:`dict` object of
+        Python :py:class:`str` (name) key and
+        Python :py:class:`str` (file_path) value data of files that will be copied into the
+        directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
+    :type cache_path_dict: dict[str, str]
+    :ivar debug: An integer debugging level.
+    :type debug: int
     """
 
     runner_script = 'bsf_runner.py'
@@ -94,23 +96,25 @@ class Runnable(object):
             cache_directory=None,
             cache_path_dict=None,
             debug=0):
-        """Initialise a C{bsf.procedure.Runnable}.
+        """Initialise a :py:class:`bsf.procedure.Runnable` object.
 
-        @param name: Name
-        @type name: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str
-        @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-            C{bsf.process.Executable} objects via the C{bsf.procedure.Runnable.runner_script}
-        @type code_module: str
-        @param cache_directory: Cache directory
-        @type cache_directory: str | None
-        @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
-            Python C{str} (file_path) value data of files that will be copied into the
-            C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str] | None
-        @param debug: Integer debugging level
-        @type debug: int
+        :param name: A name.
+        :type name: str
+        :param working_directory: A working directory for writing a Python :py:class:`pickle.Pickler` file.
+        :type working_directory: str
+        :param code_module: A name of a module, usually under the :py:mod:`bsf.runnables` module
+            that implements the logic required to run :py:class:`bsf.process.Executable` objects via the
+            :py:attr:`bsf.procedure.Runnable.runner_script`.
+        :type code_module: str
+        :param cache_directory: A cache directory path.
+        :type cache_directory: str | None
+        :param cache_path_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (name) key and
+            Python :py:class:`str` (file_path) value data of files that will be copied into the
+            directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
+        :type cache_path_dict: dict[str, str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
         """
 
         super(Runnable, self).__init__()
@@ -134,12 +138,12 @@ class Runnable(object):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.procedure.Runnable}.
+        """Trace a :py:class:`bsf.procedure.Runnable` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -161,15 +165,16 @@ class Runnable(object):
 
     @property
     def pickler_path(self):
-        """Get the Python C{pickle.Pickler} file path.
+        """Get the Python :py:class:`pickle.Pickler` file path.
 
-        @return: Python C{pickle.Pickler} file path
-        @rtype: str
+        :return: A Python :py:class:`pickle.Pickler` file path.
+        :rtype: str
         """
         return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
     def to_pickler_path(self):
-        """Write this C{bsf.procedure.Runnable} as a Python C{pickle.Pickler} file into the working directory.
+        """Write this :py:class:`bsf.procedure.Runnable` as a Python :py:class:`pickle.Pickler` file into the
+        working directory.
         """
         with open(file=self.pickler_path, mode='wb') as output_file:
             pickler = pickle.Pickler(file=output_file, protocol=pickle.HIGHEST_PROTOCOL)
@@ -179,12 +184,13 @@ class Runnable(object):
 
     @classmethod
     def from_pickler_path(cls, file_path):
-        """Create a C{bsf.procedure.Runnable} from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
+        """Create a :py:class:`bsf.procedure.Runnable` from a Python :py:class:`pickle.Pickler` file via
+        Python :py:class:`pickle.Unpickler`.
 
-        @param file_path: File path to a Python C{pickle.Pickler} file
-        @type file_path: str
-        @return: C{bsf.procedure.Runnable}
-        @rtype: Runnable
+        :param file_path: A Python :py:class:`pickle.Pickler` file path.
+        :type file_path: str
+        :return: A :py:class:`bsf.procedure.Runnable` object.
+        :rtype: Runnable
         """
         with open(file=file_path, mode='rb') as input_file:
             runnable: Runnable = pickle.Unpickler(input_file).load()
@@ -195,19 +201,19 @@ class Runnable(object):
         return runnable
 
     def cache_directory_path(self, absolute=False):
-        """Get the absolute or relative cache directory path of a C{bsf.procedure.Runnable}.
+        """Get the absolute or relative cache directory path of a :py:class:`bsf.procedure.Runnable` object.
 
-        If C{bsf.procedure.Runnable.cache_directory} is not defined, C{bsf.procedure.Runnable.working_directory}
-        will be prepended.
-        Since the relative cache directory path includes the C{bsf.procedure.Runnable.name},
-        the directory is C{bsf.procedure.Runnable}-specific.
-        (i.e. C{bsf.procedure.Runnable.cache_directory}/C{bsf.procedure.Runnable.name}_cache or
-        C{bsf.procedure.Runnable.working_directory}/C{bsf.procedure.Runnable.name}_cache)
+        If the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute is not defined,
+        :py:attr:`bsf.procedure.Runnable.working_directory` will be prepended.
+        Since the relative cache directory path includes the :py:attr:`bsf.procedure.Runnable.name`,
+        the directory is :py:class:`bsf.procedure.Runnable`-specific.
+        (i.e., :py:attr:`bsf.procedure.Runnable.cache_directory`\\/:py:attr:`bsf.procedure.Runnable.name`\\_cache or
+        :py:attr:`bsf.procedure.Runnable.working_directory`\\/:py:attr:`bsf.procedure.Runnable.name`\\_cache)
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Absolute or relative cache directory path
-        @rtype: str
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: An absolute or relative cache directory path.
+        :rtype: str
         """
         directory_name = '_'.join((self.name, 'cache'))
 
@@ -267,12 +273,12 @@ class Runnable(object):
     def get_cache_file_path(self, file_path, absolute=False):
         """Get the absolute or relative cache file path for a file path.
 
-        @param file_path: Default file path
-        @type file_path: str
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Absolute or relative cache file path
-        @rtype: str
+        :param file_path: A default file path.
+        :type file_path: str
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: An absolute or relative cache file path.
+        :rtype: str
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -280,14 +286,15 @@ class Runnable(object):
         return os.path.join(self.cache_directory_path(absolute=absolute), file_name)
 
     def temporary_directory_path(self, absolute=False):
-        """Get the absolute or relative temporary directory path of a C{bsf.procedure.Runnable}.
+        """Get the absolute or relative temporary directory path of a :py:class:`bsf.procedure.Runnable` object.
 
-        The absolute path prepends the C{bsf.procedure.Runnable.working_directory},
-        the relative just C{bsf.procedure.Runnable.name}_temporary.
-        @param absolute: Absolute or relative file path
-        @type absolute: bool
-        @return: Absolute or relative temporary directory path
-        @rtype: str
+        The absolute path prepends the :py:attr:`bsf.procedure.Runnable.working_directory`,
+        the relative uses just the :py:attr:`bsf.procedure.Runnable.name` attribute and a :literal:`_temporary` suffix.
+
+        :param absolute: Get an absolute or relative file path.
+        :type absolute: bool
+        :return: An absolute or relative temporary directory path.
+        :rtype: str
         """
         directory_name = '_'.join((self.name, 'temporary'))
 
@@ -321,14 +328,14 @@ class Runnable(object):
         return
 
     def runnable_status_file_path(self, success=True, absolute=False):
-        """Get the status file path for a C{bsf.procedure.Runnable}.
+        """Get the status file path for a :py:class:`bsf.procedure.Runnable` object.
 
-        @param success: Successful completion
-        @type success: bool
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Status file path
-        @rtype: str
+        :param success: Get a status file for :emphasis:`successful` or :emphasis:`failed` completion.
+        :type success: bool
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A status file path.
+        :rtype: str
         """
         if success:
             file_name = '_'.join((self.name, 'completed.txt'))
@@ -341,12 +348,12 @@ class Runnable(object):
             return file_name
 
     def runnable_status_file_create(self, success=True):
-        """Create an empty status file for a C{bsf.procedure.Runnable}.
+        """Create an empty status file for a :py:class:`bsf.procedure.Runnable` object.
 
-        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
+        This method is mainly used by the :py:mod:`bsf.runnable.consecutive` module and related ones.
 
-        @param success: Successful completion
-        @type success: bool
+        :param success: Get a status file for :emphasis:`successful` or :emphasis:`failed` completion.
+        :type success: bool
         """
         status_path = self.runnable_status_file_path(success=success)
         open(file=status_path, mode='wt').close()
@@ -354,9 +361,9 @@ class Runnable(object):
         return
 
     def runnable_status_file_remove(self):
-        """Remove the status file for a C{bsf.procedure.Runnable}.
+        """Remove the status file for a :py:class:`bsf.procedure.Runnable` object.
 
-        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
+        This method is mainly used by the :py:mod:`bsf.runnable.consecutive` module and related ones.
         """
         # Automatically remove both status files, successful or not.
 
@@ -377,14 +384,15 @@ class Runnable(object):
         return
 
     def runnable_step_status_file_path(self, runnable_step=None, success=True):
-        """Get the status file path for a C{bsf.process.RunnableStep} of a C{bsf.procedure.Runnable}.
+        """Get the status file path for a :py:class:`bsf.process.RunnableStep` object of a
+        :py:class:`bsf.procedure.Runnable` object.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep | None
-        @param success: Successful completion
-        @type success: bool
-        @return: Status file path
-        @rtype: str | None
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
+        :param success: Get a status file for :emphasis:`successful` or :emphasis:`failed` completion.
+        :type success: bool
+        :return: A status file path.
+        :rtype: str | None
         """
         if runnable_step is None:
             return
@@ -395,14 +403,15 @@ class Runnable(object):
             return '_'.join((self.name, runnable_step.name, 'failed.txt'))
 
     def runnable_step_status_file_create(self, runnable_step=None, success=True):
-        """Create an empty status file for a C{bsf.process.RunnableStep} of a C{bsf.procedure.Runnable}.
+        """Create an empty status file for a :py:class:`bsf.process.RunnableStep` object of a
+        :py:class:`bsf.procedure.Runnable` object.
 
-        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
+        This method is mainly used by the :py:mod:`bsf.runnable.consecutive` module and related ones.
 
-        @param runnable_step: C{bsf.process.RunnableStep} | None
-        @type runnable_step: RunnableStep
-        @param success: Successful completion
-        @type success: bool
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
+        :param success: Get a status file for :emphasis:`successful` or :emphasis:`failed` completion.
+        :type success: bool
         """
         if runnable_step is None:
             return
@@ -413,12 +422,13 @@ class Runnable(object):
         return
 
     def runnable_step_status_file_remove(self, runnable_step):
-        """Remove the status file for a C{bsf.process.RunnableStep} of a C{bsf.procedure.Runnable}.
+        """Remove the status file for a :py:class:`bsf.process.RunnableStep` object of a
+        :py:class:`bsf.procedure.Runnable` object.
 
-        This method is mainly used by C{bsf.runnable.consecutive} and related modules.
+        This method is mainly used by the :py:mod:`bsf.runnable.consecutive` module and related ones.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep | None
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -442,12 +452,13 @@ class Runnable(object):
         return
 
     def run_consecutively(self, runnable_step_list):
-        """Run a Python C{list} of C{bsf.process.RunnableStep} objects through a C{bsf.procedure.ConsecutiveRunnable}.
+        """Run a Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects through a
+         :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list: list[RunnableStep]
-        @return: Exception in case of a RunnableStep failure
-        @rtype: Exception | None
+        :param runnable_step_list: A Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects.
+        :type runnable_step_list: list[RunnableStep]
+        :return: A Python :py:class:`Exception` in case of a :py:class:`bsf.process.RunnableStep` failure.
+        :rtype: Exception | None
         """
         # Check the Python list of bsf.process.RunnableStep objects in reverse order to see what has completed already.
         # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
@@ -523,11 +534,11 @@ class Runnable(object):
 
 
 class ConsecutiveRunnable(Runnable):
-    """The C{bsf.procedure.ConsecutiveRunnable} represents a procedure of consecutively running
-    C{bsf.process.RunnableStep} or subclasses thereof.
+    """The :py:class:`bsf.procedure.ConsecutiveRunnable` class represents a procedure of consecutively running
+    :py:class:`bsf.process.RunnableStep` or subclasses thereof.
 
-    @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-    @type runnable_step_list: list[RunnableStep]
+    :ivar runnable_step_list: A Python :py:class:`list` object of :py:class:´bsf.process.RunnableStep` objects.
+    :type runnable_step_list: list[RunnableStep]
     """
 
     def __init__(
@@ -539,25 +550,27 @@ class ConsecutiveRunnable(Runnable):
             cache_path_dict=None,
             debug=0,
             runnable_step_list=None):
-        """Initialise a C{bsf.ConsecutiveRunnable}.
+        """Initialise a :py:class:`bsf.ConsecutiveRunnable` object.
 
-        @param name: Name
-        @type name: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str
-        @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-            C{bsf.process.RunnableStep} objects via the C{bsf.procedure.Runnable.runner_script} consecutively
-        @type code_module: str
-        @param cache_directory: Cache directory
-        @type cache_directory: str | None
-        @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
-            Python C{str} (file_path) value data of files that will be copied into the
-            C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str] | None
-        @param debug: Integer debugging level
-        @type debug: int
-        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list: list[RunnableStep]
+        :param name: A name.
+        :type name: str
+        :param working_directory: A working directory for writing a Python :py:class:`pickle.Pickler` file.
+        :type working_directory: str
+        :param code_module: A name of a module, usually under the :py:mod:`bsf.runnables` module
+            that implements the logic required to run :py:class:`bsf.process.Executable` objects via the
+            :py:attr:`bsf.procedure.Runnable.runner_script` consecutively
+        :type code_module: str
+        :param cache_directory: A cache directory path.
+        :type cache_directory: str | None
+        :param cache_path_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (name) key and
+          Python :py:class:`str` (file_path) value data of files that will be copied into the
+          directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
+        :type cache_path_dict: dict[str, str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
+        :param runnable_step_list: A Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects.
+        :type runnable_step_list: list[RunnableStep]
         """
         super(ConsecutiveRunnable, self).__init__(
             name=name,
@@ -575,12 +588,12 @@ class ConsecutiveRunnable(Runnable):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.procedure.ConsecutiveRunnable}.
+        """Trace a :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -606,10 +619,11 @@ class ConsecutiveRunnable(Runnable):
         return str_list
 
     def add_runnable_step(self, runnable_step):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.process.RunnableStep` object.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep | None
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -619,24 +633,27 @@ class ConsecutiveRunnable(Runnable):
         return
 
     def run(self):
-        """Convenience function to run a C{bsf.procedure.ConsecutiveRunnable}.
+        """Convenience method to run a :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @return: Exception in case of a RunnableStep failure
-        @rtype: Exception | None
+        :return: A Python :py:class:`Exception` in case of a :py:class:`bsf.process.RunnableStep` failure.
+        :rtype: Exception | None
         """
         return self.run_consecutively(runnable_step_list=self.runnable_step_list)
 
 
 class ConcurrentRunnable(Runnable):
-    """The C{bsf.procedure.ConcurrentRunnable} represents a procedure of concurrently running
-    C{bsf.process.RunnableStep} or sub-classes thereof.
+    """The :py:class:`bsf.procedure.ConcurrentRunnable` class represents a procedure of concurrently running
+    :py:class:`bsf.process.RunnableStep` objects or subclasses thereof.
 
-    @ivar runnable_step_list_prologue: Python C{list} of C{bsf.process.RunnableStep} objects run as prologue
-    @type runnable_step_list_prologue: list[RunnableStep] | None
-    @ivar runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects run concurrently
-    @type runnable_step_list_concurrent: list[RunnableStep] | None
-    @ivar runnable_step_list_epilogue: Python C{list} of C{bsf.process.RunnableStep} objects run as epilogue
-    @type runnable_step_list_epilogue: list[RunnableStep] | None
+    :ivar runnable_step_list_prologue: A Python :py:class:`list` object of
+        :py:class:`bsf.process.RunnableStep` objects run as prologue.
+    :type runnable_step_list_prologue: list[RunnableStep] | None
+    :ivar runnable_step_list_concurrent: A Python :py:class:`list` object of
+        :py:class:`bsf.process.RunnableStep` objects run concurrently.
+    :type runnable_step_list_concurrent: list[RunnableStep] | None
+    :ivar runnable_step_list_epilogue: A Python :py:class:`list` object of
+        :py:class:`bsf.process.RunnableStep` objects run as epilogue.
+    :type runnable_step_list_epilogue: list[RunnableStep] | None
     """
 
     def __init__(
@@ -650,29 +667,34 @@ class ConcurrentRunnable(Runnable):
             runnable_step_list_prologue=None,
             runnable_step_list_concurrent=None,
             runnable_step_list_epilogue=None):
-        """Initialise a C{bsf.ConcurrentRunnable}.
+        """Initialise a :py:class:`bsf.ConcurrentRunnable` object.
 
-        @param name: Name
-        @type name: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str
-        @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-            C{bsf.process.RunnableStep} objects via the C{bsf.procedure.Runnable.runner_script} concurrently
-        @type code_module: str
-        @param cache_directory: Cache directory
-        @type cache_directory: str | None
-        @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
-            Python C{str} (file_path) value data of files that will be copied into the
-            C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str] | None
-        @param debug: Integer debugging level
-        @type debug: int
-        @param runnable_step_list_prologue: Python C{list} of C{bsf.process.RunnableStep} objects run as prologue
-        @type runnable_step_list_prologue: list[RunnableStep] | None
-        @param runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects run concurrently
-        @type runnable_step_list_concurrent: list[RunnableStep] | None
-        @param runnable_step_list_epilogue: Python C{list} of C{bsf.process.RunnableStep} objects run as epilogue
-        @type runnable_step_list_epilogue: list[RunnableStep] | None
+        :param name: A name.
+        :type name: str
+        :param working_directory: A working directory for writing a Python :py:class:`pickle.Pickler` file.
+        :type working_directory: str
+        :param code_module: A name of a module, usually under the :py:mod:`bsf.runnables` module
+            that implements the logic required to run :py:class:`bsf.process.Executable` objects via the
+            :py:attr:`bsf.procedure.Runnable.runner_script` concurrently.
+        :type code_module: str
+        :param cache_directory: A cache directory path.
+        :type cache_directory: str | None
+        :param cache_path_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (name) key and
+            Python :py:class:`str` (file_path) value data of files that will be copied into the
+            directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
+        :type cache_path_dict: dict[str, str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
+        :param runnable_step_list_prologue: A Python :py:class:`list` object of
+            :py:class:´bsf.process.RunnableStep` objects run as prologue.
+        :type runnable_step_list_prologue: list[RunnableStep] | None
+        :param runnable_step_list_concurrent: A Python :py:class:`list` object of
+            :py:class:`bsf.process.RunnableStep` objects run concurrently.
+        :type runnable_step_list_concurrent: list[RunnableStep] | None
+        :param runnable_step_list_epilogue: A Python :py:class:`list` object of
+            :py:class:`bsf.process.RunnableStep` objects run as epilogue.
+        :type runnable_step_list_epilogue: list[RunnableStep] | None
         """
         super(ConcurrentRunnable, self).__init__(
             name=name,
@@ -700,12 +722,12 @@ class ConcurrentRunnable(Runnable):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.procedure.ConcurrentRunnable}.
+        """Trace a :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -741,10 +763,10 @@ class ConcurrentRunnable(Runnable):
         return str_list
 
     def add_runnable_step_prologue(self, runnable_step):
-        """Convenience method to add a C{bsf.process.RunnableStep} to the prologue list.
+        """Convenience method to add a :py:class:`bsf.process.RunnableStep` object to the prologue list.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep | None
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -754,10 +776,10 @@ class ConcurrentRunnable(Runnable):
         return
 
     def add_runnable_step_epilogue(self, runnable_step):
-        """Convenience method to add a C{bsf.process.RunnableStep} to the epilogue list.
+        """Convenience method to add a :py:class:`bsf.process.RunnableStep` object to the epilogue list.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep | None
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return
@@ -767,10 +789,10 @@ class ConcurrentRunnable(Runnable):
         return
 
     def add_runnable_step(self, runnable_step):
-        """Convenience method to add a C{bsf.process.RunnableStep} to the concurrent list.
+        """Convenience method to add a :py:class:`bsf.process.RunnableStep` object to the concurrent list.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep | None
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep | None
         """
         if runnable_step is None:
             return

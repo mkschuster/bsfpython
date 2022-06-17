@@ -69,7 +69,7 @@ argument_parser.add_argument(
 # argument_parser.add_argument(
 #     '--project-name',
 #     dest='project_name',
-#     help='project name i.e. flow cell identifier',
+#     help='project name (i.e., flow cell identifier)',
 #     required=False,
 #     type=str)
 #
@@ -107,7 +107,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--mode',
-    help='HiSeq run mode i.e. "high" (high-output) or "rapid" (rapid run) or "miseq" for a MiSeq run',
+    help='HiSeq run mode (i.e., "high" (high-output) or "rapid" (rapid run) or "miseq" for a MiSeq run)',
     required=False,
     type=str)
 
@@ -259,7 +259,7 @@ if name_space.illumina2bam:
         analysis_bid.library_path = name_space.library_path
 
     # If a library file has not been defined so far, check,
-    # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+    # if a standard library file (i.e., PROJECT_NAME_libraries.csv) exists in the current directory.
 
     if not analysis_bid.library_path:
         library_path = '_'.join((analysis_bid.project_name, 'libraries.csv'))
@@ -375,7 +375,7 @@ else:
         analysis_ids.library_path = name_space.library_path
 
     # If a library file has not been defined so far, check,
-    # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+    # if a standard library file (i.e., PROJECT_NAME_libraries.csv) exists in the current directory.
 
     if not analysis_ids.library_path:
         library_path = '_'.join((analysis_ids.project_name, 'libraries.csv'))

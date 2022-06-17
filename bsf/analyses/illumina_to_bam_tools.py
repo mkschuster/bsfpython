@@ -22,9 +22,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""IlluminaToBam Tools Analysis module.
-
-A package of classes and methods supporting analyses of the Illumina2Bam-Tools package.
+"""The :py:mod:`bsf.analyses.illumina_to_bam_tools` provides classes supporting the
+`Illumina2Bam-Tools <https://github.com/wtsi-npg/illumina2bam>`_ package.
 """
 import os
 import warnings
@@ -44,9 +43,9 @@ from bsf.standards import Configuration, StandardFilePath, JavaArchive, JavaClas
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
-    """The C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoderSheet} class represents a
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoderSheet` class represents a
     Tab-Separated Value (TSV) table of library information for the
-    C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.analysis.Analysis}.
+    :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` class.
     """
 
     _file_type = 'excel-tab'
@@ -68,7 +67,8 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
 
 class LibraryAnnotationSheet(AnnotationSheet):
-    """The C{LibraryAnnotationSheet} class represents a Comma-Separated Value (CSV) table for de-multiplexing.
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet` class represents a
+    Comma-Separated Value (CSV) table for de-multiplexing.
     """
 
     _file_type = 'excel'
@@ -121,10 +121,12 @@ class LibraryAnnotationSheet(AnnotationSheet):
     }
 
     def get_annotation_dict(self):
-        """Get a Python C{dict} of Python C{int} (lane) key and Python C{list} of Python C{dict} (row dict) values.
+        """Get a Python :py:class:`dict` object of Python :py:class:`int` (lane) key and
+        Python :py:class`list` objects of Python :py:class:`dict` (row dict) value objects.
 
-        @return: Python C{dict} of Python C{int} (lane) key and Python C{list} of Python C{dict} (row dict) values
-        @rtype: dict[int, list[dict[str, str]]]
+        :return: A Python :py:class:`dict` object of Python :py:class:`int` (lane) key and
+            Python :py:class:`list` objects of Python :py:class:`dict` (row dict) value objects.
+        :rtype: dict[int, list[dict[str, str]]]
         """
         flow_cell_dict: Dict[int, List[Dict[str, str]]] = dict()
 
@@ -137,11 +139,12 @@ class LibraryAnnotationSheet(AnnotationSheet):
         return flow_cell_dict
 
     def get_barcode_length_dict(self):
-        """Get a Python C{dict} of i7 and i5 barcode sequence lengths by lane.
+        """Get a Python :py:class:`dict` object of :literal:`i7` and :literal:`i5` barcode sequence lengths by lane.
 
-        @return: Python C{dict} of Python C{int} (lane) key and Python C{tuple} of Python C{int} (i7) and
-            Python C{int} (i5) barcode sequence length value data
-        @rtype: dict[int, (int, int)]
+        :return: A Python :py:class:`dict` object of Python :py:class:`int` (lane) key and
+            Python :py:class:`tuple` objects of Python :py:class:`int` (:literal:`i7`) and
+            Python :py:class:`int` (:literal:`i5`) barcode sequence length value objects.
+        :rtype: dict[int, (int, int)]
         """
         flow_cell_dict: Dict[int, Tuple[int, int]] = dict()
 
@@ -159,14 +162,15 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
     def validate(self, lanes=None):
         """
-        Validate a C{LibraryAnnotationSheet}.
+        Validate a :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet` object.
 
         If the number of lanes is provided, all lanes in the range are validated or else,
         the validation is just based on annotation for the lane variable.
-        @param lanes: Number of lanes to validate
-        @type lanes: int | None
-        @return: Warning messages
-        @rtype: str
+
+        :param lanes: Number of lanes to validate.
+        :type lanes: int | None
+        :return: Warning messages.
+        :rtype: str
         """
         messages = str()
 
@@ -317,16 +321,16 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
 
 class RunnableStepIlluminaToBam(RunnableStepJava):
-    """The C{bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam} class represents a
-    C{bsf.process.RunnableStepJava} specific to IlluminaToBam tools.
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam` class represents a
+    :py:class:`bsf.process.RunnableStepJava` class specific to IlluminaToBam tools.
 
     IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
     Java Archive (JAR) file.
 
-    @ivar itb_classpath: IlluminaToBam Java Class Path directory
-    @type itb_classpath: str | None
-    @ivar itb_command: IlluminaToBam command
-    @type itb_command: str | None
+    :ivar itb_classpath: An IlluminaToBam Java Class Path directory.
+    :type itb_classpath: str | None
+    :ivar itb_command: An IlluminaToBam command.
+    :type itb_command: str | None
     """
 
     def __init__(
@@ -351,49 +355,54 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
             java_jar_path=None,
             itb_classpath=None,
             itb_command=None):
-        """Initialise a C{bsf.process.RunnableStepIlluminaToBam} object.
+        """Initialise a :py:class:`bsf.process.RunnableStepIlluminaToBam` object.
 
-        @param name: Name
-        @type name: str | None
-        @param program: Program
-        @type program: str | None
-        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
-            Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} (program argument) objects
-        @type arguments: list[str] | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[Executable.name] | None
-        @param hold: Hold on job scheduling
-        @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.analysis.Stage}
-        @type submit: bool
-        @param process_identifier: Process identifier
-        @type process_identifier: str | None
-        @param sub_process: C{subprocess.Popen}
-        @type sub_process: Popen | None
-        @param process_name: Process name
-        @type process_name: str | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str] | None
-        @param java_temporary_path: Temporary directory path for the Java Virtual Machine
-        @type java_temporary_path: str | None
-        @param java_heap_maximum: Java heap maximum size (-Xmx option)
-        @type java_heap_maximum: str | None
-        @param java_jar_path: Java Archive (JAR) file path
-        @type java_jar_path: str | None
-        @param itb_classpath: IlluminaToBam Java Class Path directory
-        @type itb_classpath: str | None
-        @param itb_command: IlluminaToBam command
-        @type itb_command: str | None
+        :param name: A name.
+        :type name: str | None
+        :param program: A program.
+        :type program: str | None
+        :param options: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
+            Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
+        :type options: dict[Argument.key, list[Argument]] | None
+        :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
+        :type arguments: list[str] | None
+        :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
+        :type sub_command: Command | None
+        :param stdin: A standard input :literal:`STDIN` :py:class:`bsf.connector.Connector` object.
+        :type stdin: Connector | None
+        :param stdout: A standard output :literal:`STDOUT` :py:class:`bsf.connector.Connector` object.
+        :type stdout: Connector | None
+        :param stderr: A standard error :literal:`STDERR` :py:class:`bsf.connector.Connector` object.
+        :type stderr: Connector | None
+        :param dependencies: A Python :py:class:`list` object of
+            Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
+            in the context of :py:class:`bsf.analysis.Stage` dependencies.
+        :type dependencies: list[Executable.name] | None
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
+        :type submit: bool
+        :param process_identifier: A process identifier.
+        :type process_identifier: str | None
+        :param process_name: A process name.
+        :type process_name: str | None
+        :param sub_process: A :py:class:`subprocess.Popen` object.
+        :type sub_process: Popen | None
+        :param obsolete_file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (file path) objects
+            that can be removed after successfully completing the :py:meth:`bsf.process.RunnableStep.run` method.
+        :type obsolete_file_path_list: list[str] | None
+        :param java_temporary_path: A temporary directory path for the Java Virtual Machine.
+        :type java_temporary_path: str | None
+        :param java_heap_maximum: A Java heap maximum size (-Xmx option).
+        :type java_heap_maximum: str | None
+        :param java_jar_path: A Java Archive (JAR) file path.
+        :type java_jar_path: str | None
+        :param itb_classpath: An IlluminaToBam Java Class Path directory.
+        :type itb_classpath: str | None
+        :param itb_command: An IlluminaToBam command.
+        :type itb_command: str | None
         """
         super(RunnableStepIlluminaToBam, self).__init__(
             name=name,
@@ -426,46 +435,47 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         return
 
     def add_itb_option(self, key, value, override=False):
-        """Add a C{bsf.argument.OptionPair} to a C{bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam}.
+        """Add a :py:class:`bsf.argument.OptionPair` object to a
+        :py:class:`bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam` object.
 
-        @param key: Option key
-        @type key: str
-        @param value: Option value
-        @type value: str
-        @param override: Override existing C{bsf.argument.Argument} without warning
-        @type override: bool
+        :param key: An option key.
+        :type key: str
+        :param value: An option value.
+        :type value: str
+        :param override: Override an existing :py:class:`bsf.argument.Argument` object without warning.
+        :type override: bool
         """
         return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
 
 
 class FilePathIlluminaToBamLane(FilePath):
-    """The C{bsf.analyses.illumina_to_bam_tools.FilePathIlluminaRunFolderRestore} models files in an archive directory.
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathIlluminaToBamLane` class models file names.
 
-    @ivar unsorted_bam: Unsorted BAM file
-    @type unsorted_bam: str
-    @ivar unsorted_md5: Unsorted BAM file MD5 check sum
-    @type unsorted_md5: str
-    @ivar sorted_bam: Sorted BAM file
-    @type sorted_bam: str
-    @ivar sorted_md5: Sorted BAM file MD5 check sum
-    @type sorted_md5: str
-    @ivar archive_bam: Archive BAM file
-    @type archive_bam: str
-    @ivar archive_md5: Archive BAM file MD5 check sum
-    @type archive_md5: str
+    :ivar unsorted_bam: An :emphasis:`unsorted` BAM file path.
+    :type unsorted_bam: str
+    :ivar unsorted_md5: An :emphasis:`unsorted` BAM file MD5 check sum file path.
+    :type unsorted_md5: str
+    :ivar sorted_bam: A :emphasis:`sorted` BAM file path.
+    :type sorted_bam: str
+    :ivar sorted_md5: A :emphasis:`sorted` BAM file MD5 check sum fil epath.
+    :type sorted_md5: str
+    :ivar archive_bam: An :emphasis:`archive` BAM file path.
+    :type archive_bam: str
+    :ivar archive_md5: An :emphasis:`archive` BAM file MD5 check sum file path.
+    :type archive_md5: str
     """
 
     def __init__(self, prefix, project_name, lane, experiment_directory):
-        """Initialise a C{bsf.analyses.illumina_to_bam_tools.FilePathIlluminaToBamLane} object.
+        """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathIlluminaToBamLane` object.
         
-        @param prefix: Prefix
-        @type prefix: str
-        @param project_name: Project name
-        @type project_name: str
-        @param lane: Lane
-        @type lane: str
-        @param experiment_directory: Experiment-specific directory
-        @type experiment_directory: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :param experiment_directory: An experiment-specific directory.
+        :type experiment_directory: str
         """
         super(FilePathIlluminaToBamLane, self).__init__(prefix=prefix)
 
@@ -482,42 +492,40 @@ class FilePathIlluminaToBamLane(FilePath):
 
 
 class IlluminaToBam(Analysis):
-    """The C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} class represents the logic to
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` class represents the logic to
     convert Illumina BCL to a BAM or SAM files.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
-    @type prefix: str
-    @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | None
-    @ivar intensity_directory: File path to the I{Intensities} directory,
-        defaults to I{illumina_run_folder/Data/Intensities}
-    @type intensity_directory: str | None
-    @ivar basecalls_directory: File path to the I{BaseCalls} directory,
-        defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-    @type basecalls_directory: str | None
-    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
-        Illumina Run Folder parameters
-    @type experiment_name: str | None
-    @ivar sequencing_centre: Sequencing centre
-    @type sequencing_centre: str | None
-    @ivar sort_output: Sort BAM files
-    @type sort_output: bool | None
-    @ivar sequences_directory: Sequences directory to store archive BAM files
-    @type sequences_directory: str | None
-    @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-    @type mode_directory: str | None
-    @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-    @type mode_file: str | None
-    @ivar java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
-    @type java_classpath_illumina2bam: str | None
-    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
-    @type java_archive_picard: str | None
-    @ivar vendor_quality_filter: Vendor quality filter
-    @type vendor_quality_filter: bool
-    @ivar force: Force processing of incomplete Illumina Run Folders
-    @type force: bool | None
+    :ivar run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+    :type run_directory: str | None
+    :ivar intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+        defaults to :literal:`IRF/Data/Intensities`.
+    :type intensity_directory: str | None
+    :ivar basecalls_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
+        defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
+    :type basecalls_directory: str | None
+    :ivar experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
+        Illumina Run Folder parameters.
+    :type experiment_name: str | None
+    :ivar sequencing_centre: A sequencing centre code.
+    :type sequencing_centre: str | None
+    :ivar sort_output: Request sorting of BAM files.
+    :type sort_output: bool | None
+    :ivar sequences_directory: A directory storing lane-specific unaligned BAM files.
+    :type sequences_directory: str | None
+    :ivar mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory.
+    :type mode_directory: str | None
+    :ivar mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file.
+    :type mode_file: str | None
+    :ivar java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
+    :type java_classpath_illumina2bam: str | None
+    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :type java_archive_picard: str | None
+    :ivar vendor_quality_filter: Request vendor quality filtering.
+    :type vendor_quality_filter: bool
+    :ivar force: Request processing of incomplete Illumina Run Folder entities.
+    :type force: bool | None
     """
 
     name = 'Illumina To Bam Analysis'
@@ -525,58 +533,58 @@ class IlluminaToBam(Analysis):
 
     @classmethod
     def get_stage_name_cell(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cell'))
 
     @classmethod
     def get_stage_name_lane(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
     def get_prefix_cell(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @param lane: A lane number
-        @type lane: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
     def get_file_path_lane(cls, project_name, lane, experiment_directory):
-        """Get a C{FilePathIlluminaToBamLane} object.
+        """Get a :py:class:`bsf.analyses.illumina_to_bam.FilePathIlluminaToBamLane` object.
 
-        @param project_name: Project name
-        @type project_name: str
-        @param lane: Lane
-        @type lane: str
-        @param experiment_directory: BSF experiment directory
-        @type experiment_directory: str
-        @return: C{FilePathIlluminaToBamLane} object
-        @rtype: FilePathIlluminaToBamLane
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :param experiment_directory: An experiment directory.
+        :type experiment_directory: str
+        :return: :py:class:`bsf.analyses.illumina_to_bam.FilePathIlluminaToBamLane` object.
+        :rtype: FilePathIlluminaToBamLane
         """
         return FilePathIlluminaToBamLane(
             prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
@@ -614,69 +622,69 @@ class IlluminaToBam(Analysis):
             java_archive_picard=None,
             vendor_quality_filter=None,
             force=False):
-        """Initialise a C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} object.
+        """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | None
-        @param intensity_directory: File path to the I{Intensities} directory,
-            defaults to I{illumina_run_folder/Data/Intensities}
-        @type intensity_directory: str | None
-        @param basecalls_directory: File path to the I{BaseCalls} directory,
-            defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
-        @type basecalls_directory: str | None
-        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters
-        @type experiment_name: str | None
-        @param sequencing_centre: Sequencing centre
-        @type sequencing_centre: str | None
-        @param sort_output: Sort BAM files
-        @type sort_output: bool | None
-        @param sequences_directory: Sequences directory to store archive BAM files
-        @type sequences_directory: str | None
-        @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-        @type mode_directory: str | None
-        @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-        @type mode_file: str | None
-        @param java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
-        @type java_classpath_illumina2bam: str | None
-        @param java_archive_picard: Picard tools Java Archive (JAR) file path
-        @type java_archive_picard: str | None
-        @param vendor_quality_filter: Vendor quality filter
-        @type vendor_quality_filter: bool | None
-        @param force: Force processing of incomplete Illumina Run Folders
-        @type force: bool | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :type run_directory: str | None
+        :param intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+            defaults to :literal:`IRF/Data/Intensities`.
+        :type intensity_directory: str | None
+        :param basecalls_directory: File path to the :literal:`BaseCalls` directory,
+            defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
+        :type basecalls_directory: str | None
+        :param experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
+            Illumina Run Folder parameters.
+        :type experiment_name: str | None
+        :param sequencing_centre: A sequencing centre code.
+        :type sequencing_centre: str | None
+        :param sort_output: Request sorting of BAM files.
+        :type sort_output: bool | None
+        :param sequences_directory: A directory storing lane-specific unaligned BAM files.
+        :type sequences_directory: str | None
+        :param mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory.
+        :type mode_directory: str | None
+        :param mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file.
+        :type mode_file: str | None
+        :param java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
+        :type java_classpath_illumina2bam: str | None
+        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :type java_archive_picard: str | None
+        :param vendor_quality_filter: Reqzest vendor quality filtering.
+        :type vendor_quality_filter: bool | None
+        :param force: Request processing of incomplete Illumina Run Folder entities.
+        :type force: bool | None
         """
         super(IlluminaToBam, self).__init__(
             configuration=configuration,
@@ -718,21 +726,23 @@ class IlluminaToBam(Analysis):
         """Get the experiment directory.
 
         The experiment directory is a concatenation of the sequences directory and the project name.
-        @return: Experiment directory
-        @rtype: str | None
+
+        :return: The experiment directory.
+        :rtype: str | None
         """
         if self.sequences_directory and self.project_name:
             return os.path.join(self.sequences_directory, self.project_name)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(IlluminaToBam, self).set_configuration(configuration=configuration, section=section)
 
@@ -793,17 +803,17 @@ class IlluminaToBam(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` object.
 
         Convert an Illumina flow cell into lane-specific archive BAM files.
 
-        To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
-        library name (LB) and sample name (SM) to '<flow cell identifier>.<lane>'.
+        To convert an Illumina flow cell, :literal:`Illumina2bam` is run first, setting the SAM Read Group (@RG)
+        library name (LB) and sample name (SM) to :literal:`<flow cell identifier>.<lane>`.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
         """
         # Define an Illumina Run Folder directory.
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard BSF directory paths.
 
@@ -827,8 +837,8 @@ class IlluminaToBam(Analysis):
                 'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
 
         # Define an 'Intensities' directory.
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         # Check if an absolute path has been provided, if not,
         # automatically prepend the Illumina Run Folder path.
 
@@ -846,8 +856,8 @@ class IlluminaToBam(Analysis):
                 'The Intensity directory {!r} does not exist.'.format(intensity_directory))
 
         # Define a 'BaseCalls' directory.
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         # Check if an absolute path has been provided, if not,
         # automatically prepend the "Intensities" directory path.
 
@@ -866,7 +876,7 @@ class IlluminaToBam(Analysis):
 
         irf = RunFolder.from_file_path(file_path=self.run_directory)
 
-        # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
+        # The experiment name (e.g., BSF_0000) is used as the prefix for archive BAM files.
         # Read it from the configuration file or from the
         # Run Parameters of the Illumina Run Folder.
 
@@ -889,8 +899,8 @@ class IlluminaToBam(Analysis):
                                 "'sequencing_centre' configuration option.")
 
         # Define the "Sequences" directory in which to create the experiment directory.
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         # An absolute path cannot be prepended.
 
         if self.sequences_directory:
@@ -1164,23 +1174,26 @@ class IlluminaToBam(Analysis):
 
 
 class FilePathBamIndexDecoderCell(FilePath):
-    """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell} models flow cell-specific file paths.
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` class models
+    flow cell-specific file paths.
 
-    @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
-    @type prefix_cell: str
-    @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
-    @type sample_annotation_sheet_csv: str
-    @see: FilePathIlluminaDemultiplexSamCell
-    @see: FilePathExtractIlluminaCell
+    See also classes:
+        - :py:class:`bsf.analyses.picard.FilePathExtractIlluminaCell`
+        - :py:class:`bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell`
+
+    :ivar prefix_cell: A non-standard, flow cell-specific (i.e., project_name) prefix.
+    :type prefix_cell: str
+    :ivar sample_annotation_sheet_csv: A Sample Annotation Sheet CSV file path.
+    :type sample_annotation_sheet_csv: str
     """
 
     def __init__(self, prefix, project_name):
-        """Initialise a C{FilePathBamIndexDecoderCell} object.
+        """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` object.
 
-        @param prefix: Prefix
-        @type prefix: str
-        @param project_name: Project name
-        @type project_name: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
+        :param project_name: A project name.
+        :type project_name: str
         """
         super(FilePathBamIndexDecoderCell, self).__init__(prefix=prefix)
 
@@ -1195,45 +1208,48 @@ class FilePathBamIndexDecoderCell(FilePath):
 
 
 class FilePathBamIndexDecoderLane(FilePath):
-    """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} models lane-specific file paths.
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane` class models
+    lane-specific file paths.
 
-    @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
-    @type prefix_lane: str
-    @ivar project_barcode: Project-specific barcode CSV file
-    @type project_barcode: str
-    @ivar barcode_tsv: Lane-specific barcode TSV file
-    @type barcode_tsv: str
-    @ivar metrics_tsv: Lane-specific metrics TSV file
-    @type metrics_tsv: str
-    @ivar metrics_fraction_pdf: Lane-specific Illumina2bam I{BamIndexDecoder} fraction metrics PDF file
-    @type metrics_fraction_pdf: str
-    @ivar metrics_fraction_png: Lane-specific Illumina2bam I{BamIndexDecoder} fraction metrics PNG file
-    @type metrics_fraction_png: str
-    @ivar metrics_number_pdf: Lane-specific Illumina2bam I{BamIndexDecoder} number metrics PDF file
-    @type metrics_number_pdf: str
-    @ivar metrics_number_png: Lane-specific Illumina2bam I{BamIndexDecoder} number metrics PNG file
-    @type metrics_number_png: str
-    @ivar samples_directory: Sample directory
-    @type samples_directory: str
-    @ivar archive_bam: Archive BAM file
-    @type archive_bam: str
-    @ivar archive_md5: Archive BAM MD5 check sum
-    @type archive_md5: str
-    @see: FilePathExtractIlluminaLane
-    @see: FilePathIlluminaDemultiplexSamLane
+    See also classes:
+        - :py:class:`bsf.analyses.picard.FilePathExtractIlluminaLane`
+        - :py:class:`bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane`
+
+    :ivar prefix_lane: A non-standard, lane-specific (i.e., project_name and lane) prefix.
+    :type prefix_lane: str
+    :ivar project_barcode: A project-specific barcode CSV file path.
+    :type project_barcode: str
+    :ivar barcode_tsv: A lane-specific barcode TSV file path.
+    :type barcode_tsv: str
+    :ivar metrics_tsv: A lane-specific metrics TSV file path.
+    :type metrics_tsv: str
+    :ivar metrics_fraction_pdf: A lane-specific Illumina2bam :literal:`BamIndexDecoder` fraction metrics PDF file path.
+    :type metrics_fraction_pdf: str
+    :ivar metrics_fraction_png: A lane-specific Illumina2bam :literal:`BamIndexDecoder` fraction metrics PNG file path.
+    :type metrics_fraction_png: str
+    :ivar metrics_number_pdf: A lane-specific Illumina2bam :literal:`BamIndexDecoder` number metrics PDF file path.
+    :type metrics_number_pdf: str
+    :ivar metrics_number_png: A lane-specific Illumina2bam :literal:`BamIndexDecoder` number metrics PNG file path.
+    :type metrics_number_png: str
+    :ivar samples_directory: A directory storing sample-specific unaligned BAM files.
+    :type samples_directory: str
+    :ivar archive_bam: An :emphasis:`archive` BAM file path.
+    :type archive_bam: str
+    :ivar archive_md5: An :emphasis:`archive` BAM MD5 check sum file path.
+    :type archive_md5: str
     """
 
     def __init__(self, prefix, project_name, lane, sequences_directory):
-        """Initialise a C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} object.
+        """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane` object.
         
-        @param prefix: Prefix
-        @type prefix: str
-        @param project_name: Project name
-        @type project_name: str
-        @param lane: Lane
-        @type lane: str
-        @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :param sequences_directory: A directory storing lane-specific unaligned BAM files.
+        :type sequences_directory: str
         """
         super(FilePathBamIndexDecoderLane, self).__init__(prefix=prefix)
 
@@ -1259,33 +1275,31 @@ class FilePathBamIndexDecoderLane(FilePath):
 
 
 class BamIndexDecoder(Analysis):
-    """The C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} class represents the logic to
+    """The :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` class represents the logic to
     decode sequence archive BAM files into sample-specific BAM files.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
-    @type prefix: str
-    @ivar hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
-    @type hash_algorithm: bool | None
-    @ivar library_path: Library annotation file path
-    @type library_path: str | None
-    @ivar sequences_directory: BSF sequences directory
-    @type sequences_directory: str | None
-    @ivar samples_directory: BSF samples directory
-    @type samples_directory: str | None
-    @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-    @type mode_directory: str | None
-    @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-    @type mode_file: str | None
-    @ivar java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
-    @type java_classpath_illumina2bam: str | None
-    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
-    @type java_archive_picard: str | None
-    @ivar lanes: Number of lanes on the flow cell
-    @type lanes: int | None
-    @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
-    @type force: bool | None
+    :ivar hash_algorithm: Request using a BSF-specific hashing algorithm for demultiplexing.
+    :type hash_algorithm: bool | None
+    :ivar library_path: A library annotation file path.
+    :type library_path: str | None
+    :ivar sequences_directory: A directory storing lane-specific unaligned BAM files.
+    :type sequences_directory: str | None
+    :ivar samples_directory: A directory storing sample-specific unaligned BAM files.
+    :type samples_directory: str | None
+    :ivar mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory.
+    :type mode_directory: str | None
+    :ivar mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file.
+    :type mode_file: str | None
+    :ivar java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
+    :type java_classpath_illumina2bam: str | None
+    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :type java_archive_picard: str | None
+    :ivar lanes: A number of lanes on the flow cell.
+    :type lanes: int | None
+    :ivar force: Request de-multiplexing with a Library Annotation sheet failing validation.
+    :type force: bool | None
     """
 
     name = 'Bam Index Decoder Analysis'
@@ -1293,54 +1307,54 @@ class BamIndexDecoder(Analysis):
 
     @classmethod
     def get_stage_name_cell(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cell'))
 
     @classmethod
     def get_stage_name_lane(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
     def get_prefix_cell(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @param lane: A lane number
-        @type lane: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
     def get_file_path_cell(cls, project_name):
-        """Get a C{FilePathBamIndexDecoderCell} object.
+        """Get a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` object.
 
-        @param project_name: Project name
-        @type project_name: str
-        @return: C{FilePathBamIndexDecoderCell} object
-        @rtype: FilePathBamIndexDecoderCell
+        :param project_name: A project name
+        :type project_name: str
+        :return: A :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` object.
+        :rtype: FilePathBamIndexDecoderCell
         """
         return FilePathBamIndexDecoderCell(
             prefix=cls.get_prefix_cell(project_name=project_name),
@@ -1348,16 +1362,16 @@ class BamIndexDecoder(Analysis):
 
     @classmethod
     def get_file_path_lane(cls, project_name, lane, sequences_directory):
-        """Get a C{FilePathBamIndexDecoderLane} object.
+        """Get a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane` object.
 
-        @param project_name: Project name
-        @type project_name: str
-        @param lane: Lane
-        @type lane: str
-        @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str
-        @return: C{FilePathBamIndexDecoderLane} object
-        @rtype: FilePathBamIndexDecoderLane
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :param sequences_directory: A directory storing lane-specific unaligned BAM files.
+        :type sequences_directory: str
+        :return: A :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane` object.
+        :rtype: FilePathBamIndexDecoderLane
         """
         return FilePathBamIndexDecoderLane(
             prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
@@ -1367,13 +1381,13 @@ class BamIndexDecoder(Analysis):
 
     @classmethod
     def get_sample_annotation_sheet(cls, file_path):
-        """Get a C{bsf.ngs.SampleAnnotationSheet} object to annotate C{bsf.ngs.Sample} objects in a
-        flow cell-specific I{BSF samples} directory.
+        """Get a :py:class:`bsf.ngs.SampleAnnotationSheet` object to annotate :py:class:`bsf.ngs.Sample` objects in a
+        flow cell-specific :literal:`BSF samples` directory.
 
-        @param file_path: File path
-        @type file_path: str
-        @return: C{bsf.ngs.SampleAnnotationSheet}
-        @rtype: SampleAnnotationSheet
+        :param file_path: A file path.
+        :type file_path: str
+        :return: A :py:class:`bsf.ngs.SampleAnnotationSheet` object.
+        :rtype: SampleAnnotationSheet
         """
         return SampleAnnotationSheet(
             file_path=file_path,
@@ -1425,60 +1439,60 @@ class BamIndexDecoder(Analysis):
             java_archive_picard=None,
             lanes=8,
             force=False):
-        """Initialise a C{BamIndexDecoder} object.
+        """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
-        @type hash_algorithm: bool | None
-        @param library_path: Library annotation file path
-        @type library_path: str | None
-        @param sequences_directory: BSF sequences directory
-        @type sequences_directory: str | None
-        @param samples_directory: BSF samples directory
-        @type samples_directory: str | None
-        @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-        @type mode_directory: str | None
-        @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-        @type mode_file: str | None
-        @param java_classpath_illumina2bam: Illumina2Bam tools Java Class Path directory
-        @type java_classpath_illumina2bam: str | None
-        @param java_archive_picard: Picard tools Java Archive (JAR) file path
-        @type java_archive_picard: str | None
-        @param lanes: Number of lanes on the flow cell
-        @type lanes: int | None
-        @param force: Force de-multiplexing with a Library Annotation sheet failing validation
-        @type force: bool | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param hash_algorithm: Request using a BSF-specific hashing algorithm for demultiplexing.
+        :type hash_algorithm: bool | None
+        :param library_path: A library annotation file path.
+        :type library_path: str | None
+        :param sequences_directory: A directory storing lane-specific unaligned BAM files.
+        :type sequences_directory: str | None
+        :param samples_directory: A directory storing sample-specific unaligned BAM files.
+        :type samples_directory: str | None
+        :param mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory.
+        :type mode_directory: str | None
+        :param mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file.
+        :type mode_file: str | None
+        :param java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
+        :type java_classpath_illumina2bam: str | None
+        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :type java_archive_picard: str | None
+        :param lanes: A number of lanes on the flow cell.
+        :type lanes: int | None
+        :param force: Request de-multiplexing with a Library Annotation sheet failing validation.
+        :type force: bool | None
         """
         super(BamIndexDecoder, self).__init__(
             configuration=configuration,
@@ -1517,21 +1531,23 @@ class BamIndexDecoder(Analysis):
         """Get the experiment directory.
 
         The experiment directory is a concatenation of the samples directory and the project name.
-        @return: Experiment directory
-        @rtype: str | None
+
+        :return: A experiment directory.
+        :rtype: str | None
         """
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(BamIndexDecoder, self).set_configuration(configuration=configuration, section=section)
 
@@ -1580,17 +1596,17 @@ class BamIndexDecoder(Analysis):
         return
 
     def run(self):
-        """Run the C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} analysis to
+        """Run a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object to
         decode an archive BAM file produced with Illumina2Bam tools into sample-specific BAM files.
         """
 
         def run_get_sample_file_name(sample_name):
-            """Private function to format sample-specific BAM file names (i.e. project_lane#sample.bam).
+            """Private function to format sample-specific BAM file names (i.e., :literal:`project_lane#sample.bam`).
 
-            @param sample_name:
-            @type sample_name: str
-            @return: Sample-specific BAM file name
-            @rtype: str
+            :param sample_name: A sample name.
+            :type sample_name: str
+            :return: A sample-specific BAM file name.
+            :rtype: str
             """
             return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
 
@@ -1604,8 +1620,8 @@ class BamIndexDecoder(Analysis):
         # Load from the configuration file and override with the default if necessary.
 
         # Define the sequences and samples directory.
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard BSF directory paths.
 

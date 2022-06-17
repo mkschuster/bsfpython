@@ -23,14 +23,14 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""NGS Collection module.
+"""The :py:mod:`bsf.executables.collection` module provides classes to prune a sample annotation sheet represented by
+a :py:class:`bsf.ngs.Collection` object.
 
-A package of classes and methods to prune a sample annotation sheet.
-
-All Reads objects not associated with (FASTQ or BAM) files get deleted from their corresponding PairedReads objects.
-A Reads object is retained, if a file with a size equal to or larger than the configured minimum file size or
-an (empty) status file (*.truncated) exists in the file system. Files smaller than the configured minimum file size
-are automatically deleted.
+All :py:class:`bsf.ngs.Reads` objects not associated with (FASTQ or BAM) files get deleted from their corresponding
+:py:class:`bsf.ngs.PairedReads` objects.
+A :py:class:`bsf.ngs.Reads` object is retained, if a file with a size equal to or larger than the
+configured minimum file size or an (empty) status file (:literal:`*.truncated`) exists in the file system.
+Files smaller than the configured minimum file size are automatically deleted.
 """
 import os
 import sys
@@ -43,18 +43,19 @@ from bsf.process import Command, Executable, RunnableStep
 
 
 class RunnableStepCollectionPruneFastq(RunnableStep):
-    """The C{bsf.executables.collection.RunnableStepCollectionPruneFastq} class prunes a sample annotation sheet.
+    """The :py:class:`bsf.executables.collection.RunnableStepCollectionPruneFastq` class prunes a
+    sample annotation sheet.
 
-    @ivar file_path_old: Old Sample Annotation Sheet file path
-    @type file_path_old: str | None
-    @ivar file_path_new: New Sample Annotation Sheet file path
-    @type file_path_new: str | None
-    @ivar minimum_size: Minimum FASTQ file size
-    @type minimum_size: int
-    @ivar drop_read_1: Drop read 1
-    @type drop_read_1: bool
-    @ivar drop_read_2: Drop read 2
-    @type drop_read_2: bool
+    :ivar file_path_old: An old Sample Annotation Sheet file path.
+    :type file_path_old: str | None
+    :ivar file_path_new: A new Sample Annotation Sheet file path.
+    :type file_path_new: str | None
+    :ivar minimum_size: A minimum FASTQ file size.
+    :type minimum_size: int
+    :ivar drop_read_1: Request dropping of read 1.
+    :type drop_read_1: bool
+    :ivar drop_read_2: Request dropping of read 2.
+    :type drop_read_2: bool
     """
 
     def __init__(
@@ -79,51 +80,54 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
             minimum_size=1024,
             drop_read_1=False,
             drop_read_2=False):
-        """Initialise a C{bsf.executables.collection.RunnableStepCollectionPruneFastq}.
+        """Initialise a :py:class:`bsf.executables.collection.RunnableStepCollectionPruneFastq` object.
 
-        @param name: Name
-        @type name: str | None
-        @param program: Program
-        @type program: str | None
-        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
-            Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} (program argument) objects
-        @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[Executable.name] | None
-        @param hold: Hold on job scheduling
-        @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
-        @type submit: bool
-        @param process_identifier: Process identifier
-        @type process_identifier: str | None
-        @param process_name: Process name
-        @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
-        @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str] | None
-        @param file_path_old: Old Sample Annotation Sheet file path
-        @type file_path_old: str | None
-        @param file_path_new: New Sample Annotation Sheet file path
-        @type file_path_new: str | None
-        @param minimum_size: Minimum FASTQ file size
-        @type minimum_size: int
-        @param drop_read_1: Drop read 1
-        @type drop_read_1: bool
-        @param drop_read_2: Drop read 2
-        @type drop_read_2: bool
+        :param name: A name.
+        :type name: str | None
+        :param program: A program.
+        :type program: str | None
+        :param options: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
+            Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
+        :type options: dict[Argument.key, list[Argument]] | None
+        :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
+        :type arguments: list[str] | None
+        :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
+        :type sub_command: Command | None
+        :param stdin: A standard input :literal:`STDIN` :py:class:`bsf.connector.Connector` object.
+        :type stdin: Connector | None
+        :param stdout: A standard output :literal:`STDOUT` :py:class:`bsf.connector.Connector` object.
+        :type stdout: Connector | None
+        :param stderr: A standard error :literal:`STDERR` :py:class:`bsf.connector.Connector` object.
+        :type stderr: Connector | None
+        :param dependencies: A Python :py:class:`list` object of
+            Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
+            in the context of :py:class:`bsf.analysis.Stage` dependencies.
+        :type dependencies: list[Executable.name] | None
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
+        :type submit: bool
+        :param process_identifier: A process identifier.
+        :type process_identifier: str | None
+        :param process_name: A process name.
+        :type process_name: str | None
+        :param sub_process: A :py:class:`subprocess.Popen` object.
+        :type sub_process: Popen | None
+        :param obsolete_file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (file path) objects
+            that can be removed after successfully completing the :py:meth:`bsf.process.RunnableStep.run` method.
+        type obsolete_file_path_list: list[str] | None
+        :param file_path_old: An old Sample Annotation Sheet file path.
+        :type file_path_old: str | None
+        :param file_path_new: A new Sample Annotation Sheet file path.
+        :type file_path_new: str | None
+        :param minimum_size: A minimum FASTQ file size.
+        :type minimum_size: int
+        :param drop_read_1: Request dropping of read 1.
+        :type drop_read_1: bool
+        :param drop_read_2: Request dropping of read 2.
+        :type drop_read_2: bool
         """
         super(RunnableStepCollectionPruneFastq, self).__init__(
             name=name,
@@ -151,12 +155,12 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         return
 
     def run(self, debug=0):
-        """Run a C{bsf.executables.bed.RunnableStepRescaleScore}.
+        """Run a :py:class:`bsf.executables.collection.RunnableStepCollectionPruneFastq` object.
 
-        @param debug: Debug level
-        @type debug: int
-        @return: Python C{list} of Python C{str} (exception) objects
-        @rtype: list[str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
+        :rtype: list[str] | None
         """
         collection = Collection.from_sas_path(
             file_path='',

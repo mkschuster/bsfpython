@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Intervals module.
-
-A package of classes and methods modelling (genome) intervals.
+"""The :py:mod:`bsf.intervals` module provides classes modelling (genome) intervals.
 """
 import math
 import os
@@ -37,25 +35,25 @@ from pysam import AlignmentFile
 class Interval(object):
     """Intervals with sequence region name, start and end coordinates.
 
-    The C{bsf.intervals.Interval} object reflects Picard-style interval lists and its coordinates are 1-based.
+    The :py:class:`bsf.intervals.Interval` class reflects Picard-style interval lists and its coordinates are 1-based.
 
-    @ivar name: Sequence region name
-    @type name: str
-    @ivar start: Start coordinate
-    @type start: int
-    @ivar end: End coordinate
-    @type end: int
+    :ivar name: Sequence region name
+    :type name: str
+    :ivar start: Start coordinate
+    :type start: int
+    :ivar end: End coordinate
+    :type end: int
     """
 
     def __init__(self, name, start, end):
-        """Initialise an C{bsf.intervals.Interval} object.
+        """Initialise a :py:class:`bsf.intervals.Interval` object.
 
-        @param name: Sequence region name
-        @type name: str
-        @param start: Start coordinate
-        @type start: int
-        @param end: End coordinate
-        @type end: int
+        :param name: Sequence region name
+        :type name: str
+        :param start: Start coordinate
+        :type start: int
+        :param end: End coordinate
+        :type end: int
         """
         self.name = name
         self.start = start
@@ -67,43 +65,49 @@ class Interval(object):
         """Test for truth.
 
         Since Picard-style interval lists are 1-based, all components need to be defined.
-        @return: True if start and end are defined, False otherwise.
-        @rtype: bool
+
+        :return: :py:const:`True` if start and end are defined, :py:const:`False` otherwise.
+        :rtype: bool
         """
         return bool(self.name) and bool(self.start) and bool(self.end)
 
     def __len__(self):
         """Calculate the length.
 
-        @return: Length
-        @rtype: int
+        :return: The length.
+        :rtype: int
         """
         return self.end - self.start + 1
 
     def __str__(self):
-        return 'Interval(name={!r}, start={!r}, end={!r})'.format(self.name, self.start, self.end)
+        """Convert into a string representation
+
+        :return: A string representation.
+        :rtype: str
+        """
+        return f'Interval(name={self.name!r}, start={self.start!r}, end={self.end!r})'
         # return ':'.join((self.name, str(self.start), str(self.end)))
 
     def to_gatk_interval(self):
-        """Convert into a GATK interval string (i.e. name:start-end).
+        """Convert into a GATK interval string (i.e., name:start-end).
 
-        @return: GATK interval string
-        @rtype: str
+        :return: A GATK interval string.
+        :rtype: str
         """
         return self.name + ':' + str(self.start) + '-' + str(self.end)
 
 
 class Container(object):
-    """Container for C{bsf.intervals.Interval} objects that keeps a running sum.
+    """Container for :py:class:`bsf.intervals.Interval` class that keeps a running sum.
 
-    @ivar interval_list: Python C{list} of C{Interval} objects
-    @type interval_list: list[Interval]
-    @ivar sum: Sum
-    @type sum: int
+    :ivar interval_list: Python :py:class:`list` object of :py:class:`bsf.intervals.Interval` objects
+    :type interval_list: list[Interval]
+    :ivar sum: Sum
+    :type sum: int
     """
 
     def __init__(self):
-        """Initialise a C{bsf.intervals.Container} object.
+        """Initialise a :py:class:`bsf.intervals.Container` object.
         """
         self.interval_list = list()
 
@@ -112,18 +116,19 @@ class Container(object):
         return
 
     def __len__(self):
-        """Calculate the length of a C{Container}, which is the number of C{Interval} objects.
+        """Calculate the length of a :py:class:`bsf.intervals.Container`,
+        which is the number of :py:class:`bsf.intervals.Interval` objects.
 
-        @return: Length
-        @rtype: int
+        :return: The length.
+        :rtype: int
         """
         return len(self.interval_list)
 
     def append(self, interval):
-        """Append an C{bsf.intervals.Interval} object.
+        """Append an :py:class:`bsf.intervals.Interval` object.
 
-        @param interval: C{bsf.intervals.Interval}
-        @type interval: Interval
+        :param interval: A :py:class:`bsf.intervals.Interval` object
+        :type interval: Interval
         """
         self.interval_list.append(interval)
         self.sum += len(interval)
@@ -131,10 +136,10 @@ class Container(object):
         return
 
     def __str__(self):
-        """Get a printable representation.
+        """Get a string representation.
 
-        @return: Printable representation
-        @rtype: str
+        :return: A string representation.
+        :rtype: str
         """
         return 'Container(sum={:d}, interval_list={!r})'.format(self.sum, self.interval_list)
 
@@ -142,25 +147,30 @@ class Container(object):
 def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, acgt=None, natural=None, packed=None):
     """Create tiles on the basis of a Picard-style interval list.
 
-    The Picard ScatterIntervalsByNs interval list is a special case where only ACGTmer intervals need considering.
+    The Picard :literal:`ScatterIntervalsByNs` interval list is a special case where only :literal:`ACGTmer`
+    intervals need considering.
 
-    Partition a list into sub-lists, which sums do not exceed a maximum using a First Fit Decreasing algorithm.
-    @see: https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm
-    @see: https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm
-    @param interval_path: Picard ScatterIntervalsByNs interval list file path
-    @type interval_path: str | None
-    @param tile_number: Number of tiles
-    @type tile_number: int | None
-    @param tile_width: Width of tile
-    @type tile_width: int | None
-    @param acgt: Picard ScatterIntervalsByNs mode reading just ACGTmer intervals
-    @type acgt: bool | None
-    @param natural: Tile on (natural) sequence regions (i.e. SAM @SQ entries)
-    @type natural: bool | None
-    @param packed: Pack C{Interval} objects into C{Container} objects
-    @type packed: bool | None
-    @return: Python C{list} of C{bsf.intervals.Container} objects
-    @rtype: list[Container]
+    Partition a list into sub-lists, which sums do not exceed a maximum using a :emphasis:`First Fit Decreasing`
+    algorithm.
+
+    See also:
+        - `First-Fit algorithm <https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm>`_
+        - `Python implementations of packing algorithm <https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm>`_
+
+    :param interval_path: A Picard :literal:`ScatterIntervalsByNs` interval list file path.
+    :type interval_path: str | None
+    :param tile_number: Number of tiles
+    :type tile_number: int | None
+    :param tile_width: Width of tile
+    :type tile_width: int | None
+    :param acgt: Picard :literal:`ScatterIntervalsByNs` mode reading just :literal:`ACGTmer` intervals
+    :type acgt: bool | None
+    :param natural: Tile on (natural) sequence regions (i.e., SAM :literal:`@SQ` entries)
+    :type natural: bool | None
+    :param packed: Pack :py:class:`bsf.intervals.Interval` objects into :py:class:`bsf.intervals.Container` objects
+    :type packed: bool | None
+    :return: A Python :py:class:`list` object of :py:class:`bsf.intervals.Container` objects.
+    :rtype: list[Container]
     """
     if not os.path.exists(interval_path):
         raise Exception('Interval file ' + repr(interval_path) + ' does not exists.')
@@ -196,7 +206,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
         tile_length = float(tile_width)
     else:
         # Do not tile at all, if neither a number of tiles nor a tile width was provided.
-        # Return a list of a single Container with an empty Interval i.e. sequence region, start and end coordinates.
+        # Return a list of a single Container with an empty Interval i.e., sequence region, start and end coordinates.
         container = Container()
         container.append(interval=Interval(name='', start=0, end=0))
         container_list.append(container)
@@ -231,22 +241,24 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
 
 
 def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural=None):
-    """Create tiles on the basis of a Picard CreateSequenceDictionary sequence dictionary.
+    """Create tiles on the basis of a Picard :literal:`CreateSequenceDictionary` sequence dictionary.
 
     The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
     Sequence regions can serve as natural tiles, alternatively a number of tiles or a tile width can be
     requested. If neither tiles nor width are requested or both are 0, no tiling is attempted and a
-    single C{bsf.intervals.Container} with an empty C{bsf.intervals.Interval} is put onto the Python C{list}.
-    @param dictionary_path: Picard CreateSequenceDictionary sequence dictionary file path
-    @type dictionary_path: str
-    @param tile_number: Number of tiles
-    @type tile_number: int | None
-    @param tile_width: Width of tile
-    @type tile_width: int | None
-    @param natural: Tile on (natural) sequence regions (i.e. SAM @SQ entries)
-    @type natural: bool | None
-    @return: Python C{list} of C{bsf.intervals.Container} objects
-    @rtype: list[Container]
+    single :py:class:`bsf.intervals.Container` object with an empty :py:class:`bsf.intervals.Interval`
+    is put onto the Python :py:class:`list` object.
+
+    :param dictionary_path: Picard :literal:`CreateSequenceDictionary` sequence dictionary file path
+    :type dictionary_path: str
+    :param tile_number: Number of tiles
+    :type tile_number: int | None
+    :param tile_width: Width of tile
+    :type tile_width: int | None
+    :param natural: Tile on (natural) sequence regions (i.e., SAM :literal:`@SQ` entries)
+    :type natural: bool | None
+    :return: A Python :py:class:`list` object of :py:class:`bsf.intervals.Container` objects.
+    :rtype: list[Container]
     """
     if not os.path.exists(dictionary_path):
         raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
@@ -281,7 +293,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
         tile_length = float(tile_width)
     else:
         # Do not tile at all, if neither a number of tiles nor a tile width was provided.
-        # Return a list of a single Container with an empty Interval i.e. sequence region, start and end coordinates.
+        # Return a list of a single Container with an empty Interval i.e., sequence region, start and end coordinates.
         container = Container()
         container.append(Interval(name='', start=0, end=0))
         container_list.append(container)

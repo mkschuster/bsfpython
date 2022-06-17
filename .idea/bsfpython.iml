@@ -14,8 +14,7 @@
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
   </component>
-  <component name="PyDocumentationSettings">
-    <option name="format" value="EPYTEXT" />
-    <option name="myDocStringFormat" value="Epytext" />
+  <component name="ReSTService">
+    <option name="DOC_DIR" value="$MODULE_DIR$" />
   </component>
 </module>

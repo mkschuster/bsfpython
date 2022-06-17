@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Simple Linux Utility for Resource Management (SLURM) DRMS module.
-
-A package of methods supporting the Simple Linux Utility for Resource Management (SLURM) system as
+"""The :py:mod:`bsf.drms.slurm` module supports the Simple Linux Utility for Resource Management (SLURM) system as
 Distributed Resource Management System (DRMS) module.
 """
 import errno
@@ -46,126 +44,127 @@ database_file_name = 'bsfpython_slurm_jobs.db'
 
 
 class ProcessSLURM(object):
-    """C{bsf.drms.slurm.ProcessSLURM} class representing a Simple Linux Utility for Resource Management (SLURM) process.
+    """The :py:class:`bsf.drms.slurm.ProcessSLURM` class represents a
+    :literal:`Simple Linux Utility for Resource Management (SLURM)` process.
 
-    The instance variable names result from the SLURM command C{sacct --parsable --long}
+    The instance variable names result from the SLURM command :literal:`sacct --parsable --long`.
 
-    @ivar process_slurm_id: Primary key
-    @type process_slurm_id: int | None
-    @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
-    @type job_id: str | None
-    @ivar job_id_raw: The number of the job or job step. It is in the form: I{job.jobstep}
-    @type job_id_raw: str | None
-    @ivar job_name: The name of the job or job step
-    @type job_name: str | None
-    @ivar partition: Identifies the partition on which the job ran
-    @type partition: str | None
-    @ivar max_vm_size: Maximum virtual memory size of all tasks in job
-    @type max_vm_size: str | None
-    @ivar max_vm_size_node: The node on which the maximum virtual memory size occurred
-    @type max_vm_size_node: str | None
-    @ivar max_vm_size_task: The task identifier where the maximum virtual memory size occurred
-    @type max_vm_size_task: str | None
-    @ivar average_vm_size: Average virtual memory size of all tasks in job
-    @type average_vm_size: str | None
-    @ivar max_rss: Maximum resident set size of all tasks in job
-    @type max_rss: str | None
-    @ivar max_rss_node: The node on which the maximum resident set size occurred
-    @type max_rss_node: str | None
-    @ivar max_rss_task: The task identifier where the maximum resident set size occurred
-    @type max_rss_task: str | None
-    @ivar average_rss: Average resident set size of all tasks in job
-    @type average_rss: str | None
-    @ivar max_pages: Maximum number of page faults of all tasks in job
-    @type max_pages: str | None
-    @ivar max_pages_node: The node on which the maximum number of page faults occurred
-    @type max_pages_node: str | None
-    @ivar max_pages_task: The task identifier where the maximum number of page faults occurred
-    @type max_pages_task: str | None
-    @ivar average_pages: Average number of page faults of all tasks in job
-    @type average_pages: str | None
-    @ivar min_cpu: Minimum (system + user) CPU time of all tasks in job
-    @type min_cpu: str | None
-    @ivar min_cpu_node: The node on which the minimum CPU time occurred
-    @type min_cpu_node: str | None
-    @ivar min_cpu_task: The task identifier where the minimum CPU time occurred
-    @type min_cpu_task: str | None
-    @ivar average_cpu: Average (system + user) CPU time of all tasks in job
-    @type average_cpu: str | None
-    @ivar number_tasks: Total number of tasks in a job or step
-    @type number_tasks: str | None
-    @ivar allocated_cpus: Count of allocated CPUs
-    @type allocated_cpus: str | None
-    @ivar elapsed: The jobs elapsed time
-    @type elapsed: str | None
-    @ivar state: Displays the job status, or state
+    :ivar process_slurm_id: Primary key
+    :type process_slurm_id: int | None
+    :ivar job_id: The number of the job or job step. It is in the form: :literal:`job.jobstep`.
+    :type job_id: str | None
+    :ivar job_id_raw: The number of the job or job step. It is in the form: :literal:`job.jobstep`.
+    :type job_id_raw: str | None
+    :ivar job_name: The name of the job or job step
+    :type job_name: str | None
+    :ivar partition: Identifies the partition on which the job ran
+    :type partition: str | None
+    :ivar max_vm_size: Maximum virtual memory size of all tasks in job
+    :type max_vm_size: str | None
+    :ivar max_vm_size_node: The node on which the maximum virtual memory size occurred
+    :type max_vm_size_node: str | None
+    :ivar max_vm_size_task: The task identifier where the maximum virtual memory size occurred
+    :type max_vm_size_task: str | None
+    :ivar average_vm_size: Average virtual memory size of all tasks in job
+    :type average_vm_size: str | None
+    :ivar max_rss: Maximum resident set size of all tasks in job
+    :type max_rss: str | None
+    :ivar max_rss_node: The node on which the maximum resident set size occurred
+    :type max_rss_node: str | None
+    :ivar max_rss_task: The task identifier where the maximum resident set size occurred
+    :type max_rss_task: str | None
+    :ivar average_rss: Average resident set size of all tasks in job
+    :type average_rss: str | None
+    :ivar max_pages: Maximum number of page faults of all tasks in job
+    :type max_pages: str | None
+    :ivar max_pages_node: The node on which the maximum number of page faults occurred
+    :type max_pages_node: str | None
+    :ivar max_pages_task: The task identifier where the maximum number of page faults occurred
+    :type max_pages_task: str | None
+    :ivar average_pages: Average number of page faults of all tasks in job
+    :type average_pages: str | None
+    :ivar min_cpu: Minimum (system + user) CPU time of all tasks in job
+    :type min_cpu: str | None
+    :ivar min_cpu_node: The node on which the minimum CPU time occurred
+    :type min_cpu_node: str | None
+    :ivar min_cpu_task: The task identifier where the minimum CPU time occurred
+    :type min_cpu_task: str | None
+    :ivar average_cpu: Average (system + user) CPU time of all tasks in job
+    :type average_cpu: str | None
+    :ivar number_tasks: Total number of tasks in a job or step
+    :type number_tasks: str | None
+    :ivar allocated_cpus: Count of allocated CPUs
+    :type allocated_cpus: str | None
+    :ivar elapsed: The jobs elapsed time
+    :type elapsed: str | None
+    :ivar state: Displays the job status, or state
         Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
-    @type state: str | None
-    @ivar exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
+    :type state: str | None
+    :ivar exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
         Following the colon is the signal that caused the process to terminate if it was terminated by a signal.
-    @type exit_code: str | None
-    @ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
-    @type average_cpu_frequency: str | None
-    @ivar requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
-    @type requested_cpu_frequency_min: str | None
-    @ivar requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
-    @type requested_cpu_frequency_max: str | None
-    @ivar requested_cpu_frequency_gov: Requested CPU governor
-    @type requested_cpu_frequency_gov: str | None
-    @ivar requested_memory: Minimum required memory for the job, in MB
-    @type requested_memory: str | None
-    @ivar consumed_energy: Total energy consumed by all tasks in job, in joules
-    @type consumed_energy: str | None
-    @ivar max_disk_read: Maximum number of bytes read by all tasks in job
-    @type max_disk_read: str | None
-    @ivar max_disk_read_node: The node on which the maximum number of bytes read occurred
-    @type max_disk_read_node: str | None
-    @ivar max_disk_read_task: The task identifier where the maximum number of bytes read occurred
-    @type max_disk_read_task: str | None
-    @ivar average_disk_read: Average number of bytes read by all tasks in job
-    @type average_disk_read: str | None
-    @ivar max_disk_write: Maximum number of bytes written by all tasks in job
-    @type max_disk_write: str | None
-    @ivar max_disk_write_node: The node on which the maximum number of bytes written occurred
-    @type max_disk_write_node: str | None
-    @ivar max_disk_write_task: The task identifier where the maximum number of bytes written occurred
-    @type max_disk_write_task: str | None
-    @ivar average_disk_write: Average number of bytes written by all tasks in job
-    @type average_disk_write: str | None
-    @ivar allocated_gres: Allocated generic consumable resources
-    @type allocated_gres: str | None
-    @ivar requested_gres: Requested generic consumable resources
-    @type requested_gres: str | None
-    @ivar allocated_tres: Allocated trackable resources
-    @type allocated_tres: str | None
-    @ivar requested_tres: Requested trackable resources
-    @type requested_tres: str | None
-    @ivar tres_usage_in_average: Tres average usage in by all tasks in job.
-    @type tres_usage_in_average: str | None
-    @ivar tres_usage_in_maximum: Tres maximum usage in by all tasks in job.
-    @type tres_usage_in_maximum: str | None
-    @ivar tres_usage_in_maximum_node: Node for which each maximum TRES usage out occurred.
-    @type tres_usage_in_maximum_node: str | None
-    @ivar tres_usage_in_maximum_task: Task for which each maximum TRES usage out occurred.
-    @type tres_usage_in_maximum_task: str | None
-    @ivar tres_usage_in_minimum: Tres minimum usage in by all tasks in job.
-    @type tres_usage_in_minimum: str | None
-    @ivar tres_usage_in_minimum_node: Node for which each minimum TRES usage out occurred.
-    @type tres_usage_in_minimum_node: str | None
-    @ivar tres_usage_in_minimum_task: Task for which each minimum TRES usage out occurred.
-    @type tres_usage_in_minimum_task: str | None
-    @ivar tres_usage_in_total: Tres total usage in by all tasks in job.
-    @type tres_usage_in_total: str | None
-    @ivar tres_usage_out_maximum: Tres maximum usage out by all tasks in job.
-    @type tres_usage_out_maximum: str | None
-    @ivar tres_usage_out_maximum_node: Node for which each maximum TRES usage out occurred.
-    @type tres_usage_out_maximum_node: str | None
-    @ivar tres_usage_out_maximum_task: Task for which each maximum TRES usage out occurred.
-    @type tres_usage_out_maximum_task: str | None
-    @ivar tres_usage_out_average: Tres average usage out by all tasks in job.
-    @type tres_usage_out_average: str | None
-    @ivar tres_usage_out_total: Tres total usage out by all tasks in job.
-    @type tres_usage_out_total: str | None
+    :type exit_code: str | None
+    :ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
+    :type average_cpu_frequency: str | None
+    :ivar requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
+    :type requested_cpu_frequency_min: str | None
+    :ivar requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
+    :type requested_cpu_frequency_max: str | None
+    :ivar requested_cpu_frequency_gov: Requested CPU governor
+    :type requested_cpu_frequency_gov: str | None
+    :ivar requested_memory: Minimum required memory for the job, in MB
+    :type requested_memory: str | None
+    :ivar consumed_energy: Total energy consumed by all tasks in job, in joules
+    :type consumed_energy: str | None
+    :ivar max_disk_read: Maximum number of bytes read by all tasks in job
+    :type max_disk_read: str | None
+    :ivar max_disk_read_node: The node on which the maximum number of bytes read occurred
+    :type max_disk_read_node: str | None
+    :ivar max_disk_read_task: The task identifier where the maximum number of bytes read occurred
+    :type max_disk_read_task: str | None
+    :ivar average_disk_read: Average number of bytes read by all tasks in job
+    :type average_disk_read: str | None
+    :ivar max_disk_write: Maximum number of bytes written by all tasks in job
+    :type max_disk_write: str | None
+    :ivar max_disk_write_node: The node on which the maximum number of bytes written occurred
+    :type max_disk_write_node: str | None
+    :ivar max_disk_write_task: The task identifier where the maximum number of bytes written occurred
+    :type max_disk_write_task: str | None
+    :ivar average_disk_write: Average number of bytes written by all tasks in job
+    :type average_disk_write: str | None
+    :ivar allocated_gres: Allocated generic consumable resources
+    :type allocated_gres: str | None
+    :ivar requested_gres: Requested generic consumable resources
+    :type requested_gres: str | None
+    :ivar allocated_tres: Allocated trackable resources
+    :type allocated_tres: str | None
+    :ivar requested_tres: Requested trackable resources
+    :type requested_tres: str | None
+    :ivar tres_usage_in_average: Tres average usage in by all tasks in job.
+    :type tres_usage_in_average: str | None
+    :ivar tres_usage_in_maximum: Tres maximum usage in by all tasks in job.
+    :type tres_usage_in_maximum: str | None
+    :ivar tres_usage_in_maximum_node: Node for which each maximum TRES usage out occurred.
+    :type tres_usage_in_maximum_node: str | None
+    :ivar tres_usage_in_maximum_task: Task for which each maximum TRES usage out occurred.
+    :type tres_usage_in_maximum_task: str | None
+    :ivar tres_usage_in_minimum: Tres minimum usage in by all tasks in job.
+    :type tres_usage_in_minimum: str | None
+    :ivar tres_usage_in_minimum_node: Node for which each minimum TRES usage out occurred.
+    :type tres_usage_in_minimum_node: str | None
+    :ivar tres_usage_in_minimum_task: Task for which each minimum TRES usage out occurred.
+    :type tres_usage_in_minimum_task: str | None
+    :ivar tres_usage_in_total: Tres total usage in by all tasks in job.
+    :type tres_usage_in_total: str | None
+    :ivar tres_usage_out_maximum: Tres maximum usage out by all tasks in job.
+    :type tres_usage_out_maximum: str | None
+    :ivar tres_usage_out_maximum_node: Node for which each maximum TRES usage out occurred.
+    :type tres_usage_out_maximum_node: str | None
+    :ivar tres_usage_out_maximum_task: Task for which each maximum TRES usage out occurred.
+    :type tres_usage_out_maximum_task: str | None
+    :ivar tres_usage_out_average: Tres average usage out by all tasks in job.
+    :type tres_usage_out_average: str | None
+    :ivar tres_usage_out_total: Tres total usage out by all tasks in job.
+    :type tres_usage_out_total: str | None
     """
 
     def __init__(
@@ -228,124 +227,124 @@ class ProcessSLURM(object):
             tres_usage_out_average=None,
             tres_usage_out_total=None
     ):
-        """Initialise a C{bsf.drms.slurm.ProcessSLURM}.
+        """Initialise a :py:class:`bsf.drms.slurm.ProcessSLURM` object.
 
-        @param process_slurm_id:
-        @type process_slurm_id: int | None
-        @param job_id: The number of the job or job step. It is in the form: I{job.jobstep}
-        @type job_id: str | None
-        @param job_id_raw: The number of the job or job step. It is in the form: I{job.jobstep}
-        @type job_id_raw: str | None
-        @param job_name: The name of the job or job step
-        @type job_name: str | None
-        @param partition: Identifies the partition on which the job ran
-        @type partition: str | None
-        @param max_vm_size: Maximum virtual memory size of all tasks in job
-        @type max_vm_size: str | None
-        @param max_vm_size_node: The node on which the maximum virtual memory size occurred
-        @type max_vm_size_node: str | None
-        @param max_vm_size_task: The task identifier where the maximum virtual memory size occurred
-        @type max_vm_size_task: str | None
-        @param average_vm_size: Average virtual memory size of all tasks in job
-        @type average_vm_size: str | None
-        @param max_rss: Maximum resident set size of all tasks in job
-        @type max_rss: str | None
-        @param max_rss_node: The node on which the maximum resident set size occurred
-        @type max_rss_node: str | None
-        @param max_rss_task: The task identifier where the maximum resident set size occurred
-        @type max_rss_task: str | None
-        @param average_rss: Average resident set size of all tasks in job
-        @type average_rss: str | None
-        @param max_pages: Maximum number of page faults of all tasks in job
-        @type max_pages: str | None
-        @param max_pages_node: The node on which the maximum number of page faults occurred
-        @type max_pages_node: str | None
-        @param max_pages_task: The task identifier where the maximum number of page faults occurred
-        @type max_pages_task: str | None
-        @param average_pages: Average number of page faults of all tasks in job
-        @type average_pages: str | None
-        @param min_cpu: Minimum (system + user) CPU time of all tasks in job
-        @type min_cpu: str | None
-        @param min_cpu_node: The node on which the minimum CPU time occurred
-        @type min_cpu_node: str | None
-        @param min_cpu_task: The task identifier where the minimum CPU time occurred
-        @type min_cpu_task: str | None
-        @param average_cpu: Average (system + user) CPU time of all tasks in job
-        @type average_cpu: str | None
-        @param number_tasks: Total number of tasks in a job or step
-        @type number_tasks: str | None
-        @param allocated_cpus: Count of allocated CPUs
-        @type allocated_cpus: str | None
-        @param elapsed: The jobs elapsed time
-        @type elapsed: str | None
-        @param state: Displays the job status, or state.
+        :param process_slurm_id:
+        :type process_slurm_id: int | None
+        :param job_id: The number of the job or job step. It is in the form: :literal:`job.jobstep`.
+        :type job_id: str | None
+        :param job_id_raw: The number of the job or job step. It is in the form: :literal:`job.jobstep`.
+        :type job_id_raw: str | None
+        :param job_name: The name of the job or job step
+        :type job_name: str | None
+        :param partition: Identifies the partition on which the job ran
+        :type partition: str | None
+        :param max_vm_size: Maximum virtual memory size of all tasks in job
+        :type max_vm_size: str | None
+        :param max_vm_size_node: The node on which the maximum virtual memory size occurred
+        :type max_vm_size_node: str | None
+        :param max_vm_size_task: The task identifier where the maximum virtual memory size occurred
+        :type max_vm_size_task: str | None
+        :param average_vm_size: Average virtual memory size of all tasks in job
+        :type average_vm_size: str | None
+        :param max_rss: Maximum resident set size of all tasks in job
+        :type max_rss: str | None
+        :param max_rss_node: The node on which the maximum resident set size occurred
+        :type max_rss_node: str | None
+        :param max_rss_task: The task identifier where the maximum resident set size occurred
+        :type max_rss_task: str | None
+        :param average_rss: Average resident set size of all tasks in job
+        :type average_rss: str | None
+        :param max_pages: Maximum number of page faults of all tasks in job
+        :type max_pages: str | None
+        :param max_pages_node: The node on which the maximum number of page faults occurred
+        :type max_pages_node: str | None
+        :param max_pages_task: The task identifier where the maximum number of page faults occurred
+        :type max_pages_task: str | None
+        :param average_pages: Average number of page faults of all tasks in job
+        :type average_pages: str | None
+        :param min_cpu: Minimum (system + user) CPU time of all tasks in job
+        :type min_cpu: str | None
+        :param min_cpu_node: The node on which the minimum CPU time occurred
+        :type min_cpu_node: str | None
+        :param min_cpu_task: The task identifier where the minimum CPU time occurred
+        :type min_cpu_task: str | None
+        :param average_cpu: Average (system + user) CPU time of all tasks in job
+        :type average_cpu: str | None
+        :param number_tasks: Total number of tasks in a job or step
+        :type number_tasks: str | None
+        :param allocated_cpus: Count of allocated CPUs
+        :type allocated_cpus: str | None
+        :param elapsed: The jobs elapsed time
+        :type elapsed: str | None
+        :param state: Displays the job status, or state.
             Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
-        @type state: str | None
-        @param exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
+        :type state: str | None
+        :param exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
             Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
-        @type exit_code: str | None
-        @param average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
-        @type average_cpu_frequency: str | None
-        @param requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
-        @type requested_cpu_frequency_min: str | None
-        @param requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
-        @type requested_cpu_frequency_max: str | None
-        @param requested_cpu_frequency_gov: Requested CPU governor
-        @type requested_cpu_frequency_gov: str | None
-        @param requested_memory: Minimum required memory for the job, in MB
-        @type requested_memory: str | None
-        @param consumed_energy: Total energy consumed by all tasks in job, in joules
-        @type consumed_energy: str | None
-        @param max_disk_read: Maximum number of bytes read by all tasks in job
-        @type max_disk_read: str | None
-        @param max_disk_read_node: The node on which the maximum number of bytes read occurred
-        @type max_disk_read_node: str | None
-        @param max_disk_read_task: The task identifier where the maximum number of bytes read occurred
-        @type max_disk_read_task: str | None
-        @param average_disk_read: Average number of bytes read by all tasks in job
-        @type average_disk_read: str | None
-        @param max_disk_write: Maximum number of bytes written by all tasks in job
-        @type max_disk_write: str | None
-        @param max_disk_write_node: The node on which the maximum number of bytes written occurred
-        @type max_disk_write_node: str | None
-        @param max_disk_write_task: The task identifier where the maximum number of bytes written occurred
-        @type max_disk_write_task: str | None
-        @param average_disk_write: Average number of bytes written by all tasks in job
-        @type average_disk_write: str | None
-        @param allocated_gres: Allocated generic consumable resources
-        @type allocated_gres: str | None
-        @param requested_gres: Requested generic consumable resources
-        @type requested_gres: str | None
-        @param allocated_tres: Allocated trackable resources
-        @type allocated_tres: str | None
-        @param requested_tres: Requested trackable resources
-        @type requested_tres: str | None
-        @param tres_usage_in_average: Tres average usage in by all tasks in job.
-        @type tres_usage_in_average: str | None
-        @param tres_usage_in_maximum: Tres maximum usage in by all tasks in job.
-        @type tres_usage_in_maximum: str | None
-        @param tres_usage_in_maximum_node: Node for which each maximum TRES usage out occurred.
-        @type tres_usage_in_maximum_node: str | None
-        @param tres_usage_in_maximum_task: Task for which each maximum TRES usage out occurred.
-        @type tres_usage_in_maximum_task: str | None
-        @param tres_usage_in_minimum: Tres minimum usage in by all tasks in job.
-        @type tres_usage_in_minimum: str | None
-        @param tres_usage_in_minimum_node: Node for which each minimum TRES usage out occurred.
-        @type tres_usage_in_minimum_node: str | None
-        @param tres_usage_in_minimum_task: Task for which each minimum TRES usage out occurred.
-        @type tres_usage_in_minimum_task: str | None
-        @param tres_usage_in_total: Tres total usage in by all tasks in job.
-        @type tres_usage_in_total: str | None
-        @param tres_usage_out_maximum: Tres maximum usage out by all tasks in job.
-        @type tres_usage_out_maximum: str | None
-        @param tres_usage_out_maximum_node: Node for which each maximum TRES usage out occurred.
-        @type tres_usage_out_maximum_node: str | None
-        @param tres_usage_out_maximum_task: Task for which each maximum TRES usage out occurred.
-        @type tres_usage_out_maximum_task: str | None
-        @param tres_usage_out_average: Tres average usage out by all tasks in job.
-        @type tres_usage_out_average: str | None
-        @param tres_usage_out_total: Tres total usage out by all tasks in job.
-        @type tres_usage_out_total: str | None
+        :type exit_code: str | None
+        :param average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
+        :type average_cpu_frequency: str | None
+        :param requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
+        :type requested_cpu_frequency_min: str | None
+        :param requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
+        :type requested_cpu_frequency_max: str | None
+        :param requested_cpu_frequency_gov: Requested CPU governor
+        :type requested_cpu_frequency_gov: str | None
+        :param requested_memory: Minimum required memory for the job, in MB
+        :type requested_memory: str | None
+        :param consumed_energy: Total energy consumed by all tasks in job, in joules
+        :type consumed_energy: str | None
+        :param max_disk_read: Maximum number of bytes read by all tasks in job
+        :type max_disk_read: str | None
+        :param max_disk_read_node: The node on which the maximum number of bytes read occurred
+        :type max_disk_read_node: str | None
+        :param max_disk_read_task: The task identifier where the maximum number of bytes read occurred
+        :type max_disk_read_task: str | None
+        :param average_disk_read: Average number of bytes read by all tasks in job
+        :type average_disk_read: str | None
+        :param max_disk_write: Maximum number of bytes written by all tasks in job
+        :type max_disk_write: str | None
+        :param max_disk_write_node: The node on which the maximum number of bytes written occurred
+        :type max_disk_write_node: str | None
+        :param max_disk_write_task: The task identifier where the maximum number of bytes written occurred
+        :type max_disk_write_task: str | None
+        :param average_disk_write: Average number of bytes written by all tasks in job
+        :type average_disk_write: str | None
+        :param allocated_gres: Allocated generic consumable resources
+        :type allocated_gres: str | None
+        :param requested_gres: Requested generic consumable resources
+        :type requested_gres: str | None
+        :param allocated_tres: Allocated trackable resources
+        :type allocated_tres: str | None
+        :param requested_tres: Requested trackable resources
+        :type requested_tres: str | None
+        :param tres_usage_in_average: Tres average usage in by all tasks in job.
+        :type tres_usage_in_average: str | None
+        :param tres_usage_in_maximum: Tres maximum usage in by all tasks in job.
+        :type tres_usage_in_maximum: str | None
+        :param tres_usage_in_maximum_node: Node for which each maximum TRES usage out occurred.
+        :type tres_usage_in_maximum_node: str | None
+        :param tres_usage_in_maximum_task: Task for which each maximum TRES usage out occurred.
+        :type tres_usage_in_maximum_task: str | None
+        :param tres_usage_in_minimum: Tres minimum usage in by all tasks in job.
+        :type tres_usage_in_minimum: str | None
+        :param tres_usage_in_minimum_node: Node for which each minimum TRES usage out occurred.
+        :type tres_usage_in_minimum_node: str | None
+        :param tres_usage_in_minimum_task: Task for which each minimum TRES usage out occurred.
+        :type tres_usage_in_minimum_task: str | None
+        :param tres_usage_in_total: Tres total usage in by all tasks in job.
+        :type tres_usage_in_total: str | None
+        :param tres_usage_out_maximum: Tres maximum usage out by all tasks in job.
+        :type tres_usage_out_maximum: str | None
+        :param tres_usage_out_maximum_node: Node for which each maximum TRES usage out occurred.
+        :type tres_usage_out_maximum_node: str | None
+        :param tres_usage_out_maximum_task: Task for which each maximum TRES usage out occurred.
+        :type tres_usage_out_maximum_task: str | None
+        :param tres_usage_out_average: Tres average usage out by all tasks in job.
+        :type tres_usage_out_average: str | None
+        :param tres_usage_out_total: Tres total usage out by all tasks in job.
+        :type tres_usage_out_total: str | None
         """
         super(ProcessSLURM, self).__init__()
 
@@ -411,19 +410,19 @@ class ProcessSLURM(object):
 
 
 class ProcessSLURMAdaptor(DatabaseAdaptor):
-    """C{bsf.drms.slurm.ProcessSLURMAdaptor} class providing database access for the
-    C{bsf.drms.slurm.ProcessSLURM} class.
+    """The :py:class:`bsf.drms.slurm.ProcessSLURMAdaptor` class provides database access for the
+    :py:class:`bsf.drms.slurm.ProcessSLURM` class.
 
-    The SQL column names result from SLURM command sacct --parsable --long
+    The SQL column names result from SLURM command :literal:`sacct --parsable --long`
     """
 
     def __init__(
             self,
             database_connection):
-        """Initialise a C{bsf.drms.slurm.ProcessSLURMAdaptor}.
+        """Initialise a :py:class:`bsf.drms.slurm.ProcessSLURMAdaptor` object.
 
-        @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: DatabaseConnection
+        :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
+        :type database_connection: DatabaseConnection
         """
 
         super(ProcessSLURMAdaptor, self).__init__(
@@ -667,8 +666,8 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             # print('Statement:', statement)
             self.get_cursor().execute(statement)
             # By default, the sqlite3 Python module opens transactions implicitly before a
-            # Data Modification Language (DML) statement (i.e. INSERT, UPDATE, DELETE or REPLACE)
-            # and commits transactions implicitly before a non-DML, non-query statement (i.e. SELECT)
+            # Data Modification Language (DML) statement (i.e., INSERT, UPDATE, DELETE or REPLACE)
+            # and commits transactions implicitly before a non-DML, non-query statement (i.e., SELECT)
             self.database_connection.commit()
 
             # Drop the old table
@@ -679,24 +678,25 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return
 
     def select_all_by_job_name(self, name):
-        """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{job_name}.
+        """Select all :py:class:`bsf.drms.slurm.ProcessSLURM` objects by :literal:`job_name`.
 
-        The same C{bsf.process.Executable} can be submitted more than once into the C{bsf.analysis.Stage}.
+        The same :py:class:`bsf.process.Executable` object can be submitted more than once into the
+        :py:class:`bsf.analysis.Stage` object.
 
-        @param name: Job name
-        @type name: str
-        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: list[ProcessSLURM]
+        :param name: Job name.
+        :type name: str
+        :return: Python :py:class:`list` object of :py:class:`bsf.drms.slurm.ProcessSLURM` objects.
+        :rtype: list[ProcessSLURM]
         """
         return self.select(statement=self.statement_select(where_clause='job_name = ?'), parameters=[name])
 
     def select_all_by_state(self, state=None):
-        """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{state}.
+        """Select all :py:class:`bsf.drms.slurm.ProcessSLURM` objects by :literal:`state`.
 
-        @param state: State
-        @type state: str | None
-        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: list[ProcessSLURM]
+        :param state: State
+        :type state: str | None
+        :return: A Python :py:class:`list` object of :py:class:`bsf.drms.slurm.ProcessSLURM` objects.
+        :rtype: list[ProcessSLURM]
         """
         parameters = list()
 
@@ -709,14 +709,14 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return self.select(statement=statement, parameters=parameters)
 
     def select_all_by_states(self, state_list, negation=False):
-        """Select all C{bsf.drms.slurm.ProcessSLURM} objects by a list of states.
+        """Select all :py:class:`bsf.drms.slurm.ProcessSLURM` objects by a list of :literal:`states`.
 
-        @param state_list: State
-        @type state_list: list[str]
-        @param negation: Negation i.e. SQL NOT IN
-        @type negation: bool
-        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: list[ProcessSLURM]
+        :param state_list: A Python :class:`list` object of Python :py:class:`str` (state) objects.
+        :type state_list: list[str]
+        :param negation: Negation i.e., SQL NOT IN
+        :type negation: bool
+        :return: A Python :py:class:`list` object of :py:class:`bsf.drms.slurm.ProcessSLURM` objects.
+        :rtype: list[ProcessSLURM]
         """
         if negation:
             statement = self.statement_select(where_clause='state NOT IN (' + ','.join('?' * len(state_list)) + ')')
@@ -726,12 +726,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return self.select(statement=statement, parameters=state_list)
 
     def select_by_job_id(self, job_id):
-        """Select one C{bsf.drms.slurm.ProcessSLURM} object by job_id.
+        """Select one :py:class:`bsf.drms.slurm.ProcessSLURM` object by :literal:`job_id`.
 
-        @param job_id: Job identifier
-        @type job_id: str
-        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
-        @rtype: ProcessSLURM
+        :param job_id: Job identifier
+        :type job_id: str
+        :return: A Python :py:class:`list` object of :py:class:`bsf.drms.slurm.ProcessSLURM` objects.
+        :rtype: ProcessSLURM
         """
         object_list = self.select(statement=self.statement_select(where_clause='job_id = ?'), parameters=[job_id])
         object_length = len(object_list)
@@ -745,7 +745,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
 
 def _recalculate_memory(memory):
-    """Recalculate the memory string.
+    """Recalculate a memory string.
 
     Multiplier suffixes K, M, G, T, P, E, Z and Y are based on 1024, while
     multiplier suffixes k, m, g, t, p, e, z and y are based on 1000 in line
@@ -753,12 +753,11 @@ def _recalculate_memory(memory):
     https://en.wikipedia.org/wiki/Binary_prefix
     https://en.wikipedia.org/wiki/Metric_prefix
 
-    @param memory: Memory specification string
-    @type memory: str
-    @return: Memory specification string
-    @rtype: str
+    :param memory: Memory specification string
+    :type memory: str
+    :return: Memory specification string
+    :rtype: str
     """
-
     assert isinstance(memory, str)
 
     if memory[-1:] == 'K':  # kibi
@@ -804,32 +803,35 @@ def _recalculate_memory(memory):
 
 
 def submit(stage, debug=0):
-    """Submit each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
+    """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    Submits each C{bsf.process.Executable} into the
-    Simple Linux Utility for Resource Management (SLURM)
-    Distributed Resource Management System (DRMS).
-    @param stage: C{bsf.analysis.Stage}
-    @type stage: bsf.analysis.Stage
-    @param debug: Debug level
-    @type debug: int
+    Submits each :py:class:`bsf.process.Executable` object into the
+    :literal:`Simple Linux Utility for Resource Management (SLURM)`
+    :literal:`Distributed Resource Management System (DRMS)`.
+
+    :param stage: A :py:class:`bsf.analysis.Stage` object.
+    :type stage: bsf.analysis.Stage
+    :param debug: An integer debugging level.
+    :type debug: int
     """
 
     def submit_sbatch_stdout(_file_handle, _thread_lock, _debug, _executable):
-        """Thread callable to process the SLURM I{sbatch} I{STDOUT} stream.
+        """Thread callable to process the SLURM :manpage:`sbatch(1)` :literal:`STDOUT` stream.
 
-        Parses the process identifier returned by SLURM sbatch and sets it as
-        C{bsf.process.Executable.process_identifier}.
-        The response to the SLURM sbatch command looks like:
-        Submitted batch job 1234567
-        @param _file_handle: File handle (i.e. pipe)
-        @type _file_handle: io.TextIOWrapper
-        @param _thread_lock: Thread lock
-        @type _thread_lock: Lock
-        @param _debug: Debug level
-        @type _debug: int
-        @param _executable: C{bsf.process.Executable}
-        @type _executable: Executable
+        Parses the process identifier returned by SLURM :literal:`sbatch` and sets it as
+        :py:attr:`bsf.process.Executable.process_identifier`.
+        The response to the SLURM :literal:`sbatch` command looks like:
+
+        :literal:`Submitted batch job 1234567`
+
+        :param _file_handle: File handle (i.e. pipe)
+        :type _file_handle: io.TextIOWrapper
+        :param _thread_lock: A Python :py:class:`threading.Lock` object.
+        :type _thread_lock: Lock
+        :param _debug: Debug level
+        :type _debug: int
+        :param _executable: A :py:class:`bsf.process.Executable` object.
+        :type _executable: Executable
         """
         for _line in _file_handle:
             if _debug > 0:
@@ -1040,27 +1042,27 @@ def submit(stage, debug=0):
 
 
 def check_state(stage, debug=0):
-    """Check the state of each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
+    """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    @param stage: C{bsf.analysis.Stage}
-    @type stage: bsf.analysis.Stage
-    @param debug: Debug level
-    @type debug: int
+    :param stage: A :py:class:`bsf.analysis.Stage` object.
+    :type stage: bsf.analysis.Stage
+    :param debug: An integer debugging level.
+    :type debug: int
     """
 
     def check_state_stdout(_stdout_handle, _thread_lock, _debug, _process_slurm_adaptor, _stdout_path=None):
-        """Thread callable to process the SLURM I{sacct} I{STDOUT} stream.
+        """Thread callable to process the SLURM :manpage:`sacct(1)` :literal:`STDOUT` stream.
 
-        @param _stdout_handle: The I{STDOUT} or I{STDERR} file handle
-        @type _stdout_handle: io.TextIOWrapper
-        @param _thread_lock: Python C{threading.Lock}
-        @type _thread_lock: Lock
-        @param _debug: Debug level
-        @type _debug: int
-        @param _process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
-        @type _process_slurm_adaptor: ProcessSLURMAdaptor
-        @param _stdout_path: I{STDOUT} file path
-        @type _stdout_path: str | None
+        :param _stdout_handle: The :literal:`STDOUT` or :literal:`STDERR` file handle.
+        :type _stdout_handle: io.TextIOWrapper
+        :param _thread_lock: A Python :py:class:`threading.Lock` object.
+        :type _thread_lock: Lock
+        :param _debug: Debug level
+        :type _debug: int
+        :param _process_slurm_adaptor: A :py:class:`bsf.drms.slurm.ProcessSLURMAdaptor` object.
+        :type _process_slurm_adaptor: ProcessSLURMAdaptor
+        :param _stdout_path: A :literal:`STDOUT` file path
+        :type _stdout_path: str | None
         """
         if _debug > 0:
             _thread_lock.acquire(True)

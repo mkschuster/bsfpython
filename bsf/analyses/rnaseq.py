@@ -22,9 +22,14 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""RNA-seq Analysis module.
+"""The :py:mod:`bsf.analyses.rnaseq` module provides two main classes supporting RNA-seq analyses.
 
-A package of classes and methods supporting RNA-seq analyses.
+    - The :py:class:`bsf.analyses.rnaseq.DESeq` class models an RNA-seq analysis based on the
+        `Bioconductor <https://bioconductor.org/>`_
+        `DESeq2 <https://bioconductor.org/packages/release/bioc/html/DESeq2.html>`_ package.
+
+    - The :py:class:`bsf.analyses.rnaseq.Tuxedo` class models an RNA-seq analysis based on the
+        `Cufflinks <http://cole-trapnell-lab.github.io/cufflinks/>`_ package.
 """
 import errno
 import os
@@ -49,53 +54,53 @@ from bsf.standards import Configuration, StandardFilePath, Index, Transcriptome
 
 
 class FilePathTophat(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathTophat} models files in a sample-specific TopHat directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathTophat` class models files in a sample-specific TopHat directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar accepted_hits_bam: TopHat accepted hits BAM file
-    @type accepted_hits_bam: str
-    @ivar accepted_hits_bam_link_source: TopHat accepted hits BAM file symbolic link source
-    @type accepted_hits_bam_link_source: str
-    @ivar accepted_hits_bam_link_target: TopHat accepted hits BAM file symbolic link target
-    @type accepted_hits_bam_link_target: str
-    @ivar accepted_hits_bai: TopHat accepted hits BAI file
-    @type accepted_hits_bai: str
-    @ivar accepted_hits_bai_link_source: TopHat accepted hits BAI file symbolic link source
-    @type accepted_hits_bai_link_source: str
-    @ivar accepted_hits_bai_link_target: TopHat accepted hits BAI file symbolic link target
-    @type accepted_hits_bai_link_target: str
-    @ivar accepted_hits_bw: TopHat accepted hits bigWig file
-    @type accepted_hits_bw: str
-    @ivar align_summary: TopHat align summary file
-    @type align_summary: str
-    @ivar deletions_bb: TopHat deletions bigBed file
-    @type deletions_bb: str
-    @ivar deletions_bed: TopHat deletions BED file
-    @type deletions_bed: str
-    @ivar insertions_bb: TopHat insertions bigBed file
-    @type insertions_bb: str
-    @ivar insertions_bed: TopHat insertions BED file
-    @type insertions_bed: str
-    @ivar junctions_bb: TopHat junctions bigBed file
-    @type junctions_bb: str
-    @ivar junctions_bed: TopHat junctions BED file
-    @type junctions_bed: str
-    @ivar prep_reads_info: TopHat prepare reads information file
-    @type prep_reads_info: str
-    @ivar unmapped_bam: TopHat unmapped BAM file
-    @type unmapped_bam: str
-    @ivar unmapped_bam_link_source: TopHat unmapped BAM file symbolic link source
-    @type unmapped_bam_link_source: str
-    @ivar unmapped_bam_link_target: TopHat unmapped BAM file symbolic link target
-    @type unmapped_bam_link_target: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar accepted_hits_bam: TopHat accepted hits BAM file
+    :type accepted_hits_bam: str
+    :ivar accepted_hits_bam_link_source: TopHat accepted hits BAM file symbolic link source
+    :type accepted_hits_bam_link_source: str
+    :ivar accepted_hits_bam_link_target: TopHat accepted hits BAM file symbolic link target
+    :type accepted_hits_bam_link_target: str
+    :ivar accepted_hits_bai: TopHat accepted hits BAI file
+    :type accepted_hits_bai: str
+    :ivar accepted_hits_bai_link_source: TopHat accepted hits BAI file symbolic link source
+    :type accepted_hits_bai_link_source: str
+    :ivar accepted_hits_bai_link_target: TopHat accepted hits BAI file symbolic link target
+    :type accepted_hits_bai_link_target: str
+    :ivar accepted_hits_bw: TopHat accepted hits bigWig file
+    :type accepted_hits_bw: str
+    :ivar align_summary: TopHat align summary file
+    :type align_summary: str
+    :ivar deletions_bb: TopHat deletions bigBed file
+    :type deletions_bb: str
+    :ivar deletions_bed: TopHat deletions BED file
+    :type deletions_bed: str
+    :ivar insertions_bb: TopHat insertions bigBed file
+    :type insertions_bb: str
+    :ivar insertions_bed: TopHat insertions BED file
+    :type insertions_bed: str
+    :ivar junctions_bb: TopHat junctions bigBed file
+    :type junctions_bb: str
+    :ivar junctions_bed: TopHat junctions BED file
+    :type junctions_bed: str
+    :ivar prep_reads_info: TopHat prepare reads information file
+    :type prep_reads_info: str
+    :ivar unmapped_bam: TopHat unmapped BAM file
+    :type unmapped_bam: str
+    :ivar unmapped_bam_link_source: TopHat unmapped BAM file symbolic link source
+    :type unmapped_bam_link_source: str
+    :ivar unmapped_bam_link_target: TopHat unmapped BAM file symbolic link target
+    :type unmapped_bam_link_target: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathTophat} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathTophat, self).__init__(prefix=prefix)
 
@@ -123,49 +128,50 @@ class FilePathTophat(FilePath):
 
 
 class FilePathCufflinks(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` class models files in a
+    sample-specific Cufflinks directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes tab-separated value (TSV) file
-    @type fpkm_tracking_genes_tsv: str
-    @ivar fpkm_tracking_isoforms_tsv: Cufflinks FPKM tracking isoforms tab-separated value (TSV) file
-    @type fpkm_tracking_isoforms_tsv: str
-    @ivar skipped_gtf: Cufflinks skipped regions GTF file
-    @type skipped_gtf: str
-    @ivar skipped_gtf_link_source: Cufflinks skipped regions GTF symbolic link source
-    @type skipped_gtf_link_source: str
-    @ivar skipped_gtf_link_target: Cufflinks skipped regions GTF symbolic link target
-    @type skipped_gtf_link_target: str
-    @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
-    @type temporary_big_gene_prediction: str
-    @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
-    @type temporary_gene_prediction: str
-    @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
-    @type temporary_sorted_tsv: str
-    @ivar temporary_slopped_tsv: Temporary slopped (bedtools slop) tab-separated value (TSV) file
-    @type temporary_slopped_tsv: str
-    @ivar temporary_fixed_tsv: Temporary slopped and fixed (tab at end) tab-separated value (TSV) file
-    @type temporary_fixed_tsv: str
-    @ivar transcripts_bb: Cufflinks transcript assembly bigBed file
-    @type transcripts_bb: str
-    @ivar transcripts_bb_link_source: Cufflinks transcript assembly bigBed symbolic link source
-    @type transcripts_bb_link_source: str
-    @ivar transcripts_bb_link_target: Cufflinks transcript assembly bigBed symbolic link target
-    @type transcripts_bb_link_target: str
-    @ivar transcripts_gtf: Cufflinks transcript assembly GTF file
-    @type transcripts_gtf: str
-    @ivar transcripts_gtf_link_source: Cufflinks transcript assembly GTF symbolic link source
-    @type transcripts_gtf_link_source: str
-    @ivar transcripts_gtf_link_target: Cufflinks transcript assembly GTF symbolic link target
-    @type transcripts_gtf_link_target: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes tab-separated value (TSV) file
+    :type fpkm_tracking_genes_tsv: str
+    :ivar fpkm_tracking_isoforms_tsv: Cufflinks FPKM tracking isoforms tab-separated value (TSV) file
+    :type fpkm_tracking_isoforms_tsv: str
+    :ivar skipped_gtf: Cufflinks skipped regions GTF file
+    :type skipped_gtf: str
+    :ivar skipped_gtf_link_source: Cufflinks skipped regions GTF symbolic link source
+    :type skipped_gtf_link_source: str
+    :ivar skipped_gtf_link_target: Cufflinks skipped regions GTF symbolic link target
+    :type skipped_gtf_link_target: str
+    :ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
+    :type temporary_big_gene_prediction: str
+    :ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
+    :type temporary_gene_prediction: str
+    :ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
+    :type temporary_sorted_tsv: str
+    :ivar temporary_slopped_tsv: Temporary slopped (bedtools slop) tab-separated value (TSV) file
+    :type temporary_slopped_tsv: str
+    :ivar temporary_fixed_tsv: Temporary slopped and fixed (tab at end) tab-separated value (TSV) file
+    :type temporary_fixed_tsv: str
+    :ivar transcripts_bb: Cufflinks transcript assembly bigBed file
+    :type transcripts_bb: str
+    :ivar transcripts_bb_link_source: Cufflinks transcript assembly bigBed symbolic link source
+    :type transcripts_bb_link_source: str
+    :ivar transcripts_bb_link_target: Cufflinks transcript assembly bigBed symbolic link target
+    :type transcripts_bb_link_target: str
+    :ivar transcripts_gtf: Cufflinks transcript assembly GTF file
+    :type transcripts_gtf: str
+    :ivar transcripts_gtf_link_source: Cufflinks transcript assembly GTF symbolic link source
+    :type transcripts_gtf_link_source: str
+    :ivar transcripts_gtf_link_target: Cufflinks transcript assembly GTF symbolic link target
+    :type transcripts_gtf_link_target: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathCufflinks} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathCufflinks, self).__init__(prefix=prefix)
 
@@ -191,51 +197,52 @@ class FilePathCufflinks(FilePath):
 
 
 class FilePathCuffmerge(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathCuffmerge` class models files in a
+    comparison-specific Cuffmerge directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar assembly_txt: Assembly text file
-    @type assembly_txt: str
-    @ivar merged_bb: Cuffmerge transcript assembly bigBed file
-    @type merged_bb: str
-    @ivar merged_bb_link_source: Cuffmerge transcript assembly bigBed symbolic link source
-    @type merged_bb_link_source: str
-    @ivar merged_bb_link_target: Cuffmerge transcript assembly bigBed symbolic link target
-    @type merged_bb_link_target: str
-    @ivar merged_gtf: Cuffmerge merged GTF file
-    @type merged_gtf: str
-    @ivar merged_gtf_link_source: Cuffmerge transcript assembly GTF symbolic link source
-    @type merged_gtf_link_source: str
-    @ivar merged_gtf_link_target: Cuffmerge transcript assembly GTF symbolic link target
-    @type merged_gtf_link_target: str
-    @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
-    @type temporary_gene_prediction: str
-    @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
-    @type temporary_big_gene_prediction: str
-    @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
-    @type temporary_sorted_tsv: str
-    @ivar cuffcompare_prefix: Cuffcompare output prefix, including the cuffmerge directory path
-    @type cuffcompare_prefix: str
-    @ivar cuffcompare_combined_gtf: Cuffcompare merged GTF file
-    @type cuffcompare_combined_gtf: str
-    @ivar cuffcompare_loci: Cuffcompare loci file
-    @type cuffcompare_loci: str
-    @ivar cuffcompare_stats: Cuffcompare stats file
-    @type cuffcompare_stats: str
-    @ivar cuffcompare_tracking: Cuffcompare tracking file
-    @type cuffcompare_tracking: str
-    @ivar cuffcompare_refmap: Cuffcompare merged.gtf.refmap
-    @type cuffcompare_refmap: str
-    @ivar cuffcompare_tmap: Cuffcompare merged.gtf.tmap
-    @type cuffcompare_tmap: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar assembly_txt: Assembly text file
+    :type assembly_txt: str
+    :ivar merged_bb: Cuffmerge transcript assembly bigBed file
+    :type merged_bb: str
+    :ivar merged_bb_link_source: Cuffmerge transcript assembly bigBed symbolic link source
+    :type merged_bb_link_source: str
+    :ivar merged_bb_link_target: Cuffmerge transcript assembly bigBed symbolic link target
+    :type merged_bb_link_target: str
+    :ivar merged_gtf: Cuffmerge merged GTF file
+    :type merged_gtf: str
+    :ivar merged_gtf_link_source: Cuffmerge transcript assembly GTF symbolic link source
+    :type merged_gtf_link_source: str
+    :ivar merged_gtf_link_target: Cuffmerge transcript assembly GTF symbolic link target
+    :type merged_gtf_link_target: str
+    :ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
+    :type temporary_gene_prediction: str
+    :ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
+    :type temporary_big_gene_prediction: str
+    :ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
+    :type temporary_sorted_tsv: str
+    :ivar cuffcompare_prefix: Cuffcompare output prefix, including the cuffmerge directory path
+    :type cuffcompare_prefix: str
+    :ivar cuffcompare_combined_gtf: Cuffcompare merged GTF file
+    :type cuffcompare_combined_gtf: str
+    :ivar cuffcompare_loci: Cuffcompare loci file
+    :type cuffcompare_loci: str
+    :ivar cuffcompare_stats: Cuffcompare stats file
+    :type cuffcompare_stats: str
+    :ivar cuffcompare_tracking: Cuffcompare tracking file
+    :type cuffcompare_tracking: str
+    :ivar cuffcompare_refmap: Cuffcompare merged.gtf.refmap
+    :type cuffcompare_refmap: str
+    :ivar cuffcompare_tmap: Cuffcompare merged.gtf.tmap
+    :type cuffcompare_tmap: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffmerge} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffmerge` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathCuffmerge, self).__init__(prefix=prefix)
 
@@ -262,19 +269,20 @@ class FilePathCuffmerge(FilePath):
 
 
 class FilePathCuffquant(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathCuffquant` class models files in a
+    sample-specific Cuffquant directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar abundances: Cuffquant abundances file
-    @type abundances: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar abundances: Cuffquant abundances file
+    :type abundances: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffquant} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffquant` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathCuffquant, self).__init__(prefix=prefix)
 
@@ -285,19 +293,20 @@ class FilePathCuffquant(FilePath):
 
 
 class FilePathCuffnorm(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathCuffnorm` class models files in a
+    comparison-specific Cuffnorm directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar abundances_tsv: Abundances TSV file
-    @type abundances_tsv: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar abundances_tsv: Abundances TSV file
+    :type abundances_tsv: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffnorm} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffnorm` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathCuffnorm, self).__init__(prefix=prefix)
 
@@ -308,17 +317,18 @@ class FilePathCuffnorm(FilePath):
 
 
 class FilePathCuffdiff(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathCuffdiff` class models files in a
+    comparison-specific Cuffdiff directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffdiff} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffdiff` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathCuffdiff, self).__init__(prefix=prefix)
 
@@ -330,26 +340,28 @@ class FilePathCuffdiff(FilePath):
 
 
 class FilePathProcessCuffdiff(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathProcessCuffdiff} models files in a comparison-specific Cuffdiff directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathProcessCuffdiff` class models files in a
+    comparison-specific Cuffdiff directory.
     """
 
     pass
 
 
 class FilePathMonocle(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathMonocle} models files in a comparison-specific Monocle directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathMonocle` class models files in a
+    comparison-specific Monocle directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar annotation_tsv: Monocle annotation TSV
-    @type annotation_tsv: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar annotation_tsv: Monocle annotation TSV
+    :type annotation_tsv: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathMonocle} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathMonocle` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathMonocle, self).__init__(prefix=prefix)
 
@@ -360,9 +372,10 @@ class FilePathMonocle(FilePath):
 
 
 class TuxedoSamplePairSheet(AnnotationSheet):
-    """The C{bsf.analyses.rnaseq.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
+    """The :py:class:`bsf.analyses.rnaseq.TuxedoSamplePairSheet` class represents
+    :py:class:`bsf.ngs.Sample` object pairs.
 
-    The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
+    The :py:class:`bsf.ngs.Sample` object pairs are defined by the :literal:`bsf_rnaseq_process_cuffdiff.R` script.
     """
 
     _file_type = 'excel-tab'
@@ -376,49 +389,46 @@ class TuxedoSamplePairSheet(AnnotationSheet):
 
 
 class Tuxedo(Analysis):
-    """Tuxedo RNASeq C{bsf.analysis.Analysis} sub-class.
+    """The :py:class:`bsf.analyses.rnaseq.Tuxedo` class models an RNA-seq analysis based on the
+    `Cufflinks <http://cole-trapnell-lab.github.io/cufflinks/>`_ package as part of the Tuxedo suite.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
-    @type prefix: str
-    @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-    @type replicate_grouping: bool | None
-    @ivar comparison_path: Comparison file path
-    @type comparison_path: str | None
-    @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | None
-    @ivar genome_index_path: Bowtie genome index path
-    @type genome_index_path: str | None
-    @ivar genome_sizes_path: Reference genome sizes file path
-    @type genome_sizes_path: str | None
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
-    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
-    @type transcriptome_gtf: str | None
-    @ivar transcriptome_index: Transcriptome index directory path
-    @type transcriptome_index: str | None
-    @ivar insert_size: Insert size
-    @type insert_size: int | None
-    @ivar insert_size_sd: Insert size standard deviation
-    @type insert_size_sd: int | None
-    @ivar read_length: Read length
-    @type read_length: int | None
-    @ivar mask_gtf_path: GTF file path to mask transcripts
-    @type mask_gtf_path: str | None
-    @ivar multi_read_correction: Apply multi-read correction
-    @type multi_read_correction: bool | None
-    @ivar library_type: Library type
-        Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
-    @type library_type: str | None
-    @ivar novel_transcripts: Assemble novel transcripts
-    @type novel_transcripts: bool | None
-    @ivar false_discovery_rate: False discovery rate (FDR) threshold
-    @type false_discovery_rate: float | None
-    @ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
-    @type no_length_correction: bool | None
-    @ivar aligner: Alignment program
-    @type aligner: str | None
+    :ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+    :type replicate_grouping: bool | None
+    :ivar comparison_path: Comparison file path
+    :type comparison_path: str | None
+    :ivar genome_fasta_path: Reference genome sequence FASTA file path
+    :type genome_fasta_path: str | None
+    :ivar genome_index_path: Bowtie genome index path
+    :type genome_index_path: str | None
+    :ivar genome_sizes_path: Reference genome sizes file path
+    :type genome_sizes_path: str | None
+    :ivar transcriptome_version: A transcriptome version.
+    :type transcriptome_version: str | None
+    :ivar transcriptome_gtf: A transcriptome annotation GTF file path.
+    :type transcriptome_gtf: str | None
+    :ivar transcriptome_index: A transcriptome index directory path.
+    :type transcriptome_index: str | None
+    :ivar insert_size: An insert size.
+    :type insert_size: int | None
+    :ivar insert_size_sd: An insert size standard deviation.
+    :type insert_size_sd: int | None
+    :ivar read_length: A read length.
+    :type read_length: int | None
+    :ivar mask_gtf_path: A GTF file path to mask transcripts.
+    :type mask_gtf_path: str | None
+    :ivar multi_read_correction: Apply multi-read correction
+    :type multi_read_correction: bool | None
+    :ivar library_type: Library type Cuffquant and Cuffdiff
+        :literal:`fr-unstranded` (default), :literal:`fr-firststrand` or :literal:`fr-secondstrand`
+    :type library_type: str | None
+    :ivar novel_transcripts: Assemble novel transcripts
+    :type novel_transcripts: bool | None
+    :ivar false_discovery_rate: False discovery rate (FDR) threshold
+    :type false_discovery_rate: float | None
+    :ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
+    :type no_length_correction: bool | None
+    :ivar aligner: Alignment program
+    :type aligner: str | None
     """
 
     name = 'RNA-seq Analysis'
@@ -426,37 +436,37 @@ class Tuxedo(Analysis):
 
     @classmethod
     def get_stage_name_run_tophat(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'run_tophat'))
 
     @classmethod
     def get_stage_name_process_tophat(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'process_tophat'))
 
     @classmethod
     def get_stage_name_run_cufflinks(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'run_cufflinks'))
 
     @classmethod
     def get_stage_name_process_cufflinks(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'process_cufflinks'))
 
@@ -464,294 +474,298 @@ class Tuxedo(Analysis):
 
     @classmethod
     def get_stage_name_run_cuffmerge(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cuffmerge'))
 
     @classmethod
     def get_stage_name_run_cuffquant(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cuffquant'))
 
     @classmethod
     def get_stage_name_run_cuffnorm(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cuffnorm'))
 
     @classmethod
     def get_stage_name_run_cuffdiff(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cuffdiff'))
 
     @classmethod
     def get_stage_name_process_cuffdiff(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'process_cuffdiff'))
 
     @classmethod
     def get_stage_name_monocle(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'monocle'))
 
     @classmethod
     def get_prefix_run_tophat(cls, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_run_tophat(), sample_name))
 
     @classmethod
     def get_prefix_process_tophat(cls, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_process_tophat(), sample_name))
 
     @classmethod
     def get_prefix_run_cufflinks(cls, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cufflinks(), sample_name))
 
     @classmethod
     def get_prefix_process_cufflinks(cls):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return cls.get_stage_name_process_cufflinks()
 
     @classmethod
     def get_prefix_run_cuffmerge(cls, comparison_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffmerge(), comparison_name))
 
     @classmethod
     def get_prefix_run_cuffquant(cls, comparison_name, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffquant(), comparison_name, sample_name))
 
     @classmethod
     def get_prefix_run_cuffnorm(cls, comparison_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffnorm(), comparison_name))
 
     @classmethod
     def get_prefix_run_cuffdiff(cls, comparison_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffdiff(), comparison_name))
 
     @classmethod
     def get_prefix_process_cuffdiff(cls, comparison_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_process_cuffdiff(), comparison_name))
 
     @classmethod
     def get_prefix_monocle(cls, comparison_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_monocle(), comparison_name))
 
     @classmethod
     def get_file_path_run_tophat(cls, sample_name):
-        """Get a C{FilePathTophat} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
 
-        The prefix is non-standard, as I{rnaseq_run_tophat} and I{rnaseq_process_tophat}
-        use the same I{rnaseq_tophat} prefix.
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: C{FilePathTophat} object
-        @rtype: FilePathTophat
+        The prefix is non-standard, as :literal:`rnaseq_run_tophat` and :literal:`rnaseq_process_tophat`
+        use the same :literal:`rnaseq_tophat` prefix.
+
+        :param sample_name: A sample name
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
+        :rtype: FilePathTophat
         """
         return FilePathTophat(
             prefix='_'.join(('rnaseq_tophat', sample_name)))
 
     @classmethod
     def get_file_path_process_tophat(cls, sample_name):
-        """Get a C{FilePathTophat} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
 
-        The prefix is non-standard, as I{rnaseq_run_tophat} and I{rnaseq_process_tophat}
-        use the same I{rnaseq_tophat} prefix.
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: C{FilePathTophat} object
-        @rtype: FilePathTophat
+        The prefix is non-standard, as :literal:`rnaseq_run_tophat` and :literal:`rnaseq_process_tophat`
+        use the same :literal:`rnaseq_tophat` prefix.
+
+        :param sample_name: A sample name.
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
+        :rtype: FilePathTophat
         """
         return FilePathTophat(
             prefix='_'.join(('rnaseq_tophat', sample_name)))
 
     @classmethod
     def get_file_path_run_cufflinks(cls, sample_name):
-        """Get a C{FilePathCufflinks} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
 
-        The prefix is non-standard, as I{rnaseq_run_cufflinks} and I{rnaseq_process_cufflinks}
-        use the same I{rnaseq_cufflinks} prefix.
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: C{FilePathCufflinks}
-        @rtype: FilePathCufflinks
+        The prefix is non-standard, as :literal:`rnaseq_run_cufflinks` and :literal:`rnaseq_process_cufflinks`
+        use the same :literal:`rnaseq_cufflinks` prefix.
+
+        :param sample_name: A sample name.
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
+        :rtype: FilePathCufflinks
         """
         return FilePathCufflinks(
             prefix='_'.join(('rnaseq_cufflinks', sample_name)))
 
     @classmethod
     def get_file_path_process_cufflinks(cls, sample_name):
-        """Get a C{FilePathCufflinks} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
 
-        The prefix is non-standard, as I{rnaseq_run_cufflinks} and I{rnaseq_process_cufflinks}
-        use the same I{rnaseq_cufflinks} prefix.
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: C{FilePathCufflinks}
-        @rtype: FilePathCufflinks
+        The prefix is non-standard, as :literal:`rnaseq_run_cufflinks` and :literal:`rnaseq_process_cufflinks`
+        use the same :literal:`rnaseq_cufflinks` prefix.
+
+        :param sample_name: A sample name.
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
+        :rtype: FilePathCufflinks
         """
         return FilePathCufflinks(
             prefix='_'.join(('rnaseq_cufflinks', sample_name)))
 
     @classmethod
     def get_file_path_cuffmerge(cls, comparison_name):
-        """Get a C{FilePathCuffmerge} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffmerge` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: C{FilePathCuffmerge}
-        @rtype: FilePathCuffmerge
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathCuffmerge` object.
+        :rtype: FilePathCuffmerge
         """
         return FilePathCuffmerge(
             prefix=cls.get_prefix_run_cuffmerge(comparison_name=comparison_name))
 
     @classmethod
     def get_file_path_cuffquant(cls, comparison_name, sample_name):
-        """Get a C{FilePathCuffquant} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffquant` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: C{FilePathCuffquant}
-        @rtype: FilePathCuffquant
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :param sample_name: A sample name
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathCuffquant` object.
+        :rtype: FilePathCuffquant
         """
         return FilePathCuffquant(
             prefix=cls.get_prefix_run_cuffquant(comparison_name=comparison_name, sample_name=sample_name))
 
     @classmethod
     def get_file_path_cuffnorm(cls, comparison_name):
-        """Get a C{FilePathCuffnorm} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffnorm` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: C{FilePathCuffnorm}
-        @rtype: FilePathCuffnorm
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathCuffnorm` object.
+        :rtype: FilePathCuffnorm
         """
         return FilePathCuffnorm(
             prefix=cls.get_prefix_run_cuffnorm(comparison_name=comparison_name))
 
     @classmethod
     def get_file_path_run_cuffdiff(cls, comparison_name):
-        """Get a C{FilePathCuffdiff} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffdiff` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: C{FilePathCuffdiff}
-        @rtype: FilePathCuffdiff
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathCuffdiff` object.
+        :rtype: FilePathCuffdiff
         """
         return FilePathCuffdiff(
             prefix=cls.get_prefix_run_cuffdiff(comparison_name=comparison_name))
 
     @classmethod
     def get_file_path_process_cuffdiff(cls, comparison_name):
-        """Get a C{FilePathProcessCuffdiff} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathProcessCuffdiff` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: C{FilePathProcessCuffdiff}
-        @rtype: FilePathProcessCuffdiff
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathProcessCuffdiff` object.
+        :rtype: FilePathProcessCuffdiff
         """
         return FilePathProcessCuffdiff(
             prefix=cls.get_prefix_process_cuffdiff(comparison_name=comparison_name))
 
     @classmethod
     def get_file_path_monocle(cls, comparison_name):
-        """Get a C{FilePathMonocle} object.
+        """Get a :py:class:`bsf.analyses.rnaseq.FilePathMonocle` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @return: C{FilePathMonocle}
-        @rtype: FilePathMonocle
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :return: A :py:class:`bsf.analyses.rnaseq.FilePathMonocle` object.
+        :rtype: FilePathMonocle
         """
         return FilePathMonocle(
             prefix=cls.get_prefix_monocle(comparison_name=comparison_name))
@@ -791,77 +805,75 @@ class Tuxedo(Analysis):
             false_discovery_rate=None,
             no_length_correction=None,
             aligner=None):
-        """Initialise a C{bsf.analyses.rnaseq.Tuxedo} object.
+        """Initialise a :py:class:`bsf.analyses.rnaseq.Tuxedo` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-        @type replicate_grouping: bool | None
-        @param comparison_path: Comparison file path
-        @type comparison_path: str | None
-        @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | None
-        @param genome_index_path: Bowtie genome index path
-        @type genome_index_path: str | None
-        @param genome_sizes_path: Reference genome sizes file path
-        @type genome_sizes_path: str | None
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @param transcriptome_gtf: Transcriptome annotation GTF file path
-        @type transcriptome_gtf: str | None
-        @param transcriptome_index: Transcriptome index directory path
-        @type transcriptome_index: str | None
-        @param insert_size: Insert size
-        @type insert_size: int | None
-        @param insert_size_sd: Insert size standard deviation
-        @type insert_size_sd: int | None
-        @param read_length: Read length
-        @type read_length: int | None
-        @param mask_gtf_path: GTF file path to mask transcripts
-        @type mask_gtf_path: str | None
-        @param multi_read_correction: Apply multi-read correction
-        @type multi_read_correction: bool | None
-        @param library_type: Library type
-            Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
-        @type library_type: str | None
-        @param novel_transcripts: Assemble novel transcripts
-        @type novel_transcripts: bool | None
-        @param false_discovery_rate: False discovery rate (FDR) threshold
-        @type false_discovery_rate: float | None
-        @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
-        @type no_length_correction: bool | None
-        @param aligner: Alignment program
-        @type aligner: str | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+        :type replicate_grouping: bool | None
+        :param comparison_path: Comparison file path
+        :type comparison_path: str | None
+        :param genome_fasta_path: Reference genome sequence FASTA file path
+        :type genome_fasta_path: str | None
+        :param genome_index_path: Bowtie genome index path
+        :type genome_index_path: str | None
+        :param genome_sizes_path: Reference genome sizes file path
+        :type genome_sizes_path: str | None
+        :param transcriptome_version: Transcriptome version
+        :type transcriptome_version: str | None
+        :param transcriptome_gtf: Transcriptome annotation GTF file path
+        :type transcriptome_gtf: str | None
+        :param transcriptome_index: Transcriptome index directory path
+        :type transcriptome_index: str | None
+        :param insert_size: Insert size
+        :type insert_size: int | None
+        :param insert_size_sd: Insert size standard deviation
+        :type insert_size_sd: int | None
+        :param read_length: Read length
+        :type read_length: int | None
+        :param mask_gtf_path: GTF file path to mask transcripts
+        :type mask_gtf_path: str | None
+        :param multi_read_correction: Apply multi-read correction
+        :type multi_read_correction: bool | None
+        :param library_type: Library type Cuffquant and Cuffdiff
+            :literal:`fr-unstranded` (default), :literal:`fr-firststrand` or :literal:`fr-secondstrand`.
+        :type library_type: str | None
+        :param novel_transcripts: Assemble novel transcripts
+        :type novel_transcripts: bool | None
+        :param false_discovery_rate: False discovery rate (FDR) threshold
+        :type false_discovery_rate: float | None
+        :param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
+        :type no_length_correction: bool | None
+        :param aligner: Alignment program
+        :type aligner: str | None
         """
         super(Tuxedo, self).__init__(
             configuration=configuration,
@@ -906,14 +918,15 @@ class Tuxedo(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rnaseq.Tuxedo} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.rnaseq.Tuxedo` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(Tuxedo, self).set_configuration(configuration=configuration, section=section)
 
@@ -994,28 +1007,31 @@ class Tuxedo(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rnaseq.Tuxedo} analysis.
+        """Run a :py:class:`bsf.analyses.rnaseq.Tuxedo` object.
         """
 
         def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+            """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
+            from a CSV file path.
 
-            All C{bsf.ngs.Sample} objects referenced in a comparison are added from the C{bsf.ngs.Collection} to the
-            C{bsf.analysis.Analysis} object.
+            All :py:class:`bsf.ngs.Sample` objects referenced in a comparison are added from the
+            :py:attr:`bsf.analysis.Analysis.collection` instance variable
+            (i.e., :py:class:`bsf.ngs.Collection` object) to the
+            :py:attr:`bsf.analysis.Analysis.sample_list` instance variable.
 
-                - Column headers for CASAVA folders:
-                    - Treatment/Control/Point N ProcessedRunFolder:
+                - Column headers for CASAVA folders
+                    - Treatment/Control/Point N ProcessedRunFolder
                         - CASAVA processed run folder name or
-                        - C{bsf.analysis.Analysis.input_directory} by default
-                    - Treatment/Control/Point N Project:
+                        - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
+                    - Treatment/Control/Point N Project
                         - CASAVA Project name or
-                        - C{bsf.analysis.Analysis.project_name} by default
-                    - Treatment/Control/Point N Sample:
+                        - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
+                    - Treatment/Control/Point N Sample
                         - CASAVA Sample name, no default
-                - Column headers for independent samples:
-                    - Treatment/Control/Point N Sample:
-                    - Treatment/Control/Point N Reads:
-                    - Treatment/Control/Point N File:
+                - Column headers for independent samples
+                    - Treatment/Control/Point N Sample
+                    - Treatment/Control/Point N Reads
+                    - Treatment/Control/Point N File
             """
             if self.comparison_path:
                 # A comparison file path was provided.
@@ -1166,10 +1182,10 @@ class Tuxedo(Analysis):
         def run_write_annotation(annotation_path, annotation_dict):
             """Private function to write a sample annotation file for Cuffdiff or Cuffnorm to disk.
 
-            @param annotation_path: Annotation file path
-            @type annotation_path: str
-            @param annotation_dict: Annotation dict
-            @type annotation_dict: dict[str, list[str]]
+            :param annotation_path: Annotation file path.
+            :type annotation_path: str
+            :param annotation_dict: Annotation :py:class:`dict` object.
+            :type annotation_dict: dict[str, list[str]]
             """
             with open(file=annotation_path, mode='wt') as _annotation_file:
                 _annotation_file.write('sample_id\tgroup_label\n')
@@ -1885,7 +1901,7 @@ class Tuxedo(Analysis):
                 runnable_run_cuffmerge.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_switch_short(key='C')  # include 'contained' transcripts
-                runnable_step.add_switch_short(key='G')  # generic GFF input fields, i.e. not a Cufflinks GTF
+                runnable_step.add_switch_short(key='G')  # generic GFF input fields, (i.e., not a Cufflinks GTF)
                 runnable_step.add_option_short(key='o', value=file_path_cuffmerge.cuffcompare_prefix)
                 runnable_step.add_option_short(key='r', value=self.transcriptome_gtf)  # reference GTF
                 runnable_step.add_option_short(key='s', value=self.genome_fasta_path)  # reference sequence
@@ -2389,11 +2405,11 @@ class Tuxedo(Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.rnaseq.Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
         """
 
         def report_html():
-            """Private function to create an HTML report.
+            """Private function to create an :literal:`XHTML 1.0` report.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -2753,7 +2769,7 @@ class Tuxedo(Analysis):
             str_list.append('A comparison involves one or more sample groups with one or more replicates each.\n')
             str_list.append('Cuffdiff normalises all replicates and performs an all-against-all sample groups ')
             str_list.append('comparison.\nTypically, a single comparison including all sample groups is set up, ')
-            str_list.append('but sometimes, technical constraints (i.e. memory requirements) require setting up ')
+            str_list.append('but sometimes, technical constraints (i.e., memory requirements) require setting up ')
             str_list.append('several comparisons, each with fewer sample groups, in parallel.\n')
             str_list.append('Since Cuffdiff normalises all samples within a comparison, FPKM values of all samples ')
             str_list.append('in a particular comparison can be directly compared.')
@@ -3367,7 +3383,7 @@ class Tuxedo(Analysis):
             return
 
         def report_hub():
-            """Private function to create a UCSC Track Hub.
+            """Private function to create a :literal:`UCSC Genome Browser Track Hub`.
             """
 
             str_list: List[str] = list()
@@ -3587,14 +3603,14 @@ class Tuxedo(Analysis):
 
 
 class FilePathDESeq(FilePath):
-    """The C{bsf.analyses.rnaseq.FilePathDESeq} models files in a comparison-specific DESeq directory.
+    """The :py:class:`bsf.analyses.rnaseq.FilePathDESeq` class models files in a comparison-specific DESeq directory.
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rnaseq.FilePathDESeq} object
+        """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathDESeq` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathDESeq, self).__init__(prefix=prefix)
 
@@ -3604,24 +3620,22 @@ class FilePathDESeq(FilePath):
 
 
 class DESeq(Analysis):
-    """DESeq RNASeq C{bsf.analysis.Analysis} subclass.
+    """The :py:class:`bsf.analyses.rnaseq.DESeq` class models an RNA-seq analysis based on the
+    `Bioconductor <https://bioconductor.org/>`_
+    `DESeq2 <https://bioconductor.org/packages/release/bioc/html/DESeq2.html>`_ package.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
-    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
-    @type transcriptome_gtf: str | None
-    @ivar comparison_path: Comparison file path
-    @type comparison_path: str | None
-    @ivar contrast_path: Contrast file path
-    @type contrast_path: str | None
-    @ivar threshold_padj: Threshold for p-adjusted values
-    @type threshold_padj: float | none
-    @ivar threshold_log2fc: Threshold for log2 fold-change values
-    @type threshold_log2fc: float | None
+    :ivar transcriptome_version: Transcriptome version
+    :type transcriptome_version: str | None
+    :ivar transcriptome_gtf: Transcriptome annotation GTF file path
+    :type transcriptome_gtf: str | None
+    :ivar comparison_path: Comparison file path
+    :type comparison_path: str | None
+    :ivar contrast_path: Contrast file path
+    :type contrast_path: str | None
+    :ivar threshold_padj: Threshold for p-adjusted values
+    :type threshold_padj: float | none
+    :ivar threshold_log2fc: Threshold for log2 fold-change values
+    :type threshold_log2fc: float | None
     """
 
     name = 'DESeq RNA-seq Analysis'
@@ -3629,41 +3643,41 @@ class DESeq(Analysis):
 
     @classmethod
     def get_stage_name_analysis(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'analysis'))
 
     @classmethod
     def get_stage_name_results(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'results'))
 
     @classmethod
     def get_prefix_analysis(cls, design_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param design_name: Design name
-        @type design_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param design_name: A design name.
+        :type design_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_analysis(), design_name))
 
     @classmethod
     def get_prefix_results(cls, design_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param design_name: Design name
-        @type design_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param design_name: A design name.
+        :type design_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_results(), design_name))
 
@@ -3690,52 +3704,50 @@ class DESeq(Analysis):
             contrast_path=None,
             threshold_padj=None,
             threshold_log2fc=None):
-        """Initialise a C{bsf.analyses.rnaseq.DESeq} object.
+        """Initialise a :py:class:`bsf.analyses.rnaseq.DESeq` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @param transcriptome_gtf: Transcriptome annotation GTF file path
-        @type transcriptome_gtf: str | None
-        @param comparison_path: Comparison file path
-        @type comparison_path: str | None
-        @param contrast_path: Contrast file path
-        @type contrast_path: str | None
-        @param threshold_padj: Threshold for p-adjusted values
-        @type threshold_padj: float | none
-        @param threshold_log2fc: Threshold for log2 fold-change values
-        @type threshold_log2fc: float | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param transcriptome_version: Transcriptome version
+        :type transcriptome_version: str | None
+        :param transcriptome_gtf: Transcriptome annotation GTF file path
+        :type transcriptome_gtf: str | None
+        :param comparison_path: Comparison file path
+        :type comparison_path: str | None
+        :param contrast_path: Contrast file path
+        :type contrast_path: str | None
+        :param threshold_padj: Threshold for p-adjusted values
+        :type threshold_padj: float | none
+        :param threshold_log2fc: Threshold for log2 fold-change values
+        :type threshold_log2fc: float | None
         """
 
         super(DESeq, self).__init__(
@@ -3767,14 +3779,15 @@ class DESeq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rnaseq.Tuxedo} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.rnaseq.DESeq` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
 
         super(DESeq, self).set_configuration(configuration=configuration, section=section)
@@ -3808,7 +3821,7 @@ class DESeq(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rnaseq.DESeq} analysis.
+        """Run a :py:class:`bsf.analyses.rnaseq.DESeq` object.
         """
 
         # Start of the run() method body.
@@ -4062,18 +4075,18 @@ class DESeq(Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.rnaseq.DESeq} report in HTML format.
+        """Create a :literal:`XHTML 1.0` report.
         """
 
         def image_source_exists(prefix, suffix):
-            """Test whether an image source (i.e. path) exists.
+            """Test whether an image source (i.e., path) exists.
 
-            @param prefix: Prefix
-            @type prefix: str
-            @param suffix: Suffix
-            @type suffix: str
-            @return: True for existing image sources, False otherwise
-            @rtype: bool
+            :param prefix: A prefix.
+            :type prefix: str
+            :param suffix: A suffix.
+            :type suffix: str
+            :return: :py:const:`True` for existing image sources, :py:const`False` otherwise.
+            :rtype: bool
             """
             return os.path.exists(
                 os.path.join(
@@ -4082,7 +4095,7 @@ class DESeq(Analysis):
                     prefix + '_' + suffix))
 
         def report_html():
-            """Private function to create an HTML report.
+            """Private function to create a :literal:`XHTML 1.0` report.
             """
 
             # Create a symbolic link containing the project name and a UUID.
@@ -4144,8 +4157,8 @@ class DESeq(Analysis):
             str_list.append('<p>')
             str_list.append('A ')
             str_list.append('<a href="https://en.wikipedia.org/wiki/Likelihood-ratio_test">Likelihood-ratio test</a> ')
-            str_list.append('compares the goodness of fit of two models, a null (i.e. full) model and an alternative ')
-            str_list.append('(i.e. reduced) model. The likelihood ratio expresses how many times more likely ')
+            str_list.append('compares the goodness of fit of two models, a null (i.e., full) model and an alternative ')
+            str_list.append('(i.e., reduced) model. The likelihood ratio expresses how many times more likely ')
             str_list.append('the data fits one model than the other. ')
             str_list.append('Since each gene is modelled, the LRT allows identifying those genes that benefit ')
             str_list.append('from a variable or factor dropped in the reduced model. ')

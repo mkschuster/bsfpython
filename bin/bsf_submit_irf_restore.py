@@ -24,7 +24,7 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# BSF Python script to restore an Illumina Run Folder (IRF) from a magnetic tape library.
+#  BSF Python script to restore an Illumina Run Folder (IRF) from a magnetic tape library.
 #
 import sys
 from argparse import ArgumentParser

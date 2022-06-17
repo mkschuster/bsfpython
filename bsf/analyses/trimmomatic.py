@@ -22,9 +22,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Trimmomatic Analysis module.
-
-A package of classes and methods supporting the Trimmomatic tool.
+"""The :py:mod`bsf.analyses.trimmomatic` module classes supporting the
+`Trimmomatic <http://www.usadellab.org/cms/?page=trimmomatic>`_ tool.
 """
 import os
 import sys
@@ -39,35 +38,36 @@ from bsf.standards import Configuration, JavaArchive
 
 
 class FilePathTrimmomaticReadGroup(FilePath):
-    """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} models read group-specific Trimmomatic files.
+    """The :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup` class models
+    read group-specific Trimmomatic files.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar trim_log_tsv: Trimmomatic trim log Tab-Separated Value (TSV) file path
-    @type trim_log_tsv: str
-    @ivar summary_tsv: Summary Tab-Separated Value (TSV) file path
-    @type summary_tsv: str
-    @ivar coverage_png: Coverage Portable Network Graphics (PNG) file path
-    @type coverage_png: str
-    @ivar frequency_png: Frequency Portable Network Graphics (PNG) file path
-    @type frequency_png: str
-    @ivar surviving_png: Surviving Portable Network Graphics (PNG) file path
-    @type surviving_png: str
-    @ivar reads_1p: First Reads paired
-    @type reads_1p: str | None
-    @ivar reads_1u: First Reads unpaired
-    @type reads_1u: str | None
-    @ivar reads_2p: Second Reads paired
-    @type reads_2p: str | None
-    @ivar reads_2u: Second Reads unpaired
-    @type reads_2u: str | None
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar trim_log_tsv: A Trimmomatic trim log Tab-Separated Value (TSV) file path.
+    :type trim_log_tsv: str
+    :ivar summary_tsv: A summary Tab-Separated Value (TSV) file path.
+    :type summary_tsv: str
+    :ivar coverage_png: A coverage Portable Network Graphics (PNG) file path.
+    :type coverage_png: str
+    :ivar frequency_png: A frequency Portable Network Graphics (PNG) file path.
+    :type frequency_png: str
+    :ivar surviving_png: A surviving Portable Network Graphics (PNG) file path.
+    :type surviving_png: str
+    :ivar reads_1p: A First Reads paired file path.
+    :type reads_1p: str | None
+    :ivar reads_1u: First Reads unpaired file path.
+    :type reads_1u: str | None
+    :ivar reads_2p: Second Reads paired file path.
+    :type reads_2p: str | None
+    :ivar reads_2u: Second Reads unpaired file path.
+    :type reads_2u: str | None
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} object.
+        """Initialise a :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathTrimmomaticReadGroup, self).__init__(prefix=prefix)
 
@@ -88,25 +88,26 @@ class FilePathTrimmomaticReadGroup(FilePath):
 
 
 class FilePathTrimmomaticProject(FilePath):
-    """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} class models project-specific Trimmomatic files.
+    """The :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticProject` class models
+    project-specific Trimmomatic files.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar sas_path_old: Old Sample Annotation Sheet file path
-    @type sas_path_old: str
-    @ivar sas_path_new: New Sample Annotation Sheet file path
-    @type sas_path_new: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar sas_path_old: An old Sample Annotation Sheet file path.
+    :type sas_path_old: str
+    :ivar sas_path_new: A new Sample Annotation Sheet file path.
+    :type sas_path_new: str
     """
 
     def __init__(self, prefix, prefix_analysis, project_name):
-        """Initialise a C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} object.
+        """Initialise a :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticProject` object.
 
-        @param prefix: Prefix
-        @type prefix: str
-        @param prefix_analysis: C{bsf.analysis.Analysis.prefix}
-        @type prefix_analysis: str
-        @param project_name: Project name
-        @type project_name: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
+        :param prefix_analysis: A :py:attr:`bsf.analysis.Analysis.prefix` attribute.
+        :type prefix_analysis: str
+        :param project_name: A project name.
+        :type project_name: str
         """
         super(FilePathTrimmomaticProject, self).__init__(prefix=prefix)
 
@@ -118,20 +119,16 @@ class FilePathTrimmomaticProject(FilePath):
 
 
 class Trimmomatic(Analysis):
-    """The C{bsf.analyses.trimmomatic.Trimmomatic} class represents the logic to run the Trimmomatic analysis.
+    """The :py:class:`bsf.analyses.trimmomatic.Trimmomatic` class represents the logic to run the Trimmomatic analysis.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @ivar adapter_path: Adapter file path
-    @type adapter_path: str | None
-    @ivar trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
-    @type trimming_step_pe_list: list[str] | None
-    @ivar trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
-    @type trimming_step_se_list: list[str] | None
-    @ivar java_archive_trimmomatic: Trimmomatic tool Java Archive (JAR) file path
-    @type java_archive_trimmomatic: str | None
+    :ivar adapter_path: An adapter definition file path.
+    :type adapter_path: str | None
+    :ivar trimming_step_pe_list: A colon-separated list of Trimmomatic steps for paired-end data.
+    :type trimming_step_pe_list: list[str] | None
+    :ivar trimming_step_se_list: A colon-separated list of Trimmomatic steps for single-end data.
+    :type trimming_step_se_list: list[str] | None
+    :ivar java_archive_trimmomatic: A Trimmomatic tool Java Archive (JAR) file path.
+    :type java_archive_trimmomatic: str | None
     """
 
     name = 'Trimmomatic Analysis'
@@ -139,82 +136,82 @@ class Trimmomatic(Analysis):
 
     @classmethod
     def get_stage_name_read_group(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
     def get_stage_name_summary(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'summary'))
 
     @classmethod
     def get_stage_name_project(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'project'))
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param read_group_name: Read group name
-        @type read_group_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param read_group_name: A read group name.
+        :type read_group_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
     def get_prefix_summary(cls):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return cls.get_stage_name_summary()
 
     @classmethod
     def get_prefix_project(cls):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return cls.get_stage_name_project()
 
     @classmethod
     def get_file_path_read_group(cls, read_group_name):
-        """Get a C{FilePathTrimmomaticReadGroup} object.
+        """Get a :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup` object.
 
-        @param read_group_name: Read group name
-        @type read_group_name: str
-        @return: C{FilePathTrimmomaticReadGroup} object
-        @rtype: FilePathTrimmomaticReadGroup
+        :param read_group_name: A read group name.
+        :type read_group_name: str
+        :return: A :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup` object.
+        :rtype: FilePathTrimmomaticReadGroup
         """
         return FilePathTrimmomaticReadGroup(
             prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     @classmethod
     def get_file_path_project(cls, project_name, prefix_analysis):
-        """Get a C{FilePathTrimmomaticProject} object.
+        """Get a :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticProject` object.
 
-        @param project_name: Project name
-        @type project_name: str
-        @param prefix_analysis: C{bsf.analysis.Analysis.prefix}
-        @type prefix_analysis: str
-        @return: C{FilePathTrimmomaticProject} object
-        @rtype: FilePathTrimmomaticProject
+        :param project_name: A project name.
+        :type project_name: str
+        :param prefix_analysis: A :py:attr:`bsf.analysis.Analysis.prefix` attribute.
+        :type prefix_analysis: str
+        :return: A :py:class:`bsf.analyses.trimmomatic.FilePathTrimmomaticProject` object.
+        :rtype: FilePathTrimmomaticProject
         """
         return FilePathTrimmomaticProject(
             prefix=cls.get_prefix_project(),
@@ -242,48 +239,46 @@ class Trimmomatic(Analysis):
             trimming_step_pe_list=None,
             trimming_step_se_list=None,
             java_archive_trimmomatic=None):
-        """Initialise a C{bsf.analyses.trimmomatic.Trimmomatic} object.
+        """Initialise a :py:class:`bsf.analyses.trimmomatic.Trimmomatic` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param adapter_path: Adapter file path
-        @type adapter_path: str | None
-        @param trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
-        @type trimming_step_pe_list: list[str] | None
-        @param trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
-        @type trimming_step_se_list: list[str] | None
-        @param java_archive_trimmomatic: Trimmomatic tool Java Archive (JAR) file path
-        @type java_archive_trimmomatic: str | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param adapter_path: An adapter definition file path.
+        :type adapter_path: str | None
+        :param trimming_step_pe_list: A colon-separated list of Trimmomatic steps for paired-end data.
+        :type trimming_step_pe_list: list[str] | None
+        :param trimming_step_se_list: A colon-separated list of Trimmomatic steps for single-end data.
+        :type trimming_step_se_list: list[str] | None
+        :param java_archive_trimmomatic: A Trimmomatic tool Java Archive (JAR) file path.
+        :type java_archive_trimmomatic: str | None
         """
         super(Trimmomatic, self).__init__(
             configuration=configuration,
@@ -310,14 +305,15 @@ class Trimmomatic(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.trimmomatic.Trimmomatic} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.trimmomatic.Trimmomatic` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(Trimmomatic, self).set_configuration(configuration=configuration, section=section)
 
@@ -348,19 +344,21 @@ class Trimmomatic(Analysis):
         return
 
     def run(self):
-        """Run the C{bsf.analyses.trimmomatic.Trimmomatic} C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analyses.trimmomatic.Trimmomatic` object.
 
-        This method changes the C{bsf.ngs.Collection} object of this C{bsf.analysis.Analysis}
-        to update with FASTQ file paths.
+        This method changes the :py:class:`bsf.analyses.trimmomatic.Trimmomatic.collection` attribute
+        (:py:class:`bsf.ngs.Collection`) to update with FASTQ file paths.
         """
 
         def run_adjust_illumina_clip_path(trimming_step_list):
-            """Private function to adjust the adapter FASTA file path of ILLUMINACLIP trimming steps.
+            """Private function to adjust the adapter FASTA file path of :literal:`ILLUMINACLIP` trimming steps.
 
             If the file path is not absolute, prepend the value of the adapter_path
             instance variable.
-            @param trimming_step_list: Python C{list} of trimming steps.
-            @type trimming_step_list: list[str]
+
+            :param trimming_step_list: A Python :py:class:`list` object of
+                Python :py:class:`str` (trimming step) objects.
+            :type trimming_step_list: list[str]
             """
             for i in range(0, len(trimming_step_list)):
                 if trimming_step_list[i].startswith('ILLUMINACLIP'):
@@ -371,11 +369,13 @@ class Trimmomatic(Analysis):
             return
 
         def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+            """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
+            from a CSV file path.
 
-            This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.analysis.Analysis.sample_list} instance variable.
+            This implementation just adds all :py:class:`bsf.ngs.Sample` objects from the
+            :py:attr:`bsf.analysis.Analysis.collection` instance variable
+            (i.e., :py:class:`bsf.ngs.Collection` object) to the
+            :py:attr:`bsf.analysis.Analysis.sample_list` instance variable.
             """
 
             self.sample_list.extend(self.collection.get_all_samples())
@@ -650,8 +650,7 @@ class Trimmomatic(Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.trimmomatic.Trimmomatic} report in HTML format and a
-        UCSC Genome Browser Track Hub.
+        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
         """
 
         # Create a symbolic link containing the project name and a UUID.

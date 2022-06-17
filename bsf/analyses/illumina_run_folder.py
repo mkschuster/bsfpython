@@ -22,9 +22,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Illumina Run Folder Analysis module.
-
-A package of classes and methods supporting analyses to archive and restore Illumina Run Folders.
+"""The :py:mod:`bsf.analyses.illumina_run_folder` module provides classes and methods supporting
+the archiving and restoring of :literal:`Illumina Run Folders`.
 """
 import os
 from typing import List
@@ -41,44 +40,44 @@ from bsf.standards import Configuration, StandardFilePath
 
 
 class IlluminaRunFolderArchive(Analysis):
-    """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} class represents the logic to archive
+    """The :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` class represents the logic to archive
     an Illumina Run Folder in a format suitable for magnetic tape libraries.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
-    @type prefix: str
-    @cvar compress_archive_files: Compress archive files with GNU Zip
-    @type compress_archive_files: bool
-    @ivar archive_directory: Archive directory
-    @type archive_directory: str | None
-    @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | None
-    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
-        Illumina Run Folder parameters
-    @type experiment_name: str | None
-    @ivar irf_mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-        for the Illumina Run Folder (IRF) to be archived
-    @type irf_mode_directory: str | None
-    @ivar sav_mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-        for the Sequence Analysis Viewer (SAV) archive
-    @type sav_mode_directory: str | None
-    @ivar irf_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-        for the Illumina Run Folder (IRF) to be archived
-    @type irf_mode_file: str | None
-    @ivar sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-        for the Sequence Analysis Viewer (SAV) archive
-    @type sav_mode_file: str | None
-    @ivar cloud_account: I{Microsoft Azure Storage Account} name
-    @type cloud_account: str | None
-    @ivar cloud_container: I{Microsoft Azure Blob Service} container name
-    @type cloud_container: str | None
-    @ivar cloud_path_prefix: Blob file path prefix
-    @type cloud_path_prefix: str | None
-    @ivar cloud_concurrency: Maximum number of network connections
-    @type cloud_concurrency: int | None
-    @ivar force: Force processing of incomplete Illumina Run Folders
-    @type force: bool | None
+    :cvar compress_archive_files: Compress archive files with GNU Zip.
+    :type compress_archive_files: bool
+    :ivar archive_directory: An archive directory.
+    :type archive_directory: str | None
+    :ivar run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+    :type run_directory: str | None
+    :ivar experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
+        Illumina Run Folder parameters.
+    :type experiment_name: str | None
+    :ivar irf_mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory of the
+            archived :literal:`Illumina Run Folder` (IRF).
+    :type irf_mode_directory: str | None
+    :ivar sav_mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory of the
+            archived :literal:`Sequence Analysis Viewer` (SAV).
+    :type sav_mode_directory: str | None
+    :ivar irf_mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file of the
+            archived :literal:`Illumina Run Folder` (IRF).
+    :type irf_mode_file: str | None
+    :ivar sav_mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file of the
+            archived :literal:`Sequence Analysis Viewer` (SAV).
+    :type sav_mode_file: str | None
+    :ivar cloud_account: A :literal:`Microsoft Azure Storage Account` name.
+    :type cloud_account: str | None
+    :ivar cloud_container: A :literal:`Microsoft Azure Blob Service` container name.
+    :type cloud_container: str | None
+    :ivar cloud_path_prefix: A blob file path prefix.
+    :type cloud_path_prefix: str | None
+    :ivar cloud_concurrency: A maximum number of concurrent network connections.
+    :type cloud_concurrency: int | None
+    :ivar force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+    :type force: bool | None
     """
 
     name = 'Illumina Run Folder Archive Analysis'
@@ -88,145 +87,145 @@ class IlluminaRunFolderArchive(Analysis):
 
     @classmethod
     def get_stage_name_pre_process(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'pre_process'))
 
     @classmethod
     def get_stage_name_base_calls(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'base_calls'))
 
     @classmethod
     def get_stage_name_intensities(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'intensities'))
 
     @classmethod
     def get_stage_name_archive_folder(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'folder'))
 
     @classmethod
     def get_stage_name_post_process(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'post_process'))
 
     @classmethod
     def get_stage_name_sav(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'sav'))
 
     @classmethod
     def get_stage_name_cloud(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'cloud'))
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_pre_process(), project_name))
 
     @classmethod
     def get_prefix_base_calls(cls, project_name, lane):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @param lane: A lane number
-        @type lane: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_base_calls(), project_name, lane))
 
     @classmethod
     def get_prefix_intensities(cls, project_name, lane):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @param lane: A lane number
-        @type lane: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_intensities(), project_name, lane))
 
     @classmethod
     def get_prefix_archive_folder(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_archive_folder(), project_name))
 
     @classmethod
     def get_prefix_post_process(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_post_process(), project_name))
 
     @classmethod
     def get_prefix_sav(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_sav(), project_name))
 
     @classmethod
     def get_prefix_cloud(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_cloud(), project_name))
 
@@ -259,69 +258,71 @@ class IlluminaRunFolderArchive(Analysis):
             cloud_path_prefix=None,
             cloud_concurrency=None,
             force=None):
-        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
+        """Initialise a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param archive_directory: Archive directory
-        @type archive_directory: str | None
-        @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | None
-        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters
-        @type experiment_name: str | None
-        @param irf_mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-            for the Illumina Run Folder (IRF) to be archived
-        @type irf_mode_directory: str | None
-        @param sav_mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
-            for the Sequence Analysis Viewer (SAV) archive
-        @type sav_mode_directory: str | None
-        @param irf_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-            for the Illumina Run Folder (IRF) to be archived
-        @type irf_mode_file: str | None
-        @param sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
-            for the Sequence Analysis Viewer (SAV) archive
-        @type sav_mode_file: str | None
-        @param cloud_account: I{Microsoft Azure Storage Account} name
-        @type cloud_account: str | None
-        @param cloud_container: I{Microsoft Azure Blob Service} container name
-        @type cloud_container: str | None
-        @param cloud_path_prefix: Blob file path prefix
-        @type cloud_path_prefix: str | None
-        @param cloud_concurrency: Maximum number of network connections
-        @type cloud_concurrency: int | None
-        @param force: Force processing of incomplete Illumina Run Folders
-        @type force: bool | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param archive_directory: An archive directory.
+        :type archive_directory: str | None
+        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :type run_directory: str | None
+        :param experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
+            Illumina Run Folder parameters.
+        :type experiment_name: str | None
+        :param irf_mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory of the
+            archived :literal:`Illumina Run Folder` (IRF).
+        :type irf_mode_directory: str | None
+        :param sav_mode_directory: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each directory of the
+            archived :literal:`Sequence Analysis Viewer` (SAV).
+        :type sav_mode_directory: str | None
+        :param irf_mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file of the
+            archived :literal:`Illumina Run Folder` (IRF).
+        :type irf_mode_file: str | None
+        :param sav_mode_file: A comma-separated list of file permission bit names defined in the
+            Python :py:mod:`stat` module applied to each file of the
+            archived :literal:`Sequence Analysis Viewer` (SAV).
+        :type sav_mode_file: str | None
+        :param cloud_account: A :literal:`Microsoft Azure Storage Account` name.
+        :type cloud_account: str | None
+        :param cloud_container: A :literal:`Microsoft Azure Blob Service` container name.
+        :type cloud_container: str | None
+        :param cloud_path_prefix: A blob file path prefix.
+        :type cloud_path_prefix: str | None
+        :param cloud_concurrency: A maximum number of concurrent network connections.
+        :type cloud_concurrency: int | None
+        :param force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+        :type force: bool | None
         """
         super(IlluminaRunFolderArchive, self).__init__(
             configuration=configuration,
@@ -358,15 +359,15 @@ class IlluminaRunFolderArchive(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} object
-        via a section of a C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(IlluminaRunFolderArchive, self).set_configuration(configuration=configuration, section=section)
 
@@ -427,40 +428,41 @@ class IlluminaRunFolderArchive(Analysis):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object.
 
-        Archive an I{Illumina Run Folder} in a format suitable for magnetic tape libraries.
+        Archive an :literal:`Illumina Run Folder` in a format suitable for magnetic tape libraries.
 
         Pre-Process Illumina Run Folder:
             1. Check if the Illumina Run has finished by testing for an
-                RTAComplete.txt file.
+                :literal:`RTAComplete.txt` file.
             2. Check if an archive process is already running by testing for an
                 archive directory.
             3. Reset the file permissions for all directories via the find utility.
-                find . -type d -execdir chmod u=rwx,g=rx,o= {} +
+                :literal:`find . -type d -execdir chmod u=rwx,g=rx,o= {} +`
             4. Reset the file permissions for all regular files via the find utility.
-                find . -type f -execdir chmod u=rw,g=r,o= {} +
-            5. Compress all files in the IRF/Logs/ directory.
-                gzip --best --recursive Logs/
-            6. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
-                gzip --best --recursive IRF/Data/RTALogs/
-            7. Compress all files in the IRF/RTALogs/ directory if it exists.
-                gzip --best --recursive IRF/RTALogs/
+                :literal:`find . -type f -execdir chmod u=rw,g=r,o= {} +`
+            5. Compress all files in the :literal:`IRF/Logs/` directory.
+                :literal:`gzip --best --recursive Logs/`
+            6. Compress all files in the :literal:`IRF/Data/RTALogs/` directory if it exists.
+                :literal:`gzip --best --recursive IRF/Data/RTALogs/`
+            7. Compress all files in the :literal:`IRF/RTALogs/` directory if it exists.
+                :literal:`gzip --best --recursive IRF/RTALogs/`
             8. Create the archive directory.
         Lane specific:
-            1. Compress all IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl files.
-                find IRF/Data/Intensities/BaseCalls/L00[1-8] -name '*.bcl' -execdir gzip --best --verbose {} +
-            2. Run the GNU Tar utility over each IRF/Data/Intensities/L00[1-8]/ directory,
-               but exclude compressed cluster locations (*.clocs) files.
+            1. Compress all :literal:`IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl` files.
+                :literal:`find IRF/Data/Intensities/BaseCalls/L00[1-8]
+                -name '*.bcl' -execdir gzip --best --verbose {} +`
+            2. Run the GNU Tar utility over each :literal:`IRF/Data/Intensities/L00[1-8]/` directory,
+               but exclude compressed cluster locations (:literal:`*.clocs`) files.
             3. Calculate a MD5 checksum.
         Illumina Run Folder-specific:
             1. Run the GNU Tar utility over the remaining Illumina Run folder,
-               but exclude directories with cluster intensity (*.cif) files.
+               but exclude directories with cluster intensity (:literal:`*.cif`) files.
             2. Calculate a MD5 checksum.
         """
         # Define an Illumina Run Folder directory.
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard BSF directory paths.
 
@@ -512,7 +514,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         irf = RunFolder.from_file_path(file_path=self.run_directory)
 
-        # The experiment name (e.g. BSF_0000) is used as part of the project_name.
+        # The experiment name (e.g., BSF_0000) is used as part of the project_name.
         # Read it from the configuration file or from the
         # Run Parameters of the Illumina Run Folder.
 
@@ -911,19 +913,20 @@ class IlluminaRunFolderArchive(Analysis):
 
 
 class FilePathIlluminaRunFolderRestore(FilePath):
-    """The C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} models files in an archive directory.
+    """The :py:class:`bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore` class models files in an
+    archive directory.
 
-    @ivar folder: Folder GNU Tar archive file
-    @type folder: str
-    @ivar intensities: Intensities GNU Tar archive file
-    @type intensities: str
+    :ivar folder: GNU Tar archive file of the Illumina Run Folder.
+    :type folder: str
+    :ivar intensities: GNU Tar archive file of the intensities.
+    :type intensities: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} object.
+        """Initialise a :py:class:`bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathIlluminaRunFolderRestore, self).__init__(prefix=prefix)
 
@@ -935,23 +938,19 @@ class FilePathIlluminaRunFolderRestore(FilePath):
 
 
 class IlluminaRunFolderRestore(Analysis):
-    """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
-    Illumina Run Folder from a format suitable for magnetic tape libraries.
+    """The :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` class represents the logic to
+    restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar maximum_lane_number: Maximum number of lanes
-    @type maximum_lane_number: int
-    @ivar archive_directory: File path to an archive directory
-    @type archive_directory: str | None
-    @ivar illumina_directory: File path to the directory of I{Illumina Run Folder} directories
-    @type illumina_directory: str | None
-    @ivar extract_intensities: Extract cluster intensity file (*.cif) directories
-    @type extract_intensities: bool | None
-    @ivar force: Force processing of incomplete Illumina Run Folders
-    @type force: bool | None
+    :cvar maximum_lane_number: A maximum number of lanes.
+    :type maximum_lane_number: int
+    :ivar archive_directory: A file path to an archive directory.
+    :type archive_directory: str | None
+    :ivar illumina_directory: A file path to the directory of :literal:`Illumina Run Folder` directories.
+    :type illumina_directory: str | None
+    :ivar extract_intensities: Extract cluster intensity file (:literal:`*.cif`) directories.
+    :type extract_intensities: bool | None
+    :ivar force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+    :type force: bool | None
     """
 
     name = 'Illumina Run Folder Restore Analysis'
@@ -961,65 +960,65 @@ class IlluminaRunFolderRestore(Analysis):
 
     @classmethod
     def get_stage_name_extract_archive(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'extract_archive'))
 
     @classmethod
     def get_stage_name_compress_base_calls(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'compress_base_calls'))
 
     @classmethod
     def get_stage_name_compress_logs(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'compress_logs'))
 
     @classmethod
     def get_prefix_extract_archive(cls, project_name, lane):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @param lane: A lane number
-        @type lane: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_extract_archive(), project_name, lane))
 
     @classmethod
     def get_prefix_compress_base_calls(cls, project_name, lane):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @param lane: A lane number
-        @type lane: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :param lane: A lane number.
+        :type lane: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_compress_base_calls(), project_name, lane))
 
     @classmethod
     def get_prefix_compress_logs(cls, project_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param project_name: A project name
-        @type project_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param project_name: A project name.
+        :type project_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_compress_logs(), project_name))
 
@@ -1044,48 +1043,46 @@ class IlluminaRunFolderRestore(Analysis):
             illumina_directory=None,
             extract_intensities=False,
             force=False):
-        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.analysis.Analysis}.
+        """Initialise a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param archive_directory: File path to an archive directory
-        @type archive_directory: str | None
-        @param illumina_directory: File path to the directory of I{Illumina Run Folder} directories
-        @type illumina_directory: str | None
-        @param extract_intensities: Extract cluster intensity file (*.cif) directories
-        @type extract_intensities: bool | None
-        @param force: Force processing of incomplete Illumina Run Folders
-        @type force: bool | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param archive_directory: A file path to an archive directory.
+        :type archive_directory: str | None
+        :param illumina_directory: A file path to the directory of :literal:`Illumina Run Folder` directories.
+        :type illumina_directory: str | None
+        :param extract_intensities: Extract cluster intensity file (:literal:`*.cif`) directories.
+        :type extract_intensities: bool | None
+        :param force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+        :type force: bool | None
         """
         super(IlluminaRunFolderRestore, self).__init__(
             configuration=configuration,
@@ -1114,14 +1111,15 @@ class IlluminaRunFolderRestore(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} object
-        via a section of a C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(IlluminaRunFolderRestore, self).set_configuration(configuration=configuration, section=section)
 
@@ -1150,12 +1148,12 @@ class IlluminaRunFolderRestore(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` object.
 
         Restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
-            1. Extract the IRF_Folder.tar file.
-            2. Extract the IRF_Intensities.tar file with a 60 seconds delay.
-            3. Extract each IRF_L00[1-8].tar file with a 90 seconds delay.
+            1. Extract the :literal:`IRF_Folder.tar` file.
+            2. Extract the :literal:`IRF_Intensities.tar` file with a 60 seconds delay.
+            3. Extract each :literal:`IRF_L00[1-8].tar` file with a 90 seconds delay.
         """
         if not self.archive_directory:
             raise Exception('The archive_directory has not been defined.')

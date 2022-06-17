@@ -23,10 +23,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Microsoft Azure cloud module.
-
-A package of classes and functions to transfer files to and from the
-Microsoft Azure Storage Blob Service.
+"""The :py:mod:`bsf.executables.cloud` module provides classes and functions to transfer files to and from the
+:literal:`Microsoft Azure Storage Blob Service`.
 """
 from argparse import ArgumentParser
 from subprocess import Popen
@@ -37,21 +35,22 @@ from bsf.process import Command, Executable, RunnableStep
 
 
 class RunnableStepAzureBlockBlob(RunnableStep):
-    """The C{bsf.executables.cloud.RunnableStepAzureBlockBlob} class supports the
-     I{Microsoft Azure Storage Blob Service}.
+    """The :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlob` class supports the
+     :literal:`Microsoft Azure Storage Blob Service`.
 
-    @ivar account_name: I{Microsoft Azure Storage Account} name
-    @type account_name: str
-    @ivar container_name: I{Microsoft Azure Storage Blob Service} container name
-    @type container_name: str
-    @ivar source_path: Source (local) file path
-    @type source_path: str | None
-    @ivar target_path: Target (blob) file path
-    @type target_path: str | None
-    @ivar max_concurrency: Maximum number of I{Microsoft Azure Storage Blob Service} network connections
-    @type max_concurrency: int
-    @ivar logging_enable: Enable I{Microsoft Azure Storage Blob Service} logging via the Python C{logger} module
-    @type logging_enable: bool
+    :ivar account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str
+    :ivar container_name: A :literal:`Microsoft Azure Storage Blob Service` container name.
+    :type container_name: str
+    :ivar source_path: A source (local) file path.
+    :type source_path: str | None
+    :ivar target_path: A target (blob) file path.
+    :type target_path: str | None
+    :ivar max_concurrency: A maximum number of :literal:`Microsoft Azure Storage Blob Service` network connections.
+    :type max_concurrency: int
+    :ivar logging_enable: Enable :literal:`Microsoft Azure Storage Blob Service` logging via the
+        Python :py:class:`logging.Logger` class.
+    :type logging_enable: bool
     """
 
     def __init__(
@@ -77,53 +76,58 @@ class RunnableStepAzureBlockBlob(RunnableStep):
             target_path=None,
             max_concurrency=4,
             logging_enable=False):
-        """Initialise a C{bsf.executables.cloud.RunnableStepAzureBlockBlob} object.
+        """Initialise a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlob` object.
 
-        @param name: Name
-        @type name: str | None
-        @param program: Program
-        @type program: str | None
-        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
-            Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} (program argument) objects
-        @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[Executable.name] | None
-        @param hold: Hold on job scheduling
-        @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
-        @type submit: bool
-        @param process_identifier: Process identifier
-        @type process_identifier: str | None
-        @param process_name: Process name
-        @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
-        @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str] | None
-        @param account_name: I{Microsoft Azure Storage Account} name
-        @type account_name: str
-        @param container_name: I{Microsoft Azure Storage Blob Service} container name
-        @type container_name: str
-        @param source_path: Source (local) file path
-        @type source_path: str | None
-        @param target_path: Target (blob) file path
-        @type target_path: str | None
-        @param max_concurrency: Maximum number of I{Microsoft Azure Storage Blob Service} network connections
-        @type max_concurrency: int
-        @param logging_enable: Enable I{Microsoft Azure Storage Blob Service} logging via the Python C{logger} module
-        @type logging_enable: bool
+        :param name: A name.
+        :type name: str | None
+        :param program: A program.
+        :type program: str | None
+        :param options: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
+            Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
+        :type options: dict[Argument.key, list[Argument]] | None
+        :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
+        :type arguments: list[str] | None
+        :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
+        :type sub_command: Command | None
+        :param stdin: A standard input :literal:`STDIN` :py:class:`bsf.connector.Connector` object.
+        :type stdin: Connector | None
+        :param stdout: A standard output :literal:`STDOUT` :py:class:`bsf.connector.Connector` object.
+        :type stdout: Connector | None
+        :param stderr: A standard error :literal:`STDERR` :py:class:`bsf.connector.Connector` object.
+        :type stderr: Connector | None
+        :param dependencies: A Python :py:class:`list` object of
+            Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
+            in the context of :py:class:`bsf.analysis.Stage` dependencies.
+        :type dependencies: list[Executable.name] | None
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
+        :type submit: bool
+        :param process_identifier: A process identifier.
+        :type process_identifier: str | None
+        :param process_name: A process name.
+        :type process_name: str | None
+        :param sub_process: A :py:class:`subprocess.Popen` object.
+        :type sub_process: Popen | None
+        :param obsolete_file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (file path) objects
+            that can be removed after successfully completing the :py:meth:`bsf.process.RunnableStep.run` method.
+        :type obsolete_file_path_list: list[str] | None
+        :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+        :type account_name: str
+        :param container_name: A :literal:`Microsoft Azure Storage Blob Service` container name.
+        :type container_name: str
+        :param source_path: A source (local) file path.
+        :type source_path: str | None
+        :param target_path: A target (blob) file path.
+        :type target_path: str | None
+        :param max_concurrency: A maximum number of
+            :literal:`Microsoft Azure Storage Blob Service` network connections.
+        :type max_concurrency: int
+        :param logging_enable: Enable :literal:`Microsoft Azure Storage Blob Service` logging via the
+            Python :py:class:`logging.Logger` class.
+        :type logging_enable: bool
         """
         super(RunnableStepAzureBlockBlob, self).__init__(
             name=name,
@@ -153,11 +157,13 @@ class RunnableStepAzureBlockBlob(RunnableStep):
 
 
 class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
-    """The C{bsf.executables.cloud.RunnableStepAzureBlockBlobUpload} class uploads file paths as block blobs.
+    """The :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobUpload` class uploads local file paths to
+    block blobs.
 
-    @ivar standard_blob_tier: I{Microsoft Azure Storage Blob Service} Python C{str} standard blob tier
-        enumerated value (i.e., Archive, Cool, Hot)
-    @type standard_blob_tier: str | None
+    :ivar standard_blob_tier: A :literal:`Microsoft Azure Storage Blob Service`
+        Python :py:class:`str` standard blob tier enumerated value
+        (i.e., :literal:`Archive`, :literal:`Cool`, :literal:`Hot`).
+    :type standard_blob_tier: str | None
     """
 
     def __init__(
@@ -184,56 +190,62 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
             max_concurrency=4,
             logging_enable=False,
             standard_blob_tier=None):
-        """Initialise a C{bsf.executables.cloud.RunnableStepAzureBlockBlob} object.
+        """Initialise a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlob` object.
 
-        @param name: Name
-        @type name: str | None
-        @param program: Program
-        @type program: str | None
-        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
-            Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
-        @param arguments: Python C{list} of Python C{str} (program argument) objects
-        @type arguments: list[str] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: Command | None
-        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
-        @type stdin: Connector | None
-        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
-        @type stdout: Connector | None
-        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
-        @type stderr: Connector | None
-        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.analysis.Stage} dependencies
-        @type dependencies: list[Executable.name] | None
-        @param hold: Hold on job scheduling
-        @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
-        @type submit: bool
-        @param process_identifier: Process identifier
-        @type process_identifier: str | None
-        @param process_name: Process name
-        @type process_name: str | None
-        @param sub_process: C{subprocess.Popen}
-        @type sub_process: Popen | None
-        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str] | None
-        @param account_name: I{Microsoft Azure Storage Account} name
-        @type account_name: str
-        @param container_name: I{Microsoft Azure Storage Blob Service} container name
-        @type container_name: str
-        @param source_path: Source (local) file path
-        @type source_path: str | None
-        @param target_path: Target (blob) file path
-        @type target_path: str | None
-        @param max_concurrency: Maximum number of I{Microsoft Azure Storage Blob Service} network connections
-        @type max_concurrency: int
-        @param logging_enable: Enable I{Microsoft Azure Storage Blob Service} logging via the Python C{logger} module
-        @type logging_enable: bool
-        @param standard_blob_tier: I{Microsoft Azure Storage Blob Service} Python C{str} standard blob tier
-            enumerated value (i.e., Archive, Cool, Hot)
-        @type standard_blob_tier: str | None
+        :param name: A name.
+        :type name: str | None
+        :param program: A program.
+        :type program: str | None
+        :param options: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
+            Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
+        :type options: dict[Argument.key, list[Argument]] | None
+        :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
+        :type arguments: list[str] | None
+        :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
+        :type sub_command: Command | None
+        :param stdin: A standard input :literal:`STDIN` :py:class:`bsf.connector.Connector` object.
+        :type stdin: Connector | None
+        :param stdout: A standard output :literal:`STDOUT` :py:class:`bsf.connector.Connector` object.
+        :type stdout: Connector | None
+        :param stderr: A standard error :literal:`STDERR` :py:class:`bsf.connector.Connector` object.
+        :type stderr: Connector | None
+        :param dependencies: A Python :py:class:`list` object of
+            Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
+            in the context of :py:class:`bsf.analysis.Stage` dependencies.
+        :type dependencies: list[Executable.name] | None
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
+        :type submit: bool
+        :param process_identifier: A process identifier.
+        :type process_identifier: str | None
+        :param process_name: A process name.
+        :type process_name: str | None
+        :param sub_process: A :py:class:`subprocess.Popen` object.
+        :type sub_process: Popen | None
+        :param obsolete_file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (file path) objects
+            that can be removed after successfully completing the :py:meth:`bsf.process.RunnableStep.run` method.
+        :type obsolete_file_path_list: list[str] | None
+        :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+        :type account_name: str
+        :param container_name: A :literal:`Microsoft Azure Storage Blob Service` container name.
+        :type container_name: str
+        :param source_path: A source (local) file path.
+        :type source_path: str | None
+        :param target_path: A target (blob) file path.
+        :type target_path: str | None
+        :param max_concurrency: The maximum number of
+            :literal:`Microsoft Azure Storage Blob Service` network connections.
+        :type max_concurrency: int
+        :param logging_enable: Enable :literal:`Microsoft Azure Storage Blob Service` logging via the
+            Python :py:class:`logging.Logger` class.
+        :type logging_enable: bool
+        :param standard_blob_tier: A :literal:`Microsoft Azure Storage Blob Service`
+            Python :py:class:`str` standard blob tier enumerated value
+            (i.e., :literal:`Archive`, :literal:`Cool`, :literal:`Hot`).
+        :type standard_blob_tier: str | None
         """
         super(RunnableStepAzureBlockBlobUpload, self).__init__(
             name=name,
@@ -264,12 +276,12 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
         return
 
     def run(self, debug=0):
-        """Run a C{bsf.executables.cloud.RunnableStepAzureBlockBlobUpload}.
+        """Run a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobUpload` object.
 
-        @param debug: Debug level
-        @type debug: int
-        @return: Python C{list} of Python C{str} (exception) objects
-        @rtype: list[str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
+        :rtype: list[str] | None
         """
         blob_properties = azure_block_blob_upload(
             file_path=self.source_path,
@@ -289,16 +301,17 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
 
 
 class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
-    """The C{bsf.executables.cloud.RunnableStepAzureBlockBlobDownload} class downloads block blobs to file paths.
+    """The :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobDownload` class downloads block blobs to
+    local file paths.
     """
 
     def run(self, debug=0):
-        """Run a C{bsf.executables.cloud.RunnableStepAzureBlockBlobDownload}.
+        """Run a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobDownload` object.
 
-        @param debug: Debug level
-        @type debug: int
-        @return: Python C{list} of Python C{str} (exception) objects
-        @rtype: list[str] | None
+        :param debug: An integer debugging level.
+        :type debug: int
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
+        :rtype: list[str] | None
         """
         blob_properties = azure_block_blob_download(
             azure_blob_service_client=get_azure_blob_service_client(account_name=self.account_name),

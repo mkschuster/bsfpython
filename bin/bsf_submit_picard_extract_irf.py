@@ -63,7 +63,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--mode',
-    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    help='HiSeq run mode i.e., high (high-output) or rapid (rapid run)',
     required=False,
     type=str)
 

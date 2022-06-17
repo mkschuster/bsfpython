@@ -24,7 +24,7 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# BSF Python script to drive the Bowtie2 analysis.
+#  BSF Python script to drive the Bowtie2 analysis.
 #
 import sys
 from argparse import ArgumentParser

@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""ChIP-seq Analysis module.
-
-A package of classes and methods supporting ChIP-Seq analyses.
+"""The :py:mod:`bsf.analyses.chipseq` module provides classes and methods supporting ChIP-Seq analyses.
 """
 import os
 import sys
@@ -42,32 +40,33 @@ from bsf.standards import Configuration, StandardFilePath, Genome, Transcriptome
 
 
 class ChIPSeqComparison(object):
-    """ChIP-Seq comparison annotation sheet.
+    """The :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` models a ChIP-Seq comparison annotation sheet.
 
-    @ivar name: Comparison name
-    @type name: str
-    @ivar group: Group
-    @type group: str
-    @ivar c_name: Control name
-    @type c_name: str | None
-    @ivar t_name: Treatment name
-    @type t_name: str | None
-    @ivar c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-    @type c_samples: list[Sample]
-    @ivar t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-    @type t_samples: list[Sample]
-    @ivar factor: ChIP factor
-    @type factor: str
-    @ivar tissue: Tissue
-    @type tissue: str
-    @ivar condition: Condition
-    @type condition: str
-    @ivar treatment: Treatment
-    @type treatment: str
-    @ivar replicate: replicate number
-    @type replicate: int
-    @ivar diff_bind: Run the DiffBind analysis
-    @type diff_bind: bool
+    :ivar name: A comparison name.
+    :type name: str
+    :ivar group: A group name.
+    :type group: str
+    :ivar c_name: A :literal:`control` name.
+    :type c_name: str | None
+    :ivar t_name: A :literal:`treatment` name.
+    :type t_name: str | None
+    :ivar c_samples: A Python :py:class:`list` object of :literal:`control` :py:class:`bsf.ngs.Sample` objects.
+    :type c_samples: list[Sample]
+    :ivar t_samples: A Python :py:class:`list` object of :literal:`treatment` :py:class:`bsf.ngs.Sample` objects.
+    :type t_samples: list[Sample]
+    :ivar factor: A ChIP factor variable.
+    :type factor: str
+    :ivar tissue: A ChIP tissue variable.
+    :type tissue: str
+    :ivar condition: A ChIP condition variable.
+    :type condition: str
+    :ivar treatment: A ChIP treatment variable.
+    :type treatment: str
+    :ivar replicate: A replicate number.
+    :type replicate: int
+    :ivar diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
+        `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
+    :type diff_bind: bool
     """
 
     def __init__(
@@ -84,32 +83,33 @@ class ChIPSeqComparison(object):
             treatment=None,
             replicate=None,
             diff_bind=None):
-        """Initialise a C{bsf.analyses.chipseq.ChIPSeqComparison}.
+        """Initialise a :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` object.
 
-        @param name: Comparison name
-        @type name: str
-        @param group: Group
-        @type group: str
-        @param c_name: Control name
-        @type c_name: str | None
-        @param t_name: Treatment name
-        @type t_name: str | None
-        @param c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-        @type c_samples: list[Sample] | None
-        @param t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-        @type t_samples: list[Sample] | None
-        @param factor: ChIP factor
-        @type factor: str | None
-        @param tissue: Tissue
-        @type tissue: str | None
-        @param condition: Condition
-        @type condition: str | None
-        @param treatment: Treatment
-        @type treatment: str | None
-        @param replicate: replicate number
-        @type replicate: int | None
-        @param diff_bind: Run the DiffBind analysis
-        @type diff_bind: bool | None
+        :param name: A comparison name.
+        :type name: str
+        :param group: A group name.
+        :type group: str
+        :param c_name: A :literal:`control` name.
+        :type c_name: str | None
+        :param t_name: A :literal:`treatment` name.
+        :type t_name: str | None
+        :param c_samples: A Python :py:class:`list` object of :literal:`control` :py:class:`bsf.ngs.Sample` objects.
+        :type c_samples: list[Sample] | None
+        :param t_samples: A Python :py:class:`list` object of :literal:`treatment` :py:class:`bsf.ngs.Sample` objects.
+        :type t_samples: list[Sample] | None
+        :param factor: A ChIP factor variable.
+        :type factor: str | None
+        :param tissue: A ChIP tissue variable.
+        :type tissue: str | None
+        :param condition: A ChIP condition variable.
+        :type condition: str | None
+        :param treatment: A ChIP treatment variable.
+        :type treatment: str | None
+        :param replicate: A replicate number.
+        :type replicate: int | None
+        :param diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
+            `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
+        :type diff_bind: bool | None
         """
         super(ChIPSeqComparison, self).__init__()
 
@@ -164,11 +164,13 @@ class ChIPSeqComparison(object):
         return
 
     def get_key(self):
-        """Get a C{ChIPSeqComparison} key based on the control and treatment pair name, or just the treatment name.
+        """Get a :py:class:`str` (comparison key) object based on the
+        :literal:`control` and :literal:`treatment` pair name, or just the treatment name.
 
-        ChIP-Seq experiments use the order treatment versus control in comparisons.
-        @return: C{ChIPSeqComparison} key
-        @rtype: str
+        ChIP-Seq experiments use the order :literal:`treatment` versus :literal:`control` in comparisons.
+
+        :return: A :py:class:`str` (comparison key) object.
+        :rtype: str
         """
         if self.c_name and self.t_name:
             return '__'.join((self.t_name, self.c_name))
@@ -176,46 +178,48 @@ class ChIPSeqComparison(object):
             return self.t_name
 
     def get_prefix_peak_calling(self):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return ChIPSeq.get_prefix_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
     def get_file_path_peak_calling(self):
-        """Get a C{FilePathPeakCalling} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object from this or a subclass.
 
-        @return: C{FilePathPeakCalling} or subclass object
-        @rtype: FilePathPeakCalling
+        :return: A :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object or subclass thereof.
+        :rtype: FilePathPeakCalling
         """
         return ChIPSeq.get_file_path_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
 
 class FilePathAlignment(FilePath):
-    """The C{bsf.analyses.chipseq.FilePathAlignment} models alignment file paths.
+    """The :py:class:`bsf.analyses.chipseq.FilePathAlignment` class models alignment file paths.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar sample_bam: Sample-specific BAM file path
-    @type sample_bam: str
-    @ivar sample_bai: Sample-specific BAI index file path
-    @type sample_bai: str
-    @ivar sample_md5: Sample-specific MD5 checksum file path
-    @type sample_md5: str
-    @ivar filter_metrics_tsv: deepTools alignmentSieve metrics
-    @type filter_metrics_tsv: str
-    @ivar coverage_bw: Coverage bigWig file path
-    @type coverage_bw: str
-    @ivar coverage_bwi_txt: Coverage bigWig information file path
-    @type coverage_bwi_txt: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar sample_bam: A sample-specific BAM file path.
+    :type sample_bam: str
+    :ivar sample_bai: A sample-specific BAI index file path.
+    :type sample_bai: str
+    :ivar sample_md5: A sample-specific MD5 checksum file path.
+    :type sample_md5: str
+    :ivar filter_metrics_tsv: A `deepTools <https://deeptools.readthedocs.io/en/stable/>`_
+        `alignmentSieve <https://deeptools.readthedocs.io/en/stable/content/tools/alignmentSieve.html>`
+        metrics file path.
+    :type filter_metrics_tsv: str
+    :ivar coverage_bw: A coverage bigWig file path.
+    :type coverage_bw: str
+    :ivar coverage_bwi_txt: A coverage bigWig information file path.
+    :type coverage_bwi_txt: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chipseq.FilePathAlignment} object
+        """Initialise a :py:class:`bsf.analyses.chipseq.FilePathAlignment` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathAlignment, self).__init__(prefix=prefix)
 
@@ -234,96 +238,97 @@ class FilePathAlignment(FilePath):
 
 
 class FilePathPeakCalling(FilePath):
-    """The C{bsf.analyses.chipseq.FilePathPeakCalling} models files in a comparison-specific MACS directory.
+    """The :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` class models files in a
+    comparison-specific MACS directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar name_prefix: MACS --name option
-    @type name_prefix: str
-    @ivar control_bdg: Control (lambda) signal bedGraph
-    @type control_bdg: str
-    @ivar control_bw: Control (lambda) signal bigWig
-    @type control_bw: str
-    @ivar control_bwi: Control (lambda) signal bigWigInfo
-    @type control_bwi: str
-    @ivar treatment_bdg: Treatment signal bedGraph
-    @type treatment_bdg: str
-    @ivar treatment_bw: Treatment signal bigWig
-    @type treatment_bw: str
-    @ivar treatment_bwi: Treatment signal bigWigInfo
-    @type treatment_bwi: str
-    @ivar comparison_log_fe_bdg: Comparison signal as log10(fold-enrichment) bedGraph
-    @type comparison_log_fe_bdg: str
-    @ivar comparison_log_fe_bw: Comparison signal as log10(fold-enrichment) bigWig
-    @type comparison_log_fe_bw: str
-    @ivar comparison_log_fe_bwi: Comparison signal as log10(fold-enrichment) bigWigInfo
-    @type comparison_log_fe_bwi: str
-    @ivar comparison_ppois_bdg: Comparison signal as Poisson p-value bedGraph
-    @type comparison_ppois_bdg: str
-    @ivar comparison_ppois_bw: Comparison signal as Poisson p-value bigWig
-    @type comparison_ppois_bw: str
-    @ivar comparison_ppois_bwi: Comparison signal as Poisson p-value bigWigInfo
-    @type comparison_ppois_bwi: str
-    @ivar comparison_subtract_bdg: Comparison signal as subtraction bedGraph
-    @type comparison_subtract_bdg: str
-    @ivar comparison_subtract_bw: Comparison signal as subtraction bigWig
-    @type comparison_subtract_bw: str
-    @ivar comparison_subtract_bwi: Comparison signal as subtraction bigWigInfo
-    @type comparison_subtract_bwi: str
-    @ivar summits_bed: Peak summits BED
-    @type summits_bed: str
-    @ivar summits_bb: Peak summits bigBed
-    @type summits_bb: str
-    @ivar summits_bbi: Peak summits bigBedInfo
-    @type summits_bbi: str
-    @ivar broad_peaks_bed: Broad peaks BED
-    @type broad_peaks_bed: str
-    @ivar broad_peaks_bb: Broad peaks bigBed
-    @type broad_peaks_bb: str
-    @ivar broad_peaks_bbi: Broad peaks bigBedInfo
-    @type broad_peaks_bbi: str
-    @ivar gapped_peaks_bed: Gapped peaks BED
-    @type gapped_peaks_bed: str
-    @ivar gapped_peaks_bb: Gapped peaks bigBed
-    @type gapped_peaks_bb: str
-    @ivar gapped_peaks_bbi: Gapped peaks bigBedInfo
-    @type gapped_peaks_bbi: str
-    @ivar narrow_peaks_bed: Narrow peaks BED
-    @type narrow_peaks_bed: str
-    @ivar narrow_peaks_bb: Narrow peaks bigBed
-    @type narrow_peaks_bb: str
-    @ivar narrow_peaks_bbi: Narrow peaks bigBedInfo
-    @type narrow_peaks_bbi: str
-    @ivar peaks_broad: MACS peaks broadPeak
-    @type peaks_broad: str
-    @ivar peaks_gapped: MACS peaks gappedPeak
-    @type peaks_gapped: str
-    @ivar peaks_narrow: MACS peaks narrowPeak
-    @type peaks_narrow: str
-    @ivar peaks_tsv: MACS2 peaks tab-separated value (TSV)
-    @type peaks_tsv: str
-    @ivar peaks_xls: MACS2 peaks tab-separated value (TSV)
-    @type peaks_xls: str
-    @ivar model_r: MACS peak model as Rscript
-    @type model_r: str
-    @ivar model_pdf: MACS "Peak Model" and "Cross-Correlation" plots PDF
-    @type model_pdf: str
-    @ivar model_0_png: MACS "Peak Model" plot PNG
-    @type model_0_png: str
-    @ivar model_1_png: MACS "Cross-Correlation" plot PNG
-    @type model_1_png: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar name_prefix: A name prefix for the MACS :literal:`--name` option.
+    :type name_prefix: str
+    :ivar control_bdg: A :literal:`control` (lambda) signal bedGraph file.
+    :type control_bdg: str
+    :ivar control_bw: A :literal:`control` (lambda) signal bigWig file.
+    :type control_bw: str
+    :ivar control_bwi: A :literal:`control` (lambda) signal bigWigInfo file.
+    :type control_bwi: str
+    :ivar treatment_bdg: A :literal:`treatment` signal bedGraph file.
+    :type treatment_bdg: str
+    :ivar treatment_bw: A :literal:`treatment` signal bigWig file.
+    :type treatment_bw: str
+    :ivar treatment_bwi: A :literal:`treatment` signal bigWigInfo file.
+    :type treatment_bwi: str
+    :ivar comparison_log_fe_bdg: A comparison signal as log10(fold-enrichment) bedGraph file path.
+    :type comparison_log_fe_bdg: str
+    :ivar comparison_log_fe_bw: A comparison signal as log10(fold-enrichment) bigWig file path.
+    :type comparison_log_fe_bw: str
+    :ivar comparison_log_fe_bwi: A comparison signal as log10(fold-enrichment) bigWigInfo file path.
+    :type comparison_log_fe_bwi: str
+    :ivar comparison_ppois_bdg: A comparison signal as Poisson p-value bedGraph file path.
+    :type comparison_ppois_bdg: str
+    :ivar comparison_ppois_bw: A comparison signal as Poisson p-value bigWig file path.
+    :type comparison_ppois_bw: str
+    :ivar comparison_ppois_bwi: A comparison signal as Poisson p-value bigWigInfo file path.
+    :type comparison_ppois_bwi: str
+    :ivar comparison_subtract_bdg: A comparison signal as subtraction bedGraph file path.
+    :type comparison_subtract_bdg: str
+    :ivar comparison_subtract_bw: A comparison signal as subtraction bigWig file path.
+    :type comparison_subtract_bw: str
+    :ivar comparison_subtract_bwi: A comparison signal as subtraction bigWigInfo file path.
+    :type comparison_subtract_bwi: str
+    :ivar summits_bed: A peak summits BED file path.
+    :type summits_bed: str
+    :ivar summits_bb: A peak summits bigBed file path.
+    :type summits_bb: str
+    :ivar summits_bbi: A peak summits bigBedInfo file path.
+    :type summits_bbi: str
+    :ivar broad_peaks_bed: A :emphasis:`broad` peaks BED file path.
+    :type broad_peaks_bed: str
+    :ivar broad_peaks_bb: A :emphasis:`broad` peaks bigBed file path.
+    :type broad_peaks_bb: str
+    :ivar broad_peaks_bbi: A :emphasis:`broad` peaks bigBedInfo file path.
+    :type broad_peaks_bbi: str
+    :ivar gapped_peaks_bed: A :emphasis:`gapped` peaks BED file path.
+    :type gapped_peaks_bed: str
+    :ivar gapped_peaks_bb: A :emphasis:`gapped` peaks bigBed file path.
+    :type gapped_peaks_bb: str
+    :ivar gapped_peaks_bbi: A :emphasis:`gapped` peaks bigBedInfo file path.
+    :type gapped_peaks_bbi: str
+    :ivar narrow_peaks_bed: A :emphasis:`narrow` peaks BED file path.
+    :type narrow_peaks_bed: str
+    :ivar narrow_peaks_bb: A :emphasis:`narrow` peaks bigBed file path.
+    :type narrow_peaks_bb: str
+    :ivar narrow_peaks_bbi: A :emphasis:`narrow` peaks bigBedInfo file path.
+    :type narrow_peaks_bbi: str
+    :ivar peaks_broad: A MACS :emphasis:`broadPeak` file path.
+    :type peaks_broad: str
+    :ivar peaks_gapped: A MACS :emphasis:`gappedPeak` file path.
+    :type peaks_gapped: str
+    :ivar peaks_narrow: A MACS :emphasis:`narrowPeak` file path.
+    :type peaks_narrow: str
+    :ivar peaks_tsv: A peaks tab-separated value (TSV) file path.
+    :type peaks_tsv: str
+    :ivar peaks_xls: A MACS :emphasis:`xls` peaks tab-separated value (TSV) file path.
+    :type peaks_xls: str
+    :ivar model_r: A peak model :literal:`Rscript` file path.
+    :type model_r: str
+    :ivar model_pdf: A :emphasis:`Peak Model` and :emphasis:`Cross-Correlation` plot PDF file path.
+    :type model_pdf: str
+    :ivar model_0_png: A :emphasis:`Peak Model` plot PNG file path.
+    :type model_0_png: str
+    :ivar model_1_png: A :emphasis:`Cross-Correlation` plot PNG file path.
+    :type model_1_png: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chipseq.FilePathPeakCalling} object
+        """Initialise a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathPeakCalling, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
-        self.name_prefix = os.path.join(prefix, prefix)  # MACS2 --name option
+        self.name_prefix = os.path.join(prefix, prefix)
 
         self.control_bdg = os.path.join(prefix, '_'.join((prefix, 'control_lambda.bdg')))
         self.control_bw = os.path.join(prefix, '_'.join((prefix, 'control_lambda.bw')))
@@ -379,11 +384,21 @@ class FilePathPeakCalling(FilePath):
 
 
 class FilePathChIPQC(FilePath):
-    def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chipseq.FilePathChIPQC} object
+    """The :py:class:`bsf.analyses.chipseq.FilePathChIPQC` class models files of a
+    Bioconductor <https://bioconductor.org>`_
+    `ChIPQC <https://bioconductor.org/packages/release/bioc/html/ChIPQC.html>`_ analysis.
 
-        @param prefix: Prefix
-        @type prefix: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar report_html: A :emphasis:`ChIPQC` HTML report file path.
+    :type report_html: str
+    """
+
+    def __init__(self, prefix):
+        """Initialise a :py:class:`bsf.analyses.chipseq.FilePathChIPQC` object.
+
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathChIPQC, self).__init__(prefix=prefix)
 
@@ -395,11 +410,51 @@ class FilePathChIPQC(FilePath):
 
 
 class FilePathDiffBind(FilePath):
-    def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
+    """The :py:class:`bsf.analyses.chipseq.FilePathDiffBind` class models files of a
+    Bioconductor <https://bioconductor.org>`_
+    `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
 
-        @param prefix: Prefix
-        @type prefix: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar sample_annotation_sheet: A :emphasis:`DiffBind` sample annotation sheet file path.
+    :type sample_annotation_sheet: str
+    :ivar correlation_read_counts_pdf: A read counts correlation plot PDF file path.
+    :type correlation_read_counts_pdf: str
+    :ivar correlation_read_counts_png: A read counts correlation plot PNG file path.
+    :type correlation_read_counts_png: str
+    :ivar correlation_peak_caller_score_pdf: A peak score correlation plot PDF file path.
+    :type correlation_peak_caller_score_pdf: str
+    :ivar correlation_peak_caller_score_png: A peak score correlation plot PNG file path.
+    :type correlation_peak_caller_score_png: str
+    :ivar correlation_analysis_pdf: A differential binding analysis correlation plot PDF file path.
+    :type correlation_analysis_pdf: str
+    :ivar correlation_analysis_png: A differential binding analysis correlation plot PNG file path.
+    :type correlation_analysis_png: str
+    :ivar pca_pdf: A :emphasis:`Principal Component Analysis` (PCA) plot PDF file path.
+    :type pca_pdf: str
+    :ivar pca_png: A :emphasis:`Principal Component Analysis` (PCA) plot PNG file path.
+    :type pca_png: str
+    :ivar contrasts_csv: A contrast CSV file path.
+    :type contrasts_csv: str
+    :ivar genes_complete_tsv: A peak set annotated with genes TSV file path.
+    :type genes_complete_tsv: str
+    :ivar regions_pdf: An annotated regions plot PDF file path.
+    :type regions_pdf: str
+    :ivar regions_png: An annotated regions plot PNG file path.
+    :type regions_png: str
+    :ivar regions_tsv: An annotated regions table TSV file path.
+    :type regions_tsv: str
+    :ivar peak_set_bed: A peak set BED file path.
+    :type peak_set_bed: str
+    :ivar peak_set_bb: A peak set BigBED file path.
+    :type peak_set_bb: str
+    """
+
+    def __init__(self, prefix):
+        """Initialise a :py:class:`bsf.analyses.chipseq.FilePathDiffBind` object.
+
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathDiffBind, self).__init__(prefix=prefix)
 
@@ -425,15 +480,49 @@ class FilePathDiffBind(FilePath):
 
 
 class FilePathDiffBindContrast(FilePath):
-    def __init__(self, prefix, group_1, group_2):
-        """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
+    """The :py:class:`bsf.analyses.chipseq.FilePathDiffBindContrast` class models files of a
+    Bioconductor <https://bioconductor.org>`_
+    `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
 
-        @param prefix: Prefix
-        @type prefix: str
-        @param group_1: Group 1
-        @type group_1: str
-        @param group_2: Group 2
-        @type group_2: str
+    :ivar ma_plot_pdf: An :emphasis:`MA` plot PDF file path.
+    :type ma_plot_pdf: str
+    :ivar ma_plot_png: An :emphasis:`MA` plot PNG file path.
+    :type ma_plot_png: str
+    :ivar scatter_plot_pdf: A :emphasis:`scatter` plot PDF file path.
+    :type scatter_plot_pdf: str
+    :ivar scatter_plot_png: A :emphasis:`scatter` plot PNG file path.
+    :type scatter_plot_png: str
+    :ivar pca_plot_pdf: A :emphasis:`Principal Component Analysis` (PCA) plot PDF file path.
+    :type pca_plot_pdf: str
+    :ivar pca_plot_png: A :emphasis:`Principal Component Analysis` (PCA) plot PNG file path.
+    :type pca_plot_png: str
+    :ivar box_plot_pdf: A :emphasis:`box` plot PDF file path.
+    :type box_plot_pdf: str
+    :ivar box_plot_png: A :emphasis:`box` plot PNG file path.
+    :type box_plot_png: str
+    :ivar peaks_tsv: A peaks TSV file path.
+    :type peaks_tsv: str
+    :ivar genes_complete_tsv: A complete genes TSV file path.
+    :type genes_complete_tsv: str
+    :ivar genes_significant_tsv: A significant genes TSV file path.
+    :type genes_significant_tsv: str
+    :ivar regions_pdf: An annotated regions plot PDF file path.
+    :type regions_pdf: str
+    :ivar regions_png: An annotated regions plot PNG file path.
+    :type regions_png: str
+    :ivar regions_tsv: An annotated regions table TSV file path.
+    :type regions_tsv: str
+    """
+
+    def __init__(self, prefix, group_1, group_2):
+        """Initialise a :py:class:`bsf.analyses.ega.bsf.analyses.chipseq.FilePathDiffBind` object.
+
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
+        :param group_1: A group 1.
+        :type group_1: str
+        :param group_2: A group 2.
+        :type group_2: str
         """
         super(FilePathDiffBindContrast, self).__init__(prefix=prefix)
 
@@ -458,7 +547,9 @@ class FilePathDiffBindContrast(FilePath):
 
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
-    """ChIP-Seq Bioconductor DiffBind annotation sheet class.
+    """The :py:class:`bsf.analyses.chipseq.ChIPSeqDiffBindSheet` class models a
+    ChIP-Seq `Bioconductor <https://bioconductor.org>`_
+    `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ annotation sheet.
     """
 
     _file_type = 'excel'
@@ -523,7 +614,13 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     }
 
     def sort(self):
-        """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
+        """Sort by the following column order.
+
+            1. :literal:`Tissue`
+            2. :literal:`Factor`
+            3. :literal:`Condition`
+            4. :literal:`Treatment`
+            5. :literal:`Replicate`
         """
         self.row_dicts.sort(
             key=lambda item: '_'.join((
@@ -536,10 +633,11 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         return
 
     def to_file_path(self, adjust_field_names=None):
-        """Write a C{bsf.analyses.ChIPSeqDiffBindSheet} to a file.
+        """Write a :py:class:`bsf.analyses.chipseq.ChIPSeqDiffBindSheet` object to a file path.
 
-        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
-        @type adjust_field_names: bool
+        :param adjust_field_names: Clear and adjust the Python :py:class:`list` object of
+            Python :py:class:`str` (field name) objects.
+        :type adjust_field_names: bool
         """
         # Override the method from the super-class to automatically sort before writing to a file.
 
@@ -550,38 +648,37 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
 
 class ChIPSeq(Analysis):
-    """The C{bsf.analyses.chipseq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific Analysis.
+    """The :py:class:`bsf.analyses.chipseq.ChIPSeq` class represents the logic to run a ChIP-Seq-specific Analysis.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
-    @type prefix: str
-    @cvar skip_alignment_sieve: Skip the DeepTools alignment sieve
-    @type skip_alignment_sieve: bool
-    @ivar replicate_grouping: Group all replicates into a single process
-    @type replicate_grouping: bool | None
-    @ivar comparison_path: Comparison file path
-    @type comparison_path: str | None
-    @ivar genome_black_list: Genome black list file path
-    @type genome_black_list: str | None
-    @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | None
-    @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
-    @type genome_sizes_path: str | None
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
-    @ivar transcriptome_gtf_path: Transcriptome GTF file path
-    @type transcriptome_gtf_path: str | None
-    @ivar transcriptome_txdb_path: Transcriptome TxDb file path
-    @type transcriptome_txdb_path: str | None
-    @ivar colour_default: Default UCSC Genome Browser Track Hub RGB colour
-    @type colour_default: str | None
-    @ivar colour_dict: Python C{dict} of
-        Python C{str} factor name key and
-        Python C{str} RGB colour value data
-    @type colour_dict: dict[str, str] | None
-    @ivar factor_default: Default factor
-    @type factor_default: str
+    :cvar skip_alignment_sieve: Request skipping the `deepTools <https://deeptools.readthedocs.io/en/stable/>`
+        `alignmentSieve <https://deeptools.readthedocs.io/en/stable/content/tools/alignmentSieve.html>`_ tool.
+    :type skip_alignment_sieve: bool
+    :ivar replicate_grouping: Group all replicates into a single process.
+    :type replicate_grouping: bool | None
+    :ivar comparison_path: A comparison file path.
+    :type comparison_path: str | None
+    :ivar genome_black_list: A genome black list file path.
+    :type genome_black_list: str | None
+    :ivar genome_fasta_path: A reference genome sequence FASTA file path.
+    :type genome_fasta_path: str | None
+    :ivar genome_sizes_path: A reference genome (chromosome) sizes file path.
+    :type genome_sizes_path: str | None
+    :ivar genome_effective_size: A effective genome size.
+    :type genome_effective_size: str | None
+    :ivar transcriptome_version: A transcriptome version.
+    :type transcriptome_version: str | None
+    :ivar transcriptome_gtf_path: A transcriptome GTF file path.
+    :type transcriptome_gtf_path: str | None
+    :ivar transcriptome_txdb_path: A transcriptome TxDb file path.
+    :type transcriptome_txdb_path: str | None
+    :ivar colour_default: A default UCSC Genome Browser Track Hub RGB colour.
+    :type colour_default: str | None
+    :ivar colour_dict: A Python :py:class:`dict` object of
+        Python :py:class:`str` factor name key and
+        Python :py:class:`str` RGB colour value objects.
+    :type colour_dict: dict[str, str] | None
+    :ivar factor_default: A default ChIP factor name.
+    :type factor_default: str
     """
 
     name = 'ChIP-seq Analysis'
@@ -590,61 +687,61 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_stage_name_alignment(cls):
-        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'alignment'))
 
     @classmethod
     def get_stage_name_peak_calling(cls):
-        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'peak_calling'))
 
     @classmethod
     def get_stage_name_chipqc(cls):
-        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'chipqc'))
 
     @classmethod
     def get_stage_name_diff_bind(cls):
-        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'diff_bind'))
 
     @classmethod
     def get_prefix_alignment(cls, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param sample_name: C{bsf.ngs.Sample.name}
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_alignment(), sample_name))
 
     @classmethod
     def get_prefix_peak_calling(cls, t_name, c_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param t_name: Treatment C{bsf.ngs.Sample.name}
-        @type t_name: str
-        @param c_name: Control C{bsf.ngs.Sample.name}
-        @type c_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param t_name: A :py:attr:`bsf.ngs.Sample.name` attribute for the treatment.
+        :type t_name: str
+        :param c_name: A :py:attr:`bsf.ngs.Sample.name` attribute for the :literal:`control`.
+        :type c_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         if c_name:
             return cls.get_stage_name_peak_calling() + '_' + t_name + '__' + c_name
@@ -653,51 +750,51 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_prefix_chipqc(cls, comparison_name, factor_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param factor_name: Factor name
-        @type factor_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :param factor_name: A factor name.
+        :type factor_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_chipqc(), comparison_name, factor_name))
 
     @classmethod
     def get_prefix_diff_bind(cls, comparison_name, factor_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param factor_name: Factor name
-        @type factor_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :param factor_name: A factor name.
+        :type factor_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_diff_bind(), comparison_name, factor_name))
 
     @classmethod
     def get_file_path_alignment(cls, sample_name):
-        """Get a C{FilePathAlignment} object.
+        """Get a :py:class:`bsf.analyses.chipseq.FilePathAlignment` object.
 
-        @param sample_name: C{bsf.ngs.Sample.name}
-        @type sample_name: str
-        @return: C{FilePathAlignment}
-        @rtype: FilePathAlignment
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.chipseq.FilePathAlignment` object.
+        :rtype: FilePathAlignment
         """
         return FilePathAlignment(prefix=cls.get_prefix_alignment(sample_name=sample_name))
 
     @classmethod
     def get_file_path_peak_calling(cls, t_name, c_name):
-        """Get a C{FilePathPeakCalling} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object from this or subclass thereof.
 
-        @param t_name: C{bsf.ngs.Sample.name}
-        @type t_name: str
-        @param c_name: C{bsf.ngs.Sample.name}
-        @type c_name: str
-        @return: C{FilePathPeakCalling} or subclass object
-        @rtype: FilePathPeakCalling
+        :param t_name: A :py:attr:`bsf.ngs.Sample.name` attribute for the treatment.
+        :type t_name: str
+        :param c_name: A :py:attr:`bsf.ngs.Sample.name` attribute for the :literal:`control`.
+        :type c_name: str
+        :return: A :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object or subclass thereof.
+        :rtype: FilePathPeakCalling
         """
         return FilePathPeakCalling(
             prefix=cls.get_prefix_peak_calling(
@@ -706,14 +803,14 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_file_path_chipqc(cls, comparison_name, factor_name):
-        """Get a C{FilePathChIPQC} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.chipseq.FilePathChIPQC` object from this or a subclass.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param factor_name: Factor name
-        @type factor_name: str
-        @return: C{FilePathChIPQC} or subclass object
-        @rtype: FilePathChIPQC
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :param factor_name: A ChIP factor name.
+        :type factor_name: str
+        :return: A :py:class:`bsf.analyses.chipseq.FilePathChIPQC` object or subclass thereof.
+        :rtype: FilePathChIPQC
         """
         return FilePathChIPQC(
             prefix=cls.get_prefix_chipqc(
@@ -722,14 +819,14 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def get_file_path_diff_bind(cls, comparison_name, factor_name):
-        """Get a C{FilePathDiffBind} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.chipseq.FilePathDiffBind` object from this or a subclass.
 
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param factor_name: Factor name
-        @type factor_name: str
-        @return: C{FilePathDiffBind} or subclass object
-        @rtype: FilePathDiffBind
+        :param comparison_name: A comparison name.
+        :type comparison_name: str
+        :param factor_name: A ChIP factor name.
+        :type factor_name: str
+        :return: A :py:class:`bsf.analyses.chipseq.FilePathDiffBind` object or subclass thereof.
+        :rtype: FilePathDiffBind
         """
         return FilePathDiffBind(
             prefix=cls.get_prefix_diff_bind(
@@ -765,66 +862,64 @@ class ChIPSeq(Analysis):
             colour_default=None,
             colour_dict=None,
             factor_default=None):
-        """Initialise a C{bsf.analyses.chipseq.ChIPSeq}.
+        """Initialise a :py:class:`bsf.analyses.chipseq.ChIPSeq` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param replicate_grouping: Group all replicates into a single process
-        @type replicate_grouping: bool
-        @param comparison_path: Comparison file path
-        @type comparison_path: str | None
-        @param genome_black_list: Genome black list file path
-        @type genome_black_list: str | None
-        @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | None
-        @param genome_sizes_path: Reference genome (chromosome) sizes file path
-        @type genome_sizes_path: str | None
-        @param genome_effective_size: Effective genome size
-        @type genome_effective_size: str | None
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @param transcriptome_gtf_path: Transcriptome GTF file path
-        @type transcriptome_gtf_path: str | None
-        @param transcriptome_txdb_path: Transcriptome TxDb file path
-        @type transcriptome_txdb_path: str | None
-        @param colour_default: Default UCSC Genome Browser Track Hub RGB colour
-        @type colour_default: str | None
-        @param colour_dict: Python C{dict} of
-            Python C{str} factor name key and
-            Python C{str} RGB colour value data
-        @type colour_dict: dict[str, str] | None
-        @param factor_default: Default factor
-        @type factor_default: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param replicate_grouping: Group all replicates into a single process.
+        :type replicate_grouping: bool
+        :param comparison_path: A comparison file path.
+        :type comparison_path: str | None
+        :param genome_black_list: A genome black list file path.
+        :type genome_black_list: str | None
+        :param genome_fasta_path: A reference genome sequence FASTA file path.
+        :type genome_fasta_path: str | None
+        :param genome_sizes_path: A reference genome (chromosome) sizes file path.
+        :type genome_sizes_path: str | None
+        :param genome_effective_size: An effective genome size.
+        :type genome_effective_size: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :param transcriptome_gtf_path: A transcriptome GTF file path.
+        :type transcriptome_gtf_path: str | None
+        :param transcriptome_txdb_path: A transcriptome TxDb file path.
+        :type transcriptome_txdb_path: str | None
+        :param colour_default: A default UCSC Genome Browser Track Hub RGB colour.
+        :type colour_default: str | None
+        :param colour_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` factor name key and
+            Python :py:class:`str` RGB colour value objects.
+        :type colour_dict: dict[str, str] | None
+        :param factor_default: A default ChIP factor name.
+        :type factor_default: str
         """
         super(ChIPSeq, self).__init__(
             configuration=configuration,
@@ -871,14 +966,15 @@ class ChIPSeq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.chipseq.ChIPSeq} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a :py:class:`bsf.analyses.chipseq.ChIPSeq` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(ChIPSeq, self).set_configuration(configuration=configuration, section=section)
 
@@ -941,10 +1037,10 @@ class ChIPSeq(Analysis):
     def get_colour(self, factor):
         """Get a UCSC Genome Browser Track Hub RGB colour by a factor name.
 
-        @param factor: ChIP-seq factor name
-        @type factor: str
-        @return: Track Hub RGB colour
-        @rtype: str
+        :param factor: A ChIP-seq factor name.
+        :type factor: str
+        :return: A UCSC Track Hub RGB colour.
+        :rtype: str
         """
         if factor in self.colour_dict:
             return self.colour_dict[factor]
@@ -952,26 +1048,27 @@ class ChIPSeq(Analysis):
             return self.colour_default
 
     def run(self):
-        """Run a C{bsf.analyses.chipseq.ChIPSeq} C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analyses.chipseq.ChIPSeq` object.
         """
 
         def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
+            """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
+            from a CSV file path.
 
-                - Column headers for CASAVA folders:
-                    - Treatment/Control ProcessedRunFolder:
+                - Column headers for CASAVA folders
+                    - Treatment/Control ProcessedRunFolder
                         - CASAVA processed run folder name or
-                        - C{bsf.analysis.Analysis.input_directory} by default
-                    - Treatment/Control Project:
+                        - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
+                    - Treatment/Control Project
                         - CASAVA Project name or
-                        - C{bsf.analysis.Analysis.project_name} by default
-                    - Treatment/Control Sample:
+                        - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
+                    - Treatment/Control Sample
                         - CASAVA Sample name, no default
-                - Column headers for independent samples:
-                    - Treatment/Control Group:
-                    - Treatment/Control Sample:
-                    - Treatment/Control Reads:
-                    - Treatment/Control File:
+                - Column headers for independent samples
+                    - Treatment/Control Group
+                    - Treatment/Control Sample
+                    - Treatment/Control Reads
+                    - Treatment/Control File
             """
             annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
 
@@ -1452,7 +1549,7 @@ class ChIPSeq(Analysis):
                     # --pseudocount [0.0]
                     sub_command.add_option_long(key='pseudocount', value='0.00001')
 
-                    # --method [ppois] i.e. Poisson Pvalue -log10(pvalue), which yields data on a logarithmic scale
+                    # --method [ppois] i.e., Poisson Pvalue -log10(pvalue), which yields data on a logarithmic scale
                     sub_command.add_option_multi_long(key='method', value='ppois subtract logFE')
 
                     # --outdir [.]
@@ -1477,7 +1574,8 @@ class ChIPSeq(Analysis):
             return
 
         def run_create_diff_bind_jobs():
-            """Create Bioconductor DiffBind jobs.
+            """Create `Bioconductor <https://bioconductor.org>`_
+            `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ jobs.
             """
             # Firstly, organise the ChIPSeqComparison objects by comparison name.
             for comparison_dict in self._comparison_dict.values():
@@ -1750,13 +1848,13 @@ class ChIPSeq(Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.chipseq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
         """
 
         # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
         def report_html_1():
-            """Private function to create an HTML report for MACS1.
+            """Private function to create a :literal:`XHTML 1.0` report for MACS1.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -1878,7 +1976,7 @@ class ChIPSeq(Analysis):
             return
 
         def report_html_2():
-            """Private function to create an HTML report for MACS2.
+            """Private function to create a :literal:`XHTML 1.0` report for MACS2.
             """
             # Create a symbolic link containing the project name and a UUID.
             link_path = self.create_public_project_link()
@@ -2313,7 +2411,7 @@ class ChIPSeq(Analysis):
             return
 
         def report_hub_1():
-            """Private function to create a UCSC Track Hub for MACS1.
+            """Private function to create a :literal:`UCSC Genome Browser Track Hub` for MACS1.
             """
 
             str_list: List[str] = list()
@@ -2418,7 +2516,7 @@ class ChIPSeq(Analysis):
             return
 
         def report_hub_2():
-            """Private function to create a UCSC Track Hub for MACS2.
+            """Private function to create a :literal:`UCSC Genome Browser Track` Hub for MACS2.
             """
             # Composite tracks need tags and labels for all subGroupN entries that are defined.
 

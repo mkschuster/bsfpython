@@ -22,14 +22,13 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Son of Grid Engine (SGE) DRMS module.
-
-A package of methods supporting the Son of Grid Engine (SGE) system as
-Distributed Resource Management System (DRMS) module
+"""The :py:mod:`bsf.drms.sge` module supports the Son of Grid Engine (SGE) system as
+Distributed Resource Management System (DRMS) module.
 """
 import errno
 import os
 import re
+from threading import Lock
 from typing import List
 
 from bsf.connector import StandardOutputStream
@@ -40,73 +39,74 @@ output_directory_name = 'bsfpython_sge_output'
 
 
 class ProcessSGE(object):
-    """C{bsf.drms.sge.ProcessSGE} class representing one Son of Grid Engine (SGE) process.
+    """The :py:class:`bsf.drms.sge.ProcessSGE` class represents one
+    :literal:`Son of Grid Engine (SGE)` process.
 
-    The instance variable names result from the SGE accounting file. See man 5 accounting.
+    The instance variable names result from the SGE accounting file. See :manpage:`accounting(5)`.
 
-    @ivar process_sge_id: Primary key
-    @type process_sge_id: int | None
-    @ivar qname: Name of the cluster queue in which the job has run
-    @type qname: str | None
-    @ivar hostname: Name of the execution host
-    @type hostname: str | None
-    @ivar sge_group: The effective group id of the job owner when executing the job
-    @type sge_group: str | None
-    @ivar owner: Owner of the Grid Engine job
-    @type owner: str | None
-    @ivar job_name: Job name
-    @type job_name: str | None
-    @ivar job_number: Job identifier (job number)
-    @type job_number: str | None
-    @ivar account: An account string as specified by the qsub(1) or qalter(1) -A option
-    @type account: str | None
-    @ivar priority: Priority value assigned to the job, corresponding to the priority parameter in the
-        queue configuration (see queue_conf(5))
-    @type priority: str | None
-    @ivar submission_time: Submission time
-    @type submission_time: str | None
-    @ivar start_date: Start time
-    @type start_date: str | None
-    @ivar end_time: End time
-    @type end_time: str | None
-    @ivar failed: Indicates the problem which occurred in case a job could not be started on the execution host
-    @type failed: str | None
-    @ivar exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
+    :ivar process_sge_id: A primary key.
+    :type process_sge_id: int | None
+    :ivar qname: A name of the cluster queue in which the job has run.
+    :type qname: str | None
+    :ivar hostname: A name of the execution host.
+    :type hostname: str | None
+    :ivar sge_group: An effective group identifier of the job owner when executing the job.
+    :type sge_group: str | None
+    :ivar owner: An owner of the Grid Engine job.
+    :type owner: str | None
+    :ivar job_name: A job name.
+    :type job_name: str | None
+    :ivar job_number: A job identifier (job number).
+    :type job_number: str | None
+    :ivar account: An account string as specified by the :manpage:`qsub(1)` or :manpage:`qalter(1)` -A option.
+    :type account: str | None
+    :ivar priority: A priority value assigned to the job, corresponding to the priority parameter in the
+        queue configuration (see :manpage:`queue_conf(5)`).
+    :type priority: str | None
+    :ivar submission_time: A submission time.
+    :type submission_time: str | None
+    :ivar start_date: A start time.
+    :type start_date: str | None
+    :ivar end_time: An end time.
+    :type end_time: str | None
+    :ivar failed: An indication of the problem which occurred in case a job could not be started on the execution host.
+    :type failed: str | None
+    :ivar exit_status: An exit status of the job script (or Grid Engine-specific status in case of certain error
         conditions). The exit status is determined by following the normal shell conventions. If the command
         terminates normally, the value of the command is its exit status. However, in the case that the command
         exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
         the exit status.
-    @type exit_status: str | None
-    @ivar ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
-        it is zero
-    @type ru_wallclock: str | None
-    @ivar project: The department which was assigned to the job
-    @type project: str | None
-    @ivar department: The parallel environment which was selected for the job
-    @type department: str | None
-    @ivar granted_pe: The number of slots which were dispatched to the job by the scheduler
-    @type granted_pe: str | None
-    @ivar slots: The number of slots which were dispatched to the job by the scheduler
-    @type slots: str | None
-    @ivar task_number: Array job task index number
-    @type task_number: str | None
-    @ivar cpu: The CPU time usage in seconds
-    @type cpu: str | None
-    @ivar mem: The integral memory usage in Gbytes seconds
-    @type mem: str | None
-    @ivar io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
-    @type io: str | None
-    @ivar category: A string specifying the job category
-    @type category: str | None
-    @ivar iow: The input/output wait time in seconds (if available, otherwise 0)
-    @type iow: str | None
-    @ivar pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+    :type exit_status: str | None
+    :ivar ru_wallclock: A difference between end_time and start_time (see above), except that if the job fails,
+        it is zero.
+    :type ru_wallclock: str | None
+    :ivar project: A department which was assigned to the job.
+    :type project: str | None
+    :ivar department: A parallel environment which was selected for the job.
+    :type department: str | None
+    :ivar granted_pe: A number of slots which were dispatched to the job by the scheduler.
+    :type granted_pe: str | None
+    :ivar slots: A number of slots which were dispatched to the job by the scheduler.
+    :type slots: str | None
+    :ivar task_number: An array job task index number.
+    :type task_number: str | None
+    :ivar cpu: A CPU time usage in seconds.
+    :type cpu: str | None
+    :ivar mem: An integral memory usage in Gbytes seconds.
+    :type mem: str | None
+    :ivar io: An amount of data transferred in input/output operations in GB (if available, otherwise 0).
+    :type io: str | None
+    :ivar category: A string specifying the job category.
+    :type category: str | None
+    :ivar iow: An input/output wait time in seconds (if available, otherwise 0).
+    :type iow: str | None
+    :ivar pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
         via the qrsh -inherit interface.
-    @type pe_taskid: str | None
-    @ivar maxvmem: The maximum vmem size in bytes
-    @type maxvmem: str | None
-    @ivar arid: Advance reservation identifier
-    @type arid: str | None
+    :type pe_taskid: str | None
+    :ivar maxvmem: A maximum vmem size in bytes.
+    :type maxvmem: str | None
+    :ivar arid: An advance reservation identifier.
+    :type arid: str | None
     """
 
     def __init__(
@@ -139,71 +139,72 @@ class ProcessSGE(object):
             pe_taskid=None,
             maxvmem=None,
             arid=None):
-        """Initialise a C{bsf.drms.sge.ProcessSGE}.
+        """Initialise a :py:class:`bsf.drms.sge.ProcessSGE` object.
 
-        @param process_sge_id: Primary key
-        @type process_sge_id: int | None
-        @param qname: Name of the cluster queue in which the job has run
-        @type qname: str | None
-        @param hostname: Name of the execution host
-        @type hostname: str | None
-        @param sge_group: The effective group id of the job owner when executing the job
-        @type sge_group: str | None
-        @param owner: Owner of the Grid Engine job
-        @type owner: str | None
-        @param job_name: Job name
-        @type job_name: str | None
-        @param job_number: Job identifier (job number)
-        @type job_number: str | None
-        @param account: An account string as specified by the qsub(1) or qalter(1) -A option
-        @type account: str | None
-        @param priority: Priority value assigned to the job, corresponding to the priority parameter in the
-            queue configuration (see queue_conf(5))
-        @type priority: str | None
-        @param submission_time: Submission time
-        @type submission_time: str | None
-        @param start_date: Start time
-        @type start_date: str | None
-        @param end_time: End time
-        @type end_time: str | None
-        @param failed: Indicates the problem which occurred in case a job could not be started on the execution host
-        @type failed: str | None
-        @param exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
+        :param process_sge_id: A primary key.
+        :type process_sge_id: int | None
+        :param qname: A name of the cluster queue in which the job has run.
+        :type qname: str | None
+        :param hostname: A name of the execution host.
+        :type hostname: str | None
+        :param sge_group: An effective group id of the job owner when executing the job.
+        :type sge_group: str | None
+        :param owner: An owner of the Grid Engine job.
+        :type owner: str | None
+        :param job_name: A job name.
+        :type job_name: str | None
+        :param job_number: A job identifier (job number).
+        :type job_number: str | None
+        :param account: An account string as specified by the :manpage:`qsub(1)` or :manpage:`qalter(1)` -A option.
+        :type account: str | None
+        :param priority: A priority value assigned to the job, corresponding to the priority parameter in the
+            queue configuration (see :manpage:`queue_conf(5)`).
+        :type priority: str | None
+        :param submission_time: A submission time.
+        :type submission_time: str | None
+        :param start_date: A start time.
+        :type start_date: str | None
+        :param end_time: An end time.
+        :type end_time: str | None
+        :param failed: An indication of the problem which occurred in case a job could not be started on the
+            execution host.
+        :type failed: str | None
+        :param exit_status: An exit status of the job script (or Grid Engine-specific status in case of certain error
             conditions). The exit status is determined by following the normal shell conventions. If the command
             terminates normally, the value of the command is its exit status. However, in the case that the command
             exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
             the exit status.
-        @type exit_status: str | None
-        @param ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
-            it is zero
-        @type ru_wallclock: str | None
-        @param project: The department which was assigned to the job
-        @type project: str | None
-        @param department: The parallel environment which was selected for the job
-        @type department: str | None
-        @param granted_pe: The number of slots which were dispatched to the job by the scheduler
-        @type granted_pe: str | None
-        @param slots: The number of slots which were dispatched to the job by the scheduler
-        @type slots: str | None
-        @param task_number: Array job task index number
-        @type task_number: str | None
-        @param cpu: The CPU time usage in seconds
-        @type cpu: str | None
-        @param mem: The integral memory usage in Gbytes seconds
-        @type mem: str | None
-        @param io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
-        @type io: str | None
-        @param category: A string specifying the job category
-        @type category: str | None
-        @param iow: The input/output wait time in seconds (if available, otherwise 0)
-        @type iow: str | None
-        @param pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+        :type exit_status: str | None
+        :param ru_wallclock: A difference between end_time and start_time (see above), except that if the job fails,
+            it is zero.
+        :type ru_wallclock: str | None
+        :param project: A department which was assigned to the job.
+        :type project: str | None
+        :param department: A parallel environment which was selected for the job.
+        :type department: str | None
+        :param granted_pe: A number of slots which were dispatched to the job by the scheduler.
+        :type granted_pe: str | None
+        :param slots: A number of slots which were dispatched to the job by the scheduler.
+        :type slots: str | None
+        :param task_number: AN Array job task index number.
+        :type task_number: str | None
+        :param cpu: A CPU time usage in seconds.
+        :type cpu: str | None
+        :param mem: An integral memory usage in Gbytes seconds.
+        :type mem: str | None
+        :param io: An amount of data transferred in input/output operations in GB (if available, otherwise 0).
+        :type io: str | None
+        :param category: A string specifying the job category.
+        :type category: str | None
+        :param iow: An input/output wait time in seconds (if available, otherwise 0).
+        :type iow: str | None
+        :param pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
             via the qrsh -inherit interface.
-        @type pe_taskid: str | None
-        @param maxvmem: The maximum vmem size in bytes
-        @type maxvmem: str | None
-        @param arid: Advance reservation identifier
-        @type arid: str | None
+        :type pe_taskid: str | None
+        :param maxvmem: A maximum vmem size in bytes.
+        :type maxvmem: str | None
+        :param arid: An advance reservation identifier.
+        :type arid: str | None
         """
         super(ProcessSGE, self).__init__()
 
@@ -240,16 +241,17 @@ class ProcessSGE(object):
 
 
 class ProcessSGEAdaptor(DatabaseAdaptor):
-    """C{bsf.drms.sge.ProcessSGEAdaptor} class providing database access for the C{bsf.drms.sge.ProcessSGE} class.
+    """The :py:class:`bsf.drms.sge.ProcessSGEAdaptor` class provides database access for the
+    :py:class:`bsf.drms.sge.ProcessSGE` class.
 
-    The SQL column names result from the SGE accounting file. See man 5 accounting.
+    The SQL column names result from the SGE accounting file. See :manpage:`accounting(5)`.
     """
 
     def __init__(self, database_connection):
-        """Initialise a C{bsf.drms.sge.ProcessSGEAdaptor}.
+        """Initialise a :py:class:`bsf.drms.sge.ProcessSGEAdaptor` object.
 
-        @param database_connection: C{bsf.database.DatabaseConnection}
-        @type database_connection: DatabaseConnection
+        :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
+        :type database_connection: DatabaseConnection
         """
         super(ProcessSGEAdaptor, self).__init__(
             database_connection=database_connection,
@@ -295,7 +297,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 ('end_time', 'TEXT'),
                 # failed
                 # Indicates the problem which occurred in case a job could not be started on the execution host
-                # (e.g. because the owner of the job did not have a valid account on that machine).
+                # (e.g., because the owner of the job did not have a valid account on that machine).
                 # If Grid Engine tries to start a job multiple times, this may lead to multiple entries in the
                 # reporting file corresponding to the same job ID.
                 ('failed', 'TEXT'),
@@ -420,33 +422,35 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
 
 
 def submit(stage, debug=0):
-    """Submit each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
+    """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    Submits each C{bsf.process.Executable} into the
-    Son of Grid Engine (SGE)
+    Submits each :py:class:`bsf.process.Executable` object into the
+    :literal:`Son of Grid Engine` (SGE)
     Distributed Resource Management System (DRMS).
 
-    @param stage: C{bsf.analysis.Stage}
-    @type stage: bsf.analysis.Stage
-    @param debug: Debug level
-    @type debug: int
+    :param stage: A :py:class:`bsf.analysis.Stage` object.
+    :type stage: bsf.analysis.Stage
+    :param debug: An integer debugging level.
+    :type debug: int
     """
 
     def submit_qsub_stdout(_file_handle, _thread_lock, _debug, _executable):
-        """Thread callable to process the SGE qsub STDOUT stream.
+        """Thread callable to process the SGE :manpage:`qsub(1)` :literal:`STDOUT` stream.
 
-        Parses the process identifier returned by SGE qsub and sets it as
-        C{bsf.process.Executable.process_identifier}.
-        The response to the SGE qsub command looks like:
-        Your job 137657 ("ls") has been submitted
-        @param _file_handle: File handle (i.e. pipe)
-        @type _file_handle: io.TextIOWrapper
-        @param _thread_lock: Thread lock
-        @type _thread_lock: threading.Lock
-        @param _debug: Debug level
-        @type _debug: int
-        @param _executable: C{bsf.process.Executable}
-        @type _executable: Executable
+        Parses the process identifier returned by SGE :literal:`qsub` and sets it as
+        :py:attr:`bsf.process.Executable.process_identifier`.
+        The response to the SGE :literal:`qsub` command looks like:
+
+        :literal:`Your job 137657 ("ls") has been submitted`
+
+        :param _file_handle: A file handle (i.e., pipe).
+        :type _file_handle: io.TextIOWrapper
+        :param _thread_lock: A Python :py:class:`threading.Lock` object.
+        :type _thread_lock: Lock
+        :param _debug: Debug level
+        :type _debug: int
+        :param _executable: A :py:class:`bsf.process.Executable` object.
+        :type _executable: Executable
         """
         for _line in _file_handle:
             if _debug > 0:
@@ -545,7 +549,7 @@ def submit(stage, debug=0):
 
         if stage.parallel_environment:
             # Parallel environment format: -pe pe_name pe_min-pe_max
-            # Here, pe_max is not specified, but defaults to 9999999. See qsub (1).
+            # Here, pe_max is not specified, but defaults to 9999999. See qsub(1).
             executable_drms.add_option_multi_short(
                 key='pe',
                 value=' '.join((stage.parallel_environment, str(stage.threads))))
@@ -618,12 +622,12 @@ def submit(stage, debug=0):
 
 
 def check_state(stage, debug=0):
-    """Check the state of each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
+    """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    @param stage: C{bsf.analysis.Stage}
-    @type stage: bsf.analysis.Stage
-    @param debug: Debug level
-    @type debug: int
+    :param stage: A :py:class:`bsf.analysis.Stage` object.
+    :type stage: bsf.analysis.Stage
+    :param debug: An integer debugging level.
+    :type debug: int
     """
     if stage:
         pass

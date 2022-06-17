@@ -22,7 +22,6 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Runnables module.
-
-A package of classes and methods supporting the BSF C{bsf.procedure.Runnable} class.
+"""The :py:mod:`bsf.runnables` module provides classes and methods supporting
+:py:class:`bsf.procedure.Runnable` subclasses.
 """

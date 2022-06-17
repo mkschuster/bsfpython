@@ -24,7 +24,7 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# BSF Python script to run FastQC over an Illumina run folder.
+#  BSF Python script to run FastQC over an Illumina run folder.
 #
 import sys
 from argparse import ArgumentParser

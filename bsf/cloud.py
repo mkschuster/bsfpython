@@ -22,8 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Cloud services module.
-
+"""The :py:mod:`bsf.cloud` module provides functions to interact with cloud services.
 """
 import json
 import os
@@ -40,10 +39,10 @@ from bsf.standards import Secrets
 def get_azure_secrets_dict(account_name: str) -> Dict[str, str]:
     """Get Microsoft Azure secrets from a JSON configuration file.
 
-    @param account_name: I{Microsoft Azure Storage Account} name
-    @type account_name: str
-    @return: Python C{dict} with I{Microsoft Azure Storage Account} secrets
-    @rtype: dict[str, str]
+    :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str
+    :return: A Python :py:class:`dict` object with :literal:`Microsoft Azure Storage Account` secrets.
+    :rtype: dict[str, str]
     """
     file_path = Secrets.get_azure_file_path()
 
@@ -61,12 +60,12 @@ def get_azure_secrets_dict(account_name: str) -> Dict[str, str]:
 
 
 def get_azure_blob_name(blob: Union[BlobProperties, str]) -> str:
-    """Get an Azure blob name from a C{azure.storage.blob.BlobProperties} or a Python C{str} object.
+    """Get an Azure blob name from a :py:class:`azure.storage.blob.BlobProperties` or a Python :py:class:`str` object.
 
-    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} object
-    @type blob: BlobProperties | str
-    @return: Blob name
-    @rtype: str
+    :param blob: A :py:class:`azure.storage.blob.BlobProperties` or Python :py:class:`str` object.
+    :type blob: BlobProperties | str
+    :return: A blob name.
+    :rtype: str
     """
     if isinstance(blob, BlobProperties):
         return blob.name
@@ -77,12 +76,13 @@ def get_azure_blob_name(blob: Union[BlobProperties, str]) -> str:
 
 
 def get_container_name(container: Union[ContainerProperties, str]) -> str:
-    """Get a container name from a C{azure.storage.blob.ContainerProperties} or a Python C{str} object.
+    """Get a container name from a :py:class:`azure.storage.blob.ContainerProperties` or a
+    Python :py:class:`str` object.
 
-    @param container: C{azure.storage.blob.ContainerProperties} or Python C{str} object
-    @type container: ContainerProperties | str
-    @return: Container name
-    @rtype: str
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` or Python :py:class:`str` object.
+    :type container: ContainerProperties | str
+    :return: A container name.
+    :rtype: str
     """
     if isinstance(container, ContainerProperties):
         return container.name
@@ -97,21 +97,22 @@ def get_azure_blob_service_client(
         max_block_size: int = 100 * 1024 * 1024,
         retries_total: int = 10,
         logging_enable: bool = False) -> BlobServiceClient:
-    """Get an C{azure.storage.blob.BlobServiceClient} object.
+    """Get an :py:class:`azure.storage.blob.BlobServiceClient` object.
 
     For uploading large files, the default block size of 4 * 1024 * 1024 (4 MiB) is not big enough,
     since the number of blocks in a blob is limited to 50,000, which allows for 200,000 MiB
     or 195 GiB blobs. Changing the maximum block size to 100 MiB allows for 4882 GiB or 4 TiB blobs.
-    @param account_name: I{Microsoft Azure Storage Account} name
-    @type account_name: str
-    @param max_block_size: Maximum block size defaults to 100 MiB, which is also the maximum Azure supports
-    @type max_block_size: int
-    @param retries_total: Number of retries
-    @type retries_total: int
-    @param logging_enable: Enable logging
-    @type logging_enable: bool
-    @return: C{azure.storage.blob.BlobServiceClient} object
-    @rtype: BlobServiceClient
+
+    :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str
+    :param max_block_size: A maximum block size, which defaults to 100 MiB, which is also the maximum Azure supports.
+    :type max_block_size: int
+    :param retries_total: A number of retries.
+    :type retries_total: int
+    :param logging_enable: Enable logging via the Python :py:class:`logging.Logger` class.
+    :type logging_enable: bool
+    :return: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :rtype: BlobServiceClient
     """
     secrets_dict = get_azure_secrets_dict(account_name=account_name)
 
@@ -128,14 +129,15 @@ def get_azure_blob_service_client(
 def get_azure_container_client(
         azure_blob_service_client: BlobServiceClient,
         container: Union[ContainerProperties, str]) -> ContainerClient:
-    """Get an C{azure.storage.blob.ContainerClient} object.
+    """Get an :py:class:`azure.storage.blob.ContainerClient` object.
 
-    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
-    @type azure_blob_service_client: BlobServiceClient
-    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
-    @type container: ContainerProperties | str
-    @return: C{azure.storage.blob.ContainerClient} object
-    @rtype: ContainerClient
+    :param azure_blob_service_client: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :type azure_blob_service_client: BlobServiceClient
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` object or
+        Python :py:class:`str` (container name) object.
+    :type container: ContainerProperties | str
+    :return: A :py:class:`azure.storage.blob.ContainerClient` object.
+    :rtype: ContainerClient
     """
     return azure_blob_service_client.get_container_client(container=container)
 
@@ -144,16 +146,17 @@ def get_azure_blob_client(
         azure_blob_service_client: BlobServiceClient,
         container: Union[ContainerProperties, str],
         blob: Union[BlobProperties, str]) -> BlobClient:
-    """Get an C{azure.storage.blob.BlobClient} object.
+    """Get an :py:class:`azure.storage.blob.BlobClient` object.
 
-    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
-    @type azure_blob_service_client: BlobServiceClient
-    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
-    @type container: ContainerProperties | str
-    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
-    @type blob: BlobProperties | str
-    @return: C{azure.storage.blob.BlobClient} object
-    @rtype: BlobClient
+    :param azure_blob_service_client: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :type azure_blob_service_client: BlobServiceClient
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` object or
+        Python :py:class:`str` (container name) object.
+    :type container: ContainerProperties | str
+    :param blob: A :py:class:`azure.storage.blob.BlobProperties` or Python :py:class:`str` (blob name) object.
+    :type blob: BlobProperties | str
+    :return: A :py:class:`azure.storage.blob.BlobClient` object.
+    :rtype: BlobClient
     """
     return azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
@@ -161,14 +164,15 @@ def get_azure_blob_client(
 def azure_container_exists(
         azure_blob_service_client: BlobServiceClient,
         container: Union[ContainerProperties, str]) -> bool:
-    """Check if a container exists in a I{Microsoft Azure Storage Account}.
+    """Check if a container exists in a :literal:`Microsoft Azure Storage Account`.
 
-    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
-    @type azure_blob_service_client: BlobServiceClient
-    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
-    @type container: ContainerProperties | str
-    @return: C{True} if the container exists, C{False} otherwise
-    @rtype: bool
+    :param azure_blob_service_client: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :type azure_blob_service_client: BlobServiceClient
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` object or
+        Python :py:class:`str` (container name) object.
+    :type container: ContainerProperties | str
+    :return: :py:const:`True` if the container exists, :py:const:`False` otherwise.
+    :rtype: bool
     """
     container_name = get_container_name(container=container)
 
@@ -189,25 +193,28 @@ def azure_block_blob_upload(
         standard_blob_tier: Union[StandardBlobTier, str, None] = None,
         max_concurrency: int = 4,
         logging_enable: bool = False) -> BlobProperties:
-    """Upload a block blob into a I{Microsoft Azure Storage Account} I{Container}.
+    """Upload a block blob into a :literal:`Microsoft Azure Storage Account` :literal:`Container`.
 
-    @param file_path: Local file path
-    @type file_path: str
-    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
-    @type azure_blob_service_client: BlobServiceClient
-    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
-    @type container: ContainerProperties | str
-    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
-    @type blob: BlobProperties | str | None
-    @param standard_blob_tier: C{azure.storage.blob.StandardBlobTier} object or Python C{str} standard blob tier
-        enumerated value (i.e., Archive, Cool, Hot)
-    @type standard_blob_tier: StandardBlobTier | str | None
-    @param max_concurrency: Maximum number of network connections
-    @type max_concurrency: int
-    @param logging_enable: Enable logging via the Python C{logger} module
-    @type logging_enable: bool
-    @return: C{azure.storage.blob.BlobProperties}
-    @rtype: BlobProperties
+    :param file_path: A local file path.
+    :type file_path: str
+    :param azure_blob_service_client: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :type azure_blob_service_client: BlobServiceClient
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` object or
+        Python :py:class:`str` (container name) object.
+    :type container: ContainerProperties | str
+    :param blob: A :py:class:`azure.storage.blob.BlobProperties` object or
+        Python :py:class:`str` (blob name) object.
+    :type blob: BlobProperties | str | None
+    :param standard_blob_tier: A :py:class:`azure.storage.blob.StandardBlobTier` object or
+        Python :py:class:`str` standard blob tier enumerated value
+        (i.e., :literal:`Archive`, :literal:`Cool`, :literal:`Hot`).
+    :type standard_blob_tier: StandardBlobTier | str | None
+    :param max_concurrency: Maximum number of network connections.
+    :type max_concurrency: int
+    :param logging_enable: Enable logging via the Python :py:class:`logging.Logger` class.
+    :type logging_enable: bool
+    :return: A :py:class:`azure.storage.blob.BlobProperties` object.
+    :rtype: BlobProperties
     """
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
@@ -246,22 +253,24 @@ def azure_block_blob_download_io(
         file_io: IO,
         max_concurrency: int = 4,
         logging_enable: bool = False) -> BlobProperties:
-    """Download a block blob from a I{Microsoft Azure Storage Account} I{Container}.
+    """Download a block blob from a :literal:`Microsoft Azure Storage Account` :literal:`Container`.
 
-    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
-    @type azure_blob_service_client: BlobServiceClient
-    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
-    @type container: ContainerProperties | str
-    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
-    @type blob: BlobProperties | str
-    @param file_io: Python C{file} object
-    @type file_io: IO
-    @param max_concurrency: Maximum number of network connections
-    @type max_concurrency: int
-    @param logging_enable: Enable logging via the Python C{logger} module
-    @type logging_enable: bool
-    @return: C{azure.storage.blob.BlobProperties}
-    @rtype: BlobProperties
+    :param azure_blob_service_client: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :type azure_blob_service_client: BlobServiceClient
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` object or
+        Python :py:class:`str` (container name) object.
+    :type container: ContainerProperties | str
+    :param blob: A :py:class:`azure.storage.blob.BlobProperties` object or
+        Python :py:class:`str` (blob name) object.
+    :type blob: BlobProperties | str
+    :param file_io: A Python :py:class:`IO` object.
+    :type file_io: IO
+    :param max_concurrency: A maximum number of network connections.
+    :type max_concurrency: int
+    :param logging_enable: Enable logging via the Python :py:class:`logging.Logger` class.
+    :type logging_enable: bool
+    :return: A :py:class:`azure.storage.blob.BlobProperties` object.
+    :rtype: BlobProperties
     """
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
@@ -284,22 +293,24 @@ def azure_block_blob_download(
         file_path: str = None,
         max_concurrency: int = 4,
         logging_enable: bool = False) -> BlobProperties:
-    """Download a block blob from a I{Microsoft Azure Storage Account} I{Container}.
+    """Download a block blob from a :literal:`Microsoft Azure Storage Account` :literal:`Container`.
 
-    @param azure_blob_service_client: C{azure.storage.blob.BlobServiceClient} object
-    @type azure_blob_service_client: BlobServiceClient
-    @param container: C{azure.storage.blob.ContainerProperties} object or Python C{str} container name
-    @type container: ContainerProperties | str
-    @param blob: C{azure.storage.blob.BlobProperties} or Python C{str} blob name
-    @type blob: BlobProperties | str
-    @param file_path: Local file path
-    @type file_path: str | None
-    @param max_concurrency: Maximum number of network connections
-    @type max_concurrency: int
-    @param logging_enable: Enable logging via the Python C{logger} module
-    @type logging_enable: bool
-    @return: C{azure.storage.blob.BlobProperties}
-    @rtype: BlobProperties
+    :param azure_blob_service_client: A :py:class:`azure.storage.blob.BlobServiceClient` object.
+    :type azure_blob_service_client: BlobServiceClient
+    :param container: A :py:class:`azure.storage.blob.ContainerProperties` object or
+        Python :py:class:`str` (container name) object.
+    :type container: ContainerProperties | str
+    :param blob: A :py:class:`azure.storage.blob.BlobProperties` object or
+        Python :py:class:`str` (blob name) object.
+    :type blob: BlobProperties | str
+    :param file_path: A local file path.
+    :type file_path: str | None
+    :param max_concurrency: A maximum number of network connections.
+    :type max_concurrency: int
+    :param logging_enable: Enable logging via the Python :py:class:`logging.Logger` class.
+    :type logging_enable: bool
+    :return: A :py:class:`azure.storage.blob.BlobProperties` object.
+    :rtype: BlobProperties
     """
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):

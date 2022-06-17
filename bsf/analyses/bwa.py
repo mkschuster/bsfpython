@@ -22,9 +22,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""BWA Analysis module.
-
-A package of classes and methods supporting Burrows-Wheeler Aligner (BWA) analyses.
+"""The :py:mod:`bsf.analyses.bwa` module provides classes and methods supporting the
+`Burrows-Wheeler Aligner (BWA) <https://github.com/lh3/bwa>`_.
 """
 import os
 
@@ -37,15 +36,8 @@ from bsf.standards import StandardFilePath
 
 
 class MaximalExactMatches(Aligner):
-    """The C{bsf.analyses.bwa.MaximalExactMatches} class represents the BWA Maximal Exact Matches (MEM) algorithm.
-
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
-        that should be retained by Picard MergeBamAlignment
-    @type sam_attributes_to_retain_list: list[str]
+    """The :py:class:`bsf.analyses.bwa.MaximalExactMatches` class represents the
+    BWA :emphasis:`Maximal Exact Matches` (MEM) algorithm.
     """
     name = 'BWA Maximal Exact Matches Analysis'
     prefix = 'bwa_mem'
@@ -76,16 +68,17 @@ class MaximalExactMatches(Aligner):
     ]
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a BWA MEM-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
+        """Add a BWA MEM-specific :py:class:`bsf.process.RunnableStep` object to the
+        :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: ConcurrentRunnable
-        @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: Stage
-        @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | None
-        @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | None
+        :param runnable_align: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable_align: ConcurrentRunnable
+        :param stage_align: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_align: Stage
+        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :type file_path_1: str | None
+        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
@@ -118,7 +111,7 @@ class MaximalExactMatches(Aligner):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.bwa.MaximalExactMatches} analysis.
+        """Run a :py:class:`bsf.analyses.bwa.MaximalExactMatches` object.
         """
         # Check for the project name already here,
         # since the super class method has to be called later.

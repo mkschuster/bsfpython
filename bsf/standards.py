@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Standards module.
-
-A package of classes and methods modelling configuration and default information.
+"""The :py:mod:`bsf.standards` module provides classes modelling configuration and default information.
 """
 import os
 import stat
@@ -36,12 +34,13 @@ from xml.etree.ElementTree import ElementTree
 def get_irf_path(name):
     """Return the absolute file path for an Illumina Run Folder (IRF) name.
 
-    This method first checks for existence in C{bsf.standards.StandardFilePath.get_illumina_run()}, before
-    checking in C{bsf.standards.StandardFilePath.get_illumina_sav()}.
-    @param name: Illumina Run Folder (IRF) name
-    @type name: str
-    @return: Absolute file path
-    @rtype: str | None
+    This function first checks for existence in :py:meth:`bsf.standards.StandardFilePath.get_illumina_run`, before
+    checking in :py:meth:`bsf.standards.StandardFilePath.get_illumina_sav`.
+
+    :param name: An Illumina Run Folder (IRF) name.
+    :type name: str
+    :return: An absolute file path.
+    :rtype: str | None
     """
     # Check the Illumina Run Folder directory.
     file_path = Configuration.get_absolute_path(
@@ -69,18 +68,21 @@ def get_irf_path(name):
 
 
 class Configuration(object):
-    """The C{bsf.standards.Configuration} class represents one or more UNIX-style initialisation (*.ini) files.
+    """The :py:class:`bsf.standards.Configuration` class represents one or more UNIX-style initialisation
+    (:literal:`*.ini`) files.
 
-    A C{bsf.standards.Configuration} has an associated Python C{configparser.ConfigParser} to parse the file(s).
+    A :py:class:`bsf.standards.Configuration` object has an associated Python :py:class:`configparser.ConfigParser`
+    object to parse the file(s).
 
-    @cvar global_configuration: Global C{bsf.standards.Configuration}
-    @type global_configuration: Configuration
-    @cvar global_file_path: Global configuration file
-    @type global_file_path: str
-    @ivar file_path_list: C{bsf.standards.Configuration} file path
-    @type file_path_list: list[str]
-    @ivar config_parser: Python C{configparser.ConfigParser}
-    @type config_parser: ConfigParser
+    :cvar global_configuration: A global :py:class:`bsf.standards.Configuration` object.
+    :type global_configuration: Configuration
+    :cvar global_file_path: A global configuration file path.
+    :type global_file_path: str
+    :ivar file_path_list: A Python :py:class:`list` object of
+        Python :py:class:`str` (configuration file path) objects.
+    :type file_path_list: list[str]
+    :ivar config_parser: A Python :py:class:`configparser.ConfigParser` object.
+    :type config_parser: ConfigParser
     """
 
     global_configuration = None
@@ -89,10 +91,10 @@ class Configuration(object):
 
     @staticmethod
     def get_global_configuration():
-        """Get the global C{bsf.standards.Configuration} and initialise it, if not already done so.
+        """Get a global :py:class:`bsf.standards.Configuration` object and initialise it, if not already done so.
 
-        @return: C{bsf.standards.Configuration}
-        @rtype: Configuration
+        :return: A global :py:class:`bsf.standards.Configuration` object.
+        :rtype: Configuration
         """
         if Configuration.global_configuration is None:
             Configuration.global_configuration = Configuration.from_file_path_list(
@@ -104,19 +106,19 @@ class Configuration(object):
     def get_absolute_path(file_path=None, default_path=None):
         """Return an absolute file path.
 
-        Expand an eventual user part (i.e. on UNIX ~ or ~user) and
-        expand any environment variables (i.e. on UNIX ${NAME} or $NAME).
+        Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        expand any environment variables (i.e., on UNIX ${NAME} or $NAME).
         Check if an absolute path has been provided, if not,
         automatically prepend default directory paths,
         which again has user part and environment variables expanded.
         Finally, normalise the file path.
 
-        @param file_path: File path
-        @type file_path: str
-        @param default_path: Default absolute path
-        @type default_path: str
-        @return: Absolute path
-        @rtype: str | None
+        :param file_path: A file path.
+        :type file_path: str
+        :param default_path: A default absolute path.
+        :type default_path: str
+        :return: An absolute file path.
+        :rtype: str | None
         """
         if file_path:
             file_path = os.path.expanduser(file_path)
@@ -138,12 +140,13 @@ class Configuration(object):
 
     @staticmethod
     def section_from_instance(instance):
-        """Get a configuration section Python C{str} composed of the Python module and Python class name.
+        """Get A configuration section Python :py:class:`str` object composed of the
+        Python module and Python class name of an object instance.
 
-        @param instance: A Python instance (i.e. object)
-        @type instance: object
-        @return: Configuration file section string
-        @rtype: str
+        :param instance: A Python instance (i.e., object).
+        :type instance: object
+        :return: A configuration file section string.
+        :rtype: str
         """
         # For Python "type" instances the "__name__" instance variable provides the name of the type, while for
         # Python "object" instances the "__class__" variable provides the Python "type" object.
@@ -155,16 +158,18 @@ class Configuration(object):
 
     @classmethod
     def from_file_path_list(cls, file_path_list):
-        """Create a C{bsf.standards.Configuration} object based on a Python C{list} of Python C{str} file paths.
+        """Create a :py:class:`bsf.standards.Configuration` object based on a
+        Python :py:class:`list` object of Python :py:class:`str` (file path) objects.
 
         Both, user and variable expansion gets applied to each file path.
         Identical files are read only once.
 
-        @param file_path_list: Python C{list} of Python C{str} configuration file path objects
-        @type file_path_list: list[str]
-        @return: C{bsf.standards.Configuration}
-        @rtype: Configuration
-        @raise Exception: Configuration file path does not exist
+        :param file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (configuration file path) objects.
+        :type file_path_list: list[str]
+        :return: A :py:class:`bsf.standards.Configuration` object.
+        :rtype: Configuration
+        :raise Exception: If the configuration file path does not exist.
         """
         # Expand each file_path for user and variable names.
         temporary_list = [cls.get_absolute_path(file_path=x) for x in file_path_list]
@@ -197,12 +202,13 @@ class Configuration(object):
         return configuration
 
     def __init__(self, file_path_list=None, config_parser=None):
-        """Initialise a C{bsf.standards.Configuration}.
+        """Initialise a :py:class:`bsf.standards.Configuration` object.
 
-        @param file_path_list: Python C{list} of Python C{str} configuration file path objects
-        @type file_path_list: list[str]
-        @param config_parser: Python C{configparser.ConfigParser}
-        @type config_parser: ConfigParser
+        :param file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (configuration file path) objects.
+        :type file_path_list: list[str]
+        :param config_parser: A Python :py:class:`configparser.ConfigParser` object.
+        :type config_parser: ConfigParser
         """
         super(Configuration, self).__init__()
 
@@ -221,12 +227,12 @@ class Configuration(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.standards.Configuration}.
+        """Trace a :py:class:`bsf.standards.Configuration` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -241,39 +247,44 @@ class Configuration(object):
     def get_expanded_directory(self, section, option):
         """Get configuration information for a directory and expand it.
 
-        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
-        any environment variables i.e. on UNIX ${NAME} or $NAME.
-        @param section: Configuration file section string
-        @type section: str
-        @param option: Configuration file option string
-        @type option: str
-        @return: Expanded directory
-        @rtype: str | None
+        The expansion includes an eventual user part i.e., on UNIX ~ or ~user and
+        any environment variables i.e., on UNIX ${NAME} or $NAME.
+
+        :param section: A configuration section string.
+        :type section: str
+        :param option: A configuration option string.
+        :type option: str
+        :return: An expanded directory path.
+        :rtype: str | None
         """
         return self.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
 
     @staticmethod
     def list_from_csv(csv_string):
-        """Convert a comma-separated Python C{str} into a Python C{list} of Python C{str} objects.
+        """Convert a comma-separated Python :py:class:`str` object into a
+        Python :py:class:`list` object of Python :py:class:`str` objects.
 
         All elements are stripped and only non-empty elements are appended to the list.
-        @param csv_string: Python C{str} of comma-separated values
-        @type csv_string: str
-        @return: Python C{list} of stripped Python C{str} values
-        @rtype: list[str]
+
+        :param csv_string: A Python :py:class:`str` object of comma-separated values.
+        :type csv_string: str
+        :return: A Python :py:class:`list` object of stripped Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         return [x.strip() for x in csv_string.split(',') if x.strip()]
 
     def get_list_from_csv(self, section, option):
-        """Convert a comma-separated Python C{str} into a Python C{list} of Python C{str} objects.
+        """Convert a comma-separated Python :py:class:`str` object into a
+        Python :py:class:`list` object of Python :py:class:`str` objects.
 
         All elements are stripped and only non-empty elements are appended to the list.
-        @param section: Configuration file section string
-        @type section: str
-        @param option: Configuration file option string
-        @type option: str
-        @return: Python C{list} of Python C{str} objects
-        @rtype: list[str] | None
+
+        :param section: A configuration section string.
+        :type section: str
+        :param option: A configuration option string.
+        :type option: str
+        :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
+        :rtype: list[str] | None
         """
         csv_string = self.config_parser.get(section=section, option=option)
         if csv_string:
@@ -281,25 +292,27 @@ class Configuration(object):
 
 
 class BaseSection(object):
-    """The C{bsf.standards.BaseSection} class is the base class for a global configuration section.
+    """The :py:class:`bsf.standards.BaseSection` class is the base class for a global configuration section.
 
-    The defaults are read from the [{section}] section of the global configuration file.
+    The defaults are read from the :literal:`[{section}]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` object section.
+    :type section: str
     """
     section = None
 
     @classmethod
     def get(cls, option=None):
-        """Get the value for a configuration option in the section defined by the subclass section class variable.
+        """Get a value for a configuration option in a configuration section defined by a
+        :py:attr:`bsf.standards.BaseSection.section` class variable.
 
-        This method is a re-implementation of the C{configparser.ConfigParser.get()} method that returns C{None}
-        upon non-existing sections or options.
-        @param option: Configuration option
-        @type option: str | None
-        @return: Configuration value
-        @rtype: str | None
+        This method is a re-implementation of the :py:meth:`configparser.ConfigParser.get` method
+        that returns :literal:`None` upon non-existing sections or options.
+
+        :param option: A configuration option.
+        :type option: str | None
+        :return: A configuration option value.
+        :rtype: str | None
         """
         if not cls.section:
             return
@@ -318,14 +331,16 @@ class BaseSection(object):
 
     @classmethod
     def getboolean(cls, option=None):
-        """Get the value for a configuration option in the section defined by the subclass section class variable.
+        """Get a value for a configuration option in a configuration section defined by a
+        :py:attr:`bsf.standards.BaseSection.section` class variable.
 
-        This method is a re-implementation of the C{configparser.ConfigParser.getboolean()} method that returns C{None}
-        upon non-existing sections or options.
-        @param option: Configuration option
-        @type option: str | None
-        @return: Configuration value
-        @rtype: bool | None
+        This method is a re-implementation of the :py:meth:`configparser.ConfigParser.getboolean` method
+        that returns :literal:`None` upon non-existing sections or options.
+
+        :param option: A configuration option.
+        :type option: str | None
+        :return: A configuration option value.
+        :rtype: bool | None
         """
         if not cls.section:
             return
@@ -346,12 +361,13 @@ class BaseSection(object):
     def get_expanded_directory(cls, option=None):
         """Get configuration information for a directory and expand it.
 
-        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
-        any environment variables i.e. on UNIX ${NAME} or $NAME.
-        @param option: Configuration option
-        @type option: str | None
-        @return: Expanded directory
-        @rtype: str | None
+        The expansion includes an eventual user part i.e., on UNIX ~ or ~user and
+        any environment variables i.e., on UNIX ${NAME} or $NAME.
+
+        :param option: A configuration option.
+        :type option: str | None
+        :return: An expanded directory path.
+        :rtype: str | None
         """
         if not cls.section:
             return
@@ -366,23 +382,25 @@ class BaseSection(object):
 
 
 class BaseSectionVersion(object):
-    """The C{bsf.standards.BaseSectionVersion} class is the base class for a global configuration section and version.
+    """The :py:class:`bsf.standards.BaseSectionVersion` class is the base class for a global configuration section
+    and version.
 
-    The defaults are read from the [{section}_{version}] section of the global configuration file.
+    The defaults are read from the :literal:`[{section}_{version}]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = None
 
     @classmethod
     def get_section(cls, version=None):
-        """Get the section defined by the subclass section class variable and a version.
+        """Get a configuration section defined by a
+        :py:attr:`bsf.standards.BaseSectionVersion.section` class variable and a version.
 
-        @param version: Version
-        @type version: str | None
-        @return: Configuration section
-        @rtype: str
+        :param version: A version.
+        :type version: str | None
+        :return: A configuration section.
+        :rtype: str
         """
         if version:
             return '_'.join((cls.section, version))
@@ -391,14 +409,15 @@ class BaseSectionVersion(object):
 
     @classmethod
     def get(cls, option=None, version=None):
-        """Get the value for a configuration option in the section defined by the subclass section class variable.
+        """Get a value for a configuration option in a configuration section defined by a
+        :py:attr:`bsf.standards.BaseSectionVersion.section` class variable.
 
-        @param option: Configuration option
-        @type option: str | None
-        @param version: Version
-        @type version: str | None
-        @return: Configuration value
-        @rtype: str | None
+        :param option: A configuration option.
+        :type option: str | None
+        :param version: A version.
+        :type version: str | None
+        :return: A configuration value.
+        :rtype: str | None
         """
         if not cls.section:
             return
@@ -416,14 +435,15 @@ class BaseSectionVersion(object):
     def get_expanded_directory(cls, option=None, version=None):
         """Get configuration information for a directory and expand it.
 
-        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
-        any environment variables i.e. on UNIX ${NAME} or $NAME.
-        @param option: Configuration option
-        @type option: str | None
-        @param version: Version
-        @type version: str | None
-        @return: Expanded directory
-        @rtype: str | None
+        The expansion includes an eventual user part i.e., on UNIX ~ or ~user and
+        any environment variables i.e., on UNIX ${NAME} or $NAME.
+
+        :param option: A configuration option.
+        :type option: str | None
+        :param version: A version.
+        :type version: str | None
+        :return: An expanded directory path.
+        :rtype: str | None
         """
         if not option:
             return
@@ -436,364 +456,366 @@ class BaseSectionVersion(object):
 
 
 class JavaArchive(BaseSection):
-    """The C{bsf.standards.JavaArchive} class models Java Archive (JAR) defaults.
+    """The :py:class:`bsf.standards.JavaArchive` class models Java Archive (JAR) defaults.
 
-    The defaults are read from the [java_archive] section of the global configuration file.
+    The defaults are read from the :literal:`[java_archive]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
 
     section = 'java_archive'
 
     @classmethod
     def get_fgbio(cls):
-        """Get the Fulcrum Genomics (fgbio) Java Archive (JAR) file path.
+        """Get a Fulcrum Genomics (fgbio) Java Archive (JAR) file path.
 
-        @return: Fulcrum Genomics (fgbio) Java Archive (JAR) file path
-        @rtype: str | None
+        :return: A Fulcrum Genomics (fgbio) Java Archive (JAR) file path.
+        :rtype: str | None
         """
         return cls.get(option='fgbio')
 
     @classmethod
     def get_gatk(cls):
-        """Get the GATK Java Archive (JAR) file path.
+        """Get a GATK Java Archive (JAR) file path.
 
-        @return: GATK Java Archive (JAR) file path
-        @rtype: str | None
+        :return: A GATK Java Archive (JAR) file path.
+        :rtype: str | None
         """
         return cls.get(option='gatk')
 
     @classmethod
     def get_picard(cls):
-        """Get the Picard Java Archive (JAR) file path.
+        """Get a Picard Java Archive (JAR) file path.
 
-        @return: Picard Java Archive (JAR) file path
-        @rtype: str | None
+        :return: A Picard Java Archive (JAR) file path.
+        :rtype: str | None
         """
         return cls.get(option='picard')
 
     @classmethod
     def get_snpeff(cls):
-        """Get the snpEff Java Archive (JAR) file path.
+        """Get a snpEff Java Archive (JAR) file path.
 
-        @return: snpEff Java Archive (JAR) file path
-        @rtype: str | None
+        :return: A snpEff Java Archive (JAR) file path.
+        :rtype: str | None
         """
         return cls.get(option='snpeff')
 
     @classmethod
     def get_trimmomatic(cls):
-        """Get the Trimmomatic Java Archive (JAR) file path.
+        """Get a Trimmomatic Java Archive (JAR) file path.
 
-        @return: Trimmomatic Java Archive (JAR) file path
-        @rtype: str | None
+        :return: A Trimmomatic Java Archive (JAR) file path.
+        :rtype: str | None
         """
         return cls.get(option='trimmomatic')
 
     @classmethod
     def get_vcf_filter(cls):
-        """Get the VCF.Filter Java Archive (JAR) file path.
+        """Get a VCF.Filter Java Archive (JAR) file path.
 
-        @return: VCF.Filter Java Archive (JAR) file path
-        @rtype: str | None
+        :return: A VCF.Filter Java Archive (JAR) file path.
+        :rtype: str | None
         """
         return cls.get(option='vcf_filter')
 
 
 class JavaClassPath(BaseSection):
-    """The C{bsf.standards.JavaClassPath} class models Java Class Path directory defaults.
+    """The :py:class:`bsf.standards.JavaClassPath` class models Java Class Path directory defaults.
 
-    The defaults are read from the [java_classpath] section of the global configuration file.
+    The defaults are read from the :literal:`[java_classpath]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'java_classpath'
 
     @classmethod
     def get_illumina2bam(cls):
-        """Get the Illumina2bam tools Java Class Path directory.
+        """Get an Illumina2bam tools Java Class Path directory.
 
-        @return: Illumina2bam tools Java Class Path directory
-        @rtype: str | None
+        :return: An Illumina2bam tools Java Class Path directory.
+        :rtype: str | None
         """
         return cls.get(option='illumina2bam')
 
 
 class EnsemblVEP(BaseSectionVersion):
-    """The C{bsf.standards.EnsemblVEP} class models Ensembl Variant Effect Predictor (VEP) defaults.
+    """The :py:class:`bsf.standards.EnsemblVEP` class models Ensembl Variant Effect Predictor (VEP) defaults.
 
-    The defaults are read from the [ensembl_vep_{genome_version}] section of the global configuration file.
+    The defaults are read from the :literal:`[ensembl_vep_{genome_version}]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'ensembl_vep'
 
     @classmethod
     def get_directory_cache(cls, genome_version=None):
-        """Get the cache directory path.
+        """Get a cache directory path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Cache directory path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A cache directory path.
+        :rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_cache', version=genome_version)
 
     @classmethod
     def get_directory_fasta(cls, genome_version=None):
-        """Get the FASTA directory path.
+        """Get a FASTA directory path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: FASTA directory path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A FASTA directory path.
+        :rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_fasta', version=genome_version)
 
     @classmethod
     def get_directory_plugin(cls, genome_version=None):
-        """Get the plug-ins directory path.
+        """Get a plug-ins directory path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Plug-ins directory path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A plug-ins directory path.
+        :rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_plugin', version=genome_version)
 
     @classmethod
     def get_directory_source(cls, genome_version=None):
-        """Get the source directory path.
+        """Get a source directory path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Source directory path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A source directory path.
+        :rtype: str | None
         """
         return cls.get_expanded_directory(option='directory_source', version=genome_version)
 
     @classmethod
     def get_name_assembly(cls, genome_version=None):
-        """Get the genome assembly name.
+        """Get a genome assembly name for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Genome assembly name
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A genome assembly name.
+        :rtype: str | None
         """
         return cls.get(option='name_assembly', version=genome_version)
 
     @classmethod
     def get_name_species(cls, genome_version=None):
-        """Get the scientific species name.
+        """Get a scientific species name for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Scientific species name
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A scientific species name.
+        :rtype: str | None
         """
         return cls.get(option='name_species', version=genome_version)
 
     @classmethod
     def get_sql_user(cls, genome_version=None):
-        """Get the SQL database username.
+        """Get an SQL database username for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: SQL database username
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: An SQL database username.
+        :rtype: str | None
         """
         return cls.get(option='sql_user', version=genome_version)
 
     @classmethod
     def get_sql_pass(cls, genome_version=None):
-        """Get the SQL database password.
+        """Get an SQL database password for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: SQL database password
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: An SQL database password.
+        :rtype: str | None
         """
         return cls.get(option='sql_pass', version=genome_version)
 
     @classmethod
     def get_sql_host(cls, genome_version=None):
-        """Get the SQL database host name.
+        """Get an SQL database host name for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: SQL database host name
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: An SQL database host name.
+        :rtype: str | None
         """
         return cls.get(option='sql_host', version=genome_version)
 
     @classmethod
     def get_sql_port(cls, genome_version=None):
-        """Get the SQL database TCP/IP port number.
+        """Get an SQL database TCP/IP port number for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: SQL database TCP/IP port number
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: An SQL database TCP/IP port number.
+        :rtype: str | None
         """
         return cls.get(option='sql_port', version=genome_version)
 
     @classmethod
     def get_ofc_path(cls, genome_version=None):
-        """Get the output fields configuration (TSV) file path.
+        """Get an output fields configuration (TSV) file path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Output fields configuration (TSV) file path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: An output fields configuration (TSV) file path.
+        :rtype: str | None
         """
         return cls.get(option='ofc_path', version=genome_version)
 
     @classmethod
     def get_soc_path(cls, genome_version=None):
-        """Get the Sequence Ontology configuration (TSV) file path.
+        """Get a Sequence Ontology configuration (TSV) file path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Sequence Ontology configuration (TSV) file path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A Sequence Ontology configuration (TSV) file path.
+        :rtype: str | None
         """
         return cls.get(option='soc_path', version=genome_version)
 
     @classmethod
     def get_refseq_alignments_path(cls, genome_version=None):
-        """Get the NCBI RefSeq alignments (BAM) file path.
+        """Get an NCBI RefSeq alignments (BAM) file path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: NCBI RefSeq alignments (BAM) file path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: An NCBI RefSeq alignments (BAM) file path.
+        :rtype: str | None
         """
         return cls.get(option='refseq_alignments_path', version=genome_version)
 
     @classmethod
     def get_cadd_path(cls, genome_version=None):
-        """Get the Combined Annotation Dependent Depletion (CADD) file path.
+        """Get a Combined Annotation Dependent Depletion (CADD) file path for an Ensembl VEP genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Combined Annotation Dependent Depletion (CADD) file path
-        @rtype: str | None
+        :param genome_version: A VEP genome assembly version.
+        :type genome_version: str | None
+        :return: A Combined Annotation Dependent Depletion (CADD) file path.
+        :rtype: str | None
         """
         return cls.get(option='cadd_path', version=genome_version)
 
 
 class Genome(BaseSectionVersion):
-    """The C{bsf.standards.Genome} class models Genome defaults.
+    """The :py:class:`bsf.standards.Genome` class models Genome defaults.
 
-    The defaults are read from the [genome_{genome_version}] section of the global configuration file.
+    The defaults are read from the :literal:`[genome_{genome_version}]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'genome'
 
     @classmethod
     def get_black_list(cls, genome_version=None):
-        """Get the (ENCODE) black list file path of problematic regions.
+        """Get an (ENCODE) black list file path of problematic regions.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: (ENCODE) Black list file path
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: An (ENCODE) Black list file path.
+        :rtype: str | None
         """
         return cls.get(option='black_list', version=genome_version)
 
     @classmethod
     def get_date(cls, genome_version=None):
-        """Get the release date.
+        """Get a release date.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Release date
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A release date.
+        :rtype: str | None
         """
         return cls.get(option='date', version=genome_version)
 
     @classmethod
     def get_effective_size(cls, genome_version=None):
-        """Get the effective genome size.
+        """Get an effective genome size.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Effective genome size
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: An effective genome size.
+        :rtype: str | None
         """
         return cls.get(option='effective_size', version=genome_version)
 
     @classmethod
     def get_fasta_suffix(cls, genome_version=None):
-        """Get the FASTA suffix.
+        """Get a FASTA suffix.
 
-        The suffix could be 'fa' or 'fasta' as in "*.fa" or "*.fasta".
-        THe NCBI uses fna for nucleotide FASTA files.
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: FASTA suffix
-        @rtype: str | None
+        The suffix could be :literal:`fa` or :literal:`fasta` as in :literal:`*.fa` or :literal:`*.fasta`.
+        The NCBI uses a :literal:`faa` or :literal:`fna` suffix for FASTA files of amino-acids or nucleic-acids,
+        respectively.
+
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A FASTA suffix.
+        :rtype: str | None
         """
         return cls.get(option='fasta_suffix', version=genome_version)
 
     @classmethod
     def get_description(cls, genome_version=None):
-        """Get the description.
+        """Get A description.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Description
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A description.
+        :rtype: str | None
         """
         return cls.get(option='description', version=genome_version)
 
     @classmethod
     def get_provider(cls, genome_version=None):
-        """Get the provider.
+        """Get a provider.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Provider
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A provider.
+        :rtype: str | None
         """
         return cls.get(option='provider', version=genome_version)
 
     @classmethod
     def get_species(cls, genome_version=None):
-        """Get the species.
+        """Get a species.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Species
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A species.
+        :rtype: str | None
         """
         return cls.get(option='species', version=genome_version)
 
     @classmethod
     def get_ucsc(cls, genome_version=None):
-        """Get the UCSC Genome Browser alias.
+        """Get a UCSC Genome Browser alias.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: UCSC Genome Browser alias
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A UCSC Genome Browser alias.
+        :rtype: str | None
         """
         return cls.get(option='ucsc', version=genome_version)
 
     @classmethod
     def get_uri(cls, genome_version=None):
-        """Get the uniform resource identifier (URI).
+        """Get a Uniform Resource Identifier (URI).
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: Uniform resource identifier (URI)
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A Uniform Resource Identifier (URI).
+        :rtype: str | None
         """
         return cls.get(option='uri', version=genome_version)
 
@@ -802,10 +824,11 @@ class Genome(BaseSectionVersion):
         """Resolve a genome version to an eventual UCSC Genome Browser-specific alias.
 
         If an alias has not been defined, the original genome version will be returned.
-        @param genome_version: Genome version
-        @type genome_version: str
-        @return: UCSC Genome Browser assembly version
-        @rtype: str
+
+        :param genome_version: A genome assembly version.
+        :type genome_version: str
+        :return: A UCSC Genome Browser assembly version.
+        :rtype: str
         """
         ucsc_version = cls.get_ucsc(genome_version=genome_version)
 
@@ -816,143 +839,144 @@ class Genome(BaseSectionVersion):
 
 
 class SnpEff(BaseSectionVersion):
-    """The C{bsf.standards.SnpEff} class models snpEff defaults.
+    """The :py:class:`bsf.standards.SnpEff` class models snpEff defaults.
 
-    The defaults are read from the [snpeff_{genome_version}] section of the global configuration file.
+    The defaults are read from the :literal:`[snpeff_{genome_version}]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'snpeff'
 
     @classmethod
     def get_genome_version(cls, genome_version=None):
-        """Get the snpEff genome version.
+        """Get A snpEff genome version.
 
-        @param genome_version: Genome assembly version
-        @type genome_version: str | None
-        @return: snpEff genome version
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A snpEff genome version.
+        :rtype: str | None
         """
         return cls.get(option='genome_version', version=genome_version)
 
 
 class Transcriptome(BaseSectionVersion):
-    """The C{bsf.standards.Transcriptome} class models Transcriptome defaults.
+    """The :py:class:`bsf.standards.Transcriptome` class models Transcriptome defaults.
 
-    The defaults are read from the [transcriptome_{transcriptome_version}] section of the global configuration file.
+    The defaults are read from the :literal:`[transcriptome_{transcriptome_version}]` section of the
+    global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'transcriptome'
 
     @classmethod
     def get_date(cls, transcriptome_version=None):
-        """Get the release date.
+        """Get a release date.
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Release date
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A release date.
+        :rtype: str | None
         """
         return cls.get(option='date', version=transcriptome_version)
 
     @classmethod
     def get_description(cls, transcriptome_version=None):
-        """Get the description.
+        """Get a description.
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Description
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A description.
+        :rtype: str | None
         """
         return cls.get(option='description', version=transcriptome_version)
 
     @classmethod
     def get_genome(cls, transcriptome_version=None):
-        """Get the genome version.
+        """Get a genome version.
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Genome version
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A genome version.
+        :rtype: str | None
         """
         return cls.get(option='genome', version=transcriptome_version)
 
     @classmethod
     def get_provider(cls, transcriptome_version=None):
-        """Get the provider.
+        """Get a provider.
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Provider
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A provider.
+        :rtype: str | None
         """
         return cls.get(option='provider', version=transcriptome_version)
 
     @classmethod
     def get_species(cls, transcriptome_version=None):
-        """Get the species.
+        """Get a species.
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Species
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A species.
+        :rtype: str | None
         """
         return cls.get(option='species', version=transcriptome_version)
 
     @classmethod
     def get_uri(cls, transcriptome_version=None):
-        """Get the uniform resource identifier (URI).
+        """Get a Uniform Resource Identifier (URI).
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Uniform resource identifier (URI)
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A Uniform Resource Identifier (URI).
+        :rtype: str | None
         """
         return cls.get(option='uri', version=transcriptome_version)
 
 
 class StandardFilePath(BaseSection):
-    """The C{bsf.standards.StandardFilePath} class models file path defaults.
+    """The :py:class:`bsf.standards.StandardFilePath` class models file path defaults.
 
-    The defaults are read from the [directories] section of the global configuration file.
+    The defaults are read from the :literal:`[directories]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
 
     section = 'directories'
 
     @classmethod
     def get_cache(cls):
-        """Get the cache directory path locally on a compute-node (e.g. /dev/shm).
+        """Get a cache directory path locally on a compute-node (e.g., /dev/shm).
 
-        @return: Cache directory path
-        @rtype: str | None
+        :return: A cache directory path.
+        :rtype: str | None
         """
         return cls.get_expanded_directory(option='cache')
 
     @classmethod
     def get_home(cls):
-        """Get the home directory path.
+        """Get a home directory path.
 
-        @return: Home directory path
-        @rtype: str | None
+        :return: A home directory path.
+        :rtype: str | None
         """
         return cls.get_expanded_directory(option='home')
 
     @classmethod
     def _prepend_home(cls, absolute=True, file_path=None):
-        """Private class method to prepend the I{home} directory.
+        """Private class method to prepend a :literal:`home` directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @param file_path: File path
-        @type file_path: str | None
-        @return: File path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :param file_path: A file path.
+        :type file_path: str | None
+        :return: A :literal:`home` file path.
+        :rtype: str | None
         """
         if file_path is None:
             return
@@ -964,113 +988,113 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_illumina_run(cls, absolute=True):
-        """Get the Illumina Run Folder (IRF) directory path.
+        """Get an Illumina Run Folder (IRF) directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Illumina Run Folder directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: An Illumina Run Folder directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='illumina_run'))
 
     @classmethod
     def get_illumina_sav(cls, absolute=True):
-        """Get the Illumina Sequence Analysis Viewer (SAV) directory path.
+        """Get an Illumina Sequence Analysis Viewer (SAV) directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Illumina Sequence Analysis Viewer directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: An Illumina Sequence Analysis Viewer (SAV) directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='illumina_sav'))
 
     @classmethod
     def get_sequences(cls, absolute=True):
-        """Get the sequence directory path.
+        """Get a sequence directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Sequence directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A sequence directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='sequences'))
 
     @classmethod
     def get_samples(cls, absolute=True):
-        """Get the sample directory path.
+        """Get a sample directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Sample directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A sample directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='samples'))
 
     @classmethod
     def get_projects(cls, absolute=True):
-        """Get the project directory path.
+        """Get a project directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Project directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A project directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='projects'))
 
     @classmethod
     def get_public_html(cls, absolute=True):
-        """Get the web server directory path.
+        """Get a web server directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Web server directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A web server directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='public_html'))
 
     @classmethod
     def get_template_documents(cls, absolute=True):
-        """Get the template documents directory path.
+        """Get a template documents directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Template documents directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A template documents directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='template_documents'))
 
     @classmethod
     def get_template_scripts(cls, absolute=True):
-        """Get the template script directory path.
+        """Get a template script directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Template script directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A template script directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='template_scripts'))
 
     @classmethod
     def get_resource(cls, absolute=True):
-        """Get the resource directory path.
+        """Get a resource directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Resource directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A resource directory path.
+        :rtype: str | None
         """
         return cls._prepend_home(absolute=absolute, file_path=cls.get_expanded_directory(option='resources'))
 
     @classmethod
     def _prepend_resource(cls, absolute=True, file_path=None):
-        """Private class method to prepend the I{resource} directory.
+        """Private class method to prepend a :literal:`resource` directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @param file_path: File path
-        @type file_path: str | None
-        @return: File path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :param file_path: A file path.
+        :type file_path: str | None
+        :return: A :literal:`resource` file path.
+        :rtype: str | None
         """
         if file_path is None:
             return
@@ -1084,12 +1108,12 @@ class StandardFilePath(BaseSection):
     def get_resource_genome(cls, genome_version=None, absolute=True):
         """Get a genome resource directory path.
 
-        @param genome_version: The genome version (e.g. mm10, ...)
-        @type genome_version: str | None
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Genome resource directory path
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A genome resource directory path.
+        :rtype: str | None
         """
         file_path = cls.get_expanded_directory(option='genomes')
 
@@ -1102,10 +1126,10 @@ class StandardFilePath(BaseSection):
     def get_resource_genome_black_list(cls, genome_version):
         """Get a genome black list resource file path.
 
-        @param genome_version: The genome version (e.g. mm10, ...)
-        @type genome_version: str | None
-        @return: Genome black list resource file path
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A genome black list resource file path.
+        :rtype: str | None
         """
         black_list_file_path = Genome.get_black_list(genome_version=genome_version)
         if not black_list_file_path:
@@ -1123,15 +1147,16 @@ class StandardFilePath(BaseSection):
         """Get a genome index resource directory path.
 
         In case the genome_index is not specified, the resource genome directory will be returned.
-        @param genome_version: Genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str | None
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Genome index resource directory path
-        @rtype: str | None
-        @raise Exception: Unknown genome index name
+
+        :param genome_version: A genome assembly version.
+        :type genome_version: str
+        :param genome_index: A genome index (e.g., bowtie2, ...).
+        :type genome_index: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A genome index resource directory path.
+        :rtype: str | None
+        :raise Exception: If the genome index name is unknown.
         """
         if genome_index is None:
             return cls.get_resource_genome(genome_version=genome_version, absolute=absolute)
@@ -1149,15 +1174,15 @@ class StandardFilePath(BaseSection):
     def get_resource_genome_fasta(cls, genome_version, genome_index=None, absolute=True):
         """Get a genome FASTA resource file path.
 
-        @param genome_version: Genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str | None
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Genome FASTA resource file path
-        @rtype: str
-        @raise Exception: Unknown genome index name
+        :param genome_version: A genome assembly version.
+        :type genome_version: str
+        :param genome_index: A genome index (e.g., bowtie2, ...).
+        :type genome_index: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A genome FASTA resource file path.
+        :rtype: str
+        :raise Exception: If the genome index name is unknown.
         """
         fasta_suffix = Genome.get_fasta_suffix(genome_version=genome_version)
         if not fasta_suffix:
@@ -1172,16 +1197,16 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_genome_fasta_index(cls, genome_version, genome_index=None, absolute=True):
-        """Get a genome FASTA index (*.fai) resource file path.
+        """Get a genome FASTA index (:literal:`*.fai`) resource file path.
 
-        @param genome_version: Genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str | None
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Genome FASTA index resource file path
-        @rtype: str
+        :param genome_version: A genome assembly version.
+        :type genome_version: str
+        :param genome_index: A genome index (e.g., bowtie2, ...).
+        :type genome_index: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A genome FASTA index resource file path.
+        :rtype: str
         """
         return cls.get_resource_genome_fasta(
             genome_version=genome_version,
@@ -1192,12 +1217,12 @@ class StandardFilePath(BaseSection):
     def get_resource_transcriptome(cls, transcriptome_version=None, absolute=True):
         """Get a transcriptome resource directory path.
 
-        @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str | None
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Transcriptome resource directory path
-        @rtype: str | None
+        :param transcriptome_version: A transcriptome version (e.g., mm10_e87, ...).
+        :type transcriptome_version: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A transcriptome resource directory path.
+        :rtype: str | None
         """
         file_path = cls.get_expanded_directory(option='transcriptomes')
 
@@ -1210,15 +1235,15 @@ class StandardFilePath(BaseSection):
     def get_resource_transcriptome_index(cls, transcriptome_version, transcriptome_index, absolute=True):
         """Get a transcriptome index resource directory path.
 
-        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str
-        @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
-        @type transcriptome_index: str
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Transcriptome index resource directory path
-        @rtype: str | None
-        @raise Exception: Unknown transcriptome index name
+        :param transcriptome_version: A transcriptome version (e.g., mm10_e87, ...)
+        :type transcriptome_version: str
+        :param transcriptome_index: A transcriptome index (e.g., star, tophat, ...).
+        :type transcriptome_index: str
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A transcriptome index resource directory path.
+        :rtype: str | None
+        :raise Exception: If the transcriptome index name is unknown.
         """
         index_directory = Index.get(option=transcriptome_index)
 
@@ -1233,17 +1258,17 @@ class StandardFilePath(BaseSection):
     def get_resource_transcriptome_gtf(cls, transcriptome_version, transcriptome_index, basic=True, absolute=True):
         """Get a transcriptome GTF resource file path.
 
-        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str
-        @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
-        @type transcriptome_index: str
-        @param basic: Basic transcriptome
-        @type basic: bool
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Transcriptome GTF resource file path
-        @rtype: str | None
-        @raise Exception: Unknown transcriptome index name
+        :param transcriptome_version: A transcriptome version (e.g., mm10_e87, ...).
+        :type transcriptome_version: str
+        :param transcriptome_index: A transcriptome index (e.g., star, tophat, ...).
+        :type transcriptome_index: str
+        :param basic: Get a basic transcriptome.
+        :type basic: bool
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A transcriptome GTF resource file path.
+        :rtype: str | None
+        :raise Exception: If the transcriptome index name is unknown.
         """
         if basic:
             file_name = transcriptome_version + '_basic.gtf'
@@ -1261,17 +1286,17 @@ class StandardFilePath(BaseSection):
     def get_resource_transcriptome_txdb(cls, transcriptome_version, transcriptome_index, basic=True, absolute=True):
         """Get a transcriptome TxDb resource file path.
 
-        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str
-        @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
-        @type transcriptome_index: str
-        @param basic: Basic transcriptome
-        @type basic: bool
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Transcriptome TxDb resource file path
-        @rtype: str | None
-        @raise Exception: Unknown transcriptome index name
+        :param transcriptome_version: A transcriptome version (e.g., mm10_e87, ...).
+        :type transcriptome_version: str
+        :param transcriptome_index: A transcriptome index (e.g., star, tophat, ...).
+        :type transcriptome_index: str
+        :param basic: Get a basic transcriptome.
+        :type basic: bool
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A transcriptome TxDb resource file path.
+        :rtype: str | None
+        :raise Exception: If the transcriptome index name is unknown.
         """
         if basic:
             file_name = transcriptome_version + '_basic.sqlite'
@@ -1289,14 +1314,14 @@ class StandardFilePath(BaseSection):
     def get_resource_gatk_bundle(cls, genome_version=None, gatk_bundle_version=None, absolute=True):
         """Get a GATK bundle resource directory path.
 
-        @param genome_version: The genome version (e.g. b37, ...)
-        @type genome_version: str | None
-        @param gatk_bundle_version: The GATK bundle version
-        @type gatk_bundle_version: str | None
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: GATK bundle resource directory path
-        @rtype: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param gatk_bundle_version: A GATK bundle version.
+        :type gatk_bundle_version: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A GATK bundle resource directory path.
+        :rtype: str | None
         """
         file_path = cls.get_expanded_directory(option='gatk_bundle')
 
@@ -1310,190 +1335,190 @@ class StandardFilePath(BaseSection):
 
     @classmethod
     def get_resource_intervals(cls, absolute=True):
-        """Get the Target Intervals resource directory path.
+        """Get a Target Intervals resource directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Target Intervals resource directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A target intervals resource directory path.
+        :rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='intervals'))
 
     @classmethod
     def get_resource_cadd(cls, absolute=True):
-        """Get the Combined Annotation Dependent Depletion (CADD) resource directory path.
+        """Get A Combined Annotation Dependent Depletion (CADD) resource directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Combined Annotation Dependent Depletion (CADD) resource directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A Combined Annotation Dependent Depletion (CADD) resource directory path.
+        :rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='cadd'))
 
     @classmethod
     def get_resource_cosmic(cls, absolute=True):
-        """Get the Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path.
+        """Get a Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path.
+        :rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='cosmic'))
 
     @classmethod
     def get_resource_snpeff_data(cls, absolute=True):
-        """Get the snpEff data resource directory path.
+        """Get a snpEff data resource directory path.
 
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: snpEff data resource directory path
-        @rtype: str | None
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A snpEff data resource directory path.
+        :rtype: str | None
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get_expanded_directory(option='snpeff_data'))
 
 
 class Index(BaseSection):
-    """The C{bsf.standards.Index} class models genome or transcriptome index directory defaults.
+    """The :py:class:`bsf.standards.Index` class models genome or transcriptome index directory defaults.
 
-    The defaults are read from the [indices] section of the global configuration file.
+    The defaults are read from the :literal:`[indices]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'indices'
 
 
 class Operator(BaseSection):
-    """The C{bsf.standards.Operator} class models the operator's defaults.
+    """The :py:class:`bsf.standards.Operator` class models the operator's defaults.
 
-    The defaults are read from the [operator] section of the global configuration file.
+    The defaults are read from the :literal:`[operator]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'operator'
 
     @classmethod
     def get_contact(cls):
-        """Get the operator contact information.
+        """Get an operator contact information.
 
-        @return: Operator contact information
-        @rtype: str | None
+        :return: An operator contact information.
+        :rtype: str | None
         """
         return cls.get(option='contact')
 
     @classmethod
     def get_e_mail(cls):
-        """Get the operator e-mail information.
+        """Get an operator e-mail information.
 
-        @return: Operator e-mail information
-        @rtype: str | None
+        :return: An operator e-mail information.
+        :rtype: str | None
         """
         return cls.get(option='e_mail')
 
     @classmethod
     def get_institution(cls):
-        """Get the operator institution information.
+        """Get an operator institution information.
 
-        @return: Operator institution information
-        @rtype: str | None
+        :return: An operator institution information.
+        :rtype: str | None
         """
         return cls.get(option='institution')
 
     @classmethod
     def get_sequencing_centre(cls):
-        """Get the operator sequencing centre information.
+        """Get an operator sequencing centre information.
 
-        @return: Operator sequencing centre information
-        @rtype: str | None
+        :return: An operator sequencing centre information.
+        :rtype: str | None
         """
         return cls.get(option='sequencing_centre')
 
 
 class UCSC(BaseSection):
-    """The C{bsf.standards.UCSC} class models UCSC Genome Browser uniform resource locator (URL) defaults.
+    """The :py:class:`bsf.standards.UCSC` class models UCSC Genome Browser Uniform Resource Locator (URL) defaults.
 
-    The defaults are read from the [ucsc] section of the global configuration file.
+    The defaults are read from the :literal:`[ucsc]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
 
     section = 'ucsc'
 
     @classmethod
     def get_protocol(cls):
-        """Get the UCSC Genome Browser URL protocol (i.e. 'http' or 'https').
+        """Get a UCSC Genome Browser URL protocol (i.e., 'http' or 'https').
 
-        @return: Protocol
-        @rtype: str
+        :return: A UCSC Genome Browser URL protocol.
+        :rtype: str
         """
         return cls.get(option='protocol')
 
     @classmethod
     def get_host_name(cls):
-        """Get the UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...).
+        """Get a UCSC Genome Browser URL host name (e.g., genome.ucsc.edu, genome-euro.ucsc.edu, ...).
 
-        @return: Host name
-        @rtype: str
+        :return: A UCSC Genome Browser URL host name.
+        :rtype: str
         """
         return cls.get(option='host_name')
 
 
 class URL(BaseSection):
-    """The C{bsf.standards.URL} class models web server uniform resource locator (URL) defaults.
+    """The :py:class:`bsf.standards.URL` class models web server Uniform Resource Locator (URL) defaults.
 
-    The defaults are read from the [url] section of the global configuration file.
+    The defaults are read from the :literal:`[url]` section of the global configuration file.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
 
     section = 'url'
 
     @classmethod
     def get_protocol(cls):
-        """Get the web server URL protocol (i.e. 'http' or 'https').
+        """Get a web server URL protocol (i.e., 'http' or 'https').
 
-        @return: Protocol
-        @rtype: str
+        :return: A web server URL protocol.
+        :rtype: str
         """
         return cls.get(option='protocol')
 
     @classmethod
     def get_host_name(cls):
-        """Get the web server host name.
+        """Get a web server host name.
 
-        @return: Host name
-        @rtype: str
+        :return: A web server URL host name.
+        :rtype: str
         """
         return cls.get(option='host_name')
 
     @classmethod
     def get_relative_dna(cls):
-        """Get the relative URL to the DNA directory.
+        """Get a relative URL to the DNA directory.
 
-        @return: Relative 'DNA' URL path
-        @rtype: str
+        :return: A relative 'DNA' URL path.
+        :rtype: str
         """
         return cls.get(option='relative_dna')
 
     @classmethod
     def get_relative_projects(cls):
-        """Get the relative URL to the analysis projects directory.
+        """Get a relative URL to the analysis projects directory.
 
-        @return: Relative 'projects' URL path
-        @rtype: str
+        :return: A relative 'projects' URL path.
+        :rtype: str
         """
         return cls.get(option='relative_projects')
 
     @classmethod
     def get_absolute_base(cls):
-        """Get the absolute URL to the base directory.
+        """Get an absolute URL to the base directory.
 
-        @return: URL string
-        @rtype: str
+        :return: An absolute URL to the base directory.
+        :rtype: str
         """
         if cls.get_protocol():
             return cls.get_protocol() + '://' + cls.get_host_name()
@@ -1502,45 +1527,46 @@ class URL(BaseSection):
 
     @classmethod
     def get_absolute_dna(cls):
-        """Get the absolute URL to the DNA directory.
+        """Get an absolute URL to the DNA directory.
 
-        @return: URL string
-        @rtype: str
+        :return: An absolute URL to the DNA directory.
+        :rtype: str
         """
         return '/'.join((cls.get_absolute_base(), cls.get_relative_dna()))
 
     @classmethod
     def get_absolute_projects(cls):
-        """Get the absolute URL to the analysis projects directory.
+        """Get an absolute URL to the analysis projects directory.
 
-        @return: URL string
-        @rtype: str
+        :return: An absolute URL to the analysis projects directory.
+        :rtype: str
         """
         return '/'.join((cls.get_absolute_base(), cls.get_relative_projects()))
 
 
 class VendorQualityFilter(BaseSection):
-    """The C{bsf.standards.VendorQualityFilter} class models (SAM) Vendor Quality Filter defaults.
+    """The :py:class:`bsf.standards.VendorQualityFilter` class models (SAM) Vendor Quality Filter defaults.
 
-    The defaults are read from the [VendorQualityFilter] section of the global configuration file.
+    The defaults are read from the :literal:`[VendorQualityFilter]` section of the global configuration file.
     For each flow cell type, a boolean value specifies whether vendor quality filtering should be applied or not.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
 
     section = 'vendor_quality_filter'
 
     @classmethod
     def get_vendor_quality_filter(cls, flow_cell_type=None):
-        """Get the vendor quality filter setting for a particular flow cell type.
+        """Get a vendor quality filter setting for a particular flow cell type.
 
-        The flow cell type is accessible via property C{bsf.illumina.RunParameters.get_flow_cell_type},
-        practically directly via C{bsf.illumina.RunFolder.run_parameters.get_flow_cell_type}.
-        @param flow_cell_type: FLow cell (chemistry) type
-        @type flow_cell_type: str | None
-        @return: Vendor quality filer setting
-        @rtype: bool
+        The flow cell type is accessible via property :py:meth:`bsf.illumina.RunParameters.get_flow_cell_type`,
+        practically directly via :py:meth:`bsf.illumina.RunFolder.run_parameters.get_flow_cell_type`.
+
+        :param flow_cell_type: A fLow cell (chemistry) type.
+        :type flow_cell_type: str | None
+        :return: A vendor quality filter setting.
+        :rtype: bool
         """
         if not flow_cell_type:
             return
@@ -1560,10 +1586,10 @@ class VendorQualityFilter(BaseSection):
 
 
 class Secrets(BaseSection):
-    """The C{bsf.standards.Secrets} class models file paths to configuration files with secrets.
+    """The :py:class:`bsf.standards.Secrets` class models file paths to configuration files with secrets.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
     """
     section = 'secrets'
 
@@ -1574,12 +1600,13 @@ class Secrets(BaseSection):
         """Get a configuration file path with secrets.
 
         The configuration path is defined in the specified option under the
-        [secrets] configuration section.
+        :literal:`[secrets]` configuration section.
         Also checks that the file is only readable by the user and not accessible for group and other.
-        @param option: Configuration option
-        @type option: str
-        @return: File path to configuration file with secrets.
-        @rtype: str | None
+
+        :param option: A configuration option.
+        :type option: str
+        :return: A file path to configuration file with secrets.
+        :rtype: str | None
         """
         file_path = cls.get_expanded_directory(option=option)
 
@@ -1598,32 +1625,34 @@ class Secrets(BaseSection):
 
     @classmethod
     def get_azure_file_path(cls):
-        """Get the configuration file path with I{Microsoft Azure} secrets.
+        """Get a configuration file path with :literal:`Microsoft Azure` secrets.
 
         Also checks that the file is only readable by the user and not accessible for group and other.
-        @return: File path to configuration file with secrets.
-        @rtype: str | None
+
+        :return: A file path to configuration file with secrets.
+        :rtype: str | None
         """
         return cls.get_file_path(option='azure_file_path')
 
     @classmethod
     def get_mysql_file_path(cls):
-        """Get the configuration file path with I{Oracle MySQL} secrets.
+        """Get a configuration file path with :literal:`Oracle MySQL` secrets.
 
         Also checks that the file is only readable by the user and not accessible for group and other.
-        @return: File path to configuration file with secrets.
-        @rtype: str | None
+
+        :return: A file path to configuration file with secrets.
+        :rtype: str | None
         """
         return cls.get_file_path(option='mysql_file_path')
 
 
 class Central(BaseSection):
-    """The C{bsf.standards.Central} class models the central XML configuration document.
+    """The :py:class:`bsf.standards.Central` class models the central XML configuration document.
 
-    @cvar section: C{configparser.ConfigParser} section
-    @type section: str
-    @cvar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: ElementTree
+    :cvar section: A :py:class:`configparser.ConfigParser` section.
+    :type section: str
+    :cvar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+    :type element_tree: ElementTree
     """
 
     section = 'central'
@@ -1631,10 +1660,10 @@ class Central(BaseSection):
 
     @classmethod
     def get_configuration_xml(cls):
-        """Get the central XML configuration document file path.
+        """Get a central XML configuration document file path.
 
-        @return: Central XML configuration document file path
-        @rtype: str
+        :return: A central XML configuration document file path.
+        :rtype: str
         """
         file_path = cls.get(option='configuration_xml')
         file_path = os.path.expanduser(path=file_path)
@@ -1645,10 +1674,10 @@ class Central(BaseSection):
 
     @classmethod
     def get_element_tree(cls):
-        """Get the central C{xml.etree.ElementTree.ElementTree} class object.
+        """Get a central :py:class:`xml.etree.ElementTree.ElementTree` object.
 
-        @return: Central C{xml.etree.ElementTree.ElementTree} class object
-        @rtype: ElementTree
+        :return: A central :py:class:`xml.etree.ElementTree.ElementTree` object.
+        :rtype: ElementTree
         """
         if cls.element_tree is None:
             cls.element_tree = ElementTree(file=cls.get_configuration_xml())
@@ -1657,27 +1686,27 @@ class Central(BaseSection):
 
 
 class CentralIndexDirectories(object):
-    """The C{bsf.standards.CentralIndexDirectories} class models index directory names.
+    """The :py:class:`bsf.standards.CentralIndexDirectories` class models index directory names of the
+    central XML configuration document.
 
-    @ivar bowtie1: Bowtie1 index directory name
-    @type bowtie1: str
-    @ivar bowtie2: Bowtie2 index directory name
-    @type bowtie2: str
-    @ivar bwa: BWA index directory name
-    @type bwa: str
-    @ivar hisat2: Hisat2 index directory name
-    @type hisat2: str
-    @ivar kallisto: Kallisto index directory name
-    @type kallisto: str
-    @ivar star: STAR index directory name
-    @type star: str
-    @ivar tophat2: Tophat2 index directory name
-    @type tophat2: str
+    :ivar bowtie1: A Bowtie1 index directory name.
+    :type bowtie1: str
+    :ivar bowtie2: A Bowtie2 index directory name.
+    :type bowtie2: str
+    :ivar bwa: A BWA index directory name.
+    :type bwa: str
+    :ivar hisat2: A Hisat2 index directory name.
+    :type hisat2: str
+    :ivar kallisto: A Kallisto index directory name.
+    :type kallisto: str
+    :ivar star: A STAR index directory name.
+    :type star: str
+    :ivar tophat2: A Tophat2 index directory name.
+    :type tophat2: str
     """
 
     def __init__(self):
-        """Initialise a C{bsf.standards.CentralIndexDirectories} object.
-
+        """Initialise a :py:class:`bsf.standards.CentralIndexDirectories` object.
         """
         element_tree = Central.get_element_tree()
 
@@ -1693,6 +1722,10 @@ class CentralIndexDirectories(object):
 
 
 class CentralVendorQualityFilters(object):
+    """The :py:class:`bsf.standards.CentralVendorQualityFilters` class models vendor quality filter settings of the
+    central XML configuration document.
+    """
+
     # Python dict of (boolean state) Python str objects and Python bool value objects.
     _boolean_states = {
         '1': True, 'yes': True, 'true': True, 'on': True,
@@ -1701,12 +1734,12 @@ class CentralVendorQualityFilters(object):
 
     @classmethod
     def str_to_bool(cls, value):
-        """
+        """Convert Python :py:class:`str` objects to Python :py:class:`bool` objects.
 
-        @param value: Value
-        @type value: str
-        @return: Boolean
-        @rtype: bool | None
+        :param value: A Python :py:class:`str` object.
+        :type value: str
+        :return: A Python :py:class:`bool` object.
+        :rtype: bool | None
         """
         value = value.lower()
         if value in cls._boolean_states:
@@ -1715,6 +1748,8 @@ class CentralVendorQualityFilters(object):
             return None
 
     def __init__(self):
+        """Initialise a :py:class:`bsf.standards.CentralVendorQualityFilters` object.
+        """
         self.filter_dict: Dict[str, bool] = dict()
 
         for element in Central.get_element_tree().find(path='VendorQualityFilters').iter():

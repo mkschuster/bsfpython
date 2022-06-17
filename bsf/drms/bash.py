@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""GNU Bourne-Again Shell (Bash) DRMS module.
-
-A package of methods supporting the GNU Bourne-Again Shell (Bash) as
+"""The :py:mod:`bsf.drms.bash` module supports the GNU Bourne-Again Shell (Bash) as
 Distributed Resource Management System (DRMS) module.
 """
 import os
@@ -34,15 +32,15 @@ from bsf.connector import ConnectorFile
 
 
 def submit(stage, debug=0):
-    """Submit each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
+    """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    Submits each C{bsf.process.Executable} by writing a GNU Bourne-Again Shell (BASH) script
-    into the C{bsf.analysis.Stage.work_directory}.
+    Submits each :py:class:`bsf.process.Executable` object by writing a GNU Bourne-Again Shell (BASH) script
+    into the :py:attr:`bsf.analysis.Stage.work_directory`.
 
-    @param stage: C{bsf.analysis.Stage}
-    @type stage: bsf.analysis.Stage
-    @param debug: Debug level
-    @type debug: int
+    :param stage: A :py:class:`bsf.analysis.Stage` object.
+    :type stage: bsf.analysis.Stage
+    :param debug: An integer debugging level.
+    :type debug: int
     """
 
     output_list: List[str] = list()
@@ -73,12 +71,12 @@ def submit(stage, debug=0):
 
 
 def check_state(stage, debug=0):
-    """Check the state of each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
+    """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    @param stage: C{bsf.analysis.Stage}
-    @type stage: bsf.analysis.Stage
-    @param debug: Debug level
-    @type debug: int
+    :param stage: A :py:class:`bsf.analysis.Stage` object.
+    :type stage: bsf.analysis.Stage
+    :param debug: An integer debugging level.
+    :type debug: int
     """
 
     if stage:

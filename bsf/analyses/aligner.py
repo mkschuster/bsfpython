@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Aligner Analysis module.
-
-A package of classes and methods supporting Aligner analyses.
+"""The :py:mod:`bsf.analyses.aligner` module provides classes supporting Aligner analyses.
 """
 import os
 import re
@@ -42,27 +40,27 @@ from bsf.standards import Configuration, StandardFilePath, JavaArchive
 
 
 class FilePathAlign(FilePath):
-    """The C{bsf.analyses.aligner.FilePathAlign} class models file paths at the alignment stage.
+    """The :py:class:`bsf.analyses.aligner.FilePathAlign` class models file paths at the alignment stage.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar stderr_txt: Text file to capture STDERR of the aligner
-    @type stderr_txt: str
-    @ivar stdout_txt: Text file to capture STDOUT of the aligner
-    @type stdout_txt: str
-    @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
-    @type aligned_sam: str
-    @ivar cleaned_bam: Cleaned sequence alignment map (SAM) file path
-    @type cleaned_bam: str
-    @ivar aligned_bam: Aligned binary alignment map (BAM) file path
-    @type aligned_bam: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar stderr_txt: Text file to capture :literal:`STDERR` of the aligner
+    :type stderr_txt: str
+    :ivar stdout_txt: Text file to capture :literal:`STDOUT` of the aligner
+    :type stdout_txt: str
+    :ivar aligned_sam: An aligned sequence alignment map (SAM) file path.
+    :type aligned_sam: str
+    :ivar cleaned_bam: A cleaned sequence alignment map (SAM) file path.
+    :type cleaned_bam: str
+    :ivar aligned_bam: An aligned binary alignment map (BAM) file path.
+    :type aligned_bam: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.aligner.FilePathAlign} object
+        """Initialise a :py:class:`bsf.analyses.aligner.FilePathAlign` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -79,31 +77,32 @@ class FilePathAlign(FilePath):
 
 
 class FilePathReadGroup(FilePath):
-    """The C{bsf.analyses.aligner.FilePathReadGroup} class models file paths at the read group processing stage.
+    """The :py:class:`bsf.analyses.aligner.FilePathReadGroup` class models file paths at the
+    read group processing stage.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar merged_bam: Merged binary alignment map (BAM) file path
-    @type merged_bam: str
-    @ivar sorted_bai: Sorted binary alignment map index (BAI) file path
-    @type sorted_bai: str
-    @ivar sorted_bam: Sorted binary alignment map (BAM) file path
-    @type sorted_bam: str
-    @ivar sorted_md5: Sorted binary alignment map (BAM) file path
-    @type sorted_md5: str
-    @ivar read_group_bai: Read group binary alignment map index (BAI) file path alias
-    @type read_group_bai: str
-    @ivar read_group_bam: Read group binary alignment map (BAM) file path alias
-    @type read_group_bam: str
-    @ivar read_group_md5: Read group binary alignment map (BAM) file path alias
-    @type read_group_md5: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar merged_bam: A merged binary alignment map (BAM) file path.
+    :type merged_bam: str
+    :ivar sorted_bai: A sorted binary alignment map index (BAI) file path.
+    :type sorted_bai: str
+    :ivar sorted_bam: A sorted binary alignment map (BAM) file path.
+    :type sorted_bam: str
+    :ivar sorted_md5: A sorted binary alignment map (BAM) MD5 checksum file path.
+    :type sorted_md5: str
+    :ivar read_group_bai: A read group binary alignment map index (BAI) file path alias.
+    :type read_group_bai: str
+    :ivar read_group_bam: A read group binary alignment map (BAM) file path alias.
+    :type read_group_bam: str
+    :ivar read_group_md5: A read group binary alignment map (BAM) MD5 checksum file path alias.
+    :type read_group_md5: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.aligner.FilePathReadGroup} object
+        """Initialise a :py:class:`bsf.analyses.aligner.FilePathReadGroup` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathReadGroup, self).__init__(prefix=prefix)
 
@@ -123,43 +122,43 @@ class FilePathReadGroup(FilePath):
 
 
 class FilePathSample(FilePath):
-    """The C{bsf.analyses.aligner.FilePathSample} class models file paths at the sample processing stage.
+    """The :py:class:`bsf.analyses.aligner.FilePathSample` class models file paths at the sample processing stage.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar merged_bam: Merged binary alignment map (BAM) file path
-    @type merged_bam: str
-    @ivar duplicate_bam: Duplicate-marked binary alignment map (BAM) file path
-    @type duplicate_bam: str
-    @ivar duplicate_metrics_tsv: Picard Duplicate Metrics TSV file path
-    @type duplicate_metrics_tsv: str
-    @ivar sample_bai_link_source: Symbolic link source of the binary alignment map index (BAI) file path
-    @type sample_bai_link_source: str
-    @ivar sample_bai_link_target: Symbolic link target of the binary alignment map index (BAI) file path
-    @type sample_bai_link_target: str
-    @ivar alignment_summary_metrics_tsv: Picard Alignment Summary Metrics file path
-    @type alignment_summary_metrics_tsv: str
-    @ivar sample_bai: Sample binary alignment map index (BAI) file path
-    @type sample_bai: str
-    @ivar sample_bam: Sample binary alignment map (BAM) file path
-    @type sample_bam: str
-    @ivar sample_md5: Sample binary alignment map (BAM) file path
-    @type sample_md5: str
-    @ivar sample_wig: Sample wiggle file path
-    @type sample_wig: str
-    @ivar sample_bw: Sample bigWig file path
-    @type sample_bw: str
-    @ivar sample_bwi: Sample bigWig info file path
-    @type sample_bwi: str
-    @ivar prefix_prefix: Double prefix for RSeQC bam2wig.py.
-    @type prefix_prefix: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar merged_bam: A merged binary alignment map (BAM) file path.
+    :type merged_bam: str
+    :ivar duplicate_bam: A duplicate-marked binary alignment map (BAM) file path.
+    :type duplicate_bam: str
+    :ivar duplicate_metrics_tsv: A Picard Duplicate Metrics TSV file path.
+    :type duplicate_metrics_tsv: str
+    :ivar sample_bai_link_source: A symbolic link source of the binary alignment map index (BAI) file path.
+    :type sample_bai_link_source: str
+    :ivar sample_bai_link_target: A symbolic link target of the binary alignment map index (BAI) file path.
+    :type sample_bai_link_target: str
+    :ivar alignment_summary_metrics_tsv: A Picard Alignment Summary Metrics TSV file path.
+    :type alignment_summary_metrics_tsv: str
+    :ivar sample_bai: A sample binary alignment map index (BAI) file path.
+    :type sample_bai: str
+    :ivar sample_bam: A sample binary alignment map (BAM) file path.
+    :type sample_bam: str
+    :ivar sample_md5: A sample binary alignment map (BAM) MD5 checksum file path.
+    :type sample_md5: str
+    :ivar sample_wig: A sample wiggle file path.
+    :type sample_wig: str
+    :ivar sample_bw: A sample bigWig file path.
+    :type sample_bw: str
+    :ivar sample_bwi: A sample bigWig info file path.
+    :type sample_bwi: str
+    :ivar prefix_prefix: A double prefix for RSeQC bam2wig.py.
+    :type prefix_prefix: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.aligner.FilePathSample} object
+        """Initialise a :py:class:`bsf.analyses.aligner.FilePathSample` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathSample, self).__init__(prefix=prefix)
 
@@ -189,63 +188,69 @@ class FilePathSample(FilePath):
 
 
 class FilePathSummary(FilePath):
-    """The C{bsf.analyses.aligner.FilePathSummary} class models file paths at the summary stage.
+    """The :py:class:`bsf.analyses.aligner.FilePathSummary` class models file paths at the summary stage.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
-    @ivar pasm_alignment_read_group_pdf: Picard Alignment Summary Metrics per read group PDF plot
-    @type pasm_alignment_read_group_pdf: str
-    @ivar pasm_alignment_read_group_png: Picard Alignment Summary Metrics per read group PNG plot
-    @type pasm_alignment_read_group_pdf: str
-    @ivar pasm_alignment_sample_pdf: Picard Alignment Summary Metrics per sample PDF plot
-    @type pasm_alignment_sample_pdf: str
-    @ivar pasm_alignment_sample_png: Picard Alignment Summary Metrics per sample PNG plot
-    @type pasm_alignment_sample_png: str
-    @ivar pasm_absolute_read_group_pdf: Picard Alignment Summary Metrics absolute per read group PDF plot
-    @type pasm_absolute_read_group_pdf: str
-    @ivar pasm_absolute_read_group_png: Picard Alignment Summary Metrics absolute per read group PNG plot
-    @type pasm_absolute_read_group_pdf: str
-    @ivar pasm_absolute_sample_pdf: Picard Alignment Summary Metrics absolute per sample PDF plot
-    @type pasm_absolute_sample_pdf: str
-    @ivar pasm_absolute_sample_png: Picard Alignment Summary Metrics absolute per sample PNG plot
-    @type pasm_absolute_sample_png: str
-    @ivar pasm_percentage_read_group_pdf: Picard Alignment Summary Metrics percentage per read group PDF plot
-    @type pasm_percentage_read_group_pdf: str
-    @ivar pasm_percentage_read_group_png: Picard Alignment Summary Metrics percentage per read group PNG plot
-    @type pasm_percentage_read_group_png: str
-    @ivar pasm_percentage_sample_pdf: Picard Alignment Summary Metrics percentage per sample PDF plot
-    @type pasm_percentage_sample_pdf: str
-    @ivar pasm_percentage_sample_png: Picard Alignment Summary Metrics percentage per sample PNG plot
-    @type pasm_percentage_sample_png: str
-    @ivar pasm_strand_balance_read_group_pdf: Picard Alignment Summary Metrics strand balance per read group PDF plot
-    @type pasm_strand_balance_read_group_pdf: str
-    @ivar pasm_strand_balance_read_group_png: Picard Alignment Summary Metrics strand balance per read group PNG plot
-    @type pasm_strand_balance_read_group_pdf: str
-    @ivar pasm_strand_balance_sample_pdf: Picard Alignment Summary Metrics strand balance per sample PDF plot
-    @type pasm_strand_balance_sample_pdf: str
-    @ivar pasm_strand_balance_sample_png: Picard Alignment Summary Metrics strand balance per sample PDF plot
-    @type pasm_strand_balance_sample_png: str
-    @ivar pasm_table_read_group_tsv: Picard Alignment Summary Metrics table per read group
-    @type pasm_table_read_group_tsv: str
-    @ivar pasm_table_sample_tsv: Picard Alignment Summary Metrics table per sample
-    @type pasm_table_sample_tsv: str
-    @ivar pdsm_levels_sample_pdf: Picard Duplication Metrics levels per sample PDF plot
-    @type pdsm_levels_sample_pdf: str
-    @ivar pdsm_levels_sample_png: Picard Duplication Metrics levels per sample PNG plot
-    @type pdsm_levels_sample_png: str
-    @ivar pdsm_percentage_sample_pdf: Picard Duplication Metrics percentage per sample PDF plot
-    @type pdsm_percentage_sample_pdf: str
-    @ivar pdsm_percentage_sample_png: Picard Duplication Metrics percentage per sample PNG plot
-    @type pdsm_percentage_sample_png: str
-    @ivar pdsm_table_sample_tsv: Picard Duplication Metrics table per sample
-    @type pdsm_table_sample_tsv: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
+    :ivar pasm_alignment_read_group_pdf: A Picard Alignment Summary Metrics per read group PDF plot file path.
+    :type pasm_alignment_read_group_pdf: str
+    :ivar pasm_alignment_read_group_png: A Picard Alignment Summary Metrics per read group PNG plot file path.
+    :type pasm_alignment_read_group_pdf: str
+    :ivar pasm_alignment_sample_pdf: A Picard Alignment Summary Metrics per sample PDF plot file path.
+    :type pasm_alignment_sample_pdf: str
+    :ivar pasm_alignment_sample_png: A Picard Alignment Summary Metrics per sample PNG plot file path.
+    :type pasm_alignment_sample_png: str
+    :ivar pasm_absolute_read_group_pdf: A Picard Alignment Summary Metrics absolute per read group PDF plot file path.
+    :type pasm_absolute_read_group_pdf: str
+    :ivar pasm_absolute_read_group_png: A Picard Alignment Summary Metrics absolute per read group PNG plot file path.
+    :type pasm_absolute_read_group_pdf: str
+    :ivar pasm_absolute_sample_pdf: A Picard Alignment Summary Metrics absolute per sample PDF plot file path.
+    :type pasm_absolute_sample_pdf: str
+    :ivar pasm_absolute_sample_png: A Picard Alignment Summary Metrics absolute per sample PNG plot file path.
+    :type pasm_absolute_sample_png: str
+    :ivar pasm_percentage_read_group_pdf: A Picard Alignment Summary Metrics percentage per read group
+        PDF plot file path.
+    :type pasm_percentage_read_group_pdf: str
+    :ivar pasm_percentage_read_group_png: A Picard Alignment Summary Metrics percentage per read group
+        PNG plot file path.
+    :type pasm_percentage_read_group_png: str
+    :ivar pasm_percentage_sample_pdf: A Picard Alignment Summary Metrics percentage per sample PDF plot file path.
+    :type pasm_percentage_sample_pdf: str
+    :ivar pasm_percentage_sample_png: A Picard Alignment Summary Metrics percentage per sample PNG plot file path.
+    :type pasm_percentage_sample_png: str
+    :ivar pasm_strand_balance_read_group_pdf: A Picard Alignment Summary Metrics strand balance per read group
+        PDF plot file path.
+    :type pasm_strand_balance_read_group_pdf: str
+    :ivar pasm_strand_balance_read_group_png: A Picard Alignment Summary Metrics strand balance per read group
+        PNG plot file path.
+    :type pasm_strand_balance_read_group_pdf: str
+    :ivar pasm_strand_balance_sample_pdf: A Picard Alignment Summary Metrics strand balance per sample
+        PDF plot file path.
+    :type pasm_strand_balance_sample_pdf: str
+    :ivar pasm_strand_balance_sample_png: A Picard Alignment Summary Metrics strand balance per sample
+        PDF plot file path.
+    :type pasm_strand_balance_sample_png: str
+    :ivar pasm_table_read_group_tsv: A Picard Alignment Summary Metrics table per read group file path.
+    :type pasm_table_read_group_tsv: str
+    :ivar pasm_table_sample_tsv: A Picard Alignment Summary Metrics TSV table per sample file path.
+    :type pasm_table_sample_tsv: str
+    :ivar pdsm_levels_sample_pdf: A Picard Duplication Metrics levels per sample PDF plot file path.
+    :type pdsm_levels_sample_pdf: str
+    :ivar pdsm_levels_sample_png: A Picard Duplication Metrics levels per sample PNG plot file path.
+    :type pdsm_levels_sample_png: str
+    :ivar pdsm_percentage_sample_pdf: A Picard Duplication Metrics percentage per sample PDF plot file path.
+    :type pdsm_percentage_sample_pdf: str
+    :ivar pdsm_percentage_sample_png: A Picard Duplication Metrics percentage per sample PNG plot file path.
+    :type pdsm_percentage_sample_png: str
+    :ivar pdsm_table_sample_tsv: A Picard Duplication Metrics TSV table per sample file path.
+    :type pdsm_table_sample_tsv: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.aligner.FilePathSummary} object
+        """Initialise a :py:class:`bsf.analyses.aligner.FilePathSummary` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathSummary, self).__init__(prefix=prefix)
 
@@ -295,23 +300,20 @@ class FilePathSummary(FilePath):
 
 
 class Aligner(Analysis):
-    """The C{bsf.analyses.aligner.Aligner} class represents the logic to run a (short read) aligner.
+    """The :py:class:`bsf.analyses.aligner.Aligner` class represents the logic to run a (short read) aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
-        that should be retained by Picard MergeBamAlignment
-    @type sam_attributes_to_retain_list: list[str]
-    @ivar genome_fasta: Genome FASTA file
-    @type genome_fasta: str | None
-    @ivar genome_index: Genome index
-    @type genome_index: str | None
-    @ivar skip_mark_duplicates: Skip Picard MarkDuplicates
-    @type skip_mark_duplicates: bool | None
-    @ivar java_archive_picard: Picard tools Java Archive (JAR) file path
-    @type java_archive_picard: str | None
+    :cvar name: :py:attr:`bsf.analysis.Analysis.name` that should be overridden by subclasses.
+    :type name: str
+    :cvar prefix: :py:attr:`bsf.analysis.Analysis.prefix` that should be overridden by subclasses.
+    :type prefix: str
+    :ivar genome_fasta: A genome FASTA file path.
+    :type genome_fasta: str | None
+    :ivar genome_index: A genome index file path.
+    :type genome_index: str | None
+    :ivar skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
+    :type skip_mark_duplicates: bool | None
+    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :type java_archive_picard: str | None
     """
 
     name = 'Aligner Analysis'
@@ -321,121 +323,121 @@ class Aligner(Analysis):
 
     @classmethod
     def get_stage_name_align(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'align'))
 
     @classmethod
     def get_stage_name_read_group(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
     def get_stage_name_sample(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'sample'))
 
     @classmethod
     def get_stage_name_summary(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'summary'))
 
     @classmethod
     def get_prefix_align(cls, paired_reads_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
-        @type paired_reads_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
+        :type paired_reads_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_align(), paired_reads_name))
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param read_group_name: Read group name
-        @type read_group_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param read_group_name: Read group name
+        :type read_group_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
     def get_prefix_sample(cls, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param sample_name: C{bsf.ngs.Sample.name}
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_sample(), sample_name))
 
     @classmethod
     def get_prefix_summary(cls):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return cls.get_stage_name_summary()
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
-        """Get a C{FilePathAlign} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.aligner.FilePathAlign` object from this or a subclass.
 
-        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
-        @type paired_reads_name: str
-        @return: C{FilePathAlign} or subclass object
-        @rtype: FilePathAlign
+        :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
+        :type paired_reads_name: str
+        :return: A :py:class:`bsf.analyses.aligner.FilePathAlign` object or subclass thereof.
+        :rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
     def get_file_path_read_group(cls, read_group_name):
-        """Get a C{FilePathReadGroup} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.aligner.FilePathReadGroup` object from this or a subclass.
 
-        @param read_group_name: Read group name
-        @type read_group_name: str
-        @return: C{FilePathReadGroup} or subclass object
-        @rtype: FilePathReadGroup
+        :param read_group_name: Read group name.
+        :type read_group_name: str
+        :return: A :py:class:`bsf.analyses.aligner.FilePathReadGroup` object or subclass thereof.
+        :rtype: FilePathReadGroup
         """
         return FilePathReadGroup(prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     @classmethod
     def get_file_path_sample(cls, sample_name):
-        """Get a C{FilePathSample} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.aligner.FilePathSample` object from this or a subclass.
 
-        @param sample_name: C{bsf.ngs.Sample.name}
-        @type sample_name: str
-        @return: C{FilePathSample} or subclass object
-        @rtype: FilePathSample
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.aligner.FilePathSample` object or subclass thereof.
+        :rtype: FilePathSample
         """
         return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
     @classmethod
     def get_file_path_summary(cls):
-        """Get a C{FilePathSummary} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.aligner.FilePathSummary` object from this or a subclass.
 
-        @return: C{FilePathSummary} or subclass object
-        @rtype: FilePathSummary
+        :return: A :py:class:`bsf.analyses.aligner.FilePathSummary` object or subclass thereof.
+        :rtype: FilePathSummary
         """
         return FilePathSummary(prefix=cls.get_prefix_summary())
 
@@ -460,48 +462,46 @@ class Aligner(Analysis):
             genome_index=None,
             skip_mark_duplicates=None,
             java_archive_picard=None):
-        """Initialise a C{bsf.analyses.aligner.Aligner}.
+        """Initialise a :py:class:`bsf.analyses.aligner.Aligner` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str | None
-        @param genome_version: Genome version
-        @type genome_version: str | None
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str | None
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str | None
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str | None
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str | None
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str | None
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage] | None
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection | None
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample] | None
-        @param genome_fasta: Genome FASTA file
-        @type genome_fasta: str | None
-        @param genome_index: Genome index
-        @type genome_index: str | None
-        @param skip_mark_duplicates: Skip Picard MarkDuplicates
-        @type skip_mark_duplicates: bool | None
-        @param java_archive_picard: Picard tools Java Archive (JAR) file path
-        @type java_archive_picard: str | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param genome_fasta: A genome FASTA file path.
+        :type genome_fasta: str | None
+        :param genome_index: A genome index file path.
+        :type genome_index: str | None
+        :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
+        :type skip_mark_duplicates: bool | None
+        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :type java_archive_picard: str | None
         """
         super(Aligner, self).__init__(
             configuration=configuration,
@@ -530,14 +530,15 @@ class Aligner(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.aligner.Aligner} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a :py:class:`bsf.analyses.aligner.Aligner` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(Aligner, self).set_configuration(configuration=configuration, section=section)
 
@@ -564,64 +565,67 @@ class Aligner(Analysis):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects
-        to the C{bsf.procedure.ConcurrentRunnable}.
+        """Add one or more Aligner-specific :py:class:`bsf.process.RunnableStep` objects to the
+        :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable_align: C{bsf.procedure.Runnable}
-        @type runnable_align: ConcurrentRunnable
-        @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: Stage
-        @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | None
-        @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | None
+        :param runnable_align: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable_align: ConcurrentRunnable
+        :param stage_align: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_align: Stage
+        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :type file_path_1: str | None
+        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :type file_path_2: str | None
         """
         return
 
     def add_runnable_step_sample(self, runnable_sample, stage_sample):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects
-        to the C{bsf.procedure.ConsecutiveRunnable}.
+        """Add one or more Aligner-specific :py:class:`bsf.process.RunnableStep` objects
+        to the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @param runnable_sample: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_sample: ConsecutiveRunnable
-        @param stage_sample: C{bsf.analysis.Stage}
-        @type stage_sample: Stage
+        :param runnable_sample: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+        :type runnable_sample: ConsecutiveRunnable
+        :param stage_sample: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_sample: Stage
         """
         return
 
     def add_runnable_step_summary(self, runnable_summary, stage_summary):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects
-        to the C{bsf.procedure.ConsecutiveRunnable}.
+        """Add one or more Aligner-specific :py:class:`bsf.process.RunnableStep` objects
+        to the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @param runnable_summary: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_summary: ConsecutiveRunnable
-        @param stage_summary: C{bsf.analysis.Stage}
-        @type stage_summary: Stage
+        :param runnable_summary: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+        :type runnable_summary: ConsecutiveRunnable
+        :param stage_summary: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_summary: Stage
         """
         return
 
     def run(self):
-        """Run a C{bsf.analyses.aligner.Aligner} analysis.
+        """Run a :py:class:`bsf.analyses.aligner.Aligner` object.
         """
 
         def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+            """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
+            from a CSV file path.
 
-            This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.analysis.Analysis.sample_list} instance variable.
+            This implementation just adds all :py:class:`bsf.ngs.Sample` objects from the
+            :py:attr:`bsf.analysis.Analysis.collection` instance variable
+            (i.e., :py:class:`bsf.ngs.Collection` object) to the
+            :py:attr:`bsf.analysis.Analysis.sample_list` instance variable.
             """
             self.sample_list.extend(self.collection.get_all_samples())
 
             return
 
         def run_get_unmapped_bam(_paired_reads):
-            """Get the unmapped BAM file annotation of a C{bsf.ngs.PairedReads} object.
+            """Get the unmapped BAM file annotation of a :py:class:`bsf.ngs.PairedReads` object.
 
-            @param _paired_reads: C{bsf.ngs.PairedReads} object
-            @type _paired_reads: PairedReads
-            @return: Python C{tuple} of Python C{str} (base name) and Python C{str} (unmapped BAM file path)
-            @rtype: (str, str | None)
+            :param _paired_reads: A :py:class:`bsf.ngs.PairedReads` object.
+            :type _paired_reads: PairedReads
+            :return: A Python :py:class:`tuple` object of
+                Python :py:class:`str` (base name) and Python :py:class:`str` (unmapped BAM file path) objects.
+            :rtype: (str, str | None)
             """
             if 'BAM File' in _paired_reads.annotation_dict and _paired_reads.annotation_dict['BAM File']:
                 # Consider only the first list component.
@@ -1341,10 +1345,10 @@ class Aligner(Analysis):
         return
 
     def report_html_sample(self):
-        """Create an HTML Sample table.
+        """Create a :literal:`XHTML 1.0` sample table.
 
-        @return: Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -1400,10 +1404,10 @@ class Aligner(Analysis):
         return str_list
 
     def report_hub_alignment(self):
-        """Create an "Alignment" UCSC Composite Track.
+        """Create an :literal:`Alignment` UCSC Composite Track.
 
-        @return: Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -1452,10 +1456,10 @@ class Aligner(Analysis):
         return str_list
 
     def report_hub_coverage(self):
-        """Create a "Coverage" UCSC Composite Track Coverage.
+        """Create a :literal:`Coverage` UCSC Composite Track.
 
-        @return: Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        :return: A Python :py:class:`list` of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -1517,7 +1521,7 @@ class Aligner(Analysis):
         return str_list
 
     def report(self):
-        """Create an HTML report and a UCSC Genome Browser Track Hub.
+        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
         """
         # Create a symbolic link containing the project name and a UUID.
         # This code only needs the public URL.

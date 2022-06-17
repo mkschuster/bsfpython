@@ -60,10 +60,11 @@ si_prefix_dict = {
 def convert_into_readable(integer_bytes):
     """Convert an integer number of bytes into a readable number with SI prefixes.
 
-    @param integer_bytes: Integer number of bytes
-    @type integer_bytes: int
-    @return: Python C{tuple} of Python C{float} readable bytes and Python C{str} (SI) unit.
-    @rtype: (float, str)
+    :param integer_bytes: An integer number of bytes
+    :type integer_bytes: int
+    :return: A Python :py:class:`tuple` object of
+        Python :py:class:`float` (readable bytes) and Python :py:class:`str` (SI unit) object.
+    :rtype: (float, str)
     """
     si_index = 0
     readable_bytes = float(integer_bytes)
@@ -75,16 +76,17 @@ def convert_into_readable(integer_bytes):
 
 
 class LinearTapeFileSystemDirectory(object):
-    """The C{LinearTapeFileSystemDirectory} class represents a source (and target) directory in the copy process.
+    """The :py:class:`LinearTapeFileSystemDirectory` class represents a source (and target) directory
+    in the copy process.
 
-    @ivar source_path: Source directory path
-    @type source_path: str | None
-    @ivar target_path: Target directory path
-    @type target_path: str | None
-    @ivar source_specification: Source specification pattern including wildcard characters
-    @type source_specification: str | None
-    @ivar source_file_path_list: Python C{list} of source file paths in the directory
-    @type source_file_path_list: list[str]
+    :ivar source_path: A source directory path.
+    :type source_path: str | None
+    :ivar target_path: A target directory path.
+    :type target_path: str | None
+    :ivar source_specification: A source specification pattern including wildcard characters.
+    :type source_specification: str | None
+    :ivar source_file_path_list: A Python :py:class:`list` object of Python :py:class:`str` (source file path) objects.
+    :type source_file_path_list: list[str]
     """
 
     def __init__(
@@ -93,16 +95,17 @@ class LinearTapeFileSystemDirectory(object):
             target_path=None,
             source_specification=None,
             source_file_path_list=None):
-        """Initialise a C{LinearTapeFileSystemDirectory} object.
+        """Initialise a :py:class:`LinearTapeFileSystemDirectory` object.
 
-        @param source_path: Source directory path
-        @type source_path: str | None
-        @param target_path: Target directory path
-        @type target_path: str | None
-        @param source_specification: Source specification pattern including wildcard characters
-        @type source_specification: str | None
-        @param source_file_path_list: Python C{list} of source file paths in the directory
-        @type source_file_path_list: list[str] | None
+        :param source_path: A source directory path.
+        :type source_path: str | None
+        :param target_path: A target directory path.
+        :type target_path: str | None
+        :param source_specification: A source specification pattern including wildcard characters.
+        :type source_specification: str | None
+        :param source_file_path_list: A Python :py:class:`list` object of
+            Python :py:class:`str` (source file path) objects.
+        :type source_file_path_list: list[str] | None
         """
         super(LinearTapeFileSystemDirectory, self).__init__()
 
@@ -118,10 +121,10 @@ class LinearTapeFileSystemDirectory(object):
         return
 
     def add_source_file_path(self, source_file_path):
-        """Add a source file path to a C{LinearTapeFileSystemDirectory} object.
+        """Add a source file path to a :py:class:`LinearTapeFileSystemDirectory` object.
 
-        @param source_file_path: Source file path
-        @type source_file_path: str
+        :param source_file_path: A source file path.
+        :type source_file_path: str
         """
         if source_file_path is None:
             return
@@ -133,23 +136,24 @@ class LinearTapeFileSystemDirectory(object):
 
 
 class LinearTapeFileSystemCopy(object):
-    """The C{LinearTapeFileSystemCopy} class represents one Linear Tape File System Copy (ltfscp) process.
+    """The :py:class:`LinearTapeFileSystemCopy` class represents one Linear Tape File System Copy
+    (:literal:`ltfscp`) process.
 
-    @ivar total_buffer_size: Total buffer size
-    @type total_buffer_size: str | None
-    @ivar buffer_size: Buffer size per thread
-    @type buffer_size: str | None
-    @ivar log_level: Log level
-    @type log_level: str | None
-    @ivar recursive: Recursive processing
-    @type recursive: bool | None
-    @ivar sparse: Support sparse files
-    @type sparse: bool | None
-    @ivar default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
-    @type default_target_path: str | None
-    @ivar ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
-        C{LinearTapeFileSystemDirectory} objects
-    @type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory]
+    :ivar total_buffer_size: A total buffer size.
+    :type total_buffer_size: str | None
+    :ivar buffer_size: A buffer size per thread.
+    :type buffer_size: str | None
+    :ivar log_level: A log level.
+    :type log_level: str | None
+    :ivar recursive: Recursive processing.
+    :type recursive: bool | None
+    :ivar sparse: Support sparse files.
+    :type sparse: bool | None
+    :ivar default_target_path: A default target path for all :py:class:`LinearTapeFileSystemDirectory` objects.
+    :type default_target_path: str | None
+    :ivar ltfs_directory_dict: A Python :py:class:`dict` object of Python :py:class:`str` (directory path) key and
+        :py:class:`LinearTapeFileSystemDirectory` value objects.
+    :type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory]
 
     XML batch file format
     http://www-01.ibm.com/support/knowledgecenter/STZMZN/com.ibm.storage.hollywood.doc/ltfs_reference_lcp_cli.html
@@ -183,23 +187,23 @@ class LinearTapeFileSystemCopy(object):
             sparse=None,
             default_target_path=None,
             ltfs_directory_dict=None):
-        """Initialise a C{LinearTapeFileSystemCopy} object.
+        """Initialise a :py:class:`LinearTapeFileSystemCopy` object.
 
-        @param total_buffer_size: Total buffer size
-        @type total_buffer_size: str | None
-        @param buffer_size: Buffer size per thread
-        @type buffer_size: str | None
-        @param log_level: Log level
-        @type log_level: str | None
-        @param recursive: Recursive processing
-        @type recursive: bool | None
-        @param sparse: Support sparse files
-        @type sparse: bool | None
-        @param default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
-        @type default_target_path: str | None
-        @param ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
-            C{LinearTapeFileSystemDirectory} objects
-        @type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory] | None
+        :param total_buffer_size: A total buffer size.
+        :type total_buffer_size: str | None
+        :param buffer_size: A buffer size per thread.
+        :type buffer_size: str | None
+        :param log_level: A log level.
+        :type log_level: str | None
+        :param recursive: Recursive processing.
+        :type recursive: bool | None
+        :param sparse: Support sparse files.
+        :type sparse: bool | None
+        :param default_target_path: A default target path for all :py:class:`LinearTapeFileSystemDirectory` objects.
+        :type default_target_path: str | None
+        :param ltfs_directory_dict: A Python :py:class:`dict` object of Python :py:class:`str` (directory path) key and
+        :py:class:`LinearTapeFileSystemDirectory` value objects.
+        :type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory] | None
         """
         super(LinearTapeFileSystemCopy, self).__init__()
 
@@ -218,13 +222,14 @@ class LinearTapeFileSystemCopy(object):
         return
 
     def get_or_add_ltfs_directory(self, ltfs_directory):
-        """Add a C{LinearTapeFileSystemDirectory} object to the C{LinearTapeFileSystemCopy} object.
+        """Add a :py:class:`LinearTapeFileSystemDirectory` object to the :py:class:`LinearTapeFileSystemCopy` object.
 
-        The C{LinearTapeFileSystemDirectory} object is only added, if it does not exist already.
-        @param ltfs_directory: C{LinearTapeFileSystemDirectory}
-        @type ltfs_directory: LinearTapeFileSystemDirectory
-        @return: C{LinearTapeFileSystemDirectory}
-        @rtype: LinearTapeFileSystemDirectory
+        The :py:class:`LinearTapeFileSystemDirectory` object is only added, if it does not exist already.
+
+        :param ltfs_directory: A :py:class:`LinearTapeFileSystemDirectory` object.
+        :type ltfs_directory: LinearTapeFileSystemDirectory
+        :return: A :py:class:`LinearTapeFileSystemDirectory` object.
+        :rtype: LinearTapeFileSystemDirectory
         """
         if ltfs_directory is None:
             return
@@ -236,15 +241,16 @@ class LinearTapeFileSystemCopy(object):
             return ltfs_directory
 
     def get_or_add_source_directory(self, source_path, source_specification=None):
-        """Add a source directory to a C{LinearTapeFileSystemCopy} object.
+        """Add a source directory to a :py:class:`LinearTapeFileSystemCopy` object.
 
-        The corresponding C{LinearTapeFileSystemDirectory} object is returned.
-        @param source_path: Source directory path
-        @type source_path: str
-        @param source_specification: Source specification
-        @type source_specification: str | None
-        @return: C{LinearTapeFileSystemDirectory}
-        @rtype: LinearTapeFileSystemDirectory
+        The corresponding :py:class:`LinearTapeFileSystemDirectory` object is returned.
+
+        :param source_path: A source directory path.
+        :type source_path: str
+        :param source_specification: A source specification.
+        :type source_specification: str | None
+        :return: A :py:class:`LinearTapeFileSystemDirectory` object.
+        :rtype: LinearTapeFileSystemDirectory
         """
         if source_path in self.ltfs_directory_dict:
             return self.ltfs_directory_dict[source_path]
@@ -256,10 +262,10 @@ class LinearTapeFileSystemCopy(object):
             return ltfs_directory
 
     def add_source_file_path(self, source_path):
-        """Add a source file path to a C{LinearTapeFileSystemCopy} object.
+        """Add a source file path to a :py:class:`LinearTapeFileSystemCopy` object.
 
-        @param source_path: Source file path
-        @type source_path: str
+        :param source_path: A source file path.
+        :type source_path: str
         """
         source_path = os.path.normpath(source_path)
         source_directory = os.path.dirname(source_path)
@@ -271,10 +277,11 @@ class LinearTapeFileSystemCopy(object):
         return
 
     def get_element_tree(self):
-        """Get the C{xml.etree.ElementTree.ElementTree} representation of the C{LinearTapeFileSystemCopy} object.
+        """Get the :py:class:`xml.etree.ElementTree.ElementTree} object representation of the
+        :py:class:`LinearTapeFileSystemCopy` object.
 
-        @return: C{xml.etree.ElementTree.ElementTree}
-        @rtype: ElementTree
+        :return: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+        :rtype: ElementTree
         """
         ltfs_specification = Element(tag='ltfscpspec', attrib={'version': '1.0'})
 
@@ -345,8 +352,8 @@ class LinearTapeFileSystemCopy(object):
     def write_batch_file(self, file_path):
         """Write a Linear Tape File System Copy tool batch file.
 
-        @param file_path: File path
-        @type file_path: str
+        :param file_path: A file path.
+        :type file_path: str
         """
         ltfs_element_tree = self.get_element_tree()
         ltfs_element_tree.write(file_or_filename=file_path)

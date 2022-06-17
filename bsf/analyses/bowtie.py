@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Bowtie Analysis module.
-
-A package of classes and methods supporting Bowtie alignment analyses.
+"""The :py:mod:`bsf.analyses.bowtie` module provides classes and methods supporting the Bowtie aligners.
 """
 import os
 
@@ -37,22 +35,24 @@ from bsf.standards import StandardFilePath
 
 
 class Bowtie1(Aligner):
-    """The C{bsf.analyses.bowtie.Bowtie1} class represents the logic to run the Bowtie1 aligner.
+    """The :py:class:`bsf.analyses.bowtie.Bowtie1` class represents the logic to run the
+    `Bowtie1 <http://bowtie-bio.sourceforge.net/index.shtml>`_ short read aligner.
     """
     name = 'Bowtie1 Analysis'
     prefix = 'bowtie1'
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a Bowtie1-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
+        """Add a Bowtie1-specific :py:class:`bsf.process.RunnableStep` object to the
+        :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: ConcurrentRunnable
-        @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: Stage
-        @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | None
-        @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | None
+        :param runnable_align: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable_align: ConcurrentRunnable
+        :param stage_align: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_align: Stage
+        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :type file_path_1: str | None
+        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
@@ -77,7 +77,7 @@ class Bowtie1(Aligner):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.bowtie.Bowtie1} analysis.
+        """Run a :py:class:`bsf.analyses.bowtie.Bowtie1` object.
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
@@ -110,15 +110,8 @@ class Bowtie1(Aligner):
 
 
 class Bowtie2(Aligner):
-    """The C{bsf.analyses.bowtie.Bowtie2} class represents the logic to run the Bowtie2 aligner.
-
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
-        that should be retained by Picard MergeBamAlignment
-    @type sam_attributes_to_retain_list: list[str]
+    """The :py:class:`bsf.analyses.bowtie.Bowtie2` class represents the logic to run the
+    `Bowtie2 <http://bowtie-bio.sourceforge.net/bowtie2/index.shtml>`_ short read aligner.
     """
     name = 'Bowtie2 Analysis'
     prefix = 'bowtie2'
@@ -145,16 +138,17 @@ class Bowtie2(Aligner):
     ]
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
+        """Add a Bowtie2-specific :py:class:`bsf.process.RunnableStep` object to the
+        :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: ConcurrentRunnable
-        @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: Stage
-        @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | None
-        @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | None
+        :param runnable_align: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable_align: ConcurrentRunnable
+        :param stage_align: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_align: Stage
+        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :type file_path_1: str | None
+        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
@@ -183,7 +177,7 @@ class Bowtie2(Aligner):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.bowtie.Bowtie2} analysis.
+        """Run a :py:class:`bsf.analyses.bowtie.Bowtie2` object.
         """
         # Check for the project name already here,
         # since the super class method has to be called later.

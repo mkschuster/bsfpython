@@ -43,12 +43,13 @@ from bsf.standards import JavaArchive
 def run_picard_sam_to_fastq(input_path, temporary_path):
     """Convert a BAM file into a pair of FASTQ files for each read group (@RG).
 
-    @param input_path: File path to the BAM file
-    @type input_path: str
-    @param temporary_path: File path to a temporary directory
-    @type temporary_path: str
-    @return: Python list of tuple objects of file paths of read1 and read2
-    @rtype: list
+    :param input_path: A BAM file path.
+    :type input_path: str
+    :param temporary_path: A temporary directory path.
+    :type temporary_path: str
+    :return: A Python :py:class:`list` object of :py:class:`tuple` objects of
+        Python :py:class:`str` (file path read 1) and Python :py:class:`str` (file path read2) objects.
+    :rtype: list[(str, str)]
     """
 
     file_paths = list()
@@ -238,7 +239,7 @@ for i in range(0, len(old_file_paths_1)):
     else:
         file_path_1 = old_file_paths_1[i]
         try:
-            # The second list may be shorter (i.e. empty) in case read 2 files are not defined.
+            # The second list may be shorter (i.e., empty) in case read 2 files are not defined.
             file_path_2 = old_file_paths_2[i]
         except IndexError:
             file_path_2 = None

@@ -22,7 +22,6 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Distributed Resource Management System (DRMS) module.
-
-A package of classes and methods supporting a Distributed Resource Management System (DRMS).
+"""The :py:mod:`bsf.drms` module provides classes supporting Distributed Resource Management System (DRMS)
+implementations.
 """

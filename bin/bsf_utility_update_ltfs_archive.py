@@ -45,8 +45,8 @@ ltfs_dict: Dict[str, List[str]] = dict()
 def read_ltfs_archive(archive_file_path):
     """Read an LTFS archive file in tab-separated value (TSV) format.
 
-    @param archive_file_path: File path
-    @type archive_file_path: str
+    :param archive_file_path: A file path.
+    :type archive_file_path: str
     """
     if os.path.exists(archive_file_path):
         with open(file=archive_file_path, mode='rt') as text_io:
@@ -65,8 +65,8 @@ def read_ltfs_archive(archive_file_path):
 def write_ltfs_archive(archive_file_path):
     """Write an LTFS archive file in tab-separated value (TSV) format.
 
-    @param archive_file_path: File path
-    @type archive_file_path: str
+    :param archive_file_path: A file path.
+    :type archive_file_path: str
     """
     with open(file=archive_file_path, mode='wt') as text_io:
         for irf_file_name in sorted(ltfs_dict):
@@ -78,8 +78,8 @@ def write_ltfs_archive(archive_file_path):
 def process_json_files(top_directory_path):
     """Process JSON files with LTFS virtual extended attributes (VEA).
 
-    @param top_directory_path: Directory path
-    @type top_directory_path: str
+    :param top_directory_path: A directory path.
+    :type top_directory_path: str
     """
     re_pattern = re.compile(pattern=name_space.json_pattern)
 
@@ -94,7 +94,7 @@ def process_json_files(top_directory_path):
                 logging.debug("Excluding: '%s'", file_name)
                 continue
 
-            # The tape name could be parsed from the fle name via a regular expression, or better, retrieved from
+            # The tape name could be parsed from the file name via a regular expression, or better, retrieved from
             # the corresponding LTFS virtual extended attribute (VEA).
             # volume_name = re_match.group(1)
             with open(file=os.path.join(directory_path, file_name), mode='rt') as text_io:
@@ -119,8 +119,8 @@ def process_json_files(top_directory_path):
 def process_ltfscp_files(top_directory_path):
     """Process LTFSCP log files, particularly the 'ILT30505I' informational entry.
 
-    @param top_directory_path: Directory path
-    @type top_directory_path: str
+    :param top_directory_path: A directory path.
+    :type top_directory_path: str
     """
     re_pattern = re.compile(pattern=name_space.ltfscp_pattern)
 
@@ -135,7 +135,7 @@ def process_ltfscp_files(top_directory_path):
                 logging.debug("Excluding: '%s'", file_name)
                 continue
 
-            # Parse teh volume name from the file name (e.g., BS0048L6_log.txt)
+            # Parse the volume name from the file name (e.g., BS0048L6_log.txt)
             volume_name = re_match.group(1)
 
             with open(file=os.path.join(directory_path, file_name), mode='rt') as input_file:

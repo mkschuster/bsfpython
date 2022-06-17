@@ -22,9 +22,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Analysis module.
+"""The :py:mod:`bsf.analysis` module provides classes modelling analyses.
 
-A package of classes and methods modelling analyses.
+    - The :py:class:`bsf.analysis.Analysis` class represents a high-level analysis that involves one or more stages.
+    - The :py:class:`bsf.analysis.Stage` class represents processes that require similar computational resources.
 """
 import datetime
 import errno
@@ -46,61 +47,62 @@ from bsf.standards import Configuration, StandardFilePath, Operator, Genome, Tra
 
 
 class Analysis(object):
-    """The C{bsf.analysis.Analysis} class represents a high-level analysis.
+    """The :py:class:`bsf.analysis.Analysis` class represents a high-level analysis.
 
-    It consists of one or more C{bsf.analysis.Stage} objects that may run one or more
-    C{bsf.process.Executable} or C{bsf.process.RunnableStep} objects (programs).
+    It consists of one or more :py:class:`bsf.analysis.Stage` objects that may run one or more
+    :py:class:`bsf.process.Executable` or :py:class:`bsf.process.RunnableStep` objects (programs).
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar ucsc_name_hub: UCSC Genome Browser Track Hub "hub" file name
-    @type ucsc_name_hub: str
-    @cvar ucsc_name_genomes: UCSC Genome Browser Track Hub "genomes" file name
-    @type ucsc_name_genomes: str
-    @cvar ucsc_name_tracks: UCSC Genome Browser Track Hub "tracks" file name
-    @type ucsc_name_tracks: str
-    @ivar configuration: C{bsf.standards.Configuration}
-    @type configuration: Configuration
-    @ivar debug: Debug level
-    @type debug: int
-    @ivar project_name: Project name (arbitrary)
-    @type project_name: str | None
-    @ivar genome_version: Genome version (e.g. hg19, mm10, GRCh37, GRCm38, ...)
-    @type genome_version: str | None
-    @ivar cache_directory: C{bsf.analysis.Analysis}-wide cache directory
-    @type cache_directory: str | None
-    @ivar input_directory: Input directory
-    @type input_directory: str | None
-    @ivar output_directory: Output directory, user-specified including a genome version subdirectory
-    @type output_directory: str | None
-    @ivar project_directory: Project-specific directory
-    @type project_directory: str | None
-    @ivar genome_directory: Genome-specific directory
-    @type genome_directory: str | None
-    @ivar report_style_path: Report CSS file path
-    @type report_style_path: str | None
-    @ivar report_header_path: Report header HTML file path
-    @type report_header_path: str | None
-    @ivar report_footer_path: Report footer HTML file path
-    @type report_footer_path: str | None
-    @ivar sas_file: Sample Annotation Sheet (SAS) file path
-    @type sas_file: str | None
-    @ivar sas_prefix: A prefix to columns in a Sample Annotation Sheet
-        (e.g. Control Sample, Treatment Sample, ...)
-    @type sas_prefix: str | None
-    @ivar e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-    @type e_mail: str | None
-    @ivar stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-    @type stage_list: list[Stage]
-    @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.procedure.Runnable.name}) key data and
-        C{bsf.procedure.Runnable} value data
-    @type runnable_dict: dict[Runnable.name, Runnable]
-    @ivar collection: C{bsf.ngs.Collection}
-    @type collection: Collection
-    @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-    @type sample_list: list[Sample]
+    :cvar name: :py:attr:`bsf.analysis.Analysis.name` that should be overridden by subclasses.
+    :type name: str
+    :cvar prefix: :py:attr:`bsf.analysis.Analysis.prefix` that should be overridden by subclasses.
+    :type prefix: str
+    :cvar ucsc_name_hub: UCSC Genome Browser Track Hub :literal:`hub` file name.
+    :type ucsc_name_hub: str
+    :cvar ucsc_name_genomes: UCSC Genome Browser Track Hub :literal:`genomes` file name.
+    :type ucsc_name_genomes: str
+    :cvar ucsc_name_tracks: UCSC Genome Browser Track Hub :literal:`tracks` file name.
+    :type ucsc_name_tracks: str
+    :ivar configuration: A :py:class:`bsf.standards.Configuration` object.
+    :type configuration: Configuration
+    :ivar project_name: A project name.
+    :type project_name: str | None
+    :ivar genome_version: A genome assembly version.
+    :type genome_version: str | None
+    :ivar cache_directory: A cache directory path.
+    :type cache_directory: str | None
+    :ivar input_directory: An input directory path.
+    :type input_directory: str | None
+    :ivar output_directory: An output directory path.
+    :type output_directory: str | None
+    :ivar project_directory: A project directory path, normally under the output directory path.
+    :type project_directory: str | None
+    :ivar genome_directory: A genome directory path, normally under the project directory path.
+    :type genome_directory: str | None
+    :ivar report_style_path: Report :literal:`CSS` file path.
+    :type report_style_path: str | None
+    :ivar report_header_path: Report header :literal:`XHTML 1.0` file path.
+    :type report_header_path: str | None
+    :ivar report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+    :type report_footer_path: str | None
+    :ivar sas_file: A Sample Annotation Sheet (SAS) file path.
+    :type sas_file: str | None
+    :ivar sas_prefix: A prefix to columns in a Sample Annotation Sheet
+        (e.g., :literal:`[Control] Sample`, :literal:`[Treatment] Sample`, ...).
+    :type sas_prefix: str | None
+    :ivar e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+    :type e_mail: str | None
+    :ivar debug: An integer debugging level.
+    :type debug: int
+    :ivar stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+    :type stage_list: list[Stage]
+    :ivar runnable_dict: A Python :py:class:`dict` object of
+        Python :py:class:`str` (:py:attr:`bsf.procedure.Runnable.name`) key objects and
+        :py:class:`bsf.procedure.Runnable` value objects.
+    :type runnable_dict: dict[Runnable.name, Runnable]
+    :ivar collection: A :py:class:`bsf.ngs.Collection` object.
+    :type collection: Collection
+    :ivar sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+    :type sample_list: list[Sample]
     """
 
     name = 'Analysis'
@@ -112,15 +114,15 @@ class Analysis(object):
 
     @classmethod
     def from_config_file_path(cls, config_path):
-        """Create a new C{bsf.analysis.Analysis} from a UNIX-style configuration file path.
+        """Create a new :py:class:`bsf.analysis.Analysis` object from a UNIX-style configuration file path.
 
-        The configuration file in C{bsf.standards.Configuration.global_file_path} is read as default,
+        The configuration file in :py:attr:`bsf.standards.Configuration.global_file_path` is read as default,
         before the project-specific one gets read, if it is not the same file.
 
-        @param config_path: UNIX-style configuration file path
-        @type config_path: str
-        @return: C{bsf.analysis.Analysis}
-        @rtype: Analysis
+        :param config_path: A UNIX-style configuration file path.
+        :type config_path: str
+        :return: A :py:class:`bsf.analysis.Analysis` object.
+        :rtype: Analysis
         """
         return cls.from_configuration(
             configuration=Configuration.from_file_path_list(
@@ -128,17 +130,17 @@ class Analysis(object):
 
     @classmethod
     def from_configuration(cls, configuration):
-        """Create a new C{bsf.analysis.Analysis} from a C{bsf.standards.Configuration}.
+        """Create a new :py:class:`bsf.analysis.Analysis` object from a :py:class:`bsf.standards.Configuration` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @return: C{bsf.analysis.Analysis}
-        @rtype: Analysis
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :return: A :py:class:`bsf.analysis.Analysis` object.
+        :rtype: Analysis
         """
         analysis = cls(configuration=configuration)
 
         # A "module.class" configuration section specifies defaults for this Analysis or sub-class
-        # i.e. "bsf.analysis.Analysis" or "bsf.analyses.*", respectively.
+        # (i.e., "bsf.analysis.Analysis" or "bsf.analyses.*", respectively).
 
         analysis.set_configuration(
             configuration=analysis.configuration,
@@ -167,50 +169,49 @@ class Analysis(object):
             runnable_dict=None,
             collection=None,
             sample_list=None):
-        """Initialise a C{bsf.analysis.Analysis}.
+        """Initialise a :py:class:`bsf.analysis.Analysis` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration | None
-        @param project_name: Project name
-        @type project_name: str | None
-        @param genome_version: Genome version
-        @type genome_version: str | None
-        @param cache_directory: C{bsf.analysis.Analysis}-wide cache directory
-        @type cache_directory: str | None
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str | None
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str | None
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str | None
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str | None
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param sas_file: Sample Annotation Sheet (SAS) file path
-        @type sas_file: str | None
-        @param sas_prefix: A prefix to columns in a Sample Annotation Sheet
-            (e.g. Control Sample, Treatment Sample, ...)
-        @type sas_prefix: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str | None
-        @param debug: Integer debugging level
-        @type debug: int | None
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage] | None
-        @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.procedure.Runnable.name}) and
-            C{bsf.procedure.Runnable} value data
-        @type runnable_dict: dict[Runnable.name, Runnable] | None
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection | None
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample] | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param cache_directory: A cache directory path.
+        :type cache_directory: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param sas_file: A Sample Annotation Sheet (SAS) file path.
+        :type sas_file: str | None
+        :param sas_prefix: A prefix to columns in a Sample Annotation Sheet
+            (e.g., :literal:`[Control] Sample`, :literal:`[Treatment] Sample`, ...).
+        :type sas_prefix: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param runnable_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:py:attr:`bsf.procedure.Runnable.name`) key objects and
+            :py:class:`bsf.procedure.Runnable` value objects.
+        :type runnable_dict: dict[Runnable.name, Runnable] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
         """
         super(Analysis, self).__init__()
 
@@ -257,12 +258,12 @@ class Analysis(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.analysis.Analysis}.
+        """Trace a :py:class:`bsf.analysis.Analysis` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -304,15 +305,17 @@ class Analysis(object):
         return str_list
 
     def add_stage(self, stage):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.analysis.Stage}.
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.analysis.Stage` object.
 
-        If the C{bsf.analysis.Stage} exists already in the C{bsf.analysis.Analysis.stage_list} the method returns the
-        already existing C{bsf.analysis.Stage}.
+        If the :py:class:`bsf.analysis.Stage` exists already in the
+        :py:attr:`bsf.analysis.Analysis.stage_list` attribute,
+        the method returns the already existing :py:class:`bsf.analysis.Stage` object.
 
-        @param stage: C{bsf.analysis.Stage}
-        @type stage: Stage
-        @return: C{bsf.analysis.Stage}
-        @rtype: Stage
+        :param stage: A :py:class:`bsf.analysis.Stage` object.
+        :type stage: Stage
+        :return: A :py:class:`bsf.analysis.Stage` object.
+        :rtype: Stage
         """
         if stage not in self.stage_list:
             self.stage_list.append(stage)
@@ -320,14 +323,15 @@ class Analysis(object):
         return stage
 
     def add_runnable(self, runnable):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.Runnable}.
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.procedure.Runnable` object.
 
-        @param runnable: C{bsf.procedure.Runnable}
-        @type runnable: Runnable
-        @return: C{bsf.procedure.Runnable}
-        @rtype: Runnable
-        @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the
-            C{bsf.analysis.Analysis.runnable_dict}
+        :param runnable: A :py:class:`bsf.procedure.Runnable` object.
+        :type runnable: Runnable
+        :return: A :py:class:`bsf.procedure.Runnable` object.
+        :rtype: Runnable
+        :raise Exception: The :py:attr:`bsf.procedure.Runnable.name` already exists in the
+            :py:attr:`bsf.analysis.Analysis.runnable_dict`.
         """
         if runnable.name in self.runnable_dict:
             raise Exception('A Runnable with name ' + repr(runnable.name) +
@@ -338,38 +342,41 @@ class Analysis(object):
         return runnable
 
     def add_runnable_concurrent(self, runnable):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.ConcurrentRunnable}.
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable: ConcurrentRunnable
-        @return: C{bsf.procedure.ConcurrentRunnable}
-        @rtype: ConcurrentRunnable
-        @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the
-            C{bsf.analysis.Analysis.runnable_dict}
+        :param runnable: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable: ConcurrentRunnable
+        :return: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :rtype: ConcurrentRunnable
+        :raise Exception: The :py:attr:`bsf.procedure.Runnable.name` already exists in the
+            :py:attr:`bsf.analysis.Analysis.runnable_dict`.
         """
         return self.add_runnable(runnable=runnable)
 
     def add_runnable_consecutive(self, runnable):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.ConsecutiveRunnable}.
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-        @param runnable: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable: ConsecutiveRunnable
-        @return: C{bsf.procedure.ConsecutiveRunnable}
-        @rtype: ConsecutiveRunnable
-        @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the
-            C{bsf.analysis.Analysis.runnable_dict}
+        :param runnable: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+        :type runnable: ConsecutiveRunnable
+        :return: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+        :rtype: ConsecutiveRunnable
+        :raise Exception: The :py:attr:`bsf.procedure.Runnable.name` already exists in the
+            :py:attr:`bsf.analysis.Analysis.runnable_dict`.
         """
         return self.add_runnable(runnable=runnable)
 
     def add_sample(self, sample):
-        """Add a C{bsf.ngs.Sample} to the Python C{list} of C{bsf.ngs.Sample} objects.
+        """Add a :py:class:`bsf.ngs.Sample` object to the Python :py:class:`list` of :py:class:`bsf.ngs.Sample` objects.
 
-        If the C{bsf.ngs.Sample} already exists in the C{bsf.analysis.Analysis}, the method just returns.
-        The check is based on the Python 'in' comparison operator and in lack of a specific
-        __cmp__ method, relies on object identity (i.e. address).
+        If the :py:class:`bsf.ngs.Sample` object already exists in the :py:class:`bsf.analysis.Analysis` object,
+        the method just returns.
+        The check is based on the Python :literal:`in` comparison operator and in lack of a specific
+        :py:meth:`__cmp__` method, relies on object identity (i.e., address).
 
-        @param sample: C{bsf.ngs.Sample}
-        @type sample: Sample
+        :param sample: A :py:class:`bsf.ngs.Sample` object.
+        :type sample: Sample
         """
         if sample not in self.sample_list:
             self.sample_list.append(sample)
@@ -381,12 +388,13 @@ class Analysis(object):
 
         Based on the project name, a list of file name prefixes and one file name suffix,
         the file name that exists in the file system will be returned.
-        @param prefix_list: Python C{list} of Python C{str} (prefix) objects
-        @type prefix_list: list[str] | None
-        @param suffix: File name suffix
-        @type suffix: str
-        @return: File name or None
-        @rtype: str | None
+
+        :param prefix_list: A Python :py:class:`list` object of Python :py:class:`str` (prefix) objects.
+        :type prefix_list: list[str] | None
+        :param suffix: A file name suffix.
+        :type suffix: str
+        :return: A file name.
+        :rtype: str | None
         """
         if prefix_list is None:
             prefix_list = [self.prefix]
@@ -409,19 +417,20 @@ class Analysis(object):
         return
 
     def get_stage(self, name):
-        """Get a C{bsf.analysis.Stage} from a C{bsf.analysis.Analysis}.
+        """Get a :py:class:`bsf.analysis.Stage` object from a :py:class:`bsf.analysis.Analysis` object.
 
-        If the C{bsf.analysis.Stage} does not exist, it is created and initialised via the
-        C{bsf.standards.Configuration} in C{bsf.analysis.Analysis.configuration}.
+        If the :py:class:`bsf.analysis.Stage` object does not exist, it is created and initialised via the
+        :py:class:`bsf.standards.Configuration` object in :py:attr:`bsf.analysis.Analysis.configuration`.
+
         Reads from configuration file sections
-        I{[bsf.analysis.Stage]}
-        I{[bsf.analysis.Analysis.Stage]} or I{[bsf.analyses.*.Stage]}
-        I{[bsf.analysis.Analysis.Stage.name]} or I{[bsf.analyses.*.Stage.name]}
+        :literal:`[bsf.analysis.Stage]`
+        :literal:`[bsf.analysis.Analysis.Stage]` or :literal:`[bsf.analyses.*.Stage]`
+        :literal:`[bsf.analysis.Analysis.Stage.name]` or :literal:`[bsf.analyses.*.Stage.name]`.
 
-        @param name: Name
-        @type name: str
-        @return: C{bsf.analysis.Stage}
-        @rtype: Stage
+        :param name: A name.
+        :type name: str
+        :return: A :py:class:`bsf.analysis.Stage` object.
+        :rtype: Stage
         """
         # Check if a Stage with this the name already exists and if so, return it.
         for stage in self.stage_list:
@@ -462,15 +471,16 @@ class Analysis(object):
         return stage
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analysis.Analysis} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a :py:class:`bsf.analysis.Analysis` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
-        @raise Exception: The specified section does not exist
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
+        :raise Exception: If the specified section does not exist.
         """
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
@@ -530,10 +540,10 @@ class Analysis(object):
         return
 
     def set_command_configuration(self, command):
-        """Set default C{bsf.argument.Argument} objects for a C{bsf.process.Command}.
+        """Set default :py:class:`bsf.argument.Argument` objects for a :py:class:`bsf.process.Command` object.
 
-        @param command: C{bsf.process.Command}
-        @type command: Command
+        :param command: A :py:class:`bsf.process.Command` object.
+        :type command: Command
         """
         # TODO: Phase out this method.
         # Once all accessory scripts are converted to Runnable and bsf.process.RunnableStep objects,
@@ -555,26 +565,31 @@ class Analysis(object):
         return
 
     def set_runnable_step_configuration(self, runnable_step, tag=None):
-        """Set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
+        """Set default :py:class:`bsf.argument.Argument` objects for a :py:class:`bsf.process.RunnableStep` object.
 
         This method reads configuration section(s)
-        "Analysis.__class__.__name__"."RunnableStep.name"[."Command.name"]*
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: RunnableStep
-        @param tag: Optional tag appended to the last sub-C{Command} of this C{RunnableStep}
+        :literal:`"Analysis.__class__.__name__"."RunnableStep.name"[."Command.name"]*`
+
+        :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
+        :type runnable_step: RunnableStep
+        :param tag: An optional tag appended to the last sub-:py:class:`bsf.process.Command` of this
+            :py:class:`.bsf.process.RunnableStep` object.
             This is useful to configure ChIP-seq peak calling by the ChIP factor (e.g., H3K27me3).
-        @type tag: str | None
+        :type tag: str | None
         """
 
         def _set_configuration(command, section):
-            """Recursively set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
+            """Recursively set default :py:class:`bsf.argument.Argument` objects for a
+            :py:class:`bsf.process.RunnableStep` object.
 
-            The method sets the default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep},
-            as well as for its contained sub C{bsf.process.Command} objects.
-            @param command: C{bsf.process.Command}
-            @type command: Command
-            @param section: Configuration section
-            @type section: str
+            The method sets the default :py:class:`bsf.argument.Argument` objects for a
+            :py:class:`bsf.process.RunnableStep` object,
+            as well as for its contained sub :py:class:`bsf.process.Command` objects.
+
+            :param command: A :py:class:`bsf.process.Command` object.
+            :type command: Command
+            :param section: A Configuration section.
+            :type section: str
             """
             if command.name:
                 section += '.' + command.name
@@ -604,19 +619,22 @@ class Analysis(object):
         return
 
     def set_stage_runnable(self, stage, runnable):
-        """Create a C{bsf.process.Executable} to assign a C{bsf.procedure.Runnable} to a C{bsf.analysis.Stage}.
+        """Create a :py:class:`bsf.process.Executable` object to assign a
+        :py:class:`bsf.procedure.Runnable` object to a :py:class:`bsf.analysis.Stage` object.
 
-        In case the file in C{bsf.procedure.Runnable.get_relative_status_path} exists already,
-        C{bsf.process.Executable.submit} will be set to C{False}.
+        In case the file in :py:meth:`bsf.procedure.Runnable.get_relative_status_path` exists already,
+        :py:attr:`bsf.process.Executable.submit` will be set to :py:class:`False`.
 
-        @param stage: C{bsf.analysis.Stage}
-        @type stage: Stage
-        @param runnable: C{bsf.procedure.Runnable}
-        @type runnable: Runnable
-        @return: C{bsf.process.Executable}
-        @rtype: Executable
-        @raise Exception: A C{bsf.procedure.Runnable.name} does not exist in C{bsf.analysis.Analysis.runnable_dict}
-        @raise Exception: A C{bsf.analysis.Stage} does not exist in C{bsf.analysis.Analysis.stage_list}
+        :param stage: A :py:class:`bsf.analysis.Stage` object.
+        :type stage: Stage
+        :param runnable: A :py:class:`bsf.procedure.Runnable` object.
+        :type runnable: Runnable
+        :return: A :py:class:`bsf.process.Executable` object.
+        :rtype: Executable
+        :raise Exception: A :py:attr:`bsf.procedure.Runnable.name` object does not exist in the
+            :py:attr:`bsf.analysis.Analysis.runnable_dict` object.
+        :raise Exception: A :py:class:`bsf.analysis.Stage` object does not exist in the
+            :py:attr:`bsf.analysis.Analysis.stage_list` attribute.
         """
         if stage not in self.stage_list:
             raise Exception('A Stage with name ' + repr(stage.name) +
@@ -647,9 +665,9 @@ class Analysis(object):
         return executable
 
     def run(self):
-        """Run a C{bsf.analysis.Analysis}.
+        """Run a :py:class:`bsf.analysis.Analysis` object.
 
-        @raise Exception: An C{bsf.analysis.Analysis.project_name} has not been defined
+        :raise Exception: An :py:attr:`bsf.analysis.Analysis.project_name` has not been defined
         """
         if self.debug is None:
             self.debug = 0
@@ -661,8 +679,8 @@ class Analysis(object):
         # nor a genome_version-specific output directory.
         # Also, add the e-mail address for UCSC track hubs into the genome subclass.
 
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
+        # expand any environment variables (i.e., on UNIX ${NAME} or $NAME)
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard directory paths.
 
@@ -752,9 +770,9 @@ class Analysis(object):
         return
 
     def report(self):
-        """Create a C{bsf.analysis.Analysis} report.
+        """Create a :literal:`XHTML 1.0` report.
 
-        The method must be implemented in a subclass.
+        The method must be fully implemented in a subclass.
         """
         warnings.warn(
             "The 'report' method must be implemented in the sub-class.",
@@ -764,37 +782,39 @@ class Analysis(object):
 
     @staticmethod
     def get_html_anchor(prefix, suffix, text):
-        """Create an HTML anchor element with a relative reference path.
+        """Create a :literal:`XHTML 1.0` :literal:`anchor` element with a relative reference path.
 
-        <a href="prefix/prefix_suffix">text</a>
-        @param prefix: Prefix
-        @type prefix: str
-        @param suffix: Suffix
-        @type suffix: str
-        @param text: Link text
-        @type text: str
-        @return: HTML anchor element
-        @rtype: str
+        :literal:`<a href="prefix/prefix_suffix">text</a>`
+
+        :param prefix: A prefix.
+        :type prefix: str
+        :param suffix: A suffix.
+        :type suffix: str
+        :param text: A link text.
+        :type text: str
+        :return: A :literal:`XHTML 1.0` :literal:`anchor` element.
+        :rtype: str
         """
         return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
 
     @staticmethod
     def get_html_image(prefix, suffix, text, height=None, width=None):
-        """Create an HTML image element with a relative source path.
+        """Create a :literal:`XHTML 1.0` :literal:`img` element with a relative source path.
 
-        <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
-        @param prefix: Prefix
-        @type prefix: str
-        @param suffix: Suffix
-        @type suffix: str
-        @param text: Alternative text
-        @type text: str
-        @param height: Image height attribute
-        @type height: str
-        @param width: Image width attribute
-        @type width: str
-        @return: HTML image element
-        @rtype: str
+        :literal:`<img alt="text" src="prefix/prefix_suffix" height="80" width="80" />`
+
+        :param prefix: A prefix.
+        :type prefix: str
+        :param suffix: A suffix.
+        :type suffix: str
+        :param text: An alternative text.
+        :type text: str
+        :param height: An image height attribute.
+        :type height: str
+        :param width: Animage width attribute.
+        :type width: str
+        :return: A :literal:`XHTML 1.0` :literal:`img` element.
+        :rtype: str
         """
         str_list: List[str] = list()
 
@@ -814,12 +834,12 @@ class Analysis(object):
 
     @staticmethod
     def get_html_genome(genome_version=None):
-        """Get a genome description HTML paragraph.
+        """Get a genome description :literal:`XHTML 1.0` paragraph.
 
-        @param genome_version: Genome version
-        @type genome_version: str | None
-        @return: Genome description
-        @rtype: list[str]
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :return: A genome description :literal:`XHTML 1.0` paragraph.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -858,12 +878,12 @@ class Analysis(object):
 
     @staticmethod
     def get_html_transcriptome(transcriptome_version=None):
-        """Get a transcriptome description HTML paragraph.
+        """Get a transcriptome description :literal:`XHTML 1.0` paragraph.
 
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @return: Transcriptome description
-        @rtype: list[str]
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :return: A transcriptome description :literal:`XHTML 1.0` paragraph.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -906,24 +926,24 @@ class Analysis(object):
             creator=None,
             source=None,
             title=None):
-        """Get the header section of an XHTML 1.0 document.
+        """Get the header section of an :literal:`XHTML 1.0` document.
 
-        @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
-            defaults to XHTML 1.0 Strict
-        @type strict: bool
-        @param creator: Dublin Core DC.Creator meta field value,
-            defaults to the USER environment variable
-        @type creator: str
-        @param source: Dublin Core DC.Source meta field value,
-            defaults to the Python script file path
-        @type source: str
-        @param title: Title element value,
-            defaults to a concatenation of
-            C{bsf.analysis.Analysis.project_name} and
-            C{bsf.analysis.Analysis.report_name}
-        @type title: str
-        @return: XHTML 1.0 header section as Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        :param strict: Either a :literal:`XHTML 1.0 Strict` or a :literal:`XHTML 1.0 Transitional`
+            Document Type Declaration, defaults to :literal:`XHTML 1.0 Strict`.
+        :type strict: bool
+        :param creator: A Dublin Core :literal:`DC.Creator` meta field value,
+            defaults to the :literal:`USER` environment variable.
+        :type creator: str
+        :param source: A Dublin Core :literal:`DC.Source` meta field value,
+            defaults to the Python script file path.
+        :type source: str
+        :param title: A title element value,
+            defaults to a concatenation of the
+            :py:attr:`bsf.analysis.Analysis.project_name` and
+            :py:attr:`bsf.analysis.Analysis.report_name` attributes.
+        :type title: str
+        :return: A :literal:`XHTML 1.0` header section as Python :py:class:`list` of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         if creator is None or not creator:
             creator = getpass.getuser()
@@ -995,27 +1015,27 @@ class Analysis(object):
             url_protocol=None,
             url_host_name=None,
             title=None):
-        """Get the footer section of an XHTML 1.0 document.
+        """Get the footer section of an :literal:`XHTML 1.0` document.
 
-        @param contact: Institution contact e-mail address,
-            defaults to C{bsf.standards.Operator.get_contact()}
-        @type contact: str
-        @param institution: Institution name to be inserted into 'This report was generated by ...',
-            defaults to C{bsf.standards.Operator.get_institution()}
-        @type institution: str
-        @param url_protocol: The protocol section of the institution URL (i.e. http, https, ...),
-            defaults to C{bsf.standards.URL.get_protocol()}
-        @type url_protocol: str
-        @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
-            defaults to C{bsf.standards.URL.get_host_name()}
-        @type url_host_name: str
-        @param title: Title element value,
-            defaults to a concatenation of
-            C{bsf.analysis.Analysis.project_name} and
-            C{bsf.analysis.Analysis.report_name}
-        @type title: str
-        @return: XHTML 1.0 footer section as Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        :param contact: An institution contact e-mail address,
+            defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_contact` method.
+        :type contact: str
+        :param institution: An institution name to be inserted into 'This report was generated by ...',
+            defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_institution` method.
+        :type institution: str
+        :param url_protocol: A protocol section of the institution URL (i.e., http, https, ...),
+            defaults to the value returned by the :py:meth:`bsf.standards.URL.get_protocol` method.
+        :type url_protocol: str
+        :param url_host_name: A host name section of the institution URL (e.g., biomedical-sequencing.at),
+            defaults to the value returned by :py:meth:`bsf.standards.URL.get_host_name` method.
+        :type url_host_name: str
+        :param title: A title element value,
+            defaults to a concatenation of the
+            :py:attr:`bsf.analysis.Analysis.project_name` and
+            :py:attr:`bsf.analysis.Analysis.report_name` attributes.
+        :type title: str
+        :return: A :literal:`XHTML 1.0` footer section as Python :py:class:`list` of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         if not contact:
             contact = Operator.get_contact()
@@ -1079,41 +1099,43 @@ class Analysis(object):
             institution=None,
             url_protocol=None,
             url_host_name=None):
-        """Get a report as an XHTML 1.0 document.
+        """Get a report as an :literal:`XHTML 1.0` document.
 
         The method automatically concatenates the
-        XHTML header C{bsf.analysis.Analysis.get_html_header}, the XHTML content and the
-        XHTML footer C{bsf.analysis.Analysis.get_html_footer} before returning the report.
-        @param content: XHTML 1.0 content
-        @type content: list[str]
-        @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
-            defaults to XHTML 1.0 Strict
-        @type strict: bool
-        @param creator: Dublin Core DC.Creator meta field value,
-            defaults to the USER environment variable
-        @type creator: str
-        @param source: Dublin Core DC.Source meta field value,
-            defaults to the Python script file path
-        @type source: str
-        @param title: Title element value,
-            defaults to a concatenation of
-            C{bsf.analysis.Analysis.project_name} and
-            C{bsf.analysis.Analysis.report_name}
-        @type title: str
-        @param contact: Institution contact e-mail address,
-            defaults to C{bsf.standards.Operator.get_contact()}
-        @type contact: str
-        @param institution: Institution name to be inserted into 'This report was generated by ...',
-            defaults to C{bsf.standards.Operator.get_institution()}
-        @type institution: str
-        @param url_protocol: The protocol section of the institution URL (i.e. http, https, ...),
-            defaults to C{bsf.standards.URL.get_protocol()}
-        @type url_protocol: str
-        @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
-            defaults to C{bsf.standards.URL.get_host_name()}
-        @type url_host_name: str
-        @return: XHTML 1.0 report as Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        :literal:`XHTML 1.0` header :py:meth:`bsf.analysis.Analysis.get_html_header`, the
+        :literal:`XHTML 1.0` content and the
+        :literal:`XHTML 1.0` footer :py:meth:`bsf.analysis.Analysis.get_html_footer` before returning the report.
+
+        :param content: A :literal:`XHTML 1.0` content.
+        :type content: list[str]
+        :param strict: Either a :literal:`XHTML 1.0 Strict` or a :literal:`XHTML 1.0 Transitional`
+            Document Type Declaration, defaults to :literal:`XHTML 1.0 Strict`.
+        :type strict: bool
+        :param creator: A Dublin Core :literal:`DC.Creator` meta field value,
+            defaults to the :literal:`USER` environment variable.
+        :type creator: str
+        :param source: A Dublin Core :literal:`DC.Source` meta field value,
+            defaults to the Python script file path.
+        :type source: str
+        :param title: A title element value,
+            defaults to a concatenation of the
+            :py:attr:`bsf.analysis.Analysis.project_name` and
+            :py:attr:`bsf.analysis.Analysis.report_name` attributes.
+        :type title: str
+        :param contact: An institution contact e-mail address,
+            defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_contact` method.
+        :type contact: str
+        :param institution: An institution name to be inserted into 'This report was generated by ...',
+            defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_institution` method.
+        :type institution: str
+        :param url_protocol: A protocol section of the institution URL (i.e., http, https, ...),
+            defaults to the value returned by the :py:meth:`bsf.standards.URL.get_protocol` method.
+        :type url_protocol: str
+        :param url_host_name: A host name section of the institution URL (e.g., biomedical-sequencing.at),
+            defaults to the value returned by the :py:meth:`bsf.standards.URL.get_host_name` attribute.
+        :type url_host_name: str
+        :return: A :literal:`XHTML 1.0` report as Python :py:class:`list` of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -1148,41 +1170,45 @@ class Analysis(object):
             institution=None,
             url_protocol=None,
             url_host_name=None):
-        """Write an XHTML 1.0 report I{prefix_report.html} file into the C{bsf.analysis.Analysis.genome_directory}.
+        """Write an :literal:`XHTML 1.0` report :literal:`prefix_report.html` file into the
+        :py:attr:`bsf.analysis.Analysis.genome_directory`.
 
         The method automatically concatenates the
-        XHTML header C{bsf.analysis.Analysis.get_html_header}, the XHTML content and the
-        XHTML footer C{bsf.analysis.Analysis.get_html_footer} before writing the file.
-        @param content: XHTML 1.0 content
-        @type content: list[str]
-        @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.analysis.Analysis.prefix}
-        @type prefix: str
-        @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
-            defaults to XHTML 1.0 Strict
-        @type strict: bool
-        @param creator: Dublin Core DC.Creator meta field value,
-            defaults to the USER environment variable
-        @type creator: str
-        @param source: Dublin Core DC.Source meta field value,
-            defaults to the Python script file path
-        @type source: str
-        @param title: Title element value,
-            defaults to a concatenation of
-            C{bsf.analysis.Analysis.project_name} and
-            C{bsf.analysis.Analysis.report_name}
-        @type title: str
-        @param contact: Institution contact e-mail address,
-            defaults to C{bsf.standards.Operator.get_contact()}
-        @type contact: str
-        @param institution: Institution name to be inserted into 'This report was generated by ...',
-            defaults to C{bsf.standards.Operator.get_institution()}
-        @type institution: str
-        @param url_protocol: The protocol section of the institution URL (i.e. http, https, ...),
-            defaults to C{bsf.standards.URL.get_protocol()}
-        @type url_protocol: str
-        @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
-            defaults to C{bsf.standards.URL.get_host_name()}
-        @type url_host_name: str
+        :literal:`XHTML 1.0` header :py:meth:`bsf.analysis.Analysis.get_html_header`, the
+        :literal:`XHTML 1.0` content and the
+        :literal:`XHTML 1.0` footer :py:meth:`bsf.analysis.Analysis.get_html_footer` before writing the file.
+
+        :param content: A :literal:`XHTML 1.0` content.
+        :type content: list[str]
+        :param prefix: A file name prefix (e.g., chipseq, rnaseq, ...),
+            defaults to the :py:attr:`bsf.analysis.Analysis.prefix` atribute.
+        :type prefix: str
+        :param strict: Either a :literal:`XHTML 1.0 Strict` or a :literal:`XHTML 1.0 Transitional`
+            Document Type Declaration, defaults to :literal:`XHTML 1.0 Strict`.
+        :type strict: bool
+        :param creator: A Dublin Core :literal:`DC.Creator` meta field value,
+            defaults to the :literal:`USER` environment variable.
+        :type creator: str
+        :param source: A Dublin Core :literal:`DC.Source` meta field value,
+            defaults to the Python script file path.
+        :type source: str
+        :param title: A title element value,
+            defaults to a concatenation of the
+            :py:attr:`bsf.analysis.Analysis.project_name` and
+            :py:attr:`bsf.analysis.Analysis.report_name` attributes.
+        :type title: str
+        :param contact: An institution contact e-mail address,
+            defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_contact` method.
+        :type contact: str
+        :param institution: An institution name to be inserted into 'This report was generated by ...',
+            defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_institution` method.
+        :type institution: str
+        :param url_protocol: A protocol section of the institution URL (i.e., http, https, ...),
+            defaults to the value returned by the :py:meth:`bsf.standards.URL.get_protocol` method.
+        :type url_protocol: str
+        :param url_host_name: A host name section of the institution URL (e.g., biomedical-sequencing.at),
+            defaults to the value returned by the :py:class:`bsf.standards.URL.get_host_name` method.
+        :type url_host_name: str
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1207,9 +1233,10 @@ class Analysis(object):
     def create_project_genome_directory(self):
         """Check for and create a project or genome directory if necessary.
 
-        C{bsf.analysis.Analysis.project_directory}
-        C{bsf.analysis.Analysis.genome_directory}
-        @raise Exception: Output (genome) directory does not exist
+        :py:attr:`bsf.analysis.Analysis.project_directory`
+        :py:attr:`bsf.analysis.Analysis.genome_directory`
+
+        :raise Exception: Output (genome) directory does not exist
         """
         if not os.path.isdir(self.genome_directory):
             answer = input(
@@ -1235,13 +1262,13 @@ class Analysis(object):
 
         The link will be placed in the specified subdirectory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
-        If not specified, the subdirectory defaults to the value of C{bsf.standards.URL.get_relative_projects()}.
+        If not specified, the subdirectory defaults to the value of :py:meth:`bsf.standards.URL.get_relative_projects`.
 
-        @param sub_directory: C{bsf.analysis.Analysis}-specific directory
-        @type sub_directory: str
-        @return: Symbolic link to the project directory
-        @rtype: str
-        @raise Exception: Public HTML path does not exist
+        :param sub_directory: A :py:class:`bsf.analysis.Analysis`-specific directory.
+        :type sub_directory: str
+        :return: A symbolic link to the project directory.
+        :rtype: str
+        :raise Exception: Public HTML path does not exist
         """
         if sub_directory is None:
             sub_directory = URL.get_relative_projects()
@@ -1332,20 +1359,23 @@ class Analysis(object):
             ucsc_host_name=None):
         """Return a URL to automatically attach a UCSC Genome Browser track.
 
-        @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
-        @type options_dict: dict[str, str]
-        @param browser_dict: Python C{dict} of Python C{str} browser line key value pairs
-        @type browser_dict: dict[str, str]
-        @param track_dict: Python C{dict} of Python C{str} track line (hgct_customText) key value pairs
-        @type track_dict: dict[str, str]
-        @param ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
-            defaults to the value of C{bsf.standards.UCSC.get_protocol()}
-        @type ucsc_protocol: str
-        @param ucsc_host_name: UCSC Genome Browser URL host name,
-            defaults to the value of C{bsf.standards.UCSC.get_host_name()}
-        @type ucsc_host_name: str
-        @return: A URL to attach a track to the UCSC Genome Browser
-        @rtype: str
+        :param options_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (URL option key value pair) objects.
+        :type options_dict: dict[str, str]
+        :param browser_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (browser line key value pair) objects.
+        :type browser_dict: dict[str, str]
+        :param track_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (track line hgct_customText key value pair objects.
+        :type track_dict: dict[str, str]
+        :param ucsc_protocol: A UCSC Genome Browser URL protocol (i.e., http, https, ...)
+            defaults to the value returned by the :py:meth:`bsf.standards.UCSC.get_protocol` method.
+        :type ucsc_protocol: str
+        :param ucsc_host_name: A UCSC Genome Browser URL host name,
+            defaults to the value returned by the :py:meth:`bsf.standards.UCSC.get_host_name` method.
+        :type ucsc_host_name: str
+        :return: A URL to attach a track to the UCSC Genome Browser.
+        :rtype: str
         """
         if options_dict is None:
             options_dict = dict()
@@ -1386,18 +1416,20 @@ class Analysis(object):
     def ucsc_hub_url(self, link_path, options_dict=None):
         """Return a URL to automatically attach a UCSC Genome Browser Track Hub.
 
-        @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
-        @type link_path: str
-        @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
-        @type options_dict: dict[str, str]
-        @return: A URL to automatically attach a UCSC Genome Browser Track Hub
-        @rtype: str
+        :param link_path: A symbolic link path in the public HTML directory including project name and a UUID.
+        :type link_path: str
+        :param options_dict: A Python :py:class:`dict` of
+            Python :py:class:`str` (URL option key) key and
+            Python :py:class:`str` (URL option value) value objects.
+        :type options_dict: dict[str, str]
+        :return: A URL to automatically attach a UCSC Genome Browser Track Hub.
+        :rtype: str
         """
         if options_dict is None:
             options_dict = dict()
 
         if 'hubUrl' not in options_dict:
-            # The track hub URL requires the link name, i.e. the link path base name, to be inserted.
+            # The track hub URL requires the link name (i.e., the link path base name) to be inserted.
             link_name = os.path.basename(link_path.rstrip('/'))
             options_dict['hubUrl'] = '/'.join((
                 URL.get_absolute_projects(),
@@ -1407,13 +1439,15 @@ class Analysis(object):
         return self.ucsc_track_url(options_dict=options_dict)
 
     def ucsc_hub_html_anchor(self, link_path):
-        """Return an XHTML 1.0 anchor element to automatically attach a UCSC Genome Browser Track Hub.
+        """Return an :literal:`XHTML 1.0` anchor element to automatically attach a UCSC Genome Browser Track Hub.
 
-        @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
-        @type link_path: str
-        @see: C{bsf.analysis.Analysis.create_public_project_link}
-        @return: XHTML 1.0 anchor element as Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        See also the :py:meth:`bsf.analysis.Analysis.create_public_project_link` method.
+
+        :param link_path: A symbolic link path in the public HTML directory including project name and a UUID.
+        :type link_path: str
+        :return: A :literal:`XHTML 1.0` :literal:`anchor` element as
+            Python :py:class:`list` of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         str_list: List[str] = list()
 
@@ -1423,12 +1457,14 @@ class Analysis(object):
         return str_list
 
     def ucsc_hub_write_hub(self, prefix=None):
-        """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{bsf.analysis.Analysis.project_directory}.
+        """Write a UCSC Track Hub :literal:`prefix_hub.txt` file into the
+        :py:attr:`bsf.analysis.Analysis.project_directory`.
 
-        The C{bsf.analysis.Analysis.project_directory} is one level above the C{bsf.analysis.Analysis.genome_directory}.
+        The :py:attr:`bsf.analysis.Analysis.project_directory` is one level above
+        the :py:attr:`bsf.analysis.Analysis.genome_directory`.
 
-        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
-        @type prefix: str
+        :param prefix: A hub prefix (e.g., chipseq, rnaseq, ...).
+        :type prefix: str
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1449,12 +1485,14 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_genomes(self, prefix=None):
-        """Write a UCSC Track Hub I{prefix_genomes.txt} file into the C{bsf.analysis.Analysis.project_directory}.
+        """Write a UCSC Track Hub :literal:`prefix_genomes.txt` file into the
+        :py:attr:`bsf.analysis.Analysis.project_directory`.
 
-        The C{bsf.analysis.Analysis.project_directory} is one level above the C{bsf.analysis.Analysis.genome_directory}.
+        The :py:attr:`bsf.analysis.Analysis.project_directory` is one level above
+        the :py:attr:`bsf.analysis.Analysis.genome_directory`.
 
-        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
-        @type prefix: str
+        :param prefix: A hub prefix (e.g., chipseq, rnaseq, ...).
+        :type prefix: str
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1508,12 +1546,13 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_tracks(self, content, prefix=None):
-        """Write a UCSC Track Hub I{prefix_tracks.txt} file into the C{bsf.analysis.Analysis.genome_directory}.
+        """Write a UCSC Track Hub :literal:`prefix_tracks.txt` file into the
+        :py:attr:`bsf.analysis.Analysis.genome_directory`.
 
-        @param content: Content
-        @type content: list[str]
-        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
-        @type prefix: str
+        :param content: Content for a UCSC Track Hub.
+        :type content: list[str]
+        :param prefix: A hub prefix (e.g., chipseq, rnaseq, ...).
+        :type prefix: str
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1528,14 +1567,17 @@ class Analysis(object):
     def ucsc_hub_to_file(self, content, prefix=None):
         """Write UCSC Genome Browser Track Hub files to disk.
 
-        The method writes I{prefix_hub.txt} and I{prefix_genomes.txt} files into the
-        C{bsf.analysis.Analysis.project_directory}, above the C{bsf.analysis.Analysis.genome_directory}, as well as a
-        I{prefix_tracks.txt} file into the C{bsf.analysis.Analysis.genome_directory}.
+        The method writes :literal:`prefix_hub.txt` and :literal:`prefix_genomes.txt` files into
+        the :py:attr:`bsf.analysis.Analysis.project_directory}, above
+        the :py:attr:`bsf.analysis.Analysis.genome_directory`, as well as a
+        :literal:`prefix_tracks.txt` file into
+        the :py:attr:`bsf.analysis.Analysis.genome_directory`.
 
-        @param content: Content of the track database file
-        @type content: list[str]
-        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.analysis.Analysis.prefix}
-        @type prefix: str
+        :param content: Content for the track database file.
+        :type content: list[str]
+        :param prefix: A hub prefix (e.g., chipseq, rnaseq, ...),
+            defaults to the value of the :py:attr:`bsf.analysis.Analysis.prefix` attribute.
+        :type prefix: str
         """
         if prefix is None or not prefix:
             prefix = self.prefix
@@ -1547,12 +1589,13 @@ class Analysis(object):
         return
 
     def ucsc_hub_bigwig_info_signal_range(self, file_path):
-        """Read the bigWig signal range from a bigWig information file and return a UCSC Track Hub "type bigWig" line.
+        """Read the bigWig signal range from a bigWig information file and return a
+        UCSC Track Hub :literal:`type bigWig` line.
 
-        @param file_path: bigWigInfo file path
-        @type file_path: str
-        @return: UCSC Track Hub "type bigWig" line with optional signal range
-        @rtype: str
+        :param file_path: A UCSC bigWigInfo file path.
+        :type file_path: str
+        :return: A UCSC Track Hub :literal:`type bigWig` line with optional signal range values.
+        :rtype: str
         """
         if os.path.isabs(file_path):
             file_path_absolute = file_path
@@ -1577,7 +1620,7 @@ class Analysis(object):
             return 'type bigWig\n'
 
     def check_state(self):
-        """Check the state of each C{bsf.analysis.Stage}.
+        """Check the state of each :py:class:`bsf.analysis.Stage` object.
         """
         for stage in self.stage_list:
             stage.check_state(debug=self.debug)
@@ -1585,13 +1628,14 @@ class Analysis(object):
         return
 
     def submit(self, name=None):
-        """Submit each C{bsf.analysis.Stage}.
+        """Submit each :py:class:`bsf.analysis.Stage` object.
 
-        Submits each C{bsf.process.Executable} of either all C{bsf.analysis.Stage} objects or a named one and pickles
-        each C{bsf.procedure.Runnable}.
+        Submits each :py:class:`bsf.process.Executable` of either all :py:class:`bsf.analysis.Stage` objects or
+        a named one and pickles each :py:class:`bsf.procedure.Runnable` object.
 
-        @param name: Only submit C{bsf.process.Executable} objects linked to C{bsf.analysis.Stage.name}
-        @type name: str
+        :param name: Only submit :py:class:`bsf.process.Executable` objects linked to this
+            :py:attr:`bsf.analysis.Stage.name` attribute.
+        :type name: str
         """
         # Pickle all bsf.procedure.Runnable objects.
 
@@ -1626,46 +1670,49 @@ class Analysis(object):
 
 
 class Stage(object):
-    """The C{bsf.analysis.Stage} class represents a stage of a C{bsf.analysis.Analysis}.
+    """The :py:class:`bsf.analysis.Stage` class represents a stage of a :py:class:`bsf.analysis.Analysis` object.
 
-    A C{bsf.analysis.Stage} represents C{bsf.process.Executable} or C{bsf.procedure.Runnable} objects that share
-    similar resource requirements of a I{Distributed Resource Management System} (I{DRMS}).
+    A :py:class:`bsf.analysis.Stage` represents :py:class:`bsf.process.Executable` or
+    :py:class:`bsf.procedure.Runnable` objects that share similar resource requirements of a
+    :literal:`Distributed Resource Management System` (:literal:`DRMS`).
 
-    @ivar name: Name
-    @type name: str
-    @ivar working_directory: Working directory path
-    @type working_directory: str
-    @ivar implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
-    @type implementation: str
-    @ivar memory_free_mem: Memory limit (free physical)
-    @type memory_free_mem: str | None
-    @ivar memory_free_swap: Memory limit (free swap)
-    @type memory_free_swap: str | None
-    @ivar memory_free_virtual: Memory limit (free virtual)
-    @type memory_free_virtual: str | None
-    @ivar memory_limit_hard: Memory limit (hard)
-    @type memory_limit_hard: str | None
-    @ivar memory_limit_soft: Memory limit (soft)
-    @type memory_limit_soft: str | None
-    @ivar node_list_exclude: List of nodes to exclude
-    @type node_list_exclude: list[str] | None
-    @ivar node_list_include: List of nodes to include
-    @type node_list_include: list[str] | None
-    @ivar time_limit: Time limit
-    @type time_limit: str | None
-    @ivar parallel_environment: Parallel environment
-    @type parallel_environment: str | None
-    @ivar queue: Queue
-    @type queue: str | None
-    @ivar threads: Number of threads
-    @type threads: int
-    @ivar hold: Hold on job scheduling
-    @type hold: str | None
-    @ivar is_script: C{bsf.process.Executable} objects represent shell scripts,
-        or alternatively binary programs
-    @type is_script: bool
-    @ivar executable_list: Python C{list} of C{bsf.process.Executable} objects
-    @type executable_list: list[Executable]
+    :ivar name: A name
+    :type name: str
+    :ivar working_directory: A working directory path.
+    :type working_directory: str
+    :ivar implementation: An implementation (e.g., :literal:`sge`, :literal:`slurm`, ...).
+    :type implementation: str
+    :ivar memory_free_mem: A memory limit (free physical).
+    :type memory_free_mem: str | None
+    :ivar memory_free_swap: A memory limit (free swap).
+    :type memory_free_swap: str | None
+    :ivar memory_free_virtual: A memory limit (free virtual).
+    :type memory_free_virtual: str | None
+    :ivar memory_limit_hard: A memory limit (hard).
+    :type memory_limit_hard: str | None
+    :ivar memory_limit_soft: A memory limit (soft).
+    :type memory_limit_soft: str | None
+    :ivar node_list_exclude: A list of nodes to exclude.
+    :type node_list_exclude: list[str] | None
+    :ivar node_list_include: A list of nodes to include.
+    :type node_list_include: list[str] | None
+    :ivar time_limit: A time limit.
+    :type time_limit: str | None
+    :ivar parallel_environment: A parallel environment.
+    :type parallel_environment: str | None
+    :ivar queue: A queue name.
+    :type queue: str | None
+    :ivar reservation: A reservation name.
+    :type reservation: str | None
+    :ivar threads: A number of threads.
+    :type threads: int
+    :ivar hold: Request a hold on job scheduling.
+    :type hold: str | None
+    :ivar is_script: The :py:class:`bsf.process.Executable` objects represent shell scripts,
+        or alternatively binary programs.
+    :type is_script: bool
+    :ivar executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
+    :type executable_list: list[Executable]
     """
 
     def __init__(
@@ -1689,47 +1736,47 @@ class Stage(object):
             is_script=False,
             template_script=None,
             executable_list=None):
-        """Initialise a C{bsf.analysis.Stage}.
+        """Initialise a :py:class:`bsf.analysis.Stage` object.
 
-        @param name: Name
-        @type name: str
-        @param working_directory: Working directory
-        @type working_directory: str
-        @param implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
-        @type implementation: str
-        @param memory_free_mem: Memory limit (free physical)
-        @type memory_free_mem: str | None
-        @param memory_free_swap: Memory limit (free swap)
-        @type memory_free_swap: str | None
-        @param memory_free_virtual: Memory limit (free virtual)
-        @type memory_free_virtual: str | None
-        @param memory_limit_hard: Memory limit (hard)
-        @type memory_limit_hard: str | None
-        @param memory_limit_soft: Memory limit (soft)
-        @type memory_limit_soft: str | None
-        @param node_list_exclude: List of nodes to exclude
-        @type node_list_exclude: list[str] | None
-        @param node_list_include: List of nodes to include
-        @type node_list_include: list[str] | None
-        @param time_limit: Time limit
-        @type time_limit: str | None
-        @param parallel_environment: Parallel environment
-        @type parallel_environment: str | None
-        @param queue: Queue
-        @type queue: str | None
-        @param reservation: Reservation
-        @type reservation: str | None
-        @param threads: Number of threads
-        @type threads: int
-        @param hold: Hold on job scheduling
-        @type hold: str | None
-        @param is_script: C{bsf.process.Executable} objects represent shell scripts,
-            or alternatively binary programs
-        @type is_script: bool
-        @param template_script: Template script for submission.
-        @type template_script: str
-        @param executable_list: Python C{list} of C{bsf.process.Executable} objects
-        @type executable_list: list[Executable]
+        :param name: An name.
+        :type name: str
+        :param working_directory: A working directory.
+        :type working_directory: str
+        :param implementation: An implementation (e.g., :literal:`sge`, :literal:`slurm`, ...).
+        :type implementation: str
+        :param memory_free_mem: A memory limit (free physical).
+        :type memory_free_mem: str | None
+        :param memory_free_swap: A memory limit (free swap).
+        :type memory_free_swap: str | None
+        :param memory_free_virtual: A memory limit (free virtual).
+        :type memory_free_virtual: str | None
+        :param memory_limit_hard: A memory limit (hard).
+        :type memory_limit_hard: str | None
+        :param memory_limit_soft: A memory limit (soft).
+        :type memory_limit_soft: str | None
+        :param node_list_exclude: A list of nodes to exclude.
+        :type node_list_exclude: list[str] | None
+        :param node_list_include: A list of nodes to include.
+        :type node_list_include: list[str] | None
+        :param time_limit: A time limit.
+        :type time_limit: str | None
+        :param parallel_environment: A parallel environment.
+        :type parallel_environment: str | None
+        :param queue: A queue name.
+        :type queue: str | None
+        :param reservation: A reservation name.
+        :type reservation: str | None
+        :param threads: A number of threads.
+        :type threads: int
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param is_script: The :py:class:`bsf.process.Executable` objects represent shell scripts,
+            or alternatively binary programs.
+        :type is_script: bool
+        :param template_script: Template script for submission.
+        :type template_script: str
+        :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
+        :type executable_list: list[Executable]
         """
         super(Stage, self).__init__()
 
@@ -1785,12 +1832,12 @@ class Stage(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.analysis.Stage}.
+        """Trace a :py:class:`bsf.analysis.Stage` object.
 
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str]
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
         """
         indent = '  ' * level
 
@@ -1824,14 +1871,15 @@ class Stage(object):
         return str_list
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analysis.Stage} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a :py:class:`bsf.analysis.Stage` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
@@ -1907,22 +1955,23 @@ class Stage(object):
         return
 
     def add_executable(self, executable):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.Executable}.
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.process.Executable` object.
 
-        @param executable: C{bsf.process.Executable}
-        @type executable: Executable
-        @return: C{bsf.process.Executable}
-        @rtype: Executable
+        :param executable: A :py:class:`bsf.process.Executable` object.
+        :type executable: Executable
+        :return: A :py:class:`bsf.process.Executable` object.
+        :rtype: Executable
         """
         self.executable_list.append(executable)
 
         return executable
 
     def check_state(self, debug=0):
-        """Check the state of each C{bsf.process.Executable}.
+        """Check the state of each :py:class:`bsf.process.Executable` object.
 
-        @param debug: Debug level
-        @type debug: int
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 
@@ -1934,10 +1983,10 @@ class Stage(object):
         return
 
     def submit(self, debug=0):
-        """Submit a command line for each C{bsf.process.Executable}.
+        """Submit a command line for each :py:class:`bsf.process.Executable` object.
 
-        @param debug: Debug level
-        @type debug: int
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 

@@ -22,7 +22,5 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Analyses module.
-
-A package of classes and methods supporting analyses.
+"""The :py:mod:`bsf.analyses` module provides classes and methods supporting analyses.
 """

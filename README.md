@@ -26,7 +26,7 @@ cluster compute node via the common `bsf_runner.py` script.
 
 General settings for the BSF Python library are configured via a `${HOME}/.bsfpython.ini` file
 in the user's home directory. This file is site-specific and its information allows for automatic
-discovery of raw (e.g. Illumina run folders) and pre-processed (e.g. de-multiplexed lanes and samples)
+discovery of raw (e.g., Illumina run folders) and pre-processed (e.g., de-multiplexed lanes and samples)
 NGS data. A template file [`template_bsfpython.ini`](doc/template_bsfpython.ini) can be found in the doc subdirectory. The template,
 which documents the configuration options and provides, as far as possible, sensible default settings,
 needs copying to `${HOME}/.bsfpython.ini` before editing accordingly.
@@ -53,7 +53,7 @@ discovered. Additional reads can be linked into the system by specifying the exa
 Sample annotation sheets also provide grouping of samples that is available to the analysis.
 
     - Type (CASAVA or External)
-    - ProcessRunFolder (e.g. )
+    - ProcessRunFolder
     - Project
     - Sample
     - Reads1

@@ -43,12 +43,12 @@ from pysam.libcalignedsegment import AlignedSegment
 
 
 def write_gzip_file(task_gzip_file, task_fifo_queue):
-    """Write items from a to a C{gzip.GzipFile}
+    """Write items from a or to a :py:class:`gzip.GzipFile` object.
 
-    @param task_gzip_file: C{gzip.GzipFile}
-    @type task_gzip_file: gzip.GzipFile
-    @param task_fifo_queue: C{queue.Queue}
-    @type task_fifo_queue: queue.Queue
+    :param task_gzip_file: A :py:class:`gzip.GzipFile` object.
+    :type task_gzip_file: gzip.GzipFile
+    :param task_fifo_queue: A :py:class:`queue.Queue` object.
+    :type task_fifo_queue: queue.Queue
     """
     while True:
         line_str: str = task_fifo_queue.get()

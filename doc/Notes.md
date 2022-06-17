@@ -31,7 +31,7 @@ The Sample Annotation Sheet format is defined in bsf.ngs.Collection._process_row
  - Reads2: Same as Reads1
 
  - Groups: BSF Sample objects can be grouped for further analysis in
-           e.g. RNA-Seq or ChIP-Seq experiments.
+           e.g., RNA-Seq or ChIP-Seq experiments.
 
 ### Class Hierarchy
 
@@ -134,7 +134,7 @@ bsf.ngs class hierarchy:
     bsf.ngs.PairedReads - Represents paired reads holding one or two Reads objects
     bsf.ngs.Sample - Represents one or more PairedReads objects (replicates)
     bsf.ngs.Project - Represents one or more Sample objects
-    bsf.ngs.ProcessedRunFolder - Represents a Processed Run Folder (e.g. after CASAVA run)
+    bsf.ngs.ProcessedRunFolder - Represents a Processed Run Folder (e.g., after CASAVA run)
     bsf.ngs.Collection - Represents a collection of ProcessedRunFolder objects
 
 The bsf.ngs.Sample configuration still has some problems.

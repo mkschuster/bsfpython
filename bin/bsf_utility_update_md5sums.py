@@ -41,12 +41,12 @@ from bsf.md5sum import MD5Sum, MD5SumArchive
 def process_md5_files(md5sum_archive, directory_path, file_pattern):
     """Process individual MD5 sum files.
 
-    @param md5sum_archive:
-    @type md5sum_archive: MD5SumArchive
-    @param directory_path: Directory file path
-    @type directory_path: str
-    @param file_pattern: File pattern regular expression
-    @type file_pattern: str
+    :param md5sum_archive: A :py:class:`bsf.md5sum.MD5SumArchive` object.
+    :type md5sum_archive: MD5SumArchive
+    :param directory_path: A directory file path.
+    :type directory_path: str
+    :param file_pattern: A file pattern regular expression.
+    :type file_pattern: str
     """
     re_pattern = re.compile(pattern=file_pattern)
 
@@ -65,7 +65,7 @@ def process_md5_files(md5sum_archive, directory_path, file_pattern):
                     md5sum = MD5Sum.from_line(md5sum_str=line_str)
 
                     if not md5sum.file_path:
-                        # In case the md5sum file does not specify a file name (e.g. Picard MD5 sum files),
+                        # In case the md5sum file does not specify a file name (e.g., Picard MD5 sum files),
                         # use the file name without its '.md5' suffix.
                         if file_name.endswith('.md5'):
                             md5sum.file_path = file_name[:-4]

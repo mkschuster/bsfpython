@@ -22,7 +22,6 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Executables module.
-
-A package of classes and methods supporting executable programs and scripts.
+"""The :py:mod:`bsf.executables` module provides subclasses of :py:class:`bsf.process.RunnableStep`
+supporting executable programs and scripts.
 """

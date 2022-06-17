@@ -22,9 +22,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Illumina module.
-
-A package of classes and methods modelling data directories and files
+"""The :py:mod:`bsf.illumina` module provides classes modelling data directories and files
 specific for Illumina sequencing systems.
 """
 import datetime
@@ -40,24 +38,25 @@ from bsf.annotation import AnnotationSheet
 
 
 class Adaptors(object):
-    """The C{bsf.illumina.Adaptors} class models Illumina Sequencing Adaptor index sequences.
+    """The :py:class:`bsf.illumina.Adaptors` class models Illumina Sequencing Adaptor index sequences.
 
-    @cvar default_class: Default class
-    @type default_class: str
-    @cvar default_type: Default type
-    @type default_type: str
-    @ivar adaptor_dict: Adaptor Python C{dict}
-    @type adaptor_dict: dict[str, dict[str, dict[str, str]]]
+    :cvar default_class: Default class
+    :type default_class: str
+    :cvar default_type: Default type
+    :type default_type: str
+    :ivar adaptor_dict: Adaptor Python :py:class:`dict`
+    :type adaptor_dict: dict[str, dict[str, dict[str, str]]]
     """
     default_class = 'Default'
     default_type = 'Default'
 
     def __init__(self, adaptor_dict=None):
-        """Initialise a C{bsf.illumina.Adaptors} object.
+        """Initialise a :py:class:`bsf.illumina.Adaptors` object.
 
-        @param adaptor_dict: Hierarchy of Python C{dict} objects for class, type (e.g. i7, i5),
-            name (e.g. D701, D503) and sequence
-        @type adaptor_dict: dict[str, dict[str, dict[str, str]]]
+        :param adaptor_dict: Hierarchy of Python :py:class:`dict` objects for class,
+            type (e.g., :literal:`i7`, :literal:`i5`),
+            name (e.g., :literal:`D701`, :literal:`D503`) and sequence
+        :type adaptor_dict: dict[str, dict[str, dict[str, str]]]
         """
         super(Adaptors, self).__init__()
 
@@ -70,12 +69,12 @@ class Adaptors(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Instantiate a C{bsf.illumina.Adaptors} object from a file path.
+        """Instantiate a :py:class:`bsf.illumina.Adaptors` object from a file path.
 
-        @param file_path: File path
-        @type file_path: str
-        @return: C{bsf.illumina.Adaptors}
-        @rtype: Adaptors
+        :param file_path: File path
+        :type file_path: str
+        :return: A :py:class:`bsf.illumina.Adaptors` object
+        :rtype: Adaptors
         """
         annotation_sheet = AnnotationSheet.from_file_path(
             file_path=file_path,
@@ -108,17 +107,19 @@ class Adaptors(object):
     def match(self, sequence, adaptor_class=None, adaptor_type=None, adaptor_name=None):
         """Match an (unknown) adaptor sequence to an adaptor class, type and name.
 
-        @param sequence: Sequence
-        @type sequence: str
-        @param adaptor_class: Adaptor class
-        @type adaptor_class: str | None
-        @param adaptor_type: Adaptor type
-        @type adaptor_type: str | None
-        @param adaptor_name: Adaptor name
-        @type adaptor_name: str | None
-        @return: Python C{tuple} of Python C{str} (adaptor class), Python C{str} (adaptor type),
-            Python C{str} (adaptor name) and Python C{bool} (reverse complement)
-        @rtype: list[(str, str, str, bool)]
+        :param sequence: Sequence
+        :type sequence: str
+        :param adaptor_class: Adaptor class
+        :type adaptor_class: str | None
+        :param adaptor_type: Adaptor type
+        :type adaptor_type: str | None
+        :param adaptor_name: Adaptor name
+        :type adaptor_name: str | None
+        :return: A Python :py:class:`tuple` of Python :py:class:`str` (adaptor class),
+            Python :py:class:`str` (adaptor type),
+            Python :py:class:`str` (adaptor name) and
+            Python :py:class:`bool` (reverse complement)
+        :rtype: list[(str, str, str, bool)]
         """
         result_list: List[Tuple[str, str, str, bool]] = list()
 
@@ -159,34 +160,34 @@ class Adaptors(object):
 
 
 class RunInformationFlowcellLayout(object):
-    """The C{bsf.illumina.RunInformationFlowcellLayout} class models
-    one I{<FlowcellLayout>} XML element in an I{Illumina Run Information} (RunInfo.xml) document.
+    """The :py:class:`bsf.illumina.RunInformationFlowcellLayout` class models
+    one :literal:`<FlowcellLayout>` XML element in an :literal:`Illumina Run Information` (RunInfo.xml) document.
 
-    @ivar lane_count: Number of lanes
-    @type lane_count: int
-    @ivar surface_count: Number of surfaces
-    @type surface_count: int
-    @ivar swath_count: Number of swaths
-    @type swath_count: int
-    @ivar tile_count: Number of tiles
-    @type tile_count: int
-    @ivar tile_list: Python C{list} of Python C{str} tile names
-    @type tile_list: list[str]
+    :ivar lane_count: Number of lanes
+    :type lane_count: int
+    :ivar surface_count: Number of surfaces
+    :type surface_count: int
+    :ivar swath_count: Number of swaths
+    :type swath_count: int
+    :ivar tile_count: Number of tiles
+    :type tile_count: int
+    :ivar tile_list: Python :py:class:`list` of Python :py:class:`str` tile names
+    :type tile_list: list[str]
     """
 
     def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0, tile_list=None):
-        """Initialise a C{bsf.illumina.RunInformationFlowcellLayout} object.
+        """Initialise a :py:class:`bsf.illumina.RunInformationFlowcellLayout` object.
 
-        @param lane_count: Number of lanes
-        @type lane_count: int
-        @param surface_count: Number of surfaces
-        @type surface_count: int
-        @param swath_count: Number of swaths
-        @type swath_count: int
-        @param tile_count: Number of tiles
-        @type tile_count: int
-        @param tile_list: Python C{list} of Python C{str} tile names
-        @type tile_list: list[str]
+        :param lane_count: Number of lanes
+        :type lane_count: int
+        :param surface_count: Number of surfaces
+        :type surface_count: int
+        :param swath_count: Number of swaths
+        :type swath_count: int
+        :param tile_count: Number of tiles
+        :type tile_count: int
+        :param tile_list: Python :py:class:`list` of Python :py:class:`str` tile names
+        :type tile_list: list[str]
         """
         super(RunInformationFlowcellLayout, self).__init__()
 
@@ -203,12 +204,13 @@ class RunInformationFlowcellLayout(object):
         return
 
     def has_tile(self, tile):
-        """Test the C{RunInformationFlowcellLayout} for a particular tile.
+        """Test the :py:class:`bsf.illumina.RunInformationFlowcellLayout` object for a particular tile.
 
-        @param tile: Flowcell tile
-        @type tile: str
-        @return: C{True} if the tile is in the C{RunInformationFlowcellLayout}, C{False} otherwise
-        @rtype: bool
+        :param tile: A tile number.
+        :type tile: str
+        :return: :py:const:`True` if the tile is in the :py:class:`bsf.illumina.RunInformationFlowcellLayout` object,
+            :py:const:`False` otherwise
+        :rtype: bool
         """
         if self.tile_list:
             return tile in self.tile_list
@@ -218,26 +220,26 @@ class RunInformationFlowcellLayout(object):
 
 
 class RunInformationRead(object):
-    """The C{bsf.illumina.RunInformationRead} class models
-    one <Read> XML element in an Illumina Run Information (RunInfo.xml) document.
+    """The :py:class:`bsf.illumina.RunInformationRead` class models
+    one :literal:`<Read>` XML element in an Illumina Run Information (:literal:`RunInfo.xml`) document.
 
-    @ivar number: Read number
-    @type number: int
-    @ivar cycles: Cycle number
-    @type cycles: int
-    @ivar index: Index read
-    @type index: bool
+    :ivar number: Read number
+    :type number: int
+    :ivar cycles: Cycle number
+    :type cycles: int
+    :ivar index: Index read
+    :type index: bool
     """
 
     def __init__(self, number=0, cycles=0, index=False):
-        """Initialise a C{bsf.illumina.RunInformationRead} object.
+        """Initialise a :py:class:`bsf.illumina.RunInformationRead` object.
 
-        @param number: Read number
-        @type number: int
-        @param cycles: Cycle number
-        @type cycles: int
-        @param index: Index read
-        @type index: bool
+        :param number: A read number.
+        :type number: int
+        :param cycles: A cycle number.
+        :type cycles: int
+        :param index: Index read.
+        :type index: bool
         """
         super(RunInformationRead, self).__init__()
 
@@ -249,44 +251,48 @@ class RunInformationRead(object):
 
 
 class RunInformation(object):
-    """The C{bsf.illumina.RunInformation} class represents an Illumina
+    """The :py:class:`bsf.illumina.RunInformation` class represents an Illumina
     run information XML (RunInfo.xml) document.
 
-    @ivar file_path: File path
-    @type file_path: str | None
-    @ivar file_type: File type
-        CASAVA: FASTQ file after post-processing with CASAVA.
-        External: other data files.
-    @type file_type: str | None
-    @ivar name: Name
-    @type name: str | None
-    @ivar run_identifier: Run identifier e.g. 130724_SN815_0089_BC26JBACXX
-    @type run_identifier: str | None
-    @ivar run_number: Run number, which may not have to correspond to the run number in the run identifier e.g. 91
-    @type run_number: str | None
-    @ivar flow_cell: Illumina flow cell identifier e.g. C26JBACXX
-    @type flow_cell: str | None
-    @ivar instrument: Illumina instrument serial number e.g. SN815
-    @type instrument: str | None
-    @ivar date: Date in YYMMDD format e.g. 130724
-    @type date: str | None
-    @ivar flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-    @type flow_cell_layout: RunInformationFlowcellLayout | None
-    @ivar run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
-    @type run_information_read_list: list[RunInformationRead]
+    :ivar file_path: A file path.
+    :type file_path: str | None
+    :ivar file_type: A file type.
+        - CASAVA: FASTQ file after post-processing with CASAVA.
+        - External: other data files.
+        - Automatic:
+    :type file_type: str | None
+    :ivar name: A name.
+    :type name: str | None
+    :ivar run_identifier: A run identifier (e.g., :literal:`130724_SN815_0089_BC26JBACXX`).
+    :type run_identifier: str | None
+    :ivar run_number: A run number, which may not have to correspond to the run number in the run identifier
+        (e.g., :literal:`91`).
+    :type run_number: str | None
+    :ivar flow_cell: An Illumina flow cell identifier (e.g., :literal:`C26JBACXX`).
+    :type flow_cell: str | None
+    :ivar instrument: An Illumina instrument serial number (e.g., :literal:`SN815`).
+    :type instrument: str | None
+    :ivar date: A date in YYMMDD format (e.g., :literal:`130724`).
+    :type date: str | None
+    :ivar flow_cell_layout: A :py:class:`bsf.illumina.RunInformationFlowcellLayout` object.
+    :type flow_cell_layout: RunInformationFlowcellLayout | None
+    :ivar run_information_read_list: A Python :py:class:`list` object of
+        :py:class:`bsf.illumina.RunInformationRead` objects.
+    :type run_information_read_list: list[RunInformationRead]
     """
 
     @staticmethod
     def parse_run_identifier(run_identifier):
-        """Split an I{bsf.illumina.Illumina Run Identifier} into its components.
+        """Split an :literal:`Illumina Run Identifier` into its components.
 
-        Splits the Illumina Run Identifier into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>.
-        This method is particularly useful for older version of RunInfo.xml files, that lack
-        <Run>/<Date> and <Run>/<Flowcell> elements.
-        @param run_identifier: Illumina Run Identifier (e.g. 130724_SN815_0089_BC26JBACXX)
-        @type run_identifier: str
-        @return: Python C{list} of Python C{str} objects
-        @rtype: list[str]
+        Splits the Illumina Run Identifier into :literal:`<Date>_<Instrument>_<Number>_<FCPosition><Flowcell>`.
+        This method is particularly useful for older version of :literal:`RunInfo.xml` files, that lack
+        :literal:`<Run>/<Date>` and :literal:`<Run>/<Flowcell>` elements.
+
+        :param run_identifier: An Illumina Run Identifier (e.g., :literal:`130724_SN815_0089_BC26JBACXX`).
+        :type run_identifier: str
+        :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
+        :rtype: list[str]
         """
         # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
         component_list = run_identifier.split('_')
@@ -304,12 +310,12 @@ class RunInformation(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a C{bsf.illumina.RunInformation} object from a file path.
+        """Create a :py:class:`bsf.illumina.RunInformation` object from a file path.
 
-        @param file_path: File path
-        @type file_path: str
-        @return: C{bsf.illumina.RunInformation}
-        @rtype: RunInformation
+        :param file_path: A file path.
+        :type file_path: str
+        :return: A :py:class:`bsf.illumina.RunInformation` object.
+        :rtype: RunInformation
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -321,27 +327,27 @@ class RunInformation(object):
 
         # Parse meta-information about the Illumina run
 
-        run_identifier = run_element.get(key='Id')  # e.g. 130724_SN815_0089_BC26JBACXX
-        run_number = run_element.get(key='Number')  # e.g. 91
+        run_identifier = run_element.get(key='Id')  # e.g., 130724_SN815_0089_BC26JBACXX
+        run_number = run_element.get(key='Number')  # e.g., 91
         run_identifier_component_list = RunInformation.parse_run_identifier(run_identifier=run_identifier)
 
         xml_flow_cell = run_element.find(path='Flowcell')
         if xml_flow_cell is None:
             flow_cell = run_identifier_component_list[4]
         else:
-            flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
+            flow_cell = xml_flow_cell.text  # e.g., C26JBACXX
 
         xml_instrument = run_element.find(path='Instrument')
         if xml_instrument is None:
             instrument = run_identifier_component_list[1]
         else:
-            instrument = xml_instrument.text  # e.g. SN815
+            instrument = xml_instrument.text  # e.g., SN815
 
         xml_date = run_element.find(path='Date')
         if xml_date is None:
             date = run_identifier_component_list[0]
         else:
-            date = xml_date.text  # e.g. 130724
+            date = xml_date.text  # e.g., 130724
 
         xml_second_read = run_element.find(path='SecondRead')
         if xml_second_read is None:
@@ -404,7 +410,7 @@ class RunInformation(object):
 
         run_information_read_list.sort(key=lambda _item: _item.number)
 
-        # Warn if there is not at least one non-index read (i.e. RunInformationRead.index).
+        # Warn if there is not at least one non-index read (i.e., RunInformationRead.index).
 
         non_index_reads_list = [item for item in run_information_read_list if not item.index]
         if len(non_index_reads_list) == 0:
@@ -454,28 +460,30 @@ class RunInformation(object):
                  date=None,
                  flow_cell_layout=None,
                  run_information_read_list=None):
-        """Initialise a C{bsf.illumina.RunInformation} object.
+        """Initialise a :py:class:`bsf.illumina.RunInformation` object.
 
-        @param file_path: File path
-        @type file_path: str | None
-        @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
-        @type file_type: str | None
-        @param name: Name
-        @type name: str | None
-        @param run_identifier: Run identifier e.g. I{130724_SN815_0089_BC26JBACXX}
-        @type run_identifier: str | None
-        @param run_number: Run number, which may not have to correspond to the run number in the run identifier e.g. 91
-        @type run_number: str | None
-        @param flow_cell: Illumina flow cell identifier
-        @type flow_cell: str | None
-        @param instrument: Illumina instrument serial number
-        @type instrument: str | None
-        @param date: Date in YYMMDD format
-        @type date: str | None
-        @param flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-        @type flow_cell_layout: RunInformationFlowcellLayout | None
-        @param run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
-        @type run_information_read_list: list[RunInformationRead]
+        :param file_path: A file path.
+        :type file_path: str | None
+        :param file_type: A file type (e.g., :literal:`CASAVA`, :literal:`External` or :literal:`Automatic`).
+        :type file_type: str | None
+        :param name: A name.
+        :type name: str | None
+        :param run_identifier: A run identifier (e.g., :literal:`130724_SN815_0089_BC26JBACXX`).
+        :type run_identifier: str | None
+        :param run_number: A run number, which may not have to correspond to the run number in the run identifier
+            (e.g., :literal:`91`).
+        :type run_number: str | None
+        :param flow_cell: An Illumina flow cell identifier (e.g., :literal:`C26JBACXX`).
+        :type flow_cell: str | None
+        :param instrument: An Illumina instrument serial number (e.g., :literal:`SN815`).
+        :type instrument: str | None
+        :param date: A date in :literal:`YYMMDD` format (e.g., :literal:`130724`).
+        :type date: str | None
+        :param flow_cell_layout: A :py:class:`bsf.illumina.RunInformationFlowcellLayout` object.
+        :type flow_cell_layout: RunInformationFlowcellLayout | None
+        :param run_information_read_list: A Python :py:class:`list` object of
+            :py:class:`bsf.illumina.RunInformationRead` objects.
+        :type run_information_read_list: list[RunInformationRead]
         """
         super(RunInformation, self).__init__()
 
@@ -498,10 +506,10 @@ class RunInformation(object):
 
     @property
     def get_cycle_number(self):
-        """Get the total number of cycles.
+        """Get a total number of cycles.
 
-        @return: Number of cycles
-        @rtype: int
+        :return: A total number of cycles.
+        :rtype: int
         """
         cycle_number = 0
 
@@ -512,10 +520,10 @@ class RunInformation(object):
 
     @property
     def get_iso_date(self):
-        """Get the run start date in ISO 8601 format.
+        """Get a run start date in ISO 8601 format.
 
-        @return: The run start date in ISO 8601 format.
-        @rtype: str
+        :return: A run start date in ISO 8601 format.
+        :rtype: str
         """
         if self.date is None:
             return
@@ -533,19 +541,19 @@ class RunInformation(object):
 
     @property
     def get_read_number(self):
-        """Get the total number of reads.
+        """Get a total number of reads.
 
-        @return: Number of reads
-        @rtype: int
+        :return: A total number of reads.
+        :rtype: int
         """
         return len(self.run_information_read_list)
 
     @property
     def get_read_start_list(self):
-        """Get a Python C{list} of cycle numbers at the start of each read.
+        """Get a Python :py:class:`list` object of cycle numbers at the start of each read.
 
-        @return: Python C{list} of Python C{int} (starting cycle) for each read
-        @rtype: list[int]
+        :return: A Python :py:class:`list` object of Python :py:class:`int` (starting cycle) objects for each read.
+        :rtype: list[int]
         """
         cycle_number = 1
 
@@ -559,10 +567,10 @@ class RunInformation(object):
 
     @property
     def get_read_end_list(self):
-        """Get a Python C{list} of cycle numbers at the end of each read.
+        """Get a Python :py:class:`list` object of cycle numbers at the end of each read.
 
-        @return: Python C{list} of Python C{int} (ending cycle) for each read
-        @rtype: list[int]
+        :return: A Python :py:class:`list` object of Python :py:class:`int` (ending cycle) objects for each read.
+        :rtype: list[int]
         """
         cycle_number = 1
 
@@ -576,14 +584,15 @@ class RunInformation(object):
 
     @property
     def get_picard_read_structure(self):
-        """Get the read structure for the Picard C{ExtractIlluminaBarcodes} module.
+        """Get the read structure for the Picard :py:class:`ExtractIlluminaBarcodes` class.
 
         Codes:
-        I{T} ... Template
-        I{B} ... Barcode
-        I{S} ... Skip
-        @return: Read structure for Picard C{ExtractIlluminaBarcodes}
-        @rtype: str
+            - :literal:`T`: Template
+            - :literal:`B`: Barcode
+            - :literal:`S`: Skip
+
+        :return: A read structure for Picard :py:class:`ExtractIlluminaBarcodes`.
+        :rtype: str
         """
         # TODO: This needs to become smarter to deal with skipped bases, caused by
         # different read and barcode lengths. Skips would have to be inserted.
@@ -601,13 +610,14 @@ class RunInformation(object):
 
     @property
     def get_read_structure_list(self):
-        """Get the read structure Python C{list}.
+        """Get a read structure Python :py:class:`list` object.
 
         Codes:
-        B ... Base
-        I ... Index
-        @return: Python C{list} of Python C{str} (read structure) objects
-        @rtype: list[str]
+            - :literal:`B`: Base
+            - :literal:`I`: Index
+
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (read structure) objects.
+        :rtype: list[str]
         """
         read_structure_list: List[str] = list()
 
@@ -620,34 +630,36 @@ class RunInformation(object):
         return read_structure_list
 
     def has_tile(self, tile):
-        """Convenience method to test the C{RunInformationFlowcellLayout} for a particular tile.
+        """Convenience method to test the :py:class:`bsf.illumina.RunInformationFlowcellLayout` object
+        for a particular tile.
 
-        @param tile: Flowcell tile
-        @type tile: str
-        @return: C{True} if the tile is in the C{RunInformationFlowcellLayout}, C{False} otherwise
-        @rtype: bool
+        :param tile: A tile number.
+        :type tile: str
+        :return: :py:const:`True` if the tile is in the :py:class:`bsf.illumina.RunInformationFlowcellLayout` object,
+            :py:const:`False` otherwise
+        :rtype: bool
         """
         return self.flow_cell_layout.has_tile(tile=tile)
 
 
 class RunParameters(object):
-    """The C{bsf.illumina.RunParameters} class models the contents of runParameters.xml
+    """The :py:class:`bsf.illumina.RunParameters` class models the contents of runParameters.xml
     files inside an Illumina Run Folder.
 
-    @ivar file_path: File path
-    @type file_path: str
-    @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: ElementTree | None
+    :ivar file_path: A file path.
+    :type file_path: str
+    :ivar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+    :type element_tree: ElementTree | None
     """
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a C{bsf.illumina.RunParameters} object from a file path.
+        """Create a :py:class:`bsf.illumina.RunParameters` object from a file path.
 
-        @param file_path: File path
-        @type file_path: str | None
-        @return: C{bsf.illumina.RunParameters} object
-        @rtype: RunParameters
+        :param file_path: A file path.
+        :type file_path: str | None
+        :return: A :py:class:`bsf.illumina.RunParameters` object.
+        :rtype: RunParameters
         """
         file_path = os.path.normpath(file_path)
 
@@ -657,12 +669,12 @@ class RunParameters(object):
         return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
-        """Initialise a C{bsf.illumina.RunParameters} object.
+        """Initialise a :py:class:`bsf.illumina.RunParameters` object.
 
-        @param file_path: File path
-        @type file_path: str | None
-        @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: ElementTree | None
+        :param file_path: A file path.
+        :type file_path: str | None
+        :param element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+        :type element_tree: ElementTree | None
         """
         super(RunParameters, self).__init__()
 
@@ -674,10 +686,10 @@ class RunParameters(object):
     def xml_paths_to_text(self, xml_paths):
         """Get the text representation of the first element of a tuple of XML paths.
 
-        @param xml_paths: Python C{tuple} of Python C{str} XML path elements
-        @type xml_paths: tuple[str]
-        @return: Text representation
-        @rtype: str
+        :param xml_paths: A Python :py:class:`tuple` object of Python :py:class:`str` XML path elements.
+        :type xml_paths: tuple[str]
+        :return: A text representation.
+        :rtype: str
         """
         for xml_path in xml_paths:
             element = self.element_tree.find(path=xml_path)
@@ -688,118 +700,131 @@ class RunParameters(object):
 
     @property
     def get_run_parameters_version(self):
-        """Get the run parameters version of a C{bsf.illumina.RunParameters} object.
+        """Get the run parameters version of a :py:class:`bsf.illumina.RunParameters` object.
 
         Returns the text representation of:
-            - I{<RunParameters>/<RunParametersVersion>}: I{MiSeq} and I{NextSeq}
-        @return: Run parameters version or an empty string
-        @rtype: str
+            - :literal:`<RunParameters>/<RunParametersVersion>`: :literal:`MiSeq` and :literal:`NextSeq`
+
+        :return: A run parameters version or an empty string.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('RunParametersVersion',))
 
     @property
     def get_instrument_type(self):
-        """Get the instrument type based on a C{bsf.illumina.RunParameters} object.
+        """Get the instrument type based on a :py:class:`bsf.illumina.RunParameters` object.
 
-        Returns I{HiSeq}, I{MiSeq}, I{NextSeq} or I{NovaSeq} depending on C{get_application_name}
-        @return: Instrument type
-        @rtype: str
+        Depending on method :py:meth:`bsf.illumina.RunInfo.get_application_name`, returns:
+            - :literal:`HiSeq`
+            - :literal:`MiSeq`,
+            - :literal:`NextSeq` or
+            - :literal:`NovaSeq`
+
+        :return: An instrument type.
+        :rtype: str
         """
         # Simply remove ' Control Software' from the get_application_name property.
         return self.get_application_name[:-17]
 
     @property
     def get_experiment_name(self):
-        """Get the experiment name of a C{bsf.illumina.RunParameters} object.
+        """Get the experiment name of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<ExperimentName>}
-            - I{MiSeq}:   I{<RunParameters>/<ExperimentName>}
-            - I{NextSeq}: I{<RunParameters>/<ExperimentName>}
-            - I{NovaSeq}: I{<RunParameters>/<ExperimentName>}
-        @return: Experiment name
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<ExperimentName>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<ExperimentName>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<ExperimentName>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<ExperimentName>`
+
+        :return: An experiment name.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/ExperimentName', 'ExperimentName'))
 
     @property
     def get_flow_cell_barcode(self):
-        """Get the flow cell barcode of a C{bsf.illumina.RunParameters} object.
+        """Get the flow cell barcode of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Barcode>}
-            - I{MiSeq}:   I{<RunParameters>/<Barcode>}
-            - I{NextSeq}: I{<RunParameters>/<FlowCellSerial>}
-            - I{NovaSeq}: I{<RunParameters>/<RfidsInfo>/<FlowCellSerialBarcode>}
-        @return: Flow cell barcode
-        @rtype: str
+            - :literal:`HiSeq`:   :literal`<RunParameters>/<Setup>/<Barcode>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Barcode>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<FlowCellSerial>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<RfidsInfo>/<FlowCellSerialBarcode>`
+
+        :return: A flow cell barcode.
+        :rtype: str
         """
         return self.xml_paths_to_text(
             xml_paths=('Setup/Barcode', 'Barcode', 'FlowCellSerial', 'RfidsInfo/FlowCellSerialBarcode'))
 
     @property
     def get_flow_cell_type(self):
-        """Get the flow cell chemistry type of a C{bsf.illumina.RunParameters} object.
+        """Get the flow cell chemistry type of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Flowcell>}
-            - I{MiSeq}:   I{<RunParameters>/<ReagentKitVersion>}
-            - I{NextSeq}: I{<RunParameters>/<Chemistry>}
-            - I{NovaSeq}: I{<RunParameters>/<RfidsInfo>/<FlowCellMode>}
-        @return: Flow cell chemistry type
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<Flowcell>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<ReagentKitVersion>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<Chemistry>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<RfidsInfo>/<FlowCellMode>`
+
+        :return: A flow cell chemistry type.
+        :rtype: str
         """
         return self.xml_paths_to_text(
             xml_paths=('Setup/Flowcell', 'ReagentKitVersion', 'Chemistry', 'RfidsInfo/FlowCellMode'))
 
     @property
     def get_index_type(self):
-        """Get the index chemistry type of a C{bsf.illumina.RunParameters} object.
+        """Get the index chemistry type of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Index>}
-            - I{MiSeq}:   I{<RunParameters>/<Setup>/<Index>}
-            - I{NextSeq}: I{None}
-            - I{NovaSeq}: I{None}
-        @return: Index chemistry type
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<Index>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Setup>/<Index>`
+            - :literal:`NextSeq`: :literal:`None`
+            - :literal:`NovaSeq`: :literal:`None`
+
+        :return: An index chemistry type.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/Index',))
 
     @property
     def get_pe_type(self):
-        """Get the paired-end chemistry type of a C{bsf.illumina.RunParameters} object.
+        """Get the paired-end chemistry type of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}: I{<RunParameters>/<Setup>/<Pe>}
-            - I{MiSeq}: I{<RunParameters>/<Setup>/<Pe>}
-            - I{NextSeq}: I{None}
-            - I{NovaSeq}: I{None}
-        @return: Paired-end chemistry type
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<Pe>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Setup>/<Pe>`
+            - :literal:`NextSeq`: :literal:`None`
+            - :literal:`NovaSeq`: :literal:`None`
+
+        :return: A paired-end chemistry type.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/Pe',))
 
     @property
     def get_sbs_type(self):
-        """Get the sequencing-by-synthesis chemistry type of a C{bsf.illumina.RunParameters} object.
+        """Get the sequencing-by-synthesis chemistry type of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Sbs>}
-            - I{MiSeq}:   I{<RunParameters>/<Setup>/<Sbs>}
-            - I{NextSeq}: I{None}
-            - I{NovaSeq}: I{None}
-        @return: Sequencing-by-synthesis chemistry type
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<Sbs>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Setup>/<Sbs>`
+            - :literal:`NextSeq`: :literal:`None`
+            - :literal:`NovaSeq`: :literal:`None`
+
+        :return: A sequencing-by-synthesis chemistry type.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/Sbs',))
 
     @property
     def get_position(self):
-        """Get the flow cell position of a C{bsf.illumina.RunParameters} object.
+        """Get the flow cell position of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<FCPosition>}
-            - I{MiSeq}:   I{None}
-            - I{NextSeq}: I{'A'}
-            - I{NovaSeq}: I{<RunParameters>/<Side>}
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<FCPosition>`
+            - :literal:`MiSeq`:   :literal:`None`
+            - :literal:`NextSeq`: :literal:`A`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<Side>`
 
-        The I{NextSeq} has no concept of I{<FCPosition>}, but always uses 'A'
-        @return: Flow cell position e.g. A or B
-        @rtype: str
+        The :literal:`NextSeq` has no concept of :literal:`<FCPosition>`, but always uses :literal:`A`
+
+        :return: A flow cell position (e.g., :literal:`A` or :literal:`B`).
+        :rtype: str
         """
         if self.get_instrument_type in ('NextSeq',):
             return 'A'
@@ -808,53 +833,59 @@ class RunParameters(object):
 
     @property
     def get_run_identifier(self):
-        """Get the run identifier of a C{bsf.illumina.RunParameters} object.
+        """Get the run identifier of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<RunID>}
-            - I{MiSeq}:   I{<RunParameters>/<RunID>}
-            - I{NextSeq}: I{<RunParameters>/<RunID>}
-            - I{NovaSeq}: I{<RunParameters>/<RunId>}
-        @return: Run identifier
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<RunID>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<RunID>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<RunID>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<RunId>`
+
+        :return: A run identifier.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/RunID', 'RunID', 'RunId'))
 
     @property
     def get_real_time_analysis_version(self):
-        """Get the Real-Time Analysis (RTA) Version of a C{bsf.illumina.RunParameters} object.
+        """Get the Real-Time Analysis (RTA) Version of a :py:class:`bsf.illumina.RunParameters` object.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<RTAVersion>}
-            - I{MiSeq}:   I{<RunParameters>/<RTAVersion>}
-            - I{NextSeq}: I{<RunParameters>/<RTAVersion>}
-            - I{NovaSeq}: I{<RunParameters>/<RtaVersion>}
-        @return: RTA version
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<RTAVersion>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<RTAVersion>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<RTAVersion>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<RtaVersion>`
+
+        :return: An RTA version.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/RTAVersion', 'RTAVersion', 'RtaVersion'))
 
     @property
     def get_application_name(self):
-        """Get the application (i.e. I{HiSeq}, I{MiSeq}, I{NextSeq} or I{NovaSeq Control Software}) name.
+        """Get the application (i.e., :literal:`HiSeq`, :literal:`MiSeq`, :literal:`NextSeq` or
+        :literal:`NovaSeq Control Software`) name.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<ApplicationName>}
-            - I{MiSeq}:   I{<RunParameters>/<Setup>/<ApplicationName>}
-            - I{NextSeq}: I{<RunParameters>/<Setup>/<ApplicationName>}
-            - I{NovaSeq}: I{<RunParameters>/<Application>}
-        @return: Application name
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<ApplicationName>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Setup>/<ApplicationName>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<Setup>/<ApplicationName>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<Application>`
+
+        :return: An application name.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/ApplicationName', 'Application'))
 
     @property
     def get_application_version(self):
-        """Get the application (i.e. I{HiSeq}, I{MiSeq}, I{NextSeq} or I{NovaSeq Control Software}) version.
+        """Get the application (i.e., :literal:`HiSeq`, :literal:`MiSeq`, :literal:`NextSeq` or
+        :literal:`NovaSeq Control Software`) version.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<ApplicationVersion>}
-            - I{MiSeq}:   I{<RunParameters>/<Setup>/<ApplicationVersion>}
-            - I{NextSeq}: I{<RunParameters>/<Setup>/<ApplicationVersion>}
-            - I{NovaSeq}: I{<RunParameters>/<ApplicationVersion>}
-        @return: Application version
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<ApplicationVersion>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Setup>/<ApplicationVersion>`
+            - :literal:`NextSeq`: :literal:`<RunParameters>/<Setup>/<ApplicationVersion>`
+            - :literal:`NovaSeq`: :literal:`<RunParameters>/<ApplicationVersion>`
+
+        :return: An application version.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/ApplicationVersion', 'ApplicationVersion'))
 
@@ -862,34 +893,36 @@ class RunParameters(object):
     def get_keep_intensities(self):
         """Get the flag whether intensity files are kept.
 
-            - I{HiSeq}:   I{<RunParameters>/<Setup>/<KeepIntensityFiles>}
-            - I{MiSeq}:   I{<RunParameters>/<Setup>/<KeepIntensityFiles>}
-        @return: Keep intensity files flag
-        @rtype: str
+            - :literal:`HiSeq`:   :literal:`<RunParameters>/<Setup>/<KeepIntensityFiles>`
+            - :literal:`MiSeq`:   :literal:`<RunParameters>/<Setup>/<KeepIntensityFiles>`
+
+        :return: A keep intensity files flag.
+        :rtype: str
         """
         return self.xml_paths_to_text(xml_paths=('Setup/KeepIntensityFiles',))
 
 
 class XMLConfiguration(object):
-    """The C{bsf.illumina.XMLConfiguration} class models the contents of XML configuration
+    """The :py:class:`bsf.illumina.XMLConfiguration` class models the contents of XML configuration
     files inside an Illumina Run Folder.
 
-    @ivar file_path: File path
-    @type file_path: str | None
-    @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: ElementTree | None
+    :ivar file_path: A file path.
+    :type file_path: str | None
+    :ivar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+    :type element_tree: ElementTree | None
     """
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a C{bsf.illumina.XMLConfiguration} object from a file path.
+        """Create a :py:class:`bsf.illumina.XMLConfiguration` object from a file path.
 
-        In case the file path does not exist a C{bsf.illumina.XMLConfiguration} object
-        with an empty C{xml.etree.ElementTree.ElementTree} will be returned.
-        @param file_path: File path
-        @type file_path: str
-        @return: C{bsf.illumina.XMLConfiguration} object
-        @rtype: XMLConfiguration
+        In case the file path does not exist a :py:class:`bsf.illumina.XMLConfiguration` object
+        with an empty :py:class:`xml.etree.ElementTree.ElementTree` will be returned.
+
+        :param file_path: A file path.
+        :type file_path: str
+        :return: A :py:class:`bsf.illumina.XMLConfiguration` object.
+        :rtype: XMLConfiguration
         """
         file_path = os.path.normpath(file_path)
 
@@ -899,12 +932,12 @@ class XMLConfiguration(object):
         return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
-        """Initialise a C{bsf.illumina.XMLConfiguration} object.
+        """Initialise a :py:class:`bsf.illumina.XMLConfiguration` object.
 
-        @param file_path: File path
-        @type file_path: str | None
-        @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: ElementTree | None
+        :param file_path: A file path.
+        :type file_path: str | None
+        :param element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+        :type element_tree: ElementTree | None
         """
         super(XMLConfiguration, self).__init__()
 
@@ -915,24 +948,25 @@ class XMLConfiguration(object):
 
 
 class AnalysisConfiguration(XMLConfiguration):
-    """The C{bsf.illumina.AnalysisConfiguration} class models Image and Base Call analysis
+    """The :py:class:`bsf.illumina.AnalysisConfiguration` class models Image and Base Call analysis
     XML configuration files inside an Illumina Run Folder.
 
-    @ivar file_path: File path
-    @type file_path: str
-    @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: ElementTree
+    :ivar file_path: A file path.
+    :type file_path: str
+    :ivar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+    :type element_tree: ElementTree
     """
 
     def __init__(self, file_path=None, element_tree=None):
-        """Initialise a C{bsf.illumina.AnalysisConfiguration} object.
-        Read all I{<Tile>} elements from the I{<Run>/<TileSelection>} element from the XML configuration file
-        to initialise an internal Python C{dict} of valid tiles.
+        """Initialise a :py:class:`bsf.illumina.AnalysisConfiguration` object.
 
-        @param file_path: File path
-        @type file_path: str
-        @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: ElementTree
+        Read all :literal:`<Tile>` elements from the :literal:`<Run>/<TileSelection>` element from the
+        XML configuration file to initialise an internal Python :py:class:`dict` of valid tiles.
+
+        :param file_path: A file path.
+        :type file_path: str
+        :param element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+        :type element_tree: ElementTree
         """
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
 
@@ -952,24 +986,24 @@ class AnalysisConfiguration(XMLConfiguration):
         return
 
     def has_lane(self, lane):
-        """Check if a particular lane is defined in a C{bsf.illumina.AnalysisConfiguration} object.
+        """Check if a particular lane is defined in a :py:class:`bsf.illumina.AnalysisConfiguration` object.
 
-        @param lane: Lane index
-        @type lane: str
-        @return: Boolean value
-        @rtype: bool
+        :param lane: A lane number.
+        :type lane: str
+        :return: :py:const:`True` if the lane is defined, :py:const:`False` otherwise.
+        :rtype: bool
         """
         return lane in self._lane_tile_dict
 
     def has_lane_tile(self, lane, tile):
-        """Check if a particular tile is defined in a lane of a C{bsf.illumina.AnalysisConfiguration} object.
+        """Check if a particular tile is defined in a lane of a :py:class:`bsf.illumina.AnalysisConfiguration` object.
 
-        @param lane: Lane index
-        @type lane: str
-        @param tile: Tile index
-        @type tile: str
-        @return: Boolean value
-        @rtype: bool | None
+        :param lane: A lane number.
+        :type lane: str
+        :param tile: A tile number.
+        :type tile: str
+        :return: :py:const:`True` if the lane and tile is defined, :py:const:`False` otherwise.
+        :rtype: bool | None
         """
         if lane in self._lane_tile_dict:
             return tile in self._lane_tile_dict[lane]
@@ -978,15 +1012,15 @@ class AnalysisConfiguration(XMLConfiguration):
 
 
 class ImageAnalysis(AnalysisConfiguration):
-    """The C{bsf.illumina.ImageAnalysis} class models the contents of the
-    I{IRF/Data/Intensities/config.xml} XML configuration file inside an Illumina Run Folder.
+    """The :py:class:`bsf.illumina.ImageAnalysis` class models the contents of the
+    :py:class:`IRF/Data/Intensities/config.xml` XML configuration file inside an Illumina Run Folder.
     """
     pass
 
 
 class BaseCallAnalysis(AnalysisConfiguration):
-    """The C{bsf.illumina.BaseCallAnalysis} class models the contents of the
-    I{IRF/Data/Intensities/BaseCalls/config.xml} XML configuration file inside an Illumina Run Folder.
+    """The :py:class:`bsf.illumina.BaseCallAnalysis` class models the contents of the
+    :py:class:`IRF/Data/Intensities/BaseCalls/config.xml` XML configuration file inside an Illumina Run Folder.
     """
     pass
 
@@ -996,33 +1030,34 @@ class RunFolderNotComplete(Exception):
 
 
 class RunFolder(object):
-    """The C{bsf.illumina.RunFolder} class represents an Illumina Run Folder.
+    """The :py:class:`bsf.illumina.RunFolder` class represents an Illumina Run Folder.
 
-    @cvar rta_dict: Python C{dict} of Python C{str} (RTA version) key objects and
-        Python C{str} (RTA description) value objects
-    @type rta_dict: dict[str, str]
-    @ivar file_path: File path
-    @type file_path: str
-    @ivar file_type: File type
-        I{CASAVA}: FASTQ file after post-processing with CASAVA
-        I{External}: other data files
-    @type file_type: str
-    @ivar date: Date in YYMMDD format
-    @type date: str | None
-    @ivar instrument: Illumina instrument serial number
-    @type instrument: str | None
-    @ivar run: Run serial number
-    @type run: str | None
-    @ivar flow_cell: Flow cell identifier
-    @type flow_cell: str | None
-    @ivar run_information: C{bsf.illumina.RunInformation}
-    @type run_information: RunInformation
-    @ivar run_parameters: C{bsf.illumina.RunParameters}
-    @type run_parameters: RunParameters
-    @ivar image_analysis: C{bsf.illumina.ImageAnalysis}
-    @type image_analysis: ImageAnalysis
-    @ivar base_call_analysis: C{bsf.illumina.BaseCallAnalysis}
-    @type base_call_analysis: BaseCallAnalysis
+    :cvar rta_dict: A Python :py:class:`dict` of
+        Python :py:class:`str` (RTA version) key objects and
+        Python :py:class:`str` (RTA description) value objects.
+    :type rta_dict: dict[str, str]
+    :ivar file_path: A file path.
+    :type file_path: str
+    :ivar file_type: A file type.
+        :literal:`CASAVA`: FASTQ file after post-processing with CASAVA
+        :literal:`External`: other data files
+    :type file_type: str
+    :ivar date: A date in :literal:`YYMMDD` format.
+    :type date: str | None
+    :ivar instrument: An Illumina instrument serial number.
+    :type instrument: str | None
+    :ivar run: A run serial number.
+    :type run: str | None
+    :ivar flow_cell: A flow cell identifier.
+    :type flow_cell: str | None
+    :ivar run_information: A :py:class:`bsf.illumina.RunInformation` object.
+    :type run_information: RunInformation
+    :ivar run_parameters: A :py:class:`bsf.illumina.RunParameters` object.
+    :type run_parameters: RunParameters
+    :ivar image_analysis: A :py:class:`bsf.illumina.ImageAnalysis` object.
+    :type image_analysis: ImageAnalysis
+    :ivar base_call_analysis: A :py:class:`bsf.illumina.BaseCallAnalysis` object.
+    :type base_call_analysis: BaseCallAnalysis
     """
 
     rta_dict = {
@@ -1052,12 +1087,12 @@ class RunFolder(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Construct a C{bsf.illumina.RunFolder} object from a file path.
+        """Construct a :py:class:`bsf.illumina.RunFolder` object from a file path.
 
-        @param file_path: File path
-        @type file_path: str
-        @return: C{bsf.illumina.RunFolder}
-        @rtype: RunFolder
+        :param file_path: A file path.
+        :type file_path: str
+        :return: A :py:class:`bsf.illumina.RunFolder` object.
+        :rtype: RunFolder
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -1105,28 +1140,28 @@ class RunFolder(object):
             run_parameters=None,
             image_analysis=None,
             base_call_analysis=None):
-        """Initialise a C{bsf.illumina.RunFolder} object.
+        """Initialise a :py:class:`bsf.illumina.RunFolder` object.
 
-        @param file_path: File path
-        @type file_path: str
-        @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
-        @type file_type: str
-        @param date: Date in I{YYMMDD} format
-        @type date: str | None
-        @param instrument: Illumina instrument serial number (e.g. I{SN181}, I{SN815}, ...)
-        @type instrument: str | None
-        @param run: Run serial number
-        @type run: str | None
-        @param flow_cell: The position and flow cell identifier
-        @type flow_cell: str | None
-        @param run_information: C{bsf.illumina.RunInformation}
-        @type run_information: RunInformation
-        @param run_parameters: C{bsf.illumina.RunParameters}
-        @type run_parameters: RunParameters
-        @param image_analysis: C{bsf.illumina.ImageAnalysis}
-        @type image_analysis: ImageAnalysis
-        @param base_call_analysis: C{bsf.illumina.BaseCallAnalysis}
-        @type base_call_analysis: BaseCallAnalysis
+        :param file_path: A file path.
+        :type file_path: str
+        :param file_type: A file type (e.g., :literal:`CASAVA`, :literal:`External` or :literal:`Automatic`).
+        :type file_type: str
+        :param date: A date in :literal:`YYMMDD` format.
+        :type date: str | None
+        :param instrument: An Illumina instrument serial number (e.g., :literal:`SN181`, :literal:`SN815`, ...).
+        :type instrument: str | None
+        :param run: A run serial number.
+        :type run: str | None
+        :param flow_cell: A position and flow cell identifier.
+        :type flow_cell: str | None
+        :param run_information: A :py:class:`bsf.illumina.RunInformation` object.
+        :type run_information: RunInformation
+        :param run_parameters: A :py:class:`bsf.illumina.RunParameters` object.
+        :type run_parameters: RunParameters
+        :param image_analysis: A :py:class:`bsf.illumina.ImageAnalysis` object.
+        :type image_analysis: ImageAnalysis
+        :param base_call_analysis: A :py:class:`bsf.illumina.BaseCallAnalysis` object.
+        :type base_call_analysis: BaseCallAnalysis
         """
         super(RunFolder, self).__init__()
 
@@ -1169,19 +1204,19 @@ class RunFolder(object):
 
     @property
     def get_base_calls_directory(self):
-        """Get the base-calls directory in the I{IRF/Data/Intensities/BaseCalls} hierarchy.
+        """Get a base-calls directory in the :literal:`IRF/Data/Intensities/BaseCalls` hierarchy.
 
-        @return: Illumina base-calls directory
-        @rtype: str
+        :return: An Illumina base-calls directory.
+        :rtype: str
         """
         return os.path.join(self.file_path, 'Data', 'Intensities', 'BaseCalls')
 
     @property
     def get_name(self):
-        """Get the C{bsf.illumina.RunFolder} name.
+        """Get a Illumina Run Folder name.
 
-        @return: Name
-        @rtype: str
+        :return: An Illumina Run Folder name.
+        :rtype: str
         """
         return '_'.join((self.date, self.instrument, self.run, self.flow_cell))
 
@@ -1191,8 +1226,9 @@ class RunFolder(object):
         Return paths for files to be extracted from an Illumina Run Folder (IRF) in GNU Tar format,
         which are relevant for viewing in the Illumina Sequence Analysis Viewer (SAV).
         The file paths depend on the Realtime Analysis (RTA) software version.
-        @return: Python C{list} object of Python C{str} file path objects
-        @rtype: list[str]
+
+        :return: Python A :py:class:`list` object of Python :py:class:`str` (file path) objects.
+        :rtype: list[str]
         """
         str_list = list()
 
@@ -1240,8 +1276,8 @@ class RunFolder(object):
     def has_compressed_base_calls(self):
         """The Illumina Run Folder has un-compressed base call files.
 
-        @return: True if un-compressed files exist, False otherwise
-        @rtype: bool
+        :return: :py:const:`True` if un-compressed files exist, :py:const:`False` otherwise.
+        :rtype: bool
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -1278,8 +1314,8 @@ class RunFolder(object):
     def has_intensities(self):
         """The Illumina Run Folder has intensity files.
 
-        @return: True if intensity files exist, False otherwise
-        @rtype: bool
+        :return: :py:const:`True` if intensity files exist, :py:const:`False` otherwise.
+        :rtype: bool
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -1294,9 +1330,11 @@ class RunFolder(object):
             return False
 
     def _check_tiles_base_call(self):
-        """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/BaseCalls/config.xml}
-        configuration file. This method also builds up a Python C{dict} required for method
-        C{_is_missing_base_call_tile}.
+        """Check for missing :literal:`<Tile>` elements in the :literal:`IRF/Data/Intensities/BaseCalls/config.xml`
+        configuration file.
+
+        This method also builds up a Python :py:class:`dict` object required for method
+        :py:meth:`_is_missing_base_call_tile`.
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -1317,10 +1355,13 @@ class RunFolder(object):
         return
 
     def _check_tiles_image_analysis(self):
-        """Check for missing I{<Tile>} elements in the XML configuration file.
+        """Check for missing :literal:`<Tile>` elements in the XML configuration file.
 
-        Check the I{IRF/Data/Intensities/config.xml} configuration file for missing I{<Tile>} XML elements.
-        This method also builds up a Python C{dict} required for method C{_is_missing_image_analysis_tile}.
+        Check the :literal:`IRF/Data/Intensities/config.xml` configuration file for missing :literal:`<Tile>`
+        XML elements.
+
+        This method also builds up a Python :py:class:`dict` object required for method
+        :py:meth:`_is_missing_image_analysis_tile`.
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -1341,15 +1382,17 @@ class RunFolder(object):
         return
 
     def _is_missing_base_call_tile(self, lane, tile):
-        """Confirm that a particular I{<Tile>} element is missing from the XML configuration file.
+        """Confirm that a particular :literal:`<Tile>` element is missing from the XML configuration file.
 
-        Check the I{IRF/Data/Intensities/config.xml} configuration file for missing I{<Tile>} XML elements.
-        @param lane: Lane index
-        @type lane: int
-        @param tile: Tile name
-        @type tile: str
-        @return: Boolean value
-        @rtype: bool
+        Check the :literal:`IRF/Data/Intensities/config.xml` configuration file for missing :literal:`<Tile>`
+        XML elements.
+
+        :param lane: A lane number.
+        :type lane: int
+        :param tile: A tile number.
+        :type tile: str
+        :return: :py:const:`True` if the tile is missing, :py:const:`False` otherwise.
+        :rtype: bool
         """
         if lane in self._missing_base_call_tiles:
             lane_dict = self._missing_base_call_tiles[lane]
@@ -1361,15 +1404,17 @@ class RunFolder(object):
             return False
 
     def _is_missing_image_analysis_tile(self, lane, tile):
-        """Confirm that a particular I{<Tile>} element is missing from the XML configuration file.
+        """Confirm that a particular :literal:`<Tile>` element is missing from the XML configuration file.
 
-        Check the I{IRF/Data/Intensities/BaseCalls/config.xml} configuration file for missing I{<Tile>} XML elements.
-        @param lane: Lane index
-        @type lane: int
-        @param tile: Tile name
-        @type tile: str
-        @return: Boolean value
-        @rtype: bool
+        Check the :literal:`IRF/Data/Intensities/BaseCalls/config.xml` configuration file for
+        missing :literal`<Tile>` XML elements.
+
+        :param lane: A lane number.
+        :type lane: int
+        :param tile: A tile number.
+        :type tile: str
+        :return: :py:const:`True` if the tile is missing, :py:const:`False` otherwise.
+        :rtype: bool
         """
         if lane in self._missing_image_analysis_tiles:
             lane_dict = self._missing_image_analysis_tiles[lane]
@@ -1382,16 +1427,17 @@ class RunFolder(object):
 
     @staticmethod
     def _check_file_names(directory_dict, directory_path, file_name_list, debug=0):
-        """Check a Python C{list} of file names against a Python C{dict} of directory entries.
+        """Check a Python :py:class:`list` of file names against a Python :py:class:`dict` of directory entries.
 
-        @param directory_dict: Python C{dict} of directory entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Directory path
-        @type directory_path: str
-        @param file_name_list: Python C{list} of file names
-        @type file_name_list: list[str]
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (directory entry) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: A directory path.
+        :type directory_path: str
+        :param file_name_list: A Python :py:class:`list` object of Python :py:class:`str` (file name) objects.
+        :type file_name_list: list[str]
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         if debug > 0:
             # print('Processing directory', directory_path)
@@ -1408,16 +1454,17 @@ class RunFolder(object):
 
     @staticmethod
     def _check_file_suffixes(directory_dict, directory_path, file_suffix_list, debug=0):
-        """Check a Python C{list} of file suffixes against a Python C{dict} of directory entries.
+        """Check a Python :py:class:`list` of file suffixes against a Python :py:class:`dict` of directory entries.
 
-        @param directory_dict: Python C{dict} of directory entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Directory path
-        @type directory_path: str
-        @param file_suffix_list: Python C{list} of file names
-        @type file_suffix_list: list[str]
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (directory entry) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: A directory path.
+        :type directory_path: str
+        :param file_suffix_list: A Python :py:class:`list` object of Python :py:class:`str` (file name) objects.
+        :type file_suffix_list: list[str]
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         if debug > 0:
             # print('Processing directory', directory_path)
@@ -1435,14 +1482,15 @@ class RunFolder(object):
         return
 
     def _check_config(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Config/} directory.
+        """Check the :literal:`IRF/Config/` directory.
 
-        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (Illumina Run Folder :literal:`IRF/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
         # flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
@@ -1524,14 +1572,15 @@ class RunFolder(object):
         return
 
     def _check_data_intensities_base_calls_matrix(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Data/Intensities/BaseCalls/Matrix/} directory.
+        """Check the :literal:`IRF/Data/Intensities/BaseCalls/Matrix/` directory.
 
-        @param directory_dict: Python C{dict} of I{IRF/Data/Intensities/BaseCalls/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: I{IRF/Data/Intensities/BaseCalls/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:literal:`IRF/Data/Intensities/BaseCalls/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An :literal:`IRF/Data/Intensities/BaseCalls/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1654,14 +1703,15 @@ class RunFolder(object):
         return
 
     def _check_data_intensities_base_calls_phasing(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Data/Intensities/BaseCalls/Phasing/} directory.
+        """Check the :literal:`IRF/Data/Intensities/BaseCalls/Phasing/` directory.
 
-        @param directory_dict: Python C{dict} of I{IRF/Data/intensities/BaseCalls/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: I{IRF/Data/intensities/BaseCalls/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:literal:`IRF/Data/intensities/BaseCalls/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An :literal:`IRF/Data/intensities/BaseCalls/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1770,14 +1820,15 @@ class RunFolder(object):
         return
 
     def _check_data_intensities_base_calls(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Data/Intensities/BaseCalls/} directory.
+        """Check the :literal:`IRF/Data/Intensities/BaseCalls/` directory.
 
-        @param directory_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: I{IRF/Data/Intensities/} file path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:literal:`IRF/Data/Intensities/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An :literal:`IRF/Data/Intensities/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2010,14 +2061,15 @@ class RunFolder(object):
         return
 
     def _check_data_intensities_offsets(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Data/Intensities/Offsets/} directory.
+        """Check the :literal:`IRF/Data/Intensities/Offsets/` directory.
 
-        @param directory_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: I{IRF/Data/Intensities/} file path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:literal:`IRF/Data/Intensities/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An :literal:`IRF/Data/Intensities/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2061,14 +2113,15 @@ class RunFolder(object):
         return
 
     def _check_data_intensities(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Data/Intensities/} directory.
+        """Check the :literal:`IRF/Data/Intensities/` directory.
 
-        @param directory_dict: Python C{dict} of I{IRF/Data/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: I{IRF/Data/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:literal:`IRF/Data/`)  objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An :literal:`IRF/Data/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2311,14 +2364,15 @@ class RunFolder(object):
         return
 
     def _check_data_tile_status(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Data/TileStatus/} directory.
+        """Check the :literal:`IRF/Data/TileStatus/` directory.
 
-        @param directory_dict: Python C{dict} of I{IRF/Data/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: I{IRF/Data/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (:literal:`IRF/Data/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An :literal:`IRF/Data/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -2367,14 +2421,15 @@ class RunFolder(object):
         return
 
     def _check_data(self, directory_dict, directory_path, debug=0):
-        """Check the IRF/Data/ directory.
+        """Check the :literal:`IRF/Data/` directory.
 
-        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (Illumina Run Folder :literal:`IRF/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2466,14 +2521,15 @@ class RunFolder(object):
         return
 
     def _check_inter_op(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/InterOp/} directory.
+        """Check the :literal:`IRF/InterOp/` directory.
 
-        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (Illumina Run Folder :literal:`IRF/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2641,14 +2697,15 @@ class RunFolder(object):
         return
 
     def _check_periodic_save_rates(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/PeriodicSaveRates/} directory.
+        """Check the :literal:`IRF/PeriodicSaveRates/` directory.
 
-        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (Illumina Run Folder :literal:`IRF/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         _directory_name = 'PeriodicSaveRates'
         _directory_path = os.path.join(directory_path, _directory_name)
@@ -2681,14 +2738,15 @@ class RunFolder(object):
         return
 
     def _check_recipe(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Recipe/} directory.
+        """Check the :literal:`IRF/Recipe/` directory.
 
-        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (Illumina Run Folder :literal:`IRF/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
@@ -2749,14 +2807,15 @@ class RunFolder(object):
         return
 
     def _check_thumbnail_images(self, directory_dict, directory_path, debug=0):
-        """Check the I{IRF/Thumbnail_Images/} directory.
+        """Check the :literal:`IRF/Thumbnail_Images/` directory.
 
-        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type directory_dict: dict[str, int]
-        @param directory_path: Illumina Run Folder I{IRF/} path
-        @type directory_path: str
-        @param debug: Integer debugging level
-        @type debug: int
+        :param directory_dict: A Python :py:class:`dict` object of
+            Python :py:class:`str` (Illumina Run Folder :literal:`IRF/`) objects.
+        :type directory_dict: dict[str, int]
+        :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
+        :type directory_path: str
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2927,9 +2986,10 @@ class RunFolder(object):
     def check(self, debug=0):
         """Check an Illumina Run Folder in regard to its internal directory and file structure.
 
-        Both, missing and additional files are printed to STDOUT.
-        @param debug: Integer debugging level
-        @type debug: int
+        Both, missing and additional files are printed to :literal:`STDOUT`.
+
+        :param debug: An integer debugging level.
+        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 

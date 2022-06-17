@@ -22,10 +22,8 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Kallisto Analysis module.
-
-A package of classes and methods supporting Kallisto analyses.
-See https://pachterlab.github.io/kallisto/manual
+"""The :py:mod:`bsf.analyses.kallisto` module provides classes and methods supporting
+`Kallisto <https://pachterlab.github.io/kallisto/manual>`_ analyses.
 """
 import os
 import sys
@@ -39,17 +37,18 @@ from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
 
 class FilePathSample(FilePath):
-    """The C{bsf.analyses.kallisto.FilePathSample} models files in a sample-specific Kallisto directory.
+    """The :py:class:`bsf.analyses.kallisto.FilePathSample` class models files in a
+    sample-specific Kallisto directory.
 
-    @ivar output_directory: Output directory
-    @type output_directory: str
+    :ivar output_directory: An output directory path.
+    :type output_directory: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.kallisto.FilePathSample} object
+        """Initialise a :py:class:`bsf.analyses.kallisto.FilePathSample` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathSample, self).__init__(prefix=prefix)
 
@@ -62,24 +61,20 @@ class FilePathSample(FilePath):
 
 
 class Kallisto(Analysis):
-    """Kallisto C{bsf.analysis.Analysis} subclass.
+    """The :py:class:`bsf.analyses.kallisto.Kallisto` class provides support for the Kallisto pseudo-aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
-    @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | None
-    @ivar fragment_length_value: Fragment length
-    @type fragment_length_value: str | None
-    @ivar fragment_length_standard_deviation: Fragment length standard deviation
-    @type fragment_length_standard_deviation: str | None
-    @ivar bias_correction: Enable sequence-specific bias correction
-    @type bias_correction: bool
-    @ivar bootstrap_samples: Number of bootstrap samples
-    @type bootstrap_samples: str
+    :ivar transcriptome_version: A transcriptome version.
+    :type transcriptome_version: str | None
+    :ivar transcriptome_index_path: A transcriptome index file path.
+    :type transcriptome_index_path: str | None
+    :ivar fragment_length_value: A fragment length.
+    :type fragment_length_value: str | None
+    :ivar fragment_length_standard_deviation: A fragment length standard deviation.
+    :type fragment_length_standard_deviation: str | None
+    :ivar bias_correction: Request sequence-specific bias correction.
+    :type bias_correction: bool
+    :ivar bootstrap_samples: A number of bootstrap samples.
+    :type bootstrap_samples: str
     """
 
     name = 'Kallisto Analysis'
@@ -87,32 +82,32 @@ class Kallisto(Analysis):
 
     @classmethod
     def get_stage_name_sample(cls):
-        """Get a particular C{bsf.analysis.Stage.name}.
+        """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
-        @return: C{bsf.analysis.Stage.name}
-        @rtype: str
+        :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
+        :rtype: str
         """
         return '_'.join((cls.prefix, 'sample'))
 
     @classmethod
     def get_prefix_sample(cls, sample_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
         """
         return '_'.join((cls.get_stage_name_sample(), sample_name))
 
     @classmethod
     def get_file_path_sample(cls, sample_name):
-        """Get a C{FilePathSample} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.kallisto.FilePathSample` object from this or a subclass.
 
-        @param sample_name: C{bsf.ngs.Sample.name}
-        @type sample_name: str
-        @return: C{FilePathSample} or subclass object
-        @rtype: FilePathSample
+        :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        :type sample_name: str
+        :return: A :py:class:`bsf.analyses.kallisto.FilePathSample` object or subclass thereof.
+        :rtype: FilePathSample
         """
         return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
@@ -139,52 +134,50 @@ class Kallisto(Analysis):
             fragment_length_standard_deviation=None,
             bias_correction=None,
             bootstrap_samples=None):
-        """Initialise a C{bsf.analyses.kallisto.Kallisto} object.
+        """Initialise a :py:class:`bsf.analyses.kallisto.Kallisto` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str
-        @param genome_version: Genome version
-        @type genome_version: str
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage]
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample]
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | None
-        @param fragment_length_value: Fragment length
-        @type fragment_length_value: str | None
-        @param fragment_length_standard_deviation: Fragment length standard deviation
-        @type fragment_length_standard_deviation: str | None
-        @param bias_correction: Enable sequence-specific bias correction
-        @type bias_correction: bool
-        @param bootstrap_samples: Number of bootstrap samples
-        @type bootstrap_samples: str
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :param transcriptome_index_path: A transcriptome index file path.
+        :type transcriptome_index_path: str | None
+        :param fragment_length_value: A fragment length.
+        :type fragment_length_value: str | None
+        :param fragment_length_standard_deviation: A fragment length standard deviation.
+        :type fragment_length_standard_deviation: str | None
+        :param bias_correction: Request sequence-specific bias correction.
+        :type bias_correction: bool
+        :param bootstrap_samples: A number of bootstrap samples.
+        :type bootstrap_samples: str
         """
         super(Kallisto, self).__init__(
             configuration=configuration,
@@ -215,14 +208,15 @@ class Kallisto(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rnaseq.Tuxedo} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.kallisto.Kallisto` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(Kallisto, self).set_configuration(configuration=configuration, section=section)
 
@@ -255,15 +249,17 @@ class Kallisto(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rnaseq.Tuxedo} analysis.
+        """Run a :py:class:`bsf.analyses.kallisto.Kallisto` object.
         """
 
         def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+            """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
+            from a CSV file path.
 
-            This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.analysis.Analysis.sample_list} instance variable.
+            This implementation just adds all :py:class:`bsf.ngs.Sample` objects from the
+            :py:attr:`bsf.analysis.Analysis.collection` instance variable
+            (i.e., :py:class:`bsf.ngs.Collection` object) to the
+            :py:attr:`bsf.analysis.Analysis.sample_list` instance variable.
             """
             self.sample_list.extend(self.collection.get_all_samples())
 

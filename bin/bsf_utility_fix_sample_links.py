@@ -37,10 +37,10 @@ from argparse import ArgumentParser
 def scan_directory(directory_path, debug=0):
     """Scan a directory for symbolic links or directories recursively.
 
-    @param directory_path: Directory path
-    @type directory_path: str
-    @param debug: Debug level
-    @type debug: int
+    :param directory_path: A directory path.
+    :type directory_path: str
+    :param debug: An integer debugging level.
+    :type debug: int
     """
     for file_name in os.listdir(directory_path):
         file_path = os.path.join(directory_path, file_name)

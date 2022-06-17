@@ -65,7 +65,7 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--project-name',
     dest='project_name',
-    help='project name i.e. flow cell identifier',
+    help='project name (i.e., flow cell identifier)',
     required=False,
     type=str)
 
@@ -86,7 +86,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--mode',
-    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    help='HiSeq run mode (i.e., "high" (high-output) or "rapid" (rapid run))',
     required=False,
     type=str)
 

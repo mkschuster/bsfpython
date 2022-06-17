@@ -22,11 +22,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""Generic ConsecutiveRunnable module.
-
-A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConsecutiveRunnable}.
-Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
-restarting of the C{bsf.procedure.ConsecutiveRunnable} object processing.
+"""The :py:mod:`bsf.runnables.consecutive` class provides functions to run
+:py:class:`bsf.process.RunnableStep` objects of a :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+Empty status files keep track of completed :py:class:`bsf.process.RunnableStep` objects and allow for
+restarting of the :py:class:`bsf.procedure.ConsecutiveRunnable` object processing.
 """
 import os
 
@@ -34,10 +33,10 @@ from bsf.procedure import ConsecutiveRunnable
 
 
 def run(runnable):
-    """Run the the C{bsf.procedure.ConsecutiveRunnable}.
+    """Run the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
-    @param runnable: C{bsf.procedure.ConsecutiveRunnable}
-    @type runnable: ConsecutiveRunnable
+    :param runnable: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.
+    :type runnable: ConsecutiveRunnable
     """
 
     # If the ConsecutiveRunnable status file exists, there is nothing to do and

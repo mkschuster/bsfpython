@@ -22,12 +22,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""HISAT Analysis module.
-
-A package of classes and methods supporting the HISAT graph-based alignment of next generation sequencing reads
-to a population of genomes.
-
-Project:  https://ccb.jhu.edu/software/hisat2/index.shtml
+"""The :py:mod:`bsf.analyses.hisat` module provides classes and methods supporting the
+`HISAT <https://daehwankimlab.github.io/hisat2/>`_ graph-based alignment of
+next generation sequencing reads to a population of genomes.
 """
 import os
 
@@ -41,17 +38,17 @@ from bsf.standards import Configuration, StandardFilePath, Transcriptome
 
 
 class FilePathAlign(AlignerFilePathAlign):
-    """The C{bsf.analyses.hisat.FilePathAlign} class models file paths at the alignment stage.
+    """The :py:class:`bsf.analyses.hisat.FilePathAlign` class models file paths at the alignment stage.
 
-    @ivar summary_txt: Alignment summary file
-    @type summary_txt: str
+    :ivar summary_txt: An alignment summary file path.
+    :type summary_txt: str
     """
 
     def __init__(self, prefix):
-        """Initialise a C{FilePathAlign} object.
+        """Initialise a :py:class:`bsf.analyses.hisat.FilePathAlign` object.
 
-        @param prefix: Prefix
-        @type prefix: str
+        :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
+        :type prefix: str
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -61,25 +58,18 @@ class FilePathAlign(AlignerFilePathAlign):
 
 
 class Hisat2(Aligner):
-    """The C{bsf.analyses.hisat.Hisat2} class represents the logic to run a (short read) aligner.
+    """The :py:class:`bsf.analyses.hisat.Hisat2` class represents the logic to run a (short read) aligner.
 
-    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by subclasses
-    @type name: str
-    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by subclasses
-    @type prefix: str
-    @cvar sam_attributes_to_retain_list: A Python C{list} of aligner-specific, private SAM tags (i.e. X*, Y*, z*)
-        that should be retained by Picard MergeBamAlignment
-    @type sam_attributes_to_retain_list: list[str]
-    @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str | None
-    @ivar transcriptome_gtf: Transcriptome annotation GTF file path
-    @type transcriptome_gtf: str | None
-    @ivar transcriptome_index: Transcriptome index directory path
-    @type transcriptome_index: str
-    @cvar rna_strand: mRNA strand (i.e. F, R, FR or RF)
-    @type rna_strand: str
-    @ivar threads_number: Number of threads
-    @type threads_number: int | None
+    :ivar transcriptome_version: A transcriptome version.
+    :type transcriptome_version: str | None
+    :ivar transcriptome_gtf: A transcriptome annotation GTF file path.
+    :type transcriptome_gtf: str | None
+    :ivar transcriptome_index: A transcriptome index directory path.
+    :type transcriptome_index: str
+    :ivar rna_strand: An mRNA strand (i.e., F, R, FR or RF).
+    :type rna_strand: str
+    :ivar threads_number: A number of threads.
+    :type threads_number: int | None
     """
 
     name = 'HISAT2 Analysis'
@@ -123,12 +113,12 @@ class Hisat2(Aligner):
 
     @classmethod
     def get_file_path_align(cls, paired_reads_name):
-        """Get a C{FilePathAlign} object from this or a subclass.
+        """Get a :py:class:`bsf.analyses.hisat.FilePathAlign` object from this or a subclass.
 
-        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
-        @type paired_reads_name: str
-        @return: C{FilePathAlign} or subclass object
-        @rtype: FilePathAlign
+        :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
+        :type paired_reads_name: str
+        :return: A :py:class:`bsf.analyses.hisat.FilePathAlign` object or subclass thereof.
+        :rtype: FilePathAlign
         """
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
@@ -158,58 +148,56 @@ class Hisat2(Aligner):
             java_archive_picard=None,
             rna_strand=None,
             threads_number=None):
-        """Initialise a C{bsf.analyses.hisat.Hisat2}.
+        """Initialise a :py:class:`bsf.analyses.hisat.Hisat2` object.
 
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param project_name: Project name
-        @type project_name: str | None
-        @param genome_version: Genome version
-        @type genome_version: str | None
-        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
-        @type input_directory: str | None
-        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
-        @type output_directory: str | None
-        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
-            normally under the C{bsf.analysis.Analysis}-wide output directory
-        @type project_directory: str | None
-        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
-            normally under the C{bsf.analysis.Analysis}-wide project directory
-        @type genome_directory: str | None
-        @param report_style_path: Report CSS file path
-        @type report_style_path: str | None
-        @param report_header_path: Report header HTML file path
-        @type report_header_path: str | None
-        @param report_footer_path: Report footer HTML file path
-        @type report_footer_path: str | None
-        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str | None
-        @param debug: Integer debugging level
-        @type debug: int
-        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
-        @type stage_list: list[Stage] | None
-        @param collection: C{bsf.ngs.Collection}
-        @type collection: Collection | None
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[Sample] | None
-        @param genome_fasta: Genome FASTA file
-        @type genome_fasta: str | None
-        @param genome_index: Genome index
-        @type genome_index: str | None
-        @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str | None
-        @param transcriptome_gtf: Transcriptome annotation GTF file path
-        @type transcriptome_gtf: str | None
-        @param transcriptome_index: Transcriptome index directory path
-        @type transcriptome_index: str
-        @param skip_mark_duplicates: Mark duplicates
-        @type skip_mark_duplicates: bool | None
-        @param java_archive_picard: Picard tools Java Archive (JAR) file path
-        @type java_archive_picard: str | None
-        @param rna_strand: mRNA strand (i.e. F, R, FR or RF)
-        @type rna_strand: str
-        @param threads_number: Number of threads
-        @type threads_number: int | None
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param genome_version: A genome assembly version.
+        :type genome_version: str | None
+        :param input_directory: An input directory path.
+        :type input_directory: str | None
+        :param output_directory: An output directory path.
+        :type output_directory: str | None
+        :param project_directory: A project directory path, normally under the output directory path.
+        :type project_directory: str | None
+        :param genome_directory: A genome directory path, normally under the project directory path.
+        :type genome_directory: str | None
+        :param report_style_path: Report :literal:`CSS` file path.
+        :type report_style_path: str | None
+        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :type report_header_path: str | None
+        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :type report_footer_path: str | None
+        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :type e_mail: str | None
+        :param debug: An integer debugging level.
+        :type debug: int | None
+        :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
+        :type stage_list: list[Stage] | None
+        :param collection: A :py:class:`bsf.ngs.Collection` object.
+        :type collection: Collection | None
+        :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
+        :type sample_list: list[Sample] | None
+        :param genome_fasta: A genome FASTA file path.
+        :type genome_fasta: str | None
+        :param genome_index: A genome index file path.
+        :type genome_index: str | None
+        :param transcriptome_version: A transcriptome version.
+        :type transcriptome_version: str | None
+        :param transcriptome_gtf: A transcriptome annotation GTF file path.
+        :type transcriptome_gtf: str | None
+        :param transcriptome_index: A transcriptome index directory path.
+        :type transcriptome_index: str
+        :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
+        :type skip_mark_duplicates: bool | None
+        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :type java_archive_picard: str | None
+        :param rna_strand: An mRNA strand (i.e., F, R, FR or RF).
+        :type rna_strand: str
+        :param threads_number: A number of threads.
+        :type threads_number: int | None
         """
         super(Hisat2, self).__init__(
             configuration=configuration,
@@ -244,14 +232,15 @@ class Hisat2(Aligner):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.hisat.Hisat2} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a :py:class:`bsf.analyses.hisat.Hisat2` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: Configuration
-        @param section: Configuration file section
-        @type section: str
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
         """
         super(Hisat2, self).set_configuration(configuration=configuration, section=section)
 
@@ -280,17 +269,17 @@ class Hisat2(Aligner):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more HISAT2-specific C{bsf.process.RunnableStep} objects to the
-        C{bsf.procedure.ConcurrentRunnable}.
+        """Add one or more HISAT2-specific :py:class:`bsf.process.RunnableStep` objects to the
+        :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
-        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
-        @type runnable_align: ConcurrentRunnable
-        @param stage_align: C{bsf.analysis.Stage}
-        @type stage_align: Stage
-        @param file_path_1: FASTQ file path 1
-        @type file_path_1: str | None
-        @param file_path_2: FASTQ file path 2
-        @type file_path_2: str | None
+        :param runnable_align: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
+        :type runnable_align: ConcurrentRunnable
+        :param stage_align: A :py:class:`bsf.analysis.Stage` object.
+        :type stage_align: Stage
+        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :type file_path_1: str | None
+        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
@@ -340,13 +329,13 @@ class Hisat2(Aligner):
         # --rg-id <text>
         # --rg <text>
 
-        # Enable memory-mapped (i.e. shared) indices.
+        # Enable memory-mapped (i.e., shared) indices.
         runnable_step.add_switch_long(key='mm')
 
         return
 
     def run(self):
-        """Run a C{bsf.analyses.hisat.Hisat2} analysis.
+        """Run a :py:class:`bsf.analyses.hisat.Hisat2` object.
         """
         # Check for the project name already here,
         # since the super class method has to be called later.
