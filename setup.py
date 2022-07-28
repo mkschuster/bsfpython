@@ -28,8 +28,8 @@
 #
 import setuptools
 
-with open(file='README.md', mode='r') as fh:
-    long_description = fh.read()
+with open(file='README.md', mode='r') as text_io:
+    long_description = text_io.read()
 
 # https://docs.python.org/3/distutils/setupscript.html
 setuptools.setup(
