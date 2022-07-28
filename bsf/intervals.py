@@ -267,7 +267,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     container_list: List[Container] = list()
     total_length: int = 0
 
-    alignment_file = AlignmentFile(dictionary_path, 'rt')
+    alignment_file = AlignmentFile(filename=dictionary_path, mode='r')
 
     # Summarise sequence lengths to get the total length.
     for sq_entry in alignment_file.header['SQ']:

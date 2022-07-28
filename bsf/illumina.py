@@ -529,14 +529,14 @@ class RunInformation(object):
             return
         else:
             return datetime.datetime(
-                int(self.date[0:2]) + 2000,  # year
-                int(self.date[2:4]),  # month
-                int(self.date[4:6]),  # day
-                0,  # hour
-                0,  # minute
-                0,  # second
-                0,  # microsecond
-                dateutil.tz.tzlocal()  # tzinfo
+                year=int(self.date[0:2]) + 2000,
+                month=int(self.date[2:4]),
+                day=int(self.date[4:6]),
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+                tzinfo=dateutil.tz.tzlocal()
             ).isoformat()
 
     @property
