@@ -4302,6 +4302,10 @@ class DESeq(Analysis):
 
             # Print contrasts ordered by design names.
             for design_name in sorted(contrast_dict):
+                # Exclude designs that are either not or no longer in the design dict since they were excluded.
+                if design_name not in design_dict:
+                    continue
+
                 design_prefix = '_'.join((self.prefix, design_name))
                 contrasts_summary_path = os.path.join(
                     self.genome_directory,
