@@ -108,11 +108,11 @@ for file_name in file_name_list:
         print('Directory ' + repr(file_name) + ' not an Illumina Run Folder')
         continue
 
-    # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
+    # Temporarily catch OSError and xml.etree.ElementTree.ParseError exceptions
     # that result from a broken FhGFS file system.
     try:
         irf = RunFolder.from_file_path(file_path=file_path)
-    except IOError as exception:
+    except OSError:
         if name_space.debug:
             print('\t'.join((file_name, '?', '?', '?')))
         continue
