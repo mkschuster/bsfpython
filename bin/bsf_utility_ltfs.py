@@ -24,7 +24,11 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-#  BSF Python script to support IBM Linear Tape File System (LTFS) operations.
+#  BSF Python script to prepare an XML batch file for the IBM Linear Tape File System Copy tool.
+#  This script requires an LTO barcode and reads a corresponding text file with file paths from the current directory.
+#  The file sizes are determined and summed up to report the remaining or exceeded space depending on the cartridge
+#  barcode or a mounted cartridge. An XML file, which can be used as a batch file for the
+#  Linear Tape File System Copy (ltfscp) tool gets written into the current directory.
 #
 import os
 from argparse import ArgumentParser
@@ -35,15 +39,27 @@ cartridge_dict = {
     # Part Number 19P0034
     # EC - M10321
     # http://www-01.ibm.com/support/docview.wss?uid=ssg1S7000429
+    # https://www.ibm.com/docs/en/ts4300-tape-library?topic=overview-supported-tape-cartridges
     # 'L1': # Generation 1 Type A (100 GB)
     # 'LA': # Generation 1 Type B (50 GB)
     # 'LB': # Generation 1 Type C (30 GB)
     # 'LC': # Generation 1 Type D (10 GB)
     # 'L2': # Generation 2 Type A (200 GB)
     # 'L3': # Generation 3 Type A (400 GB)
+    # 'LT': # Generation 3 WORM   (400 GB)
     # 'L4': # Generation 4 Type A (600 GB)
+    # 'LU': # Generation 4 WORM   (600 GB)
     'L5': 1391601152 * 1024,  # Generation 5 Type A (1500 GB)
+    'LV': 1391601152 * 1024,  # Generation 5 WORM   (1500 GB)
     'L6': 2351648768 * 1024,  # Generation 6 Type A (2500 GB)
+    'LW': 2351648768 * 1024,  # Generation 6 WORM   (2500 GB)
+    # 'L7': # Generation 7 Type A (6 TB)
+    # 'LX': # Generation 7 WORM   (6 TB)
+    # 'M8': # Generation M8       (9 TB)
+    # 'L8': # Generation 8 Type A (12 TB)
+    # 'LY': # Generation 8 WORM   (12 TB)
+    # 'L9': # Generation 9 Type A (18 TB)
+    # 'LZ': # Generation 9 WORM   (18 TB)
 }
 
 si_prefix_dict = {
@@ -60,7 +76,7 @@ si_prefix_dict = {
 def convert_into_readable(integer_bytes):
     """Convert an integer number of bytes into a readable number with SI prefixes.
 
-    :param integer_bytes: An integer number of bytes
+    :param integer_bytes: An integer number of bytes.
     :type integer_bytes: int
     :return: A Python :py:class:`tuple` object of
         Python :py:class:`float` (readable bytes) and Python :py:class:`str` (SI unit) object.
@@ -277,7 +293,7 @@ class LinearTapeFileSystemCopy(object):
         return
 
     def get_element_tree(self):
-        """Get the :py:class:`xml.etree.ElementTree.ElementTree} object representation of the
+        """Get the :py:class:`xml.etree.ElementTree.ElementTree` object representation of the
         :py:class:`LinearTapeFileSystemCopy` object.
 
         :return: A :py:class:`xml.etree.ElementTree.ElementTree` object.
@@ -466,8 +482,8 @@ else:
 
 total_size = 0
 
-with open(file=cartridge_code + '.txt', mode='rt') as input_file:
-    for main_file_path in input_file:
+with open(file=cartridge_code + '.txt', mode='rt') as text_io:
+    for main_file_path in text_io:
         main_file_path = main_file_path.strip()
         main_file_path = os.path.normpath(main_file_path)
         ltfs_stat_result = os.stat(main_file_path)
