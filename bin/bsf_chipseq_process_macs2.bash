@@ -260,13 +260,13 @@ cd "${prefix}" || exit 1
 # Convert the model Rscript into a model PDF document.
 
 if [[ -f "${prefix}/${prefix}_model.r" ]]; then
-  Rscript "${prefix}/${prefix}_model.r"
+  Rscript "${prefix}/${prefix}_model.r" || exit 1
 fi
 
 # Use ImageMagick "convert" to convert the model PDF into two PNG files.
 
 if [[ -f "${prefix}/${prefix}_model.pdf" ]]; then
-  convert "${prefix}/${prefix}_model.pdf" "${prefix}/${prefix}_model.png"
+  convert "${prefix}/${prefix}_model.pdf" "${prefix}/${prefix}_model.png" || exit 1
 fi
 
 # Change back to the old working directory, the genome directory.
