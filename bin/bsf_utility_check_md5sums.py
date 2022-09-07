@@ -70,7 +70,7 @@ md5sum_archive = MD5SumArchive.from_file_path(file_path=name_space.file_path)
 text_io = NamedTemporaryFile(mode='wt', suffix='.md5', delete=False)
 
 for file_path in name_space.file_paths:
-    file_name = os.path.basename(p=file_path)
+    file_name = os.path.basename(file_path)
     if file_name in md5sum_archive.md5sum_dict:
         md5sum = md5sum_archive.md5sum_dict[file_name]
         md5_file_path = os.path.normpath(os.path.join(os.getcwd(), file_path))

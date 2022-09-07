@@ -486,8 +486,7 @@ with open(file=cartridge_code + '.txt', mode='rt') as text_io:
     for main_file_path in text_io:
         main_file_path = main_file_path.strip()
         main_file_path = os.path.normpath(main_file_path)
-        ltfs_stat_result = os.stat(main_file_path)
-        total_size += ltfs_stat_result.st_size
+        total_size += os.stat(path=main_file_path, follow_symlinks=True).st_size
         linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
 
 if ltfs_free_bytes <= total_size:

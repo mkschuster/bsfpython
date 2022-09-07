@@ -28,7 +28,6 @@
 #
 import os
 import re
-import stat
 from argparse import ArgumentParser
 
 from bsf.standards import Configuration, StandardFilePath
@@ -53,17 +52,15 @@ if not os.path.exists(prf_path):
 
 for file_name in os.listdir(prf_path):
     file_path = os.path.join(prf_path, file_name)
-    mode = os.stat(file_path).st_mode
-    match = re.search(pattern=r'^(\d+)$', string=file_name)
-    if stat.S_ISDIR(mode) and match:
+    re_match = re.search(pattern=r'^(\d+)$', string=file_name)
+    if os.path.isdir(file_path) and re_match is not None:
         # This is the lane directory. Should be changed from 1 to L001 for CASAVA compatibility ...
         for file_name_2 in os.listdir(file_path):
             file_path_2 = os.path.join(file_path, file_name_2)
-            mode = os.stat(file_path_2).st_mode
-            match = re.search(pattern=r'([^.]+).([^.]+).output.metrics.txt', string=file_name_2)
-            if stat.S_ISREG(mode) and match:
-                with open(file=file_path_2, mode='rt') as metrics_file:
-                    for line_str in metrics_file:
+            re_match = re.search(pattern=r'([^.]+).([^.]+).output.metrics.txt', string=file_name_2)
+            if os.path.isfile(file_path_2) and re_match is not None:
+                with open(file=file_path_2, mode='rt') as text_io:
+                    for line_str in text_io:
                         if not line_str:
                             continue
 

@@ -1613,13 +1613,12 @@ class Secrets(BaseSection):
         if not file_path:
             return None
 
-        file_stat_result = os.stat(path=file_path, follow_symlinks=True)
+        path_stat_result = os.stat(path=file_path, follow_symlinks=True)
 
-        if file_stat_result.st_mode & cls.user_mask:
+        if path_stat_result.st_mode & cls.user_mask:
             raise Exception(
-                'Secrets configuration file {} has file mode {:#0o}, '
-                'but should obey user mask {:#0o}.'.format(
-                    file_path, file_stat_result.st_mode, cls.user_mask))
+                f'Secrets configuration file {file_path} has file mode {path_stat_result.st_mode:#0o}, '
+                f'but should obey user mask {cls.user_mask:#0o}.')
 
         return file_path
 
@@ -1666,9 +1665,9 @@ class Central(BaseSection):
         :rtype: str
         """
         file_path = cls.get(option='configuration_xml')
-        file_path = os.path.expanduser(path=file_path)
-        file_path = os.path.expandvars(path=file_path)
-        file_path = os.path.normpath(path=file_path)
+        file_path = os.path.expanduser(file_path)
+        file_path = os.path.expandvars(file_path)
+        file_path = os.path.normpath(file_path)
 
         return file_path
 

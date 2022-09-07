@@ -27,7 +27,6 @@
 import logging
 import os
 import re
-import stat
 from typing import Callable, Dict, List, Optional
 from weakref import ReferenceType
 
@@ -831,8 +830,7 @@ class Sample(NextGenerationBase):
                 if not file_name.endswith('fastq.gz'):
                     continue
                 file_path = os.path.join(sample.file_path, file_name)
-                file_mode = os.stat(file_path).st_mode
-                if not stat.S_ISREG(file_mode):
+                if not os.path.isfile(file_path):
                     continue
                 sample.add_reads(reads=Reads.from_file_path(file_path=file_path, file_type=file_type))
         else:
@@ -1133,9 +1131,8 @@ class Project(NextGenerationBase):
             re_pattern = re.compile(pattern=r'^Sample_(.*)$')
             for file_name in os.listdir(project.file_path):
                 file_path = os.path.join(project.file_path, file_name)
-                file_mode = os.stat(file_path).st_mode
                 re_match = re_pattern.search(string=file_name)
-                if stat.S_ISDIR(file_mode) and re_match is not None:
+                if os.path.isdir(file_path) and re_match is not None:
                     if re_match.group(1) in project.sample_dict:
                         raise Exception(f'Sample with name {re_match.group(1)!r} already exists.')
                     else:
@@ -1381,9 +1378,8 @@ class ProcessedRunFolder(NextGenerationBase):
             re_pattern = re.compile(pattern=r'^Project_(.*)$')
             for file_name in os.listdir(prf.file_path):
                 file_path = os.path.join(prf.file_path, file_name)
-                file_mode = os.stat(file_path).st_mode
                 re_match = re_pattern.search(string=file_name)
-                if stat.S_ISDIR(file_mode) and re_match is not None:
+                if os.path.isdir(file_path) and re_match is not None:
                     if re_match.group(1) in prf.project_dict:
                         raise Exception(f'Project with name {re_match.group(1)!r} already exists.')
                     else:

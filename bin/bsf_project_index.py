@@ -58,13 +58,13 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
 
     for file_name in os.listdir(directory_absolute):
         file_path = os.path.join(directory_absolute, file_name)
-        mode = os.stat(file_path).st_mode
-        if stat.S_ISDIR(mode):
+        path_stat_result = os.stat(path=file_path, follow_symlinks=True)
+        if stat.S_ISDIR(path_stat_result.st_mode):
             scan_directory(
                 report_dict_local=report_dict_local,
                 directory_root=directory_root,
                 directory_path=os.path.join(directory_path, file_name))
-        elif stat.S_ISREG(mode):
+        elif stat.S_ISREG(path_stat_result.st_mode):
             match = re.search(pattern=r'^(.*)_report.html$', string=file_name)
             if match:
                 report_type = match.group(1)

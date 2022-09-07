@@ -67,13 +67,19 @@ print('Flow Cell Identifier: ', '_'.join((irf.run_parameters.get_experiment_name
                                           irf.run_parameters.get_flow_cell_barcode)))
 print('Read Structure:       ', ' + '.join(irf.run_information.get_read_structure_list))
 
-file_path_start = os.path.join(file_path, 'Config')
-if os.path.exists(file_path_start):
-    print('Start date:           ', datetime.date.fromtimestamp(os.stat(file_path_start).st_mtime))
+try:
+    path_stat_result = os.stat(path=os.path.join(file_path, 'Config'), follow_symlinks=True)
+except FileNotFoundError:
+    pass
+else:
+    print('Start date:           ', datetime.date.fromtimestamp(path_stat_result.st_mtime))
 
-file_path_end = os.path.join(file_path, 'RTAComplete.txt')
-if os.path.exists(file_path_end):
-    print('End date:             ', datetime.date.fromtimestamp(os.stat(file_path_end).st_mtime))
+try:
+    path_stat_result = os.stat(path=os.path.join(file_path, 'RTAComplete.txt'), follow_symlinks=True)
+except FileNotFoundError:
+    pass
+else:
+    print('End date:             ', datetime.date.fromtimestamp(path_stat_result.st_mtime))
 
 print('Experiment:           ', irf.run_parameters.get_experiment_name)
 print('Flow Cell:            ', irf.run_parameters.get_flow_cell_barcode)
