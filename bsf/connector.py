@@ -23,13 +23,18 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 """The :py:mod:`bsf.connector` module provides classes modelling inter-process connectors.
+
+The :py:class:`bsf.connector.Connector` objects are assigned via the :py:meth:`bsf.process.Executable.map_connector`
+static method for each :literal:`STDIN`, :literal:`STDOUT` and :literal:`STDERR` stream by the
+:py:func:`bsf.process.Executable.run_executables` class method.
 """
+
 from threading import Thread
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TextIO
 
 __all__ = \
-    'Connector', 'ConnectorFile', 'ConnectorPipe', 'ConnectorPipeNamed', \
-    'ConcurrentProcess', 'ElectronicSink', \
+    'Connector', 'ConnectorFile', 'ConnectorTextIO', 'ConnectorPipe', 'ConnectorPipeNamed', \
+    'ConcurrentProcess', 'ElectronicSink', 'StandardOutputRedirection', \
     'StandardStream', 'StandardInputStream', 'StandardOutputStream', 'StandardErrorStream'
 
 
@@ -42,7 +47,8 @@ class Connector(object):
 
 
 class ConnectorFile(Connector):
-    """The :py:class:`bsf.connector.ConnectorFile` class represents a file.
+    """The :py:class:`bsf.connector.ConnectorFile` class represents a file path that needs opening with
+    a particular mode.
 
     :ivar file_path: A file path.
     :type file_path: str
@@ -70,6 +76,27 @@ class ConnectorFile(Connector):
             f'{self.__class__.__name__}(' \
             f'file_path={self.file_path!r}, ' \
             f'file_mode={self.file_mode!r})'
+
+
+class ConnectorTextIO(Connector):
+    """The :py:class:`ConnectorTextIO` class represents a :py:class:`io.TextIOWrapper`
+    (or :py:class:`typing.TextIO`) object.
+
+    :ivar text_io: A Python :py:class:`io.TextIOWrapper` (or :py:class:`typing.TextIO`) object.
+    :type text_io: TextIO
+    """
+
+    def __init__(self, text_io: TextIO) -> None:
+        """Initialise a :py:class:`bsf.connector.ConnectorTextIO` object.
+
+        :param text_io: A Python :py:class:`io.TextIOWrapper` (or :py:class:`typing.TextIO`) object.
+        :type text_io: TextIO
+        """
+        super(ConnectorTextIO, self).__init__()
+
+        self.text_io = text_io
+
+        return
 
 
 class ConnectorPipe(Connector):
@@ -124,6 +151,15 @@ class ConcurrentProcess(Connector):
 class ElectronicSink(Connector):
     """The :py:class:`bsf.connector.ElectronicSink` class represents a :py:class:`io.FileIO` connection to
     :py:data:`os.devnull` via a Python :py:class:`subprocess.Popen` object and :py:data:`subprocess.DEVNULL`.
+    """
+
+    pass
+
+
+class StandardOutputRedirection(Connector):
+    """The :py:class:`bsf.connector.StandardOutputRedirection` class represents a
+    redirection from standard error to standard output via a Python :py:class:`subprocess.Popen` object
+    and :py:data:`subprocess.STDOUT`.
     """
 
     pass

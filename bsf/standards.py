@@ -1457,6 +1457,69 @@ class Index(BaseSection):
     _section = 'indices'
 
 
+class LinearTapeFileSystem(BaseSection):
+    """The :py:class:`LinearTapeFileSystem` class models device and file paths for the
+    :emphasis:`Linear Tape File System` (LTFS).
+
+    The defaults are read from the :literal:`[ltfs]` section.
+    """
+    _section = 'ltfs'
+
+    @classmethod
+    def get_drive_selector(cls) -> Optional[str]:
+        """Get a :emphasis:`serial number` or :emphasis:`device path` for a tape drive.
+
+        :return: A :emphasis:`serial number` or :emphasis:`device path` for a tape drive.
+        :rtype: str | None
+        """
+        return cls.get(option='drive_selector')
+
+    @classmethod
+    def get_drive_path(cls) -> Optional[str]:
+        """Get a :emphasis:`Linear Tape File System` (LTFS) mount point file path for a tape drive.
+
+        :return: A :emphasis:`Linear Tape File System` (LTFS) mount point file path for a tape drive.
+        :rtype: str | None
+        """
+        return cls.get(option='drive_path')
+
+    @classmethod
+    def get_drive_ltfs_options(cls) -> Optional[str]:
+        """Get a :emphasis:`Linear Tape File System` (LTFS) mount option string for a tape drive.
+
+        :return: A :emphasis:`Linear Tape File System` (LTFS) mount option string for a tape drive.
+        :rtype: str | None
+        """
+        return cls.get(option='drive_ltfs_options')
+
+    @classmethod
+    def get_library_selector(cls) -> Optional[str]:
+        """Get a :emphasis:`serial number` or :emphasis:`device path` for a tape library changer.
+
+        :return: A :emphasis:`serial number` or :emphasis:`device path` for a tape library changer.
+        :rtype: str | None
+        """
+        return cls.get(option='library_selector')
+
+    @classmethod
+    def get_library_path(cls) -> Optional[str]:
+        """Get a :emphasis:`Linear Tape File System` (LTFS) mount point path for a tape library changer.
+
+        :return: A :emphasis:`Linear Tape File System` (LTFS) mount point path for a tape library changer.
+        :rtype: str | None
+        """
+        return cls.get(option='library_path')
+
+    @classmethod
+    def get_library_ltfs_options(cls) -> Optional[str]:
+        """Get a :emphasis:`Linear Tape File System` (LTFS) mount option string for a tape library changer.
+
+        :return: A :emphasis:`Linear Tape File System` (LTFS) mount option string for a tape library changer.
+        :rtype: str | None
+        """
+        return cls.get(option='library_ltfs_options')
+
+
 class Operator(BaseSection):
     """The :py:class:`bsf.standards.Operator` class models the operator's defaults.
 

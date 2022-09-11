@@ -31,7 +31,7 @@ import shutil
 import stat
 import sys
 import time
-from subprocess import Popen, PIPE, DEVNULL
+from subprocess import Popen, PIPE, DEVNULL, STDOUT
 from threading import Lock, Thread
 from typing import IO, Optional, TypeVar, TextIO, Union
 
@@ -643,6 +643,9 @@ class Executable(Command):
         if isinstance(connector, ElectronicSink):
             return DEVNULL
 
+        if isinstance(connector, StandardOutputRedirection):
+            return STDOUT
+
         if isinstance(connector, ConnectorFile):
             if isinstance(connector, ConnectorPipeNamed):
                 # A named pipe needs creating before it can be opened.
@@ -656,6 +659,9 @@ class Executable(Command):
 
         if isinstance(connector, StandardStream):
             return PIPE
+
+        if isinstance(connector, ConnectorTextIO):
+            return connector.text_io
 
         if isinstance(connector, ConcurrentProcess):
             if executable_list is None:

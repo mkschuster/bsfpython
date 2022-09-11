@@ -58,6 +58,7 @@
       <w>isoforms</w>
       <w>iupac</w>
       <w>ltfs</w>
+      <w>ltfscp</w>
       <w>ncbi</w>
       <w>oligonucleotide</w>
       <w>phred</w>
@@ -84,6 +85,7 @@
       <w>trimmomatic</w>
       <w>truseq</w>
       <w>ucsc</w>
+      <w>ultrium</w>
       <w>unstranded</w>
       <w>vqslod</w>
       <w>vqsr</w>
