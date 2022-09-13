@@ -77,6 +77,7 @@ setuptools.setup(
     scripts=[
         'bin/bsf_runner.py',
 
+        # Analysis submission scripts.
         'bin/bsf_submit_bam_index_decoder.py',
         'bin/bsf_submit_bowtie2.py',
         'bin/bsf_submit_bwa_mem.py',
@@ -102,6 +103,7 @@ setuptools.setup(
         'bin/bsf_submit_trimmomatic.py',
         'bin/bsf_submit_variant_calling.py',
 
+        # Utility scripts.
         'bin/bsf_utility_blob_download.py',
         'bin/bsf_utility_blob_upload.py',
         'bin/bsf_utility_check_md5sums.py',
@@ -116,7 +118,7 @@ setuptools.setup(
         'bin/bsf_utility_irf_software_versions.py',
         'bin/bsf_utility_irf_summary.py',
         'bin/bsf_utility_library_reverse_complement.py',
-        'bin/bsf_utility_ltfs.py',
+        'bin/bsf_utility_ltfs_ltfscp.py',
         'bin/bsf_utility_plot_insert_size.py',
         'bin/bsf_utility_sam_bc_qt_to_fastq.py',
         'bin/bsf_utility_trace_pickler_file.py',
@@ -124,6 +126,9 @@ setuptools.setup(
         'bin/bsf_utility_update_md5sums.py',
         'bin/bsf_utility_uuid_append.py',
         'bin/bsf_utility_validate_library_annotation.py',
+        'bin/bsf_utility_zip_bowtie2.bash',
+        'bin/bsf_utility_zip_rnaseq_deseq.bash',
+        'bin/bsf_utility_zip_star.bash',
 
         # Legacy scripts.
         'bin/bsf_chipseq_process_macs14.bash',
