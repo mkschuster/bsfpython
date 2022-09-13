@@ -4097,6 +4097,18 @@ class DESeq(Analysis):
         def report_html():
             """Private function to create a :literal:`XHTML 1.0` report.
             """
+            # Read the design table as a backup, in case the design-specific LRT summary table is not available.
+            # Exclude designs if requested.
+
+            design_sheet = AnnotationSheet.from_file_path(
+                file_path=self.comparison_path,
+                file_type='excel',
+                name='DESeq Design Table')
+
+            design_dict: Dict[str, Dict[str, str]] = {
+                value['design']: value for value in design_sheet.row_dicts if
+                not design_sheet.get_boolean(row_dict=value, key='exclude')
+            }
 
             # Create a symbolic link containing the project name and a UUID.
             self.create_public_project_link()
@@ -4136,20 +4148,178 @@ class DESeq(Analysis):
             str_list.append('</p>\n')
             str_list.append('\n')
 
+            # Exploratory Analysis Table.
+
+            str_list.append('<h2 id="exploratory_analysis">Exploratory Analysis</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<p>')
+            str_list.append('For each design, multi-dimensional scaling (MDS), principal component analysis (PCA) ')
+            str_list.append('and heatmap plots are provided for combinations of variables or factors. ')
+            str_list.append('Variance by principal component plots show the distribution of the variance for ')
+            str_list.append('a maximum of the first hundred components. ')
+            str_list.append('Two sets of plots are available, based on data in model-aware or blind mode. ')
+            str_list.append('</p>\n')
+            str_list.append('\n')
+
+            str_list.append('<table id="exploratory_analysis_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th class="left">Design</th>\n')
+            str_list.append('<th class="left">MDS Blind</th>\n')
+            str_list.append('<th class="left">MDS Model</th>\n')
+            str_list.append('<th class="left">PCA Blind</th>\n')
+            str_list.append('<th class="left">PCA Model</th>\n')
+            str_list.append('<th class="left">Heatmap Blind</th>\n')
+            str_list.append('<th class="left">Heatmap Model</th>\n')
+            str_list.append('<th class="left">Cook\'s Distances</th>\n')
+            str_list.append('<th class="left">FPKM Density</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for design_name in sorted(design_dict):
+                design_row_dict = design_dict[design_name]
+                design_prefix = '_'.join((self.prefix, design_row_dict['design']))
+                for plot_instance in design_row_dict['plot_aes'].split('|'):
+                    plot_path = plot_instance.replace('geom_', '').replace(';', '__').translate(
+                        str.maketrans(':=,', '___'))
+
+                    str_list.append('<tr>\n')
+
+                    # Design
+                    str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
+
+                    # MDS and PCA plots for Blind and Model.
+                    for plot_type in ('mds', 'pca'):
+                        for model_type in ('blind', 'model'):
+                            plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
+                            plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                            str_list.append('<td>')
+                            if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
+                                str_list.append(
+                                    self.get_html_anchor(
+                                        prefix=design_prefix,
+                                        suffix=plot_path_pdf,
+                                        text=self.get_html_image(
+                                            prefix=design_prefix,
+                                            suffix=plot_path_png,
+                                            text=plot_type + ' plot',
+                                            height='80',
+                                            width='80')))
+                            str_list.append('</td>\n')
+
+                    # Heatmap plots
+                    plot_type = 'heatmap'
+                    for model_type in ('blind', 'model'):
+                        plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
+                        plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                        str_list.append('<td>')
+                        if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
+                            str_list.append(
+                                self.get_html_anchor(
+                                    prefix=design_prefix,
+                                    suffix=plot_path_pdf,
+                                    text=self.get_html_image(
+                                        prefix=design_prefix,
+                                        suffix=plot_path_png,
+                                        text=plot_type + ' plot',
+                                        height='80',
+                                        width='80')))
+                        str_list.append('</td>\n')
+
+                    # Cook's Distances
+                    str_list.append('<td></td>\n')
+
+                    # FPKM Density
+                    str_list.append('<td></td>\n')
+
+                    str_list.append('</tr>\n')
+
+                # Add a line with the variance-per-principal-component and RIN score density plots.
+                str_list.append('<tr>\n')
+
+                # Design
+                str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
+
+                # MDS Blind
+                str_list.append('<td></td>\n')
+
+                # MDS Model (use for RIN density plot if available)
+                str_list.append('<td>')
+                if image_source_exists(prefix=design_prefix, suffix='rin_density.png'):
+                    str_list.append(self.get_html_anchor(
+                        prefix=design_prefix,
+                        suffix='rin_density.pdf',
+                        text=self.get_html_image(
+                            prefix=design_prefix,
+                            suffix='rin_density.png',
+                            text='RIN density plot',
+                            height='80',
+                            width='80')))
+                str_list.append('</td>\n')
+
+                # PCA Variance per Principal Component for Blind and Model.
+                plot_type = 'pca'
+                plot_path = 'variance'
+                for model_type in ('blind', 'model'):
+                    plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
+                    plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                    str_list.append('<td>')
+                    if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
+                        str_list.append(
+                            self.get_html_anchor(
+                                prefix=design_prefix,
+                                suffix=plot_path_pdf,
+                                text=self.get_html_image(
+                                    prefix=design_prefix,
+                                    suffix=plot_path_png,
+                                    text=plot_type + ' plot',
+                                    height='80',
+                                    width='80')))
+                    str_list.append('</td>\n')
+
+                # Heatmap Blind
+                str_list.append('<td></td>\n')
+
+                # Heatmap Model
+                str_list.append('<td></td>\n')
+
+                # Cook's Distance Box Plot
+                str_list.append('<td>\n')
+                if image_source_exists(prefix=design_prefix, suffix='cooks_distances.png'):
+                    str_list.append(self.get_html_anchor(
+                        prefix=design_prefix,
+                        suffix='cooks_distances.pdf',
+                        text=self.get_html_image(
+                            prefix=design_prefix,
+                            suffix='cooks_distances.png',
+                            text='Cook\'s distance box plot',
+                            height='80',
+                            width='80')))
+                str_list.append('</td>\n')
+
+                # FPKM Density
+                str_list.append('<td>\n')
+                if image_source_exists(prefix=design_prefix, suffix='fpkm_density.png'):
+                    str_list.append(self.get_html_anchor(
+                        prefix=design_prefix,
+                        suffix='fpkm_density.pdf',
+                        text=self.get_html_image(
+                            prefix=design_prefix,
+                            suffix='fpkm_density.png',
+                            text='FPKM density plot',
+                            height='80',
+                            width='80')))
+                str_list.append('</td>\n')
+
+                str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
             # Likelihood Ratio Testing (LRT) Table
-
-            # Read the design table as a backup, in case the design-specific LRT summary table is not available.
-            # Exclude designs if requested.
-
-            design_sheet = AnnotationSheet.from_file_path(
-                file_path=self.comparison_path,
-                file_type='excel',
-                name='DESeq Design Table')
-
-            design_dict: Dict[str, Dict[str, str]] = {
-                value['design']: value for value in design_sheet.row_dicts if
-                not design_sheet.get_boolean(row_dict=value, key='exclude')
-            }
 
             str_list.append('<h2 id="lrt">Likelihood Ratio Testing (LRT)</h2>\n')
             str_list.append('\n')
@@ -4165,7 +4335,8 @@ class DESeq(Analysis):
             str_list.append('The intention behind LRT is to show that the terms included in the model are both, ')
             str_list.append('specific and relevant, as spurious terms unnecessarily reduce statistical power. ')
             str_list.append('For the differential expression calling in the ')
-            str_list.append('<a href="#contrasts_table">Contrasts Table</a> below, the Wald test is applied.')
+            str_list.append('<a href="#contrasts_table">Differential Expression Testing Table</a> below, ')
+            str_list.append('the Wald test is applied.')
             str_list.append('</p>\n')
             str_list.append('<p>')
             str_list.append('Please see also the DESeq2 manual section on ')
@@ -4195,14 +4366,17 @@ class DESeq(Analysis):
                     self.genome_directory,
                     design_prefix,
                     design_prefix + '_lrt_summary.tsv')
+
                 if os.path.exists(lrt_summary_path):
                     lrt_summary_sheet = AnnotationSheet.from_file_path(
                         file_path=lrt_summary_path,
                         file_type='excel-tab',
                         name='DESeq LRT Summary Table')
+
                     lrt_row_dict_list = lrt_summary_sheet.row_dicts
                 else:
                     lrt_row_dict_list = list()
+
                     for reduced_tuple in design_row_dict['reduced_formulas'].split(';'):
                         reduced_name, reduced_formula = reduced_tuple.split(':')
                         lrt_row_dict_list.append({
@@ -4213,14 +4387,13 @@ class DESeq(Analysis):
                             'significant': '',
                         })
 
-                # for reduced_tuple in design_row_dict['reduced_formulas'].split(';'):
-                #     reduced_name, reduced_formula = reduced_tuple.split(':')
                 for lrt_row_dict in lrt_row_dict_list:
                     str_list.append('<tr>\n')
                     str_list.append('<td>' + lrt_row_dict['design'] + '</td>\n')
                     str_list.append('<td>' + lrt_row_dict['full_formula'] + '</td>\n')
                     str_list.append('<td>' + lrt_row_dict['reduced_name'] + '</td>\n')
                     str_list.append('<td>' + lrt_row_dict['reduced_formula'] + '</td>\n')
+
                     # Differential genes
                     str_list.append('<td>' +
                                     self.get_html_anchor(
@@ -4228,6 +4401,7 @@ class DESeq(Analysis):
                                         suffix='_'.join(('lrt', lrt_row_dict['reduced_name'] + '.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
+
                     # Significant genes
                     str_list.append('<td>' +
                                     self.get_html_anchor(
@@ -4235,10 +4409,13 @@ class DESeq(Analysis):
                                         suffix='_'.join(('lrt', lrt_row_dict['reduced_name'], 'significant.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
+
+                    # Significant Number
                     if lrt_row_dict['significant']:
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(lrt_row_dict['significant'])))
                     else:
                         str_list.append('<td class="right"></td>\n')
+
                     str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
@@ -4247,7 +4424,7 @@ class DESeq(Analysis):
 
             # Contrast table.
 
-            str_list.append('<h2 id="contrasts">Contrasts</h2>\n')
+            str_list.append('<h2 id="contrasts">Differential Expression Testing</h2>\n')
             str_list.append('<p>')
             str_list.append('Differential expression calls are based on the full model formula ')
             str_list.append('shown in the <a href="#lrt_table">LRT Table</a> above, ')
@@ -4326,15 +4503,19 @@ class DESeq(Analysis):
                         continue
 
                     str_list.append('<tr>\n')
+
                     # Design
                     str_list.append('<td class="left">' + row_dict['Design'] + '</td>\n')
+
                     # Contrast
                     str_list.append('<td class="left">' + row_dict['Label'] + '</td>\n')
+
                     # TSV
                     numerator = row_dict['Numerator'].replace(',', '_')
                     denominator = row_dict['Denominator'].replace(',', '_')
                     if not denominator or denominator == 'NA':
                         denominator = 'intercept'
+
                     # Differential Genes
                     str_list.append('<td>' +
                                     self.get_html_anchor(
@@ -4343,6 +4524,7 @@ class DESeq(Analysis):
                                                          'genes.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
+
                     # Significant Genes
                     str_list.append('<td>' +
                                     self.get_html_anchor(
@@ -4351,21 +4533,25 @@ class DESeq(Analysis):
                                                          'significant.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
+
                     # Significant Number
                     if 'Significant' in row_dict:
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['Significant'])))
                     else:
                         str_list.append('<td></td>\n')
+
                     # Significant Up genes
                     if 'SignificantUp' in row_dict:
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['SignificantUp'])))
                     else:
                         str_list.append('<td></td>\n')
+
                     # Significant Down genes
                     if 'SignificantDown' in row_dict:
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['SignificantDown'])))
                     else:
                         str_list.append('<td></td>\n')
+
                     # MA Plot
                     str_list.append('<td>' +
                                     self.get_html_anchor(
@@ -4378,6 +4564,7 @@ class DESeq(Analysis):
                                             height='80',
                                             width='80')) +
                                     '</td>\n')
+
                     # Volcano Plot
                     str_list.append('<td>' +
                                     self.get_html_anchor(
@@ -4392,8 +4579,10 @@ class DESeq(Analysis):
                                             height='80',
                                             width='80')) +
                                     '</td>\n')
+
                     # Numerator
                     str_list.append('<td class="left">' + row_dict['Numerator'] + '</td>\n')
+
                     # Denominator
                     str_list.append('<td class="left">')
                     if not row_dict['Denominator'] or row_dict['Denominator'] == 'NA':
@@ -4401,6 +4590,7 @@ class DESeq(Analysis):
                     else:
                         str_list.append(row_dict['Denominator'])
                     str_list.append('</td>\n')
+
                     str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
@@ -4429,8 +4619,11 @@ class DESeq(Analysis):
 
             for design_name in sorted(design_dict):
                 str_list.append('<tr>\n')
+
+                # Design
                 str_list.append('<td>' + design_name + '</td>\n')
 
+                # Enrichr Report
                 enrichr_prefix = '_'.join((self.prefix, design_name, 'enrichr'))
                 if os.path.exists(os.path.join(
                         self.genome_directory,
@@ -4442,6 +4635,7 @@ class DESeq(Analysis):
                 else:
                     str_list.append('<td></td>\n')
 
+                # Heatmap Report
                 heatmap_prefix = '_'.join((self.prefix, design_name, 'heatmap'))
                 if os.path.exists(os.path.join(
                         self.genome_directory,
@@ -4453,6 +4647,7 @@ class DESeq(Analysis):
                 else:
                     str_list.append('<td></td>\n')
 
+                # Volcano Report
                 volcano_prefix = '_'.join((self.prefix, design_name, 'volcano'))
                 if os.path.exists(os.path.join(
                         self.genome_directory,
@@ -4464,164 +4659,6 @@ class DESeq(Analysis):
                 else:
                     str_list.append('<td></td>\n')
 
-                str_list.append('</tr>\n')
-
-            str_list.append('</tbody>\n')
-            str_list.append('</table>\n')
-            str_list.append('\n')
-
-            # Link MDS and PCA plots.
-
-            str_list.append('<h2 id="plots">Plots</h2>\n')
-            str_list.append('\n')
-
-            str_list.append('<p>')
-            str_list.append('For each design, multi-dimensional scaling (MDS), principal component analysis (PCA) ')
-            str_list.append('and heatmap plots are provided for combinations of variables or factors. ')
-            str_list.append('Variance by principal component plots show the distribution of the variance for ')
-            str_list.append('a maximum of the first hundred components. ')
-            str_list.append('Two sets of plots are available, based on data in model-aware or blind mode. ')
-            str_list.append('</p>\n')
-            str_list.append('\n')
-
-            str_list.append('<table id="plot_table">\n')
-            str_list.append('<thead>\n')
-            str_list.append('<tr>\n')
-            str_list.append('<th class="left">Design</th>\n')
-            str_list.append('<th class="left">MDS Blind</th>\n')
-            str_list.append('<th class="left">MDS Model</th>\n')
-            str_list.append('<th class="left">PCA Blind</th>\n')
-            str_list.append('<th class="left">PCA Model</th>\n')
-            str_list.append('<th class="left">Heatmap Blind</th>\n')
-            str_list.append('<th class="left">Heatmap Model</th>\n')
-            # str_list.append('<th>Plot Aesthetics</th>\n')
-            str_list.append('<th class="left">Cook\'s Distances</th>\n')
-            str_list.append('<th class="left">FPKM Density</th>\n')
-            str_list.append('</tr>\n')
-            str_list.append('</thead>\n')
-            str_list.append('<tbody>\n')
-
-            for design_name in sorted(design_dict):
-                design_row_dict = design_dict[design_name]
-                design_prefix = '_'.join((self.prefix, design_row_dict['design']))
-                for plot_instance in design_row_dict['plot_aes'].split('|'):
-                    plot_path = plot_instance.replace('geom_', '').replace(';', '__').translate(
-                        str.maketrans(':=,', '___'))
-                    str_list.append('<tr>\n')
-                    # Design
-                    str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
-                    for plot_type in ('mds', 'pca'):
-                        for model_type in ('blind', 'model'):
-                            plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
-                            plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
-                            str_list.append('<td>')
-                            if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
-                                str_list.append(
-                                    self.get_html_anchor(
-                                        prefix=design_prefix,
-                                        suffix=plot_path_pdf,
-                                        text=self.get_html_image(
-                                            prefix=design_prefix,
-                                            suffix=plot_path_png,
-                                            text=plot_type + ' plot',
-                                            height='80',
-                                            width='80')))
-                            str_list.append('</td>\n')
-                    # Heatmap plots
-                    plot_type = 'heatmap'
-                    for model_type in ('blind', 'model'):
-                        plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
-                        plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
-                        str_list.append('<td>')
-                        if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
-                            str_list.append(
-                                self.get_html_anchor(
-                                    prefix=design_prefix,
-                                    suffix=plot_path_pdf,
-                                    text=self.get_html_image(
-                                        prefix=design_prefix,
-                                        suffix=plot_path_png,
-                                        text=plot_type + ' plot',
-                                        height='80',
-                                        width='80')))
-                        str_list.append('</td>\n')
-
-                    # Plot Aesthetics
-                    # str_list.append('<td>' + plot_instance + '</td>\n')
-                    # Cook's Distances
-                    str_list.append('<td></td>\n')
-                    # FPKM Density
-                    str_list.append('<td></td>\n')
-                    str_list.append('</tr>\n')
-
-                # Add a line with the variance per principal component plots.
-                str_list.append('<tr>\n')
-                str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
-                str_list.append('<td></td>\n')  # MDS Blind
-                # str_list.append('<td></td>\n')  # MDS Model
-                str_list.append('<td>')  # MDS Model (use for RIN density plot if available)
-                if image_source_exists(prefix=design_prefix, suffix='rin_density.png'):
-                    str_list.append(self.get_html_anchor(
-                        prefix=design_prefix,
-                        suffix='rin_density.pdf',
-                        text=self.get_html_image(
-                            prefix=design_prefix,
-                            suffix='rin_density.png',
-                            text='RIN density plot',
-                            height='80',
-                            width='80')))
-                str_list.append('</td>\n')
-
-                # PCA Variance per component for Blind and Model.
-                plot_type = 'pca'
-                plot_path = 'variance'
-                for model_type in ('blind', 'model'):
-                    plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
-                    plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
-                    str_list.append('<td>')
-                    if image_source_exists(prefix=design_prefix, suffix=plot_path_png):
-                        str_list.append(
-                            self.get_html_anchor(
-                                prefix=design_prefix,
-                                suffix=plot_path_pdf,
-                                text=self.get_html_image(
-                                    prefix=design_prefix,
-                                    suffix=plot_path_png,
-                                    text=plot_type + ' plot',
-                                    height='80',
-                                    width='80')))
-                    str_list.append('</td>\n')
-
-                str_list.append('<td></td>\n')  # Heatmap Blind
-                str_list.append('<td></td>\n')  # Heatmap Model
-
-                # Cook's Distance Box Plot
-                str_list.append('<td>\n')
-                if image_source_exists(prefix=design_prefix, suffix='cooks_distances.png'):
-                    str_list.append(self.get_html_anchor(
-                        prefix=design_prefix,
-                        suffix='cooks_distances.pdf',
-                        text=self.get_html_image(
-                            prefix=design_prefix,
-                            suffix='cooks_distances.png',
-                            text='Cook\'s distance box plot',
-                            height='80',
-                            width='80')))
-                str_list.append('</td>\n')
-
-                # FPKM Density
-                str_list.append('<td>\n')
-                if image_source_exists(prefix=design_prefix, suffix='fpkm_density.png'):
-                    str_list.append(self.get_html_anchor(
-                        prefix=design_prefix,
-                        suffix='fpkm_density.pdf',
-                        text=self.get_html_image(
-                            prefix=design_prefix,
-                            suffix='fpkm_density.png',
-                            text='FPKM density plot',
-                            height='80',
-                            width='80')))
-                str_list.append('</td>\n')
                 str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
