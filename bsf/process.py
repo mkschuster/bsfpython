@@ -779,8 +779,6 @@ class Executable(Command):
     :type hold: bool | None
     :ivar submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
     :type submit: bool
-    :ivar maximum_attempts: Maximum number of attempts to run this :py:class:`bsf.process.Executable` object
-    :type maximum_attempts: int
     :ivar process_identifier: A process identifier.
     :type process_identifier: str | None
     :ivar process_name: A process name.
@@ -905,7 +903,6 @@ class Executable(Command):
             dependencies=None,
             hold=None,
             submit=True,
-            maximum_attempts=1,
             process_identifier=None,
             process_name=None,
             sub_process=None):
@@ -937,8 +934,6 @@ class Executable(Command):
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
         :type submit: bool
-        :param maximum_attempts: Maximum number of attempts to run this :py:class:`bsf.process.Executable` object
-        :type maximum_attempts: int
         :param process_identifier: A process identifier.
         :type process_identifier: str | None
         :param process_name: A process name.
@@ -977,11 +972,6 @@ class Executable(Command):
             assert isinstance(submit, bool)
             self.submit = submit
 
-        if maximum_attempts is None:
-            self.maximum_attempts = 1
-        else:
-            self.maximum_attempts = maximum_attempts
-
         self.process_identifier = process_identifier
         self.process_name = process_name
 
@@ -1007,7 +997,6 @@ class Executable(Command):
         str_list.append('{}  stderr:             {!r}\n'.format(indent, self.stderr))
         str_list.append('{}  hold:               {!r}\n'.format(indent, self.hold))
         str_list.append('{}  submit:             {!r}\n'.format(indent, self.submit))
-        str_list.append('{}  maximum_attempts:   {!r}\n'.format(indent, self.maximum_attempts))
         str_list.append('{}  process_identifier: {!r}\n'.format(indent, self.process_identifier))
         str_list.append('{}  process_name:       {!r}\n'.format(indent, self.process_name))
 
