@@ -38,7 +38,7 @@ import sys
 import urllib.parse
 import uuid
 import warnings
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from bsf.ngs import Collection, Sample
 from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
@@ -254,6 +254,8 @@ class Analysis(object):
             self.sample_list = list()
         else:
             self.sample_list = sample_list
+
+        self._public_project_link_path: Optional[str] = None
 
         return
 
@@ -782,7 +784,7 @@ class Analysis(object):
 
     @staticmethod
     def get_html_anchor(prefix, suffix, text):
-        """Create a :literal:`XHTML 1.0` :literal:`anchor` element with a relative reference path.
+        """Get a :literal:`XHTML 1.0` :literal:`anchor` element with a relative reference path.
 
         :literal:`<a href="prefix/prefix_suffix">text</a>`
 
@@ -799,7 +801,7 @@ class Analysis(object):
 
     @staticmethod
     def get_html_image(prefix, suffix, text, height=None, width=None):
-        """Create a :literal:`XHTML 1.0` :literal:`img` element with a relative source path.
+        """Get a :literal:`XHTML 1.0` :literal:`img` element with a relative source path.
 
         :literal:`<img alt="text" src="prefix/prefix_suffix" height="80" width="80" />`
 
@@ -811,7 +813,7 @@ class Analysis(object):
         :type text: str
         :param height: An image height attribute.
         :type height: str
-        :param width: Animage width attribute.
+        :param width: An image width attribute.
         :type width: str
         :return: A :literal:`XHTML 1.0` :literal:`img` element.
         :rtype: str
@@ -926,7 +928,7 @@ class Analysis(object):
             creator=None,
             source=None,
             title=None):
-        """Get the header section of an :literal:`XHTML 1.0` document.
+        """Get a header section of an :literal:`XHTML 1.0` document.
 
         :param strict: Either a :literal:`XHTML 1.0 Strict` or a :literal:`XHTML 1.0 Transitional`
             Document Type Declaration, defaults to :literal:`XHTML 1.0 Strict`.
@@ -1015,7 +1017,7 @@ class Analysis(object):
             url_protocol=None,
             url_host_name=None,
             title=None):
-        """Get the footer section of an :literal:`XHTML 1.0` document.
+        """Get a footer section of an :literal:`XHTML 1.0` document.
 
         :param contact: An institution contact e-mail address,
             defaults to the value returned by the :py:meth:`bsf.standards.Operator.get_contact` method.
@@ -1181,7 +1183,7 @@ class Analysis(object):
         :param content: A :literal:`XHTML 1.0` content.
         :type content: list[str]
         :param prefix: A file name prefix (e.g., chipseq, rnaseq, ...),
-            defaults to the :py:attr:`bsf.analysis.Analysis.prefix` atribute.
+            defaults to the :py:attr:`bsf.analysis.Analysis.prefix` attribute.
         :type prefix: str
         :param strict: Either a :literal:`XHTML 1.0 Strict` or a :literal:`XHTML 1.0 Transitional`
             Document Type Declaration, defaults to :literal:`XHTML 1.0 Strict`.
@@ -1230,46 +1232,31 @@ class Analysis(object):
 
         return
 
-    def create_project_genome_directory(self):
-        """Check for and create a project or genome directory if necessary.
-
-        :py:attr:`bsf.analysis.Analysis.project_directory`
-        :py:attr:`bsf.analysis.Analysis.genome_directory`
-
-        :raise Exception: Output (genome) directory does not exist
-        """
-        if not os.path.isdir(self.genome_directory):
-            answer = input(
-                'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.\n' +
-                'Create? [Y/n] ')
-
-            if not answer or answer == 'Y' or answer == 'y':
-                # In principle, a race condition could occur as the directory
-                # could have been created after its existence has been checked.
-                try:
-                    os.makedirs(self.genome_directory)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
-            else:
-                raise Exception(
-                    'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.')
-
-        return
-
-    def create_public_project_link(self, sub_directory=None):
+    def create_public_project_link(self, sub_directory=None, reset=None):
         """Create a symbolic link from the public HTML directory to the project directory if not already there.
 
-        The link will be placed in the specified subdirectory and contain
-        the project name followed by a 128 bit hexadecimal UUID string.
+        The link will be placed in the specified subdirectory under :py:meth:`StandardFilePath.get_public_html` and
+        contain the project name followed by a 128 bit hexadecimal UUID string.
         If not specified, the subdirectory defaults to the value of :py:meth:`bsf.standards.URL.get_relative_projects`.
+
+        All symbolic links are checked to identify an already existing one and
+        any dangling links encountered are reported.
 
         :param sub_directory: A :py:class:`bsf.analysis.Analysis`-specific directory.
         :type sub_directory: str
+        :param reset: Replace an existing symbolic link with a new one.
+        :type reset: bool | None
         :return: A symbolic link to the project directory.
         :rtype: str
         :raise Exception: Public HTML path does not exist
         """
+        # Cache the results since reading directories and checking symbolic links is quite involved.
+        # The public project path consists of the absolute public_html directory,
+        # the analysis-specific subdirectory, the project name and a 128 bit hexadecimal UUID string.
+
+        if self._public_project_link_path and not reset:
+            return self._public_project_link_path
+
         if sub_directory is None:
             sub_directory = URL.get_relative_projects()
 
@@ -1282,73 +1269,75 @@ class Analysis(object):
                 'The public HTML directory path ' + repr(html_path) + ' does not exist.\n' +
                 'Please check the optional sub-directory name ' + repr(sub_directory) + '.')
 
-        # The target_path consists of the absolute public_html directory,
-        # the analysis-specific subdirectory, the project name and a 128 bit hexadecimal UUID string.
+        # Check all symbolic links to find one already pointing to the source path and
+        # to identify any danging symbolic links.
 
-        target_path = os.path.join(html_path, '_'.join((self.project_name, uuid.uuid4().hex)))
-
-        # The final_path holds the final symbolic link target path.
-        # It can be the target_path assembled above or point to an already existing one.
-
-        final_path = target_path
-
-        for file_name in os.listdir(html_path):
-            file_path = os.path.join(html_path, file_name)
-            if os.path.islink(file_path):
-                source_path = os.readlink(file_path)
+        for target_name in os.listdir(html_path):
+            target_path = os.path.join(html_path, target_name)
+            if os.path.islink(target_path):
+                source_path = os.readlink(target_path)
                 if not os.path.isabs(source_path):
                     source_path = os.path.join(html_path, source_path)
                 source_path = os.path.normpath(source_path)
+
                 if not os.path.exists(source_path):
-                    # Both paths for os.path.samefile have to exist.
-                    # Check for dangling symbolic links.
+                    # For os.path.samefile both paths have to exist.
+                    # Check the source path and report dangling symbolic links for any analysis project.
                     warnings.warn(
-                        'Dangling symbolic link ' + repr(source_path) + ' to ' + repr(file_path),
+                        'Dangling symbolic link ' + repr(target_path) + ' to ' + repr(source_path),
                         UserWarning)
                     continue
+
                 if os.path.samefile(source_path, self.project_directory):
-                    # Reset the final_path to the already existing file_path.
-                    final_path = file_path
+                    # Set the target path to the already existing file_path, but report duplicate symbolic links.
                     # Do not break out here to discover all dangling symbolic links.
+                    if self._public_project_link_path:
+                        warnings.warn(
+                            'More than one symbolic link points to this project directory. primary: ' +
+                            repr(target_path) + 'secondary: ' + self._public_project_link_path,
+                            UserWarning)
+                    else:
+                        self._public_project_link_path = target_path
 
-        if final_path != target_path:
-            # A symbolic link already exists.
-            # Ask the user to re-create the symbolic link.
-            answer = input(
-                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' exists.\n' +
-                'Re-create? [y/N] ')
+        if reset:
+            try:
+                os.remove(self._public_project_link_path)
+            except OSError as exception:
+                if exception.errno != errno.ENOENT:
+                    raise
 
-            if not answer or answer.upper() == 'N':
-                print('Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' not reset.')
-            else:
-                try:
-                    os.remove(final_path)
-                except OSError as exception:
-                    if exception.errno != errno.ENOENT:
-                        raise
-                try:
-                    os.symlink(os.path.relpath(self.project_directory, html_path), target_path)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
-                final_path = target_path
+            self._public_project_link_path = None
+
+        if not self._public_project_link_path:
+            self._public_project_link_path = os.path.join(html_path, '_'.join((self.project_name, uuid.uuid4().hex)))
+
+            try:
+                os.symlink(os.path.relpath(self.project_directory, html_path), self._public_project_link_path, True)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+
+        return self._public_project_link_path
+
+    def get_html_report_url(self, sub_directory=None, prefix=None):
+        """Get an HTML report URL.
+
+        :param sub_directory: A :py:class:`bsf.analysis.Analysis`-specific directory.
+        :type sub_directory: str
+        :param prefix: A file name prefix (e.g., chipseq, rnaseq, ...),
+            defaults to the :py:attr:`bsf.analysis.Analysis.prefix` attribute.
+        :type prefix: str
+        :return:
+        """
+        if prefix is None or not prefix:
+            prefix = self.prefix
+
+        link_name = os.path.basename(self.create_public_project_link(sub_directory=sub_directory))
+
+        if self.genome_version:
+            return f'{URL.get_absolute_projects()}/{link_name}/{self.genome_version}/{prefix}_report.html'
         else:
-            # A symbolic link does not exist.
-            # Ask the user to create a symbolic link.
-            answer = input(
-                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' does not exist.\n' +
-                'Create? [Y/n] ')
-
-            if not answer or answer.upper() == 'Y':
-                try:
-                    os.symlink(os.path.relpath(self.project_directory, html_path), final_path)
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
-            else:
-                print('Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' not set.')
-
-        return final_path
+            return f'{URL.get_absolute_projects()}/{link_name}/{prefix}_report.html'
 
     def ucsc_track_url(
             self,
@@ -1366,7 +1355,7 @@ class Analysis(object):
             Python :py:class:`str` (browser line key value pair) objects.
         :type browser_dict: dict[str, str]
         :param track_dict: A Python :py:class:`dict` object of
-            Python :py:class:`str` (track line hgct_customText key value pair objects.
+            Python :py:class:`str` (track line hgct_customText) key value pair objects.
         :type track_dict: dict[str, str]
         :param ucsc_protocol: A UCSC Genome Browser URL protocol (i.e., http, https, ...)
             defaults to the value returned by the :py:meth:`bsf.standards.UCSC.get_protocol` method.
@@ -1510,6 +1499,7 @@ class Analysis(object):
                     if not line_str:
                         continue
                     field_list = line_str.split()
+
                     if len(field_list) != 2:
                         warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
                                       repr(file_path) + '.\n' +
@@ -1520,6 +1510,7 @@ class Analysis(object):
                                           repr(file_path) + '.\n' +
                                           "Got more than one 'genomes' lines in succession.")
                         genome_version = field_list[1]
+
                     if field_list[0] == 'trackDb':
                         if genome_version is None:
                             warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +

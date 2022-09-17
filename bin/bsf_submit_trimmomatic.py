@@ -102,6 +102,8 @@ print('Project name:      ', analysis.project_name)
 print('Input directory:   ', analysis.input_directory)
 print('Project directory: ', analysis.project_directory)
 print('Genome directory:  ', analysis.genome_directory)
+if name_space.stage and name_space.stage == 'report':
+    print('Report URL:        ', analysis.get_html_report_url())
 
 if analysis.debug >= 2:
     print(repr(analysis), 'final trace:')
