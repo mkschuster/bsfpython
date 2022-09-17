@@ -780,14 +780,6 @@ class AnnotationSheet(object):
 
         return
 
-    def csv_reader_next(self):
-        """Read the next line of a CSV file linked to a :py:class:`bsf.annotation.AnnotationSheet` object.
-
-        :return: A Python :py:class:`dict` of column key and row value data.
-        :rtype: dict[str, str]
-        """
-        return self._csv_reader_object.next()
-
     def csv_reader_close(self):
         """Close a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
         for reading.
@@ -827,8 +819,8 @@ class AnnotationSheet(object):
 
         return
 
-    def csv_writer_next(self, row_dict):
-        """Write the next line of a CSV file linked to a :py:class:`bsf.annotation.AnnotationSheet` object.
+    def csv_writer_write_row(self, row_dict):
+        """Write the next row of a CSV file linked to a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictWriter` object.
         :type row_dict: dict[str, str]
@@ -926,7 +918,7 @@ class AnnotationSheet(object):
         self.csv_writer_open()
 
         for row_dict in self.row_dicts:
-            self.csv_writer_next(row_dict=row_dict)
+            self.csv_writer_write_row(row_dict=row_dict)
 
         self.csv_writer_close()
 
