@@ -82,18 +82,18 @@ class Bowtie1(Aligner):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Get the sample annotation sheet.
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[Bowtie1.prefix], suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         # The Bowtie1 genome index is quite peculiar as it has to be the index file path without file extensions.
 
@@ -182,18 +182,18 @@ class Bowtie2(Aligner):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Get the sample annotation sheet.
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[Bowtie2.prefix], suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         # The Bowtie2 genome index is quite peculiar as it has to be the index file path without file extensions.
 

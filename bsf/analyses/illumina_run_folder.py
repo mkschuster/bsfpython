@@ -242,7 +242,6 @@ class IlluminaRunFolderArchive(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -282,8 +281,6 @@ class IlluminaRunFolderArchive(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -336,7 +333,6 @@ class IlluminaRunFolderArchive(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -467,7 +463,7 @@ class IlluminaRunFolderArchive(Analysis):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception('An Illumina run directory or file path has not been defined.')
+            raise Exception(f"A {self.name!s} requires a 'run_directory' configuration option.")
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
@@ -481,8 +477,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception(
-                'The Illumina run directory {!r} does not exist.'.format(self.run_directory))
+            raise Exception(f"The Illumina 'run_directory' {self.run_directory!r} does not exist.")
 
         # Check whether the Illumina Run Folder is complete.
         # Check whether the IRF/RTAComplete.txt file exists in the Illumina Run Folder
@@ -490,8 +485,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Alternatively, require the force instance variable to start archiving.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise RunFolderNotComplete(
-                'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
+            raise RunFolderNotComplete(f"The Illumina 'run_directory' {self.run_directory!r} is not complete.")
 
         # Define an Illumina Run Folder archive directory.
 
@@ -509,8 +503,8 @@ class IlluminaRunFolderArchive(Analysis):
         # Check that the directory above the archive directory exists to avoid creation of rogue paths.
 
         if not os.path.isdir(os.path.dirname(self.archive_directory)):
-            raise Exception('The directory above the archive directory {!r} does not exist.'.
-                            format(os.path.dirname(self.archive_directory)))
+            raise Exception(f"The directory above the 'archive_directory' "
+                            f"{os.path.dirname(self.archive_directory)!r} does not exist.")
 
         irf = RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -521,7 +515,7 @@ class IlluminaRunFolderArchive(Analysis):
         if not self.experiment_name:
             self.experiment_name = irf.run_parameters.get_experiment_name
             if not self.experiment_name:
-                raise Exception('An experiment_name has not been defined.')
+                raise Exception(f"A {self.name!s} requires an 'experiment_name' configuration option.")
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the
@@ -1035,7 +1029,6 @@ class IlluminaRunFolderRestore(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -1067,8 +1060,6 @@ class IlluminaRunFolderRestore(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -1096,7 +1087,6 @@ class IlluminaRunFolderRestore(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -1156,21 +1146,20 @@ class IlluminaRunFolderRestore(Analysis):
             3. Extract each :literal:`IRF_L00[1-8].tar` file with a 90 seconds delay.
         """
         if not self.archive_directory:
-            raise Exception('The archive_directory has not been defined.')
+            raise Exception(f"A {self.name!s} requires an 'archive_directory' configuration option.")
 
         self.archive_directory = self.configuration.get_absolute_path(
             file_path=self.archive_directory)
 
         if not os.path.isdir(self.archive_directory):
-            raise Exception('The Illumina run archive {!r} does not exist.'.format(self.archive_directory))
+            raise Exception(f"The 'archive_directory' {self.archive_directory!r} does not exist.")
 
         self.illumina_directory = self.configuration.get_absolute_path(
             file_path=self.illumina_directory,
             default_path=StandardFilePath.get_illumina_run(absolute=True))
 
         if not os.path.isdir(self.illumina_directory):
-            raise Exception('The directory of Illumina Run Folder directories {!r} does not exist.'.
-                            format(self.illumina_directory))
+            raise Exception(f"The 'illumina_directory' {self.illumina_directory!r} does not exist.")
 
         # The Illumina Run Folder must *not* already exist unless the force option has been set.
 
@@ -1178,8 +1167,7 @@ class IlluminaRunFolderRestore(Analysis):
         run_directory_path = os.path.join(self.illumina_directory, run_directory_name)
 
         if os.path.exists(run_directory_path) and not self.force:
-            raise Exception('The Illumina Run Folder directory {!r} exists already.'.
-                            format(run_directory_path))
+            raise Exception(f"The Illumina Run Folder directory {run_directory_path!r} does exist already.")
 
         # A FilePath object cannot be used, because instruments have a variable number of lanes.
         file_path_dict = {
@@ -1195,13 +1183,13 @@ class IlluminaRunFolderRestore(Analysis):
         # At least the IRF_Folder.tar, IRF_Intensities.tar and IRF_L001.tar files have to be there.
 
         if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['folder'])):
-            raise Exception('Illumina Run Archive file {!r} is missing.'.format(file_path_dict['folder']))
+            raise Exception(f"The Illumina Run Archive file {file_path_dict['folder']!r} is missing.")
 
         if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['intensities'])):
-            raise Exception('Illumina Run Archive file {!r} is missing.'.format(file_path_dict['intensities']))
+            raise Exception(f"The Illumina Run Archive file {file_path_dict['intensities']!r} is missing.")
 
         if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['L001'])):
-            raise Exception('Illumina Run Archive file {!r} is missing.'.format(file_path_dict['L001']))
+            raise Exception(f"The Illumina Run Archive file {file_path_dict['L001']!r} is missing.")
 
         super(IlluminaRunFolderRestore, self).run()
 

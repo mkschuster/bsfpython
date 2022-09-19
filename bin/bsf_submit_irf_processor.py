@@ -28,8 +28,8 @@
 #  drive the IlluminaToBamTools IlluminaToBam and BamIndexDecoder analyses.
 #
 import datetime
+import logging
 import os
-import sys
 import time
 from argparse import ArgumentParser
 
@@ -42,36 +42,43 @@ argument_parser = ArgumentParser(
     description='Illumina Run Folder processor driver script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--dry-run',
+    action='store_false',
+    default=True,
+    dest='drms_submit',
+    help='dry run',
+    required=False)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--stage',
     help='limit job submission to a particular Analysis stage',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--illumina2bam',
     action='store_true',
-    help='Use Illumina2bam rather than Picard tools')
+    help='Use Illumina2bam rather than Picard tools',
+    required=False)
 
 # argument_parser.add_argument(
 #     '--archive-directory',
 #     dest='archive_directory',
 #     help='archive directory',
-#     required=False,
-#     type=str)
+#     required=False)
 #
 # argument_parser.add_argument(
 #     '--project-name',
 #     dest='project_name',
 #     help='project name (i.e., flow cell identifier)',
-#     required=False,
-#     type=str)
+#     required=False)
 #
 # argument_parser.add_argument(
 #     '--extract-intensities',
@@ -83,33 +90,30 @@ argument_parser.add_argument(
 # argument_parser.add_argument(
 #     '--force',
 #     action='store_true',
-#     help='force expanding a run folder even if it exists already')
+#     help='force expanding a run folder even if it exists already',
+#     required=False)
 
 argument_parser.add_argument(
     '--irf',
     help='Illumina Run Folder name or file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--library-path',
     dest='library_path',
     help='library annotation sheet file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--configuration',
     default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--mode',
     help='HiSeq run mode (i.e., "high" (high-output) or "rapid" (rapid run) or "miseq" for a MiSeq run)',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--compression',
@@ -121,7 +125,8 @@ argument_parser.add_argument(
     '--no-validation',
     action='store_true',
     dest='no_validation',
-    help='force processing even if library annotation sheet validation fails')
+    help='force processing even if library annotation sheet validation fails',
+    required=False)
 
 argument_parser.add_argument(
     '--loop',
@@ -133,18 +138,22 @@ argument_parser.add_argument(
     '--interval',
     help='loop interval [s]',
     default=120,
+    required=False,
     type=int)
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 # if name_space.archive_directory:
 #
 #     # Extract the Illumina Run Folder first.
 #
 #     irf_restore = IlluminaRunFolderRestore.from_config_file_path(config_path=name_space.configuration)
-#
-#     if name_space.debug:
-#         irf_restore.debug = name_space.debug
 #
 #     if name_space.project_name:
 #         irf_restore.project_name = name_space.project_name
@@ -159,7 +168,7 @@ name_space = argument_parser.parse_args()
 #         irf_restore.force = name_space.force
 #
 #     irf_restore.run()
-#     irf_restore.submit(name=name_space.stage)
+#     irf_restore.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 #
 #     print(irf_restore.name)
 #     print('Project name:           ', irf_restore.project_name)
@@ -170,15 +179,7 @@ name_space = argument_parser.parse_args()
 #     irf_restore = None
 
 if name_space.illumina2bam:
-    # Create an IlluminaToBam analysis, run and submit it.
-
-    analysis_itb = IlluminaToBam.from_config_file_path(
-        config_path=name_space.configuration)
-
-    # Set arguments that override the configuration file.
-
-    if name_space.debug:
-        analysis_itb.debug = name_space.debug
+    analysis_itb = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
 
     if name_space.irf:
         analysis_itb.run_directory = name_space.irf
@@ -187,8 +188,6 @@ if name_space.illumina2bam:
     #     # If the IlluminaRunFolderRestore has not run, the run folder is not complete.
     #     itb.run_directory = irf_restore.get_run_directory_path
     #     itb.force = True
-
-    # Do the work.
 
     if name_space.loop:
         # If the --loop option has been set, wait until RTAComplete.txt has been copied.
@@ -208,7 +207,7 @@ if name_space.illumina2bam:
         analysis_itb.run()
 
     analysis_itb.check_state()
-    analysis_itb.submit(name=name_space.stage)
+    analysis_itb.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
     print(analysis_itb.name)
     print('Project name:           ', analysis_itb.project_name)
@@ -216,23 +215,11 @@ if name_space.illumina2bam:
     print('Illumina run directory: ', analysis_itb.run_directory)
     print('Experiment directory:   ', analysis_itb.get_experiment_directory)
 
-    if analysis_itb.debug >= 2:
-        print(repr(analysis_itb), 'final trace:')
-        sys.stdout.writelines(analysis_itb.trace(level=1))
-
-    # Create a BamIndexDecoder analysis, run and submit it.
-
-    analysis_bid = BamIndexDecoder.from_config_file_path(
-        config_path=name_space.configuration)
+    analysis_bid = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
 
     # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
 
     analysis_bid.project_name = analysis_itb.project_name
-
-    # Set arguments that override the configuration file.
-
-    if name_space.debug:
-        analysis_bid.debug = name_space.debug
 
     if name_space.mode:
         if name_space.mode == 'high':
@@ -248,9 +235,8 @@ if name_space.illumina2bam:
         else:
             raise Exception("Unknown output mode " + name_space.mode)
     else:
-        analysis_bid.lanes = \
-            RunFolder.from_file_path(
-                file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
+        analysis_bid.lanes = RunFolder.from_file_path(
+            file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
 
     if name_space.no_validation:
         analysis_bid.force = name_space.no_validation
@@ -271,7 +257,7 @@ if name_space.illumina2bam:
 
         analysis_bid.run()
         analysis_bid.check_state()
-        analysis_bid.submit(name=name_space.stage)
+        analysis_bid.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
         print('')
         print(analysis_bid.name)
@@ -279,27 +265,14 @@ if name_space.illumina2bam:
         print('Project directory:    ', analysis_bid.project_directory)
         print('Sequences directory:  ', analysis_bid.sequences_directory)
         print('Experiment directory: ', analysis_bid.get_experiment_directory)
-
-    if analysis_bid.debug >= 2:
-        print(repr(analysis_bid), 'final trace:')
-        sys.stdout.writelines(analysis_bid.trace(level=1))
 else:
-    # Create an IlluminaMultiplexSam analysis, run and submit it.
-
     analysis_ims = IlluminaMultiplexSam.from_config_file_path(config_path=name_space.configuration)
-
-    # Set arguments that override the configuration file.
-
-    if name_space.debug:
-        analysis_ims.debug = name_space.debug
 
     if name_space.irf:
         analysis_ims.run_directory = name_space.irf
 
     if name_space.compression is not None:
         analysis_ims.compression_level = name_space.compression
-
-    # Do the work.
 
     if name_space.loop:
         # If the --loop option has been set, wait until RTAComplete.txt has been copied.
@@ -319,7 +292,7 @@ else:
         analysis_ims.run()
 
     analysis_ims.check_state()
-    analysis_ims.submit(name=name_space.stage)
+    analysis_ims.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
     print(analysis_ims.name)
     print('Project name:           ', analysis_ims.project_name)
@@ -327,25 +300,13 @@ else:
     print('Illumina run directory: ', analysis_ims.run_directory)
     print('Experiment directory:   ', analysis_ims.get_experiment_directory)
 
-    if analysis_ims.debug >= 2:
-        print(repr(analysis_ims), 'final trace:')
-        sys.stdout.writelines(analysis_ims.trace(level=1))
-
-    # Create a IlluminaDemultiplexSam analysis, run and submit it.
-
-    analysis_ids = IlluminaDemultiplexSam.from_config_file_path(
-        config_path=name_space.configuration)
+    analysis_ids = IlluminaDemultiplexSam.from_config_file_path(config_path=name_space.configuration)
 
     # Transfer the project_name and run_directory from the IlluminaMultiplexSam to the
     # IlluminaDemultiplexSam analysis.
 
     analysis_ids.project_name = analysis_ims.project_name
     analysis_ids.run_directory = analysis_ims.run_directory
-
-    # Set arguments that override the configuration file.
-
-    if name_space.debug:
-        analysis_ids.debug = name_space.debug
 
     if name_space.compression is not None:
         analysis_ids.compression_level = name_space.compression
@@ -364,9 +325,8 @@ else:
         else:
             raise Exception("Unknown output mode " + name_space.mode)
     else:
-        analysis_ids.lanes = \
-            RunFolder.from_file_path(
-                file_path=analysis_ims.run_directory).run_information.flow_cell_layout.lane_count
+        analysis_ids.lanes = RunFolder.from_file_path(
+            file_path=analysis_ims.run_directory).run_information.flow_cell_layout.lane_count
 
     if name_space.no_validation:
         analysis_ids.force = name_space.no_validation
@@ -387,7 +347,7 @@ else:
 
         analysis_ids.run()
         analysis_ids.check_state()
-        analysis_ids.submit(name=name_space.stage)
+        analysis_ids.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
         print('')
         print(analysis_ids.name)
@@ -395,7 +355,3 @@ else:
         print('Project directory:    ', analysis_ids.project_directory)
         print('Sequences directory:  ', analysis_ids.sequences_directory)
         print('Experiment directory: ', analysis_ids.get_experiment_directory)
-
-    if analysis_ids.debug >= 2:
-        print(repr(analysis_ids), 'final trace:')
-        sys.stdout.writelines(analysis_ids.trace(level=1))

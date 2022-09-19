@@ -26,12 +26,15 @@
 """The :py:mod:`bsf.executables.cloud` module provides classes and functions to transfer files to and from the
 :literal:`Microsoft Azure Storage Blob Service`.
 """
+import logging
 from argparse import ArgumentParser
 from subprocess import Popen
 
 from bsf.cloud import get_azure_blob_service_client, azure_block_blob_download, azure_block_blob_upload
 from bsf.connector import Connector
 from bsf.process import Command, Executable, RunnableStep
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class RunnableStepAzureBlockBlob(RunnableStep):
@@ -155,6 +158,16 @@ class RunnableStepAzureBlockBlob(RunnableStep):
 
         return
 
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepAzureBlockBlob, self).__repr__()[:-1]}, ' \
+            f'account_name={self.account_name!r}, ' \
+            f'container_name={self.container_name!r}, ' \
+            f'source_path={self.source_path!r}, ' \
+            f'target_path={self.target_path!r}, ' \
+            f'max_concurrency={self.max_concurrency!r}, ' \
+            f'logging_enable={self.logging_enable!r})'
+
 
 class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
     """The :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobUpload` class uploads local file paths to
@@ -275,11 +288,20 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepAzureBlockBlob, self).__repr__()[:-1]}, ' \
+            f'account_name={self.account_name!r}, ' \
+            f'container_name={self.container_name!r}, ' \
+            f'source_path={self.source_path!r}, ' \
+            f'target_path={self.target_path!r}, ' \
+            f'max_concurrency={self.max_concurrency!r}, ' \
+            f'logging_enable={self.logging_enable!r}, ' \
+            f'standard_blob_tier={self.standard_blob_tier!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobUpload` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -292,10 +314,10 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
             max_concurrency=self.max_concurrency,
             logging_enable=self.logging_enable)
 
-        print('Azure Blob name:', blob_properties.name)
-        print('Azure Blob size:', blob_properties.size)
-        print('Azure Blob ETag:', blob_properties.etag)
-        print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
+        module_logger.info('Azure Blob name: %r', blob_properties.name)
+        module_logger.info('Azure Blob size: %r', blob_properties.size)
+        module_logger.info('Azure Blob ETag: %r', blob_properties.etag)
+        module_logger.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())
 
         return None
 
@@ -305,11 +327,9 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
     local file paths.
     """
 
-    def run(self, debug=0):
+    def run(self):
         """Run a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobDownload` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -321,10 +341,10 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
             max_concurrency=self.max_concurrency,
             logging_enable=self.logging_enable)
 
-        print('Azure Blob name:', blob_properties.name)
-        print('Azure Blob size:', blob_properties.size)
-        print('Azure Blob ETag:', blob_properties.etag)
-        print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
+        module_logger.info('Azure Blob name: %r', blob_properties.name)
+        module_logger.info('Azure Blob size: %r', blob_properties.size)
+        module_logger.info('Azure Blob ETag: %r', blob_properties.etag)
+        module_logger.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())
 
         return None
 
@@ -334,46 +354,42 @@ if __name__ == '__main__':
         description='Module driver script.')
 
     argument_parser.add_argument(
-        '--debug',
-        default=0,
-        help='Debug level',
-        required=False,
-        type=int)
+        '--logging-level',
+        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+        default='INFO',
+        dest='logging_level',
+        help='Logging level [INFO]',
+        required=False)
 
     argument_parser.add_argument(
         '--action',
         dest='action',
         help='Action (i.e. upload, download)',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--account-name',
         dest='account_name',
         help='Account name',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--container-name',
         dest='container_name',
         help='Container name',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--source-path',
         dest='source_path',
         help='Source (local) file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--target-path',
         dest='target_path',
         help='Target (blob) file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--maximum-concurrency',
@@ -392,6 +408,12 @@ if __name__ == '__main__':
 
     name_space = argument_parser.parse_args()
 
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
     if name_space.action == 'upload':
         runnable_step = RunnableStepAzureBlockBlobUpload(
             name='block_blob_upload',
@@ -402,7 +424,7 @@ if __name__ == '__main__':
             max_concurrency=name_space.max_conurrency,
             logging_enable=name_space.logging_enable)
 
-        runnable_step.run(debug=name_space.debug)
+        runnable_step.run()
 
     if name_space.action == 'download':
         runnable_step = RunnableStepAzureBlockBlobDownload(
@@ -414,4 +436,4 @@ if __name__ == '__main__':
             max_concurrency=name_space.max_conurrency,
             logging_enable=name_space.logging_enable)
 
-        runnable_step.run(debug=name_space.debug)
+        runnable_step.run()

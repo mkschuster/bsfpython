@@ -25,15 +25,16 @@
 """The :py:mod:`bsf.analyses.kallisto` module provides classes and methods supporting
 `Kallisto <https://pachterlab.github.io/kallisto/manual>`_ analyses.
 """
+import logging
 import os
-import sys
-import warnings
 
 from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory
 from bsf.standards import Configuration, StandardFilePath, Transcriptome
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class FilePathSample(FilePath):
@@ -124,7 +125,6 @@ class Kallisto(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -158,8 +158,6 @@ class Kallisto(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -191,7 +189,6 @@ class Kallisto(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -270,12 +267,12 @@ class Kallisto(Analysis):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Kallisto requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_version' configuration option.")
 
         # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
@@ -284,18 +281,18 @@ class Kallisto(Analysis):
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a valid 'genome_version' configuration option.")
 
         # Get the sample annotation sheet before calling the run() method of the bsf.analysis.Analysis super-class.
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         super(Kallisto, self).run()
 
@@ -307,8 +304,7 @@ class Kallisto(Analysis):
                 self.transcriptome_version + '.idx')
 
         if not os.path.exists(self.transcriptome_index_path):
-            raise Exception('The ' + self.name + ' transcriptome index file path does not exist.\n' +
-                            self.transcriptome_index_path)
+            raise Exception(f'The transcriptome index file path {self.transcriptome_index_path!r} does not exist.')
 
         run_read_comparisons()
 
@@ -319,9 +315,8 @@ class Kallisto(Analysis):
         self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=True, exclude=True)
 
@@ -336,8 +331,7 @@ class Kallisto(Analysis):
             runnable_sample = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
                     name=prefix_sample,
-                    working_directory=self.genome_directory,
-                    debug=self.debug))
+                    working_directory=self.genome_directory))
             # executable_sample =
             self.set_stage_runnable(
                 stage=stage_sample,
@@ -368,13 +362,14 @@ class Kallisto(Analysis):
 
             if 'Library Type' in sample.annotation_dict:
                 if len(sample.annotation_dict['Library Type']) > 1:
-                    warnings.warn('More than one annotation for sample ' + repr(sample.name) +
-                                  " and key 'Library Type'.")
+                    module_logger.warning(
+                        "More than one annotation for sample %r and key 'Library Type'.",
+                        sample.name)
 
                 library_type = sample.annotation_dict['Library Type'][0]
                 if library_type not in ('unstranded', 'first', 'second'):
-                    raise Exception("The 'Library Type' annotation for sample " + repr(sample.name) +
-                                    " has to be one of 'unstranded', 'first' or 'second'.")
+                    raise Exception(f"The 'Library Type' annotation for sample {sample.name!r} "
+                                    "has to be one of 'unstranded', 'first' or 'second'.")
 
                 if library_type == 'second':
                     runnable_step.sub_command.add_switch_long(key='rf-stranded')
@@ -384,8 +379,8 @@ class Kallisto(Analysis):
             single_end_mode = True
             for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
+                    module_logger.debug('PairedReads name:', paired_reads.get_name())
+                    module_logger.log(logging.DEBUG - 2, 'PairedReads: %r', paired_reads)
                     if paired_reads.reads_1 is not None:
                         runnable_step.sub_command.arguments.append(paired_reads.reads_1.file_path)
                     if paired_reads.reads_2 is not None:
@@ -397,8 +392,9 @@ class Kallisto(Analysis):
 
                 if 'Fragment Length Value' in sample.annotation_dict:
                     if len(sample.annotation_dict['Fragment Length Value']) > 1:
-                        warnings.warn('More than one annotation for sample ' + repr(sample.name) +
-                                      " and key 'Fragment Length Value'.")
+                        module_logger.warning(
+                            "More than one annotation for sample %r and key 'Fragment Length Value'.",
+                            sample.name)
                     runnable_step.sub_command.add_option_long(
                         key='fragment-length',
                         value=sample.annotation_dict['Fragment Length Value'][0])
@@ -409,8 +405,9 @@ class Kallisto(Analysis):
 
                 if 'Fragment Length Standard Deviation' in sample.annotation_dict:
                     if len(sample.annotation_dict['Fragment Length Standard Deviation']) > 1:
-                        warnings.warn('More than one annotation for sample ' + repr(sample.name) +
-                                      " and key 'Fragment Length Standard Deviation'.")
+                        module_logger.warning(
+                            "More than one annotation for sample %r and key 'Fragment Length Standard Deviation'.",
+                            sample.name)
                     runnable_step.sub_command.add_option_long(
                         key='sd',
                         value=sample.annotation_dict['Fragment Length Standard Deviation'][0])

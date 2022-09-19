@@ -26,10 +26,10 @@
 Distributed Resource Management System (DRMS) module.
 """
 import errno
+import logging
 import math
 import os
 import re
-import warnings
 from csv import DictReader
 from threading import Lock
 from typing import List
@@ -37,10 +37,13 @@ from typing import List
 from bsf.connector import StandardOutputStream
 from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor, \
     SQLiteTableInfoAdaptor
-from bsf.process import Executable, get_timestamp
+from bsf.process import Executable
+
+database_file_name = 'bsfpython_slurm_jobs.db'
+
+module_logger = logging.getLogger(name=__name__)
 
 output_directory_name = 'bsfpython_slurm_output'
-database_file_name = 'bsfpython_slurm_jobs.db'
 
 
 class ProcessSLURM(object):
@@ -623,11 +626,8 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """
         column_dict_old, column_dict_new = self.compare_table_definitions()
 
-        # print('Column dict old:', column_dict_old)
-        # print('Column dict new:', column_dict_new)
-
         if len(column_dict_new) or len(column_dict_old):
-            print('Attempting to patch SQLite table', self.table_name)
+            module_logger.info('Attempting to patch SQLite table: %r.', self.table_name)
 
             # Get the column definitions from the original table, which is needed for the
             # INSERT INTO (columns) expression.
@@ -643,12 +643,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
             # Rename the old table to move it sideways.
             statement = self.statement_alter_table_rename(table_name_new=table_name_old)
-            # print('Statement:', statement)
+            module_logger.log(logging.DEBUG - 1, 'SQL statement: %r', statement)
             self.get_cursor().execute(statement)
 
             # Create a new table
             statement = self.statement_create_table()
-            # print('Statement:', statement)
+            module_logger.log(logging.DEBUG - 1, 'SQL statement: %r', statement)
             self.get_cursor().execute(statement)
 
             # Call INSERT INTO ...
@@ -663,7 +663,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             statement_list.append(table_name_old)
 
             statement = ' '.join(statement_list)
-            # print('Statement:', statement)
+            module_logger.log(logging.DEBUG - 1, 'SQL statement: %r', statement)
             self.get_cursor().execute(statement)
             # By default, the sqlite3 Python module opens transactions implicitly before a
             # Data Modification Language (DML) statement (i.e., INSERT, UPDATE, DELETE or REPLACE)
@@ -672,7 +672,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
             # Drop the old table
             statement = self.statement_drop_table(table_name=table_name_old)
-            # print('Statement:', statement)
+            module_logger.log(logging.DEBUG - 1, 'SQL statement: %r', statement)
             self.get_cursor().execute(statement)
 
         return
@@ -802,20 +802,20 @@ def _recalculate_memory(memory):
     return str(result)
 
 
-def submit(stage, debug=0):
+def submit(stage, drms_submit=None):
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object into the
-    :literal:`Simple Linux Utility for Resource Management (SLURM)`
-    :literal:`Distributed Resource Management System (DRMS)`.
+    :emphasis:`Simple Linux Utility for Resource Management` (SLURM)
+    :emphasis:`Distributed Resource Management System` (DRMS).
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
     :type stage: bsf.analysis.Stage
-    :param debug: An integer debugging level.
-    :type debug: int
+    :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
+    :type drms_submit: bool | None
     """
 
-    def submit_sbatch_stdout(_file_handle, _thread_lock, _debug, _executable):
+    def submit_sbatch_stdout(_file_handle, _thread_lock, _executable):
         """Thread callable to process the SLURM :manpage:`sbatch(1)` :literal:`STDOUT` stream.
 
         Parses the process identifier returned by SLURM :literal:`sbatch` and sets it as
@@ -828,25 +828,20 @@ def submit(stage, debug=0):
         :type _file_handle: io.TextIOWrapper
         :param _thread_lock: A Python :py:class:`threading.Lock` object.
         :type _thread_lock: Lock
-        :param _debug: Debug level
-        :type _debug: int
         :param _executable: A :py:class:`bsf.process.Executable` object.
         :type _executable: Executable
         """
         for _line in _file_handle:
-            if _debug > 0:
-                _thread_lock.acquire(True)
-                print('Line:', _line)
-                _thread_lock.release()
+            _line = _line.rstrip()
+
+            module_logger.debug('Line: %r', _line)
 
             _match = re.search(pattern=r'Submitted batch job (\d+)', string=_line)
 
             if _match:
                 _executable.process_identifier = _match.group(1)
             else:
-                _thread_lock.acquire(True)
-                print('Could not parse the process identifier from the SLURM sbatch response line', _line)
-                _thread_lock.release()
+                module_logger.warning('Could not parse the SLURM sbatch response line: %r', _line)
 
         return
 
@@ -862,16 +857,12 @@ def submit(stage, debug=0):
     # SLURM process would have been submitted and its identifier could no longer be updated. Hence, the test here.
 
     if not os.access(file_path, os.W_OK):
-        raise Exception('Cannot write to SQLite database file path:', repr(file_path))
+        raise Exception(f'Cannot write to SQLite database file path: {file_path!r}')
 
     output_list: List[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
-
-    if debug > 0:
-        output_list.append('# BSF-Python debug mode: ' + repr(debug) + '\n')
-        output_list.append('\n')
 
     for executable in stage.executable_list:
         executable_drms = Executable(
@@ -942,13 +933,11 @@ def submit(stage, debug=0):
             output_directory_path = os.path.join(stage.working_directory, output_directory_name)
 
             if not os.path.isdir(output_directory_path):
-                # In principle, a race condition could occur as the directory
-                # could have been created after its existence has been checked.
                 try:
                     os.makedirs(output_directory_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
-                        raise
+                        raise exception
 
             executable_drms.add_option_pair_long(
                 key='error',
@@ -977,12 +966,13 @@ def submit(stage, debug=0):
                 # This bsf.process.Executable has been submitted at least once before.
                 # For the moment, set the dependency on the last submission.
                 process_identifier_list.append(process_slurm_list[-1].job_id)
-            elif debug == 0:
-                warnings.warn(
-                    'While submitting Executable with name ' + repr(executable.name) + ', ' +
-                    'Executable with name ' + repr(executable_name) + ' that it depends on, ' +
+            else:
+                module_logger.debug(
+                    'While submitting Executable.name %r, Executable.name %r that it depends on, '
                     'has not been submitted before.',
-                    UserWarning)
+                    executable.name,
+                    executable_name)
+
         if len(process_identifier_list):
             # Only set the dependency option if there are some on the process identifier list.
             # The identifier list may be empty if no dependencies exist or no Executable has been submitted before.
@@ -996,10 +986,10 @@ def submit(stage, debug=0):
         if len(process_slurm_list) and process_slurm_list[-1].state in ('PENDING', 'RUNNING'):
             executable.submit = False
 
-        # Finally, submit this command if requested and not in debug mode.
+        # Finally, submit this command if requested.
 
-        if executable.submit and debug == 0:
-            exception_str_list = executable_drms.run(debug=debug)
+        if executable.submit and drms_submit:
+            exception_str_list = executable_drms.run()
 
             if exception_str_list:
                 exception_str_list.append('Command list representation: ' + repr(executable_drms.command_list()))
@@ -1035,48 +1025,30 @@ def submit(stage, debug=0):
         database_connection.commit()
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_' + stage.name + '.bash')
-    with open(file=script_path, mode='wt') as script_file:
-        script_file.writelines(output_list)
+    with open(file=script_path, mode='wt') as output_text_io:
+        output_text_io.writelines(output_list)
 
     return
 
 
-def check_state(stage, debug=0):
+def check_state(stage):
     """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
     :type stage: bsf.analysis.Stage
-    :param debug: An integer debugging level.
-    :type debug: int
     """
 
-    def check_state_stdout(_stdout_handle, _thread_lock, _debug, _process_slurm_adaptor, _stdout_path=None):
+    def check_state_stdout(_stdout_handle, _thread_lock, _process_slurm_adaptor):
         """Thread callable to process the SLURM :manpage:`sacct(1)` :literal:`STDOUT` stream.
 
         :param _stdout_handle: The :literal:`STDOUT` or :literal:`STDERR` file handle.
         :type _stdout_handle: io.TextIOWrapper
         :param _thread_lock: A Python :py:class:`threading.Lock` object.
         :type _thread_lock: Lock
-        :param _debug: Debug level
-        :type _debug: int
         :param _process_slurm_adaptor: A :py:class:`bsf.drms.slurm.ProcessSLURMAdaptor` object.
         :type _process_slurm_adaptor: ProcessSLURMAdaptor
-        :param _stdout_path: A :literal:`STDOUT` file path
-        :type _stdout_path: str | None
         """
-        if _debug > 0:
-            _thread_lock.acquire(True)
-            print(get_timestamp(), "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
-            _thread_lock.release()
-
-        if _stdout_path:
-            output_file = open(file=_stdout_path, mode='wt')
-            if _debug > 0:
-                _thread_lock.acquire(True)
-                print(get_timestamp(), "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
-                _thread_lock.release()
-        else:
-            output_file = None
+        module_logger.debug("Started Runner 'STDOUT' processor.")
 
         dict_reader = DictReader(f=_stdout_handle, delimiter='|')
 
@@ -1154,18 +1126,7 @@ def check_state(stage, debug=0):
                 _process_slurm_adaptor.update(object_instance=new_process_slurm)
                 _thread_lock.release()
 
-        if _debug > 0:
-            _thread_lock.acquire(True)
-            print(get_timestamp(), "Received EOF on 'STDOUT' pipe.")
-            _thread_lock.release()
-
-        if output_file:
-            output_file.close()
-
-            if _debug > 0:
-                _thread_lock.acquire(True)
-                print(get_timestamp(), "Closed 'STDOUT' file " + repr(_stdout_path) + '.')
-                _thread_lock.release()
+        module_logger.debug("Received EOF on 'STDOUT' pipe.")
 
         # Commit changes to the database and explicitly disconnect so that other threads have access.
         _process_slurm_adaptor.commit()
@@ -1198,8 +1159,7 @@ def check_state(stage, debug=0):
     if not process_slurm_list:
         return
 
-    if debug > 0:
-        print('Number of ProcessSLURM objects to check:', len(process_slurm_list))
+    module_logger.debug('Number of ProcessSLURM objects to check: %d', len(process_slurm_list))
 
     executable_drms = Executable(
         name='sacct',
@@ -1211,7 +1171,7 @@ def check_state(stage, debug=0):
     executable_drms.add_switch_long(key='long')
     executable_drms.add_switch_long(key='parsable')
 
-    exception_str_list = executable_drms.run(debug=debug)
+    exception_str_list = executable_drms.run()
 
     if exception_str_list:
         exception_str_list.append('Command list representation: ' + repr(executable_drms.command_list()))

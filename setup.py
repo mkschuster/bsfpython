@@ -32,12 +32,13 @@ with open(file='README.md', mode='r') as text_io:
     long_description = text_io.read()
 
 # https://docs.python.org/3/distutils/setupscript.html
+# https://setuptools.pypa.io/en/latest/references/keywords.html
 setuptools.setup(
     # https://packaging.python.org/specifications/core-metadata/
     # metadata_version='2.1',
     # Additional Meta-Data
     name='bsfpython-MSchuster',
-    version='0.0.1',
+    version='2022.10.13',
     author='Michael Schuster',
     author_email='mschuster@cemm.oeaw.ac.at',
     maintainer='Michael Schuster',
@@ -54,7 +55,7 @@ setuptools.setup(
         'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)'
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Topic :: Scientific/Engineering :: Bio-Informatics'
+        'Topic :: Scientific/Engineering :: Bio-Informatics',
     ],
     # platforms=[],
     # keywords=[],

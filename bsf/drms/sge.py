@@ -26,6 +26,7 @@
 Distributed Resource Management System (DRMS) module.
 """
 import errno
+import logging
 import os
 import re
 from threading import Lock
@@ -34,6 +35,8 @@ from typing import List
 from bsf.connector import StandardOutputStream
 from bsf.database import DatabaseAdaptor, DatabaseConnection
 from bsf.process import Executable
+
+module_logger = logging.getLogger(name=__name__)
 
 output_directory_name = 'bsfpython_sge_output'
 
@@ -421,20 +424,20 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
         return
 
 
-def submit(stage, debug=0):
+def submit(stage, drms_submit=None):
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object into the
-    :literal:`Son of Grid Engine` (SGE)
-    Distributed Resource Management System (DRMS).
+    :emphasis:`Son of Grid Engine` (SGE)
+    :emphasis:`Distributed Resource Management System` (DRMS).
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
     :type stage: bsf.analysis.Stage
-    :param debug: An integer debugging level.
-    :type debug: int
+    :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
+    :type drms_submit: bool | None
     """
 
-    def submit_qsub_stdout(_file_handle, _thread_lock, _debug, _executable):
+    def submit_qsub_stdout(_file_handle, _thread_lock, _executable):
         """Thread callable to process the SGE :manpage:`qsub(1)` :literal:`STDOUT` stream.
 
         Parses the process identifier returned by SGE :literal:`qsub` and sets it as
@@ -447,26 +450,20 @@ def submit(stage, debug=0):
         :type _file_handle: io.TextIOWrapper
         :param _thread_lock: A Python :py:class:`threading.Lock` object.
         :type _thread_lock: Lock
-        :param _debug: Debug level
-        :type _debug: int
         :param _executable: A :py:class:`bsf.process.Executable` object.
         :type _executable: Executable
         """
         for _line in _file_handle:
-            if _debug > 0:
-                _thread_lock.acquire(True)
-                print('Line:', _line)
-                _thread_lock.release()
+            _line = _line.rstrip()
+            module_logger.debug('Line: %r', _line)
 
-            _match = re.search(pattern=r'Your job (\d+) \("([^"]+)"\) has been submitted', string=_line)
+            _re_match = re.search(pattern=r'Your job (\d+) \("([^"]+)"\) has been submitted', string=_line)
 
-            if _match:
-                _executable.process_identifier = _match.group(1)
-                # _executable.process_name = _match.group(2)
+            if _re_match:
+                _executable.process_identifier = _re_match.group(1)
+                # _executable.process_name = _re_match.group(2)
             else:
-                _thread_lock.acquire(True)
-                print('Could not parse SGE qsub response line:', repr(_line))
-                _thread_lock.release()
+                module_logger.warning('Could not parse the SGE qsub response line: %r', _line)
 
         return
 
@@ -474,10 +471,6 @@ def submit(stage, debug=0):
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
-
-    if debug > 0:
-        output_list.append('# BSF-Python debug mode: ' + repr(debug) + '\n')
-        output_list.append('\n')
 
     for executable in stage.executable_list:
         executable_drms = Executable(
@@ -572,13 +565,11 @@ def submit(stage, debug=0):
             output_directory_path = os.path.join(stage.working_directory, output_directory_name)
 
             if not os.path.isdir(output_directory_path):
-                # In principle, a race condition could occur as the directory
-                # could have been created after its existence has been checked.
                 try:
                     os.makedirs(output_directory_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
-                        raise
+                        raise exception
 
             executable_drms.add_option_short(key='e', value=output_directory_name)
             executable_drms.add_option_short(key='o', value=output_directory_name)
@@ -600,10 +591,10 @@ def submit(stage, debug=0):
         if len(executable.dependencies):
             executable_drms.add_option_short(key='hold_jid', value=','.join(executable.dependencies))
 
-        # Finally, submit this command if requested and not in debug mode.
+        # Finally, submit this command if requested.
 
-        if executable.submit and debug == 0:
-            exception_str_list = executable_drms.run(debug=debug)
+        if executable.submit and drms_submit:
+            exception_str_list = executable_drms.run()
 
             if exception_str_list:
                 exception_str_list.append('Command list representation: ' + repr(executable_drms.command_list()))
@@ -615,24 +606,19 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_sge_' + stage.name + '.bash')
-    with open(file=script_path, mode='wt') as script_file:
-        script_file.writelines(output_list)
+    with open(file=script_path, mode='wt') as output_text_io:
+        output_text_io.writelines(output_list)
 
     return
 
 
-def check_state(stage, debug=0):
+def check_state(stage):
     """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
     :type stage: bsf.analysis.Stage
-    :param debug: An integer debugging level.
-    :type debug: int
     """
     if stage:
-        pass
-
-    if debug:
         pass
 
     return

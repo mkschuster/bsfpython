@@ -65,13 +65,6 @@ argument_parser = ArgumentParser(
     description='BSF utility to extract index sequences of an unaligned BAM file into a FASTQ file.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--input-path',
     dest='input_path',
     help='BAM file path',

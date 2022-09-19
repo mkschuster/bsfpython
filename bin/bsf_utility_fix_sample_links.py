@@ -34,13 +34,13 @@ import stat
 from argparse import ArgumentParser
 
 
-def scan_directory(directory_path, debug=0):
+def scan_directory(directory_path, commit=None):
     """Scan a directory for symbolic links or directories recursively.
 
     :param directory_path: A directory path.
     :type directory_path: str
-    :param debug: An integer debugging level.
-    :type debug: int
+    :param commit: Commit changes to the file system.
+    :type commit: bool | None
     """
     for file_name in os.listdir(directory_path):
         file_path = os.path.join(directory_path, file_name)
@@ -52,7 +52,7 @@ def scan_directory(directory_path, debug=0):
             # For a link, evaluate the link.
             source_path = os.readlink(file_path)
             if not os.path.exists(source_path):
-                print('source {!r} target {!r} of old symbolic link'.format(source_path, file_name))
+                print(f'source {source_path!r} target {file_name!r} of old symbolic link')
                 # Split the entire source path to get the last two components of the source path including
                 # the lanes-specific BAM file and the flow cell directory.
                 source_path_list = list()
@@ -68,19 +68,22 @@ def scan_directory(directory_path, debug=0):
                 source_path = os.path.relpath(
                     os.path.join(name_space.sequences_path, *source_path_list[-2:]),
                     directory_path)
-                print('source {!r} target {!r} of new symbolic link'.format(source_path, file_name))
+                print(f'source {source_path!r} target {file_name!r} of new symbolic link')
+
                 # Check that the directory is writable.
                 directory_mode = os.lstat(directory_path)
+
                 if directory_mode[stat.ST_MODE] & stat.S_IWUSR:
                     # The old symbolic link need deleting before a new one can be set.
                     # Secure against race conditions in case the link has already been deleted
                     # before calling os.remove() or added before calling os.symlink().
-                    if not debug:
+                    if commit:
                         try:
                             os.remove(file_path)
                         except OSError as exception:
                             if exception.errno != errno.ENOENT:
                                 raise
+
                         try:
                             os.symlink(source_path, file_path)
                         except OSError as exception:
@@ -96,26 +99,25 @@ argument_parser = ArgumentParser(
     description='Fix symbolic links between the BSF samples and BSF sequences directory.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--dry-run',
+    action='store_false',
+    default=True,
+    dest='commit',
+    help='dry run',
+    required=False)
 
 argument_parser.add_argument(
     '--samples-path',
     dest='samples_path',
     help='BSF samples directory path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--sequences-path',
     dest='sequences_path',
     help='BSF sequences directory path',
-    required=False,
-    type=str)
+    required=False)
 
 name_space = argument_parser.parse_args()
 
-scan_directory(directory_path=name_space.samples_path, debug=name_space.debug)
+scan_directory(directory_path=name_space.samples_path, commit=name_space.commit)

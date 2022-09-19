@@ -24,8 +24,11 @@
 #
 """The :py:mod:`bsf.database` module provides classes and methods to centralises :literal:`SQLite` Database access.
 """
+import logging
 from sqlite3 import Connection, Cursor, IntegrityError, OperationalError, connect
 from typing import Dict, List
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class DatabaseConnection(object):
@@ -683,8 +686,7 @@ class DatabaseAdaptor(object):
         primary_name = self._get_column_name_for_primary()
 
         if not primary_name:
-            raise Exception(
-                'Cannot create a SQL UPDATE statement ' + repr(self.table_name) + ' without a primary key.')
+            raise Exception(f'Cannot create an SQL UPDATE statement {self.table_name} without a primary key.')
 
         statement_list: List[str] = list()
 
@@ -776,7 +778,7 @@ class DatabaseAdaptor(object):
         object_length = len(object_list)
 
         if object_length > 1:
-            raise Exception('SQL database returned more than one row for primary key ' + repr(primary_key) + '.')
+            raise Exception(f'SQL database returned more than one row for primary key {primary_key!r}.')
         elif object_length == 1:
             return object_list[0]
         else:
@@ -797,18 +799,14 @@ class DatabaseAdaptor(object):
 
         try:
             self.get_cursor().execute(self.statement_insert(), value_list)
-        except IntegrityError:
-            print('Encountered sqlite3.IntegrityError for table name ' +
-                  self.table_name + 'on the following SQL fields:\n' +
-                  'Fields: ' + self._build_column_insert_expression() + '\n' +
-                  'Values: ' + repr(value_list))
-            raise
-        except OperationalError:
-            print('Encountered sqlite3.OperationalError for table name ' +
-                  self.table_name + ' on the following SQL fields:\n' +
-                  'Fields: ' + self._build_column_insert_expression() + '\n' +
-                  'Values: ' + repr(value_list))
-            raise
+        except IntegrityError as exception:
+            module_logger.error('Encountered sqlite3.IntegrityError for table name %r on fields %r and values %r.',
+                                self.table_name, self._build_column_insert_expression(), value_list)
+            raise exception
+        except OperationalError as exception:
+            module_logger.error('Encountered sqlite3.OperationalError for table name %r on fields %r and values %r.',
+                                self.table_name, self._build_column_insert_expression(), value_list)
+            raise exception
 
         # Update the canonical attribute containing the primary key with the last row identifier.
         last_row_identifier = self.get_cursor().lastrowid
@@ -831,18 +829,17 @@ class DatabaseAdaptor(object):
         primary_name = self._get_column_name_for_primary()
 
         if not primary_name:
-            raise Exception('Cannot update table ' + repr(self.table_name) + ' without a primary key.')
+            raise Exception(f'Cannot update table {self.table_name!r} without a primary key.')
 
         value_list = [object_instance.__getattribute__(item) for item in self._get_column_name_list_without_primary()]
         value_list.append(object_instance.__getattribute__(primary_name))
 
         try:
             self.get_cursor().execute(self.statement_update(), value_list)
-        except IntegrityError:
-            print('Encountered SQLite3 integrity error.\n',
-                  '  SQL statement:', self.statement_update(), '\n',
-                  '  Values:', value_list)
-            raise
+        except IntegrityError as exception:
+            module_logger.error('Encountered SQLite3 integrity error on SQL statement %r and values %r.',
+                                self.statement_update(), value_list)
+            raise exception
 
         return
 

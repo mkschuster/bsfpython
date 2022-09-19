@@ -26,8 +26,8 @@
 #
 #  BSF Python script to drive the Variant Calling analysis pipeline.
 #
+import logging
 import os
-import sys
 from argparse import ArgumentParser
 
 from bsf.analyses.variant_calling import VariantCallingGATK, FilePathProcessSample, FilePathProcessReadGroup
@@ -36,17 +36,25 @@ argument_parser = ArgumentParser(
     description=VariantCallingGATK.name + ' driver script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--dry-run',
+    action='store_false',
+    default=True,
+    dest='drms_submit',
+    help='dry run',
+    required=False)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--stage',
     help='limit job submission to a particular Analysis stage',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--find-missing',
@@ -57,17 +65,17 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     'configuration',
-    help='configuration (*.ini) file path',
-    type=str)
+    help='configuration (*.ini) file path')
 
 name_space = argument_parser.parse_args()
 
-# Create a VariantCallingGATK Analysis and run it.
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 analysis = VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
-
-if name_space.debug:
-    analysis.debug = name_space.debug
 
 analysis.run()
 analysis.check_state()
@@ -123,7 +131,7 @@ if name_space.find_missing:
         else:
             print("Complete sample:", sample.name)
 else:
-    analysis.submit(name=name_space.stage)
+    analysis.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
     print(analysis.name)
     print('Project name:      ', analysis.project_name)
@@ -131,9 +139,5 @@ else:
     print('Input directory:   ', analysis.input_directory)
     print('Project directory: ', analysis.project_directory)
     print('Genome directory:  ', analysis.genome_directory)
-    if name_space.stage and name_space.stage == 'report':
+    if name_space.stage == 'report':
         print('Report URL:        ', analysis.get_html_report_url())
-
-    if analysis.debug >= 2:
-        print(repr(analysis), 'final trace:')
-        sys.stdout.writelines(analysis.trace(level=1))

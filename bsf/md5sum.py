@@ -135,17 +135,17 @@ class MD5SumArchive(object):
         """
         # Check if a file_path instance variable is set.
         if not md5sum.file_path:
-            module_logger.warning(f"Missing 'file_path' instance variable for 'check_sum' {md5sum.check_sum!r}.")
+            module_logger.warning("Missing 'file_path' instance variable for 'check_sum' %r.", md5sum.check_sum)
             return False
 
         # Check if a check_sum instance variable is set.
         if not md5sum.check_sum:
-            module_logger.warning(f"Missing 'check_sum' instance variable for 'file_path' {md5sum.file_path!r}.")
+            module_logger.warning("Missing 'check_sum' instance variable for 'file_path' %r.", md5sum.file_path)
             return False
 
         # Check if no other check_sum value is set for this file_path.
         if md5sum.file_path in self.md5sum_dict and self.md5sum_dict[md5sum.file_path].check_sum != md5sum.check_sum:
-            module_logger.warning(f'Non-matching check sum {md5sum.check_sum!r} for file path {md5sum.file_path!r}.')
+            module_logger.warning('Non-matching check sum %r for file path %r.', md5sum.check_sum, md5sum.file_path)
             return False
 
         self.md5sum_dict[md5sum.file_path] = md5sum
@@ -173,24 +173,20 @@ class MD5SumArchive(object):
             file_path = self.file_path
 
         if os.path.exists(file_path):
-            with open(file=file_path, mode='rt') as input_file:
-                for line_str in input_file:
+            with open(file=file_path, mode='rt') as input_text_io:
+                for line_str in input_text_io:
                     md5sum = MD5Sum.from_line(md5sum_str=line_str)
 
                     module_logger.debug(
-                        f'read_md5sum_archive: '
-                        f'md5_file_path: {md5sum.file_path!r} '
-                        f'md5_check_sum: {md5sum.check_sum!r} '
-                        f'md5_check_mode: {md5sum.check_mode!r}'
-                    )
+                        'read_md5sum_archive: MD5Sum.file_path: %r MD5Sum.check_sum: %r MD5Sum.check_mode: %r',
+                        md5sum.file_path, md5sum.check_sum, md5sum.check_mode)
 
                     if not self.add_md5sum(md5sum=md5sum):
                         raise Exception(
-                            f'The md5sum archive file {file_path!r} '
-                            "does not obey the standard 'MD5SUM *file_path' format."
-                        )
+                            f'The MD5SumArchive file {file_path!r} '
+                            "does not obey the standard 'MD5SUM *file_path' format.")
         else:
-            module_logger.warning(f'The md5sum archive {file_path!r} does not exists.')
+            module_logger.warning('The MD5SumArchive.file_path %r does not exist.', file_path)
 
         return
 
@@ -203,10 +199,10 @@ class MD5SumArchive(object):
         :return: A :py:class:`bsf.md5sum.MD5SumArchive` object.
         :rtype: MD5SumArchive
         """
-        module_logger.debug(f'Reading MD5SumArchive from file path: {file_path!r}')
+        module_logger.debug('Reading MD5SumArchive from file path: %r', file_path)
 
         if not file_path:
-            raise Exception('Require a valid file_path option.')
+            raise Exception("Require a valid 'file_path' option.")
 
         md5sum_archive = cls(file_path=file_path)
         md5sum_archive.read_md5sum_archive()
@@ -222,9 +218,9 @@ class MD5SumArchive(object):
         if not file_path:
             file_path = self.file_path
 
-        module_logger.debug(f'Writing MD5SumArchive to file path: {file_path!r}')
+        module_logger.debug('Writing MD5SumArchive to file path: %r', file_path)
 
-        with open(file=file_path, mode='wt') as text_io:
+        with open(file=file_path, mode='wt') as output_text_io:
             for md5_file_name in sorted(self.md5sum_dict):
                 md5sum = self.md5sum_dict[md5_file_name]
 
@@ -233,6 +229,6 @@ class MD5SumArchive(object):
                     if md5sum.file_path.endswith(suffix):
                         md5sum.check_mode = '*'
 
-                print(md5sum.to_line(), file=text_io)
+                print(md5sum.to_line(), file=output_text_io)
 
         return

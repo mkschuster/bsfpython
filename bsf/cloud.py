@@ -47,12 +47,13 @@ def get_azure_secrets_dict(account_name: str) -> Dict[str, str]:
     file_path = Secrets.get_azure_file_path()
 
     if file_path and os.path.exists(file_path):
-        with open(file=file_path, mode='rt') as text_io:
-            secrets_dict: Dict[str, Dict[str, str]] = json.load(fp=text_io)
+        with open(file=file_path, mode='rt') as input_text_io:
+            secrets_dict: Dict[str, Dict[str, str]] = json.load(fp=input_text_io)
 
         if account_name not in secrets_dict:
-            raise Exception('Microsoft Azure Storage Account name ' + repr(account_name) + ' not in secrets file ' +
-                            repr(file_path))
+            raise Exception(
+                f'The Microsoft Azure Storage Account name {account_name!r} '
+                f'is missing from secrets file {file_path!r}.')
 
         return secrets_dict[account_name]
     else:
@@ -219,7 +220,7 @@ def azure_block_blob_upload(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            'Container ' + repr(get_azure_container_name(container=container)) + ' does not exist in this account.')
+            f'A Container {get_azure_container_name(container=container)!r} does not exist in this account.')
 
     if blob is None:
         blob = os.path.basename(file_path)
@@ -234,11 +235,11 @@ def azure_block_blob_upload(
         else:
             standard_blob_tier = None
 
-    with open(file=file_path, mode='rb') as binary_io:
+    with open(file=file_path, mode='rb') as input_binary_io:
         # The blob_type option defaults to azure.storage.blob.BlobType.BlockBlob
         # The retries_total option cannot be used in the upload_blob() call.
         azure_blob_client.upload_blob(
-            data=binary_io,
+            data=input_binary_io,
             standard_blob_tier=standard_blob_tier,
             max_concurrency=max_concurrency,
             logging_enable=logging_enable)
@@ -275,7 +276,7 @@ def azure_block_blob_download_io(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            'Container ' + repr(get_azure_container_name(container=container)) + ' does not exist in this account.')
+            f'A Container {get_azure_container_name(container=container)!r} does not exist in this account.')
 
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
@@ -315,7 +316,7 @@ def azure_block_blob_download(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            'Container ' + repr(get_azure_container_name(container=container)) + ' does not exist in this account.')
+            f'A Container {get_azure_container_name(container=container)!r} does not exist in this account.')
 
     if not file_path:
         # The Azure Storage Blob Service always uses URL-compliant slash characters as path separators.
@@ -323,9 +324,9 @@ def azure_block_blob_download(
 
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
-    with open(file=file_path, mode='wb') as binary_io:
+    with open(file=file_path, mode='wb') as output_binary_io:
         azure_blob_client.download_blob(
             max_concurrency=max_concurrency,
-            logging_enable=logging_enable).readinto(stream=binary_io)
+            logging_enable=logging_enable).readinto(stream=output_binary_io)
 
     return azure_blob_client.get_blob_properties()

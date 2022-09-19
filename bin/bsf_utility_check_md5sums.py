@@ -38,32 +38,31 @@ argument_parser = ArgumentParser(
     description='Update an MD5 sum archive file')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--file-path',
     dest='file_path',
     help='MD5 sum archive file path',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     'file_paths',
     help='one or more file paths',
-    nargs='+',
-    type=str)
+    nargs='+')
 
 name_space = argument_parser.parse_args()
 
-if name_space.debug:
-    if name_space.debug > 1:
-        logging.basicConfig(level=logging.DEBUG)
-    elif name_space.debug > 0:
-        logging.basicConfig(level=logging.INFO)
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 md5sum_archive = MD5SumArchive.from_file_path(file_path=name_space.file_path)
 

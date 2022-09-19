@@ -33,17 +33,18 @@ import getpass
 import html
 import importlib
 import inspect
+import logging
 import os
-import sys
 import urllib.parse
 import uuid
-import warnings
 from typing import Dict, List, Optional
 
 from bsf.ngs import Collection, Sample
 from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import Command, Executable, RunnableStep
 from bsf.standards import Configuration, StandardFilePath, Operator, Genome, Transcriptome, UCSC, URL
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class Analysis(object):
@@ -91,8 +92,6 @@ class Analysis(object):
     :type sas_prefix: str | None
     :ivar e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
     :type e_mail: str | None
-    :ivar debug: An integer debugging level.
-    :type debug: int
     :ivar stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
     :type stage_list: list[Stage]
     :ivar runnable_dict: A Python :py:class:`dict` object of
@@ -164,7 +163,6 @@ class Analysis(object):
             sas_file=None,
             sas_prefix=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             runnable_dict=None,
             collection=None,
@@ -200,8 +198,6 @@ class Analysis(object):
         :type sas_prefix: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param runnable_dict: A Python :py:class:`dict` object of
@@ -233,7 +229,6 @@ class Analysis(object):
         self.sas_file = sas_file
         self.sas_prefix = sas_prefix
         self.e_mail = e_mail
-        self.debug = debug
 
         if stage_list is None:
             self.stage_list = list()
@@ -284,7 +279,6 @@ class Analysis(object):
         str_list.append('{}  sas_file: {!r}\n'.format(indent, self.sas_file))
         str_list.append('{}  sas_prefix: {!r}\n'.format(indent, self.sas_prefix))
         str_list.append('{}  e_mail: {!r}\n'.format(indent, self.e_mail))
-        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
         str_list.append('{}  stage_list: {!r}\n'.format(indent, self.stage_list))
         str_list.append('{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict))
         str_list.append('{}  collection: {!r}\n'.format(indent, self.collection))
@@ -336,8 +330,8 @@ class Analysis(object):
             :py:attr:`bsf.analysis.Analysis.runnable_dict`.
         """
         if runnable.name in self.runnable_dict:
-            raise Exception('A Runnable with name ' + repr(runnable.name) +
-                            ' already exists in Analysis ' + repr(self.project_name) + '.')
+            raise Exception(f'A Runnable with name {runnable.name!r} already exists in '
+                            f'Analysis {self.project_name!r}.')
         else:
             self.runnable_dict[runnable.name] = runnable
 
@@ -404,15 +398,17 @@ class Analysis(object):
         for prefix in prefix_list:
             # Preferentially test with the genome version.
             file_name = '_'.join((self.project_name, self.genome_version, prefix, suffix))
-            if self.debug > 0:
-                print('Checking annotation sheet: ', repr(file_name))
+
+            module_logger.debug('Checking for annotation sheet: %r', file_name)
+
             if os.path.exists(file_name):
                 return file_name
 
             # Fall-back test without the genome version.
             file_name = '_'.join((self.project_name, prefix, suffix))
-            if self.debug > 0:
-                print('Checking annotation sheet: ', repr(file_name))
+
+            module_logger.debug('Checking annotation sheet: %r', file_name)
+
             if os.path.exists(file_name):
                 return file_name
 
@@ -449,8 +445,7 @@ class Analysis(object):
         section = Configuration.section_from_instance(instance=stage)
         stage.set_configuration(configuration=self.configuration, section=section)
 
-        if self.debug > 1:
-            print('Stage configuration section:', repr(section))
+        module_logger.log(logging.DEBUG - 1, 'Stage configuration section: %r', section)
 
         # A "bsf.analysis.Analysis.Stage" or "bsf.analyses.*.Stage" pseudo-class section specifies
         # Analysis-specific or sub-class-specific options for the Stage, respectively.
@@ -458,8 +453,7 @@ class Analysis(object):
         section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage'))
         stage.set_configuration(configuration=self.configuration, section=section)
 
-        if self.debug > 1:
-            print('Stage configuration section:', repr(section))
+        module_logger.log(logging.DEBUG - 1, 'Stage configuration section: %r', section)
 
         # A "bsf.analysis.Analysis.Stage.name" or "bsf.analyses.*.Stage.name" section specifies defaults
         # for a particular Stage of an Analysis or subclass, respectively.
@@ -467,8 +461,7 @@ class Analysis(object):
         section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage', stage.name))
         stage.set_configuration(configuration=self.configuration, section=section)
 
-        if self.debug > 1:
-            print('Stage configuration section:', repr(section))
+        module_logger.log(logging.DEBUG - 1, 'Stage configuration section: %r', section)
 
         return stage
 
@@ -485,15 +478,10 @@ class Analysis(object):
         :raise Exception: If the specified section does not exist.
         """
         if not configuration.config_parser.has_section(section=section):
-            raise Exception(
-                'Section ' + repr(section) +
-                ' not defined in Configuration files:\n' + repr(configuration.file_path_list))
+            raise Exception(f'Section {section!r} is not defined in Configuration files:\n'
+                            f'{configuration.file_path_list}')
 
         # The configuration section is available.
-
-        option = 'debug'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.debug = configuration.config_parser.getint(section=section, option=option)
 
         option = 'project_name'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -559,8 +547,7 @@ class Analysis(object):
             section += '.'
             section += command.program
 
-        if self.debug > 1:
-            print('Command configuration section:', repr(section))
+        module_logger.log(logging.DEBUG - 1, 'Command configuration section: %r', section)
 
         command.set_configuration(configuration=self.configuration, section=section)
 
@@ -598,8 +585,7 @@ class Analysis(object):
             else:
                 section += '.' + command.program
 
-            if self.debug > 1:
-                print('RunnableStep configuration section:', repr(section))
+            module_logger.log(logging.DEBUG - 1, 'RunnableStep configuration section: %r', section)
 
             command.set_configuration(configuration=self.configuration, section=section)
 
@@ -639,12 +625,10 @@ class Analysis(object):
             :py:attr:`bsf.analysis.Analysis.stage_list` attribute.
         """
         if stage not in self.stage_list:
-            raise Exception('A Stage with name ' + repr(stage.name) +
-                            ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
+            raise Exception(f'A Stage.name {stage.name!r} does not exist in Analysis {self.project_name!r}.')
 
         if runnable.name not in self.runnable_dict:
-            raise Exception('A Runnable with name ' + repr(runnable.name) +
-                            ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
+            raise Exception(f'A Runnable.name {runnable.name!r} does not exist in Analysis {self.project_name}.')
 
         if stage.template_script:
             if os.path.isabs(stage.template_script):
@@ -671,11 +655,8 @@ class Analysis(object):
 
         :raise Exception: An :py:attr:`bsf.analysis.Analysis.project_name` has not been defined
         """
-        if self.debug is None:
-            self.debug = 0
-
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Some analyses such as FastQC do not require a genome_version,
         # nor a genome_version-specific output directory.
@@ -701,7 +682,7 @@ class Analysis(object):
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
         if not os.path.isdir(self.output_directory):
-            raise Exception('The Analysis output_directory ' + repr(self.output_directory) + ' does not exist.')
+            raise Exception(f"The 'output_directory' {self.output_directory!r} does not exist.")
 
         # Define project_directory and genome_directory instance variables.
         # If a genome_version option is present, append
@@ -725,7 +706,7 @@ class Analysis(object):
                 os.makedirs(self.genome_directory)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         if self.report_style_path:
             self.report_style_path = self.configuration.get_absolute_path(
@@ -745,7 +726,7 @@ class Analysis(object):
         if not self.e_mail:
             self.e_mail = Operator.get_e_mail()
             if not self.e_mail:
-                raise Exception('A ' + self.name + " requires an 'e_mail' configuration option.")
+                raise Exception(f"A {self.name!s} requires an 'e_mail' configuration option.")
 
         if self.sas_file:
             # Populate a bsf.ngs.Collection from a SampleAnnotationSheet.
@@ -762,9 +743,8 @@ class Analysis(object):
                 sas_path=self.sas_file,
                 sas_prefix=self.sas_prefix)
 
-            if self.debug > 1:
-                print(self, 'Collection name:', repr(self.collection.name))
-                sys.stdout.writelines(self.collection.trace(level=1))
+            module_logger.log(logging.DEBUG - 1, 'Collection name: %r', self.collection.name)
+            module_logger.log(logging.DEBUG - 2, 'Collection: %r', self.collection)
         else:
             # Create an empty bsf.ngs.Collection.
             self.collection = Collection()
@@ -776,9 +756,9 @@ class Analysis(object):
 
         The method must be fully implemented in a subclass.
         """
-        warnings.warn(
-            "The 'report' method must be implemented in the sub-class.",
-            UserWarning)
+        module_logger.warning(
+            "The 'report' method must be implemented in the %r sub-class.",
+            self.__class__.__name__)
 
         return
 
@@ -860,8 +840,10 @@ class Analysis(object):
         species = Genome.get_species(genome_version=genome_version)
         # Without species information, the description is not useful.
         if species is None:
-            warnings.warn("No species information for genome version '" + genome_version +
-                          "' in the central configuration file.")
+            module_logger.warning(
+                'No species information for genome version %r in the central configuration file.',
+                genome_version)
+
             return str_list
 
         str_list.append('<p>')
@@ -904,8 +886,10 @@ class Analysis(object):
         species = Transcriptome.get_species(transcriptome_version=transcriptome_version)
         # Without species information, the description is not useful.
         if species is None:
-            warnings.warn("No species information for transcriptome version '" + transcriptome_version +
-                          "' in the central configuration file.")
+            module_logger.warning(
+                'No species information for transcriptome version %r in the central configuration file.',
+                transcriptome_version)
+
             return str_list
 
         str_list.append('<p>')
@@ -982,8 +966,8 @@ class Analysis(object):
 
         # If available, import a custom CSS document.
         if self.report_style_path:
-            with open(file=self.report_style_path, mode='rt') as text_io:
-                str_list.extend(text_io)
+            with open(file=self.report_style_path, mode='rt') as input_text_io:
+                str_list.extend(input_text_io)
         else:
             str_list.append('  .left    { text-align: left; }\n')
             str_list.append('  .right   { text-align: right; }\n')
@@ -1005,8 +989,8 @@ class Analysis(object):
 
         # Include additional lines from an optional, Analysis-specific report header template.
         if self.report_header_path:
-            with open(file=self.report_header_path, mode='rt') as text_io:
-                str_list.extend(text_io)
+            with open(file=self.report_header_path, mode='rt') as input_text_io:
+                str_list.extend(input_text_io)
 
         return str_list
 
@@ -1058,8 +1042,8 @@ class Analysis(object):
 
         # Include additional lines from an optional, Analysis-specific report footer template.
         if self.report_footer_path:
-            with open(file=self.report_footer_path, mode='rt') as text_io:
-                str_list.extend(text_io)
+            with open(file=self.report_footer_path, mode='rt') as input_text_io:
+                str_list.extend(input_text_io)
 
         str_list.append('<hr class="footer" />\n')
         str_list.append('<p class="footer">\n')
@@ -1217,8 +1201,8 @@ class Analysis(object):
 
         with open(
                 file=os.path.join(self.genome_directory, '_'.join((prefix, 'report.html'))),
-                mode='wt') as text_io:
-            text_io.writelines(
+                mode='wt') as output_text_io:
+            output_text_io.writelines(
                 self.get_html_report(
                     content=content,
                     strict=strict,
@@ -1266,8 +1250,8 @@ class Analysis(object):
 
         if not os.path.isdir(html_path):
             raise Exception(
-                'The public HTML directory path ' + repr(html_path) + ' does not exist.\n' +
-                'Please check the optional sub-directory name ' + repr(sub_directory) + '.')
+                f'The public HTML directory path {html_path!r} does not exist.\n'
+                f'Please check the optional sub-directory name {sub_directory!r}.')
 
         # Check all symbolic links to find one already pointing to the source path and
         # to identify any danging symbolic links.
@@ -1283,19 +1267,17 @@ class Analysis(object):
                 if not os.path.exists(source_path):
                     # For os.path.samefile both paths have to exist.
                     # Check the source path and report dangling symbolic links for any analysis project.
-                    warnings.warn(
-                        'Dangling symbolic link ' + repr(target_path) + ' to ' + repr(source_path),
-                        UserWarning)
+                    module_logger.warning('Dangling symbolic link %r to %r.', target_path, source_path)
                     continue
 
                 if os.path.samefile(source_path, self.project_directory):
                     # Set the target path to the already existing file_path, but report duplicate symbolic links.
                     # Do not break out here to discover all dangling symbolic links.
                     if self._public_project_link_path:
-                        warnings.warn(
-                            'More than one symbolic link points to this project directory. primary: ' +
-                            repr(target_path) + 'secondary: ' + self._public_project_link_path,
-                            UserWarning)
+                        module_logger.warning(
+                            'More than one symbolic link points to this project directory. primary: %r secondary: %r',
+                            target_path,
+                            self._public_project_link_path)
                     else:
                         self._public_project_link_path = target_path
 
@@ -1304,7 +1286,7 @@ class Analysis(object):
                 os.remove(self._public_project_link_path)
             except OSError as exception:
                 if exception.errno != errno.ENOENT:
-                    raise
+                    raise exception
 
             self._public_project_link_path = None
 
@@ -1315,7 +1297,7 @@ class Analysis(object):
                 os.symlink(os.path.relpath(self.project_directory, html_path), self._public_project_link_path, True)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         return self._public_project_link_path
 
@@ -1468,8 +1450,8 @@ class Analysis(object):
 
         with open(
                 file=os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_hub))),
-                mode='wt') as text_io:
-            text_io.writelines(str_list)
+                mode='wt') as output_text_io:
+            output_text_io.writelines(str_list)
 
         return
 
@@ -1493,29 +1475,30 @@ class Analysis(object):
 
         if os.path.exists(file_path):
             genome_version = None
-            with open(file=file_path, mode='rt') as text_io:
-                for line_str in text_io:
+            with open(file=file_path, mode='rt') as input_text_io:
+                for line_str in input_text_io:
                     line_str = line_str.strip()
                     if not line_str:
                         continue
                     field_list = line_str.split()
 
                     if len(field_list) != 2:
-                        warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
-                                      repr(file_path) + '.\n' +
-                                      'Expected exactly two components after line splitting.')
+                        module_logger.warning(
+                            'Malformed line %r in UCSC genomes file %r. '
+                            'Expected exactly two components after line splitting.', line_str, file_path)
+
                     if field_list[0] == 'genome':
                         if genome_version is not None:
-                            warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
-                                          repr(file_path) + '.\n' +
-                                          "Got more than one 'genomes' lines in succession.")
+                            module_logger.warning(
+                                "Malformed line %r in UCSC genomes file %r. "
+                                "Got more than one 'genomes' lines in succession.", line_str, file_path)
                         genome_version = field_list[1]
 
                     if field_list[0] == 'trackDb':
                         if genome_version is None:
-                            warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
-                                          repr(file_path) + '.\n' +
-                                          "Got a 'trackDb' line without a preceding genomes line.")
+                            module_logger.warning(
+                                "Malformed line %r in UCSC genomes file %r. "
+                                "Got a 'trackDb' line without a preceding genomes line.", line_str, file_path)
                         else:
                             genome_version_dict[genome_version] = field_list[1]
                             genome_version = None
@@ -1531,8 +1514,8 @@ class Analysis(object):
             str_list.append('trackDb ' + genome_version_dict[genome_version] + '\n')
             str_list.append('\n')
 
-        with open(file=file_path, mode='wt') as text_io:
-            text_io.writelines(str_list)
+        with open(file=file_path, mode='wt') as output_text_io:
+            output_text_io.writelines(str_list)
 
         return
 
@@ -1550,8 +1533,8 @@ class Analysis(object):
 
         with open(
                 file=os.path.join(self.genome_directory, '_'.join((prefix, self.ucsc_name_tracks))),
-                mode='wt') as text_io:
-            text_io.writelines(content)
+                mode='wt') as output_text_io:
+            output_text_io.writelines(content)
 
         return
 
@@ -1597,8 +1580,8 @@ class Analysis(object):
             minimum = None
             maximum = None
 
-            with open(file=file_path_absolute, mode='rt') as text_io:
-                for line in text_io:
+            with open(file=file_path_absolute, mode='rt') as input_text_io:
+                for line in input_text_io:
                     if line.startswith('min:'):
                         line_list = line.split()
                         minimum = line_list[1].strip()
@@ -1614,11 +1597,11 @@ class Analysis(object):
         """Check the state of each :py:class:`bsf.analysis.Stage` object.
         """
         for stage in self.stage_list:
-            stage.check_state(debug=self.debug)
+            stage.check_state()
 
         return
 
-    def submit(self, name=None):
+    def submit(self, name=None, drms_submit=None):
         """Submit each :py:class:`bsf.analysis.Stage` object.
 
         Submits each :py:class:`bsf.process.Executable` of either all :py:class:`bsf.analysis.Stage` objects or
@@ -1627,6 +1610,8 @@ class Analysis(object):
         :param name: Only submit :py:class:`bsf.process.Executable` objects linked to this
             :py:attr:`bsf.analysis.Stage.name` attribute.
         :type name: str
+        :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
+        :type drms_submit: bool | None
         """
         # Pickle all bsf.procedure.Runnable objects.
 
@@ -1643,11 +1628,10 @@ class Analysis(object):
                     submit += 1
                 else:
                     continue
-            stage.submit(debug=self.debug)
+            stage.submit(drms_submit=drms_submit)
 
-            if self.debug:
-                print(repr(stage))
-                sys.stdout.writelines(stage.trace(level=1))
+            module_logger.debug('Stage.name: %r', stage.name)
+            module_logger.log(logging.DEBUG - 2, 'Stage: %r', stage)
 
         if name:
             if name == 'report':
@@ -1655,7 +1639,7 @@ class Analysis(object):
             elif not submit:
                 name_list = [stage.name for stage in self.stage_list]
                 name_list.append('report')
-                print('Valid Analysis Stage names are:', repr(name_list))
+                module_logger.warning('Valid Analysis Stage names are: %r', name_list)
 
         return
 
@@ -1822,6 +1806,29 @@ class Stage(object):
 
         return
 
+    def __repr__(self):
+        return \
+            f'Stage(' \
+            f'name={self.name!r}, ' \
+            f'working_directory={self.working_directory!r}, ' \
+            f'implementation={self.implementation!r}, ' \
+            f'memory_free_mem={self.memory_free_mem!r}, ' \
+            f'memory_free_swap={self.memory_free_swap!r}, ' \
+            f'memory_free_virtual={self.memory_free_virtual!r}, ' \
+            f'memory_limit_hard={self.memory_limit_hard!r}, ' \
+            f'memory_limit_soft={self.memory_limit_soft!r}, ' \
+            f'node_list_exclude={self.node_list_exclude!r}, ' \
+            f'node_list_include={self.node_list_include!r}, ' \
+            f'time_limit={self.time_limit!r}, ' \
+            f'parallel_environment={self.parallel_environment!r}, ' \
+            f'queue={self.queue!r}, ' \
+            f'reservation{self.reservation!r}, ' \
+            f'threads={self.threads!r}, ' \
+            f'hold={self.hold!r}, ' \
+            f'is_script={self.is_script!r}, ' \
+            f'template_script={self.template_script!r}, ' \
+            f'executable_list={self.executable_list!r})'
+
     def trace(self, level):
         """Trace a :py:class:`bsf.analysis.Stage` object.
 
@@ -1874,8 +1881,7 @@ class Stage(object):
         """
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section ' + repr(section) + ' not defined in Configuration files:\n' +
-                repr(configuration.file_path_list))
+                f'A section {section!r} is not defined in Configuration files:\n{configuration.file_path_list!r}')
 
         # The configuration section is available.
 
@@ -1958,32 +1964,29 @@ class Stage(object):
 
         return executable
 
-    def check_state(self, debug=0):
+    def check_state(self):
         """Check the state of each :py:class:`bsf.process.Executable` object.
-
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 
         module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
 
         check_state_function = getattr(module_type, 'check_state')
-        check_state_function(stage=self, debug=debug)
+        check_state_function(stage=self)
 
         return
 
-    def submit(self, debug=0):
+    def submit(self, drms_submit=None):
         """Submit a command line for each :py:class:`bsf.process.Executable` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
+        :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
+        :type drms_submit: bool | None
         """
         # Dynamically import the module specific for the configured DRMS implementation.
 
         module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
 
         submit_function = getattr(module_type, 'submit')
-        submit_function(stage=self, debug=debug)
+        submit_function(stage=self, drms_submit=drms_submit)
 
         return

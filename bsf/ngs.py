@@ -112,12 +112,11 @@ class NextGenerationBase(object):
         :rtype: str
         """
         return \
-            f'NextGenerationBase(' \
-            f'name={self.name!r} ' \
-            f'file_path={self.file_path!r} ' \
-            f'file_type={self.file_type!r} ' \
-            f'annotation_dict={self.annotation_dict!r}' \
-            f')'
+            f'{self.__class__.__name__}(' \
+            f'name={self.name!r}, ' \
+            f'file_path={self.file_path!r}, ' \
+            f'file_type={self.file_type!r}, ' \
+            f'annotation_dict={self.annotation_dict!r})'
 
     def add_annotation(self, key, value):
         """Add an annotation value under a key.
@@ -323,16 +322,11 @@ class Reads(NextGenerationBase):
         :rtype: str
         """
         return \
-            f'Reads(' \
-            f'name={self.name!r} ' \
-            f'file_path={self.file_path!r} ' \
-            f'file_type={self.file_type!r} ' \
-            f'annotation_dict={self.annotation_dict!r} ' \
-            f'barcode={self.barcode!r} ' \
-            f'lane={self.lane!r} ' \
-            f'read={self.read!r} ' \
-            f'chunk={self.chunk!r}' \
-            f')'
+            f'{super(Reads, self).__repr__()[:-1]}, ' \
+            f'barcode={self.barcode!r}, ' \
+            f'lane={self.lane!r}, ' \
+            f'read={self.read!r}, ' \
+            f'chunk={self.chunk!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.ngs.Reads` object.
@@ -604,18 +598,13 @@ class PairedReads(NextGenerationBase):
         :rtype: str
         """
         return \
-            f'PairedReads(' \
-            f'name={self.name!r} ' \
-            f'file_path={self.file_path!r} ' \
-            f'file_type={self.file_type!r} ' \
-            f'annotation_dict={self.annotation_dict!r} ' \
-            f'reads_1={self.reads_1!r} ' \
-            f'reads_2={self.reads_2!r} ' \
-            f'exclude={self.exclude!r} ' \
-            f'index_1={self.index_1!r} ' \
-            f'index_2={self.index_2!r} ' \
-            f'read_group={self.read_group!r}' \
-            f')'
+            f'{super(PairedReads, self).__repr__()[:-1]}, ' \
+            f'reads_1={self.reads_1!r}, ' \
+            f'reads_2={self.reads_2!r}, ' \
+            f'exclude={self.exclude!r}, ' \
+            f'index_1={self.index_1!r}, ' \
+            f'index_2={self.index_2!r}, ' \
+            f'read_group={self.read_group!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.ngs.PairedReads` object.
@@ -669,20 +658,17 @@ class PairedReads(NextGenerationBase):
 
         if self.reads_1 is not None:
             if not self.reads_1.match_paired(reads=reads):
-                # logger.warning(
-                #     f'The Reads object is not compatible with the PairedReads.reads_1 object. '
-                #     f'reads: {reads!r} '
-                #     f'paired_reads.reads_1: {self.reads_1!r}'
-                # )
+                # module_logger.warning(
+                #     'The Reads object is not compatible with the PairedReads.reads_1 object. '
+                #     'reads: %r paired_reads.reads_1: %r', reads, self.reads_1)
                 return False
 
             if self.reads_1.file_type == 'CASAVA':
                 if reads.read == 'R1':
                     raise Exception(
-                        'PairedReads.reads_1 has already been defined.\n'
+                        'The PairedReads.reads_1 object has already been defined.\n'
                         f'  reads_1: {self.reads_1.file_path!r}\n'
-                        f'  reads:   {reads.file_path!r}'
-                    )
+                        f'  reads:   {reads.file_path!r}')
                 elif reads.read == 'R2':
                     self.reads_2 = reads
                     reads.weak_reference_paired_reads = ReferenceType(self)
@@ -692,11 +678,9 @@ class PairedReads(NextGenerationBase):
 
         if self.reads_2 is not None:
             if not self.reads_2.match_paired(reads=reads):
-                # logger.warning(
-                #     f'The Reads object is not compatible with the PairedReads.reads_2 object. '
-                #     f'reads: {reads!r} '
-                #     f'paired_reads.reads_2: {self.reads_2!r}'
-                # )
+                # module_logger.warning(
+                #     'The Reads object is not compatible with the PairedReads.reads_2 object. '
+                #     'reads: %r paired_reads.reads_2: %r', reads, self.reads_2)
                 return False
 
             if self.reads_2.file_type == 'CASAVA':
@@ -706,10 +690,9 @@ class PairedReads(NextGenerationBase):
                     return True
                 elif reads.read == 'R2':
                     raise Exception(
-                        'PairedReads.reads_2 has already been defined.\n'
+                        'The PairedReads.reads_2 object has already been defined.\n'
                         f'  reads_2: {self.reads_2.file_path!r}\n'
-                        f'  reads:   {reads.file_path!r}'
-                    )
+                        f'  reads:   {reads.file_path!r}')
                 else:
                     raise Exception(f'Unexpected Reads.read value {reads.read!r} for CASAVA.')
 
@@ -889,13 +872,8 @@ class Sample(NextGenerationBase):
         :rtype: str
         """
         return \
-            f'Sample(' \
-            f'name={self.name!r} ' \
-            f'file_path={self.file_path!r} ' \
-            f'file_type={self.file_type!r} ' \
-            f'annotation_dict={self.annotation_dict!r} ' \
-            f'paired_reads_list={self.paired_reads_list!r}' \
-            f')'
+            f'{super(Sample, self).__repr__()[:-1]}, ' \
+            f'paired_reads_list={self.paired_reads_list!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.ngs.Sample` object.
@@ -1134,7 +1112,7 @@ class Project(NextGenerationBase):
                 re_match = re_pattern.search(string=file_name)
                 if os.path.isdir(file_path) and re_match is not None:
                     if re_match.group(1) in project.sample_dict:
-                        raise Exception(f'Sample with name {re_match.group(1)!r} already exists.')
+                        raise Exception(f'A Sample with name {re_match.group(1)!r} already exists.')
                     else:
                         project.add_sample(sample=Sample.from_file_path(file_path=file_path, file_type=file_type))
         else:
@@ -1192,6 +1170,16 @@ class Project(NextGenerationBase):
         self.weak_reference_prf = weak_reference_prf
 
         return
+
+    def __repr__(self):
+        """Return a printable representation of a :py:class:`bsf.ngs.Project` object.
+
+        :return: A printable representation.
+        :rtype: str
+        """
+        return \
+            f'{super(Project, self).__repr__()[:-1]}, ' \
+            f'sample_dict={self.sample_dict!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.ngs.Project` object.
@@ -1381,7 +1369,7 @@ class ProcessedRunFolder(NextGenerationBase):
                 re_match = re_pattern.search(string=file_name)
                 if os.path.isdir(file_path) and re_match is not None:
                     if re_match.group(1) in prf.project_dict:
-                        raise Exception(f'Project with name {re_match.group(1)!r} already exists.')
+                        raise Exception(f'A Project with name {re_match.group(1)!r} already exists.')
                     else:
                         prf.add_project(project=Project.from_file_path(file_path=file_path, file_type=file_type))
         elif file_type == 'External':
@@ -1452,6 +1440,19 @@ class ProcessedRunFolder(NextGenerationBase):
         self.weak_reference_collection = weak_reference_collection
 
         return
+
+    def __repr__(self):
+        """Return a printable representation of a :py:class:`bsf.ngs.ProcessedRunFolder` object.
+
+        :return: A printable representation.
+        :rtype: str
+        """
+        return \
+            f'{super(ProcessedRunFolder, self).__repr__()[:-1]}, ' \
+            f'prefix={self.prefix!r}, ' \
+            f'flow_cell={self.flow_cell!r}, ' \
+            f'version={self.version!r}, ' \
+            f'project_dict={self.project_dict!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.ngs.ProcessedRunFolder` object.
@@ -1755,12 +1756,7 @@ class Collection(NextGenerationBase):
             :return: A :py:class:`bsf.ngs.Sample` object.
             :rtype: Sample
             """
-            module_logger.debug(
-                f'process_sample('
-                f'project={project!r}, '
-                f'sample={sample!r}'
-                f')'
-            )
+            module_logger.debug('process_sample(project=%r, sample=%r)', project, sample)
 
             _key = 'Sample Name'
             if sas_prefix:
@@ -1789,10 +1785,7 @@ class Collection(NextGenerationBase):
 
             sample.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
 
-            module_logger.debug(
-                f'process_sample final: '
-                f'sample={sample!r}'
-            )
+            module_logger.debug('process_sample final: sample=%r', sample)
 
             return sample
 
@@ -1855,13 +1848,8 @@ class Collection(NextGenerationBase):
                 :rtype: Reads | None
                 """
                 module_logger.debug(
-                    f'process_reads_new('
-                    f'_reads={_reads!r}, '
-                    f'_reads_file={_reads_file!r}, '
-                    f'_reads_name={_reads_name!r}, '
-                    f'_file_type={_file_type!r}'
-                    f')'
-                )
+                    'process_reads_new(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
+                    _reads, _reads_file, _reads_name, _file_type)
 
                 return Reads(name=_reads_name, file_path=_reads_file, file_type=_file_type)
 
@@ -1881,13 +1869,8 @@ class Collection(NextGenerationBase):
                 :rtype: Reads | None
                 """
                 module_logger.debug(
-                    f'process_reads_new_file('
-                    f'_reads={_reads!r}, '
-                    f'_reads_file={_reads_file!r}, '
-                    f'_reads_name={_reads_name!r}, '
-                    f'_file_type={_file_type!r}'
-                    f')'
-                )
+                    'process_reads_new_file(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
+                    _reads, _reads_file, _reads_name, _file_type)
 
                 return Reads(name=None, file_path=_reads_file, file_type=_file_type)
 
@@ -1907,13 +1890,8 @@ class Collection(NextGenerationBase):
                 :rtype: Reads | None
                 """
                 module_logger.debug(
-                    f'process_reads_new_name('
-                    f'_reads={_reads!r}, '
-                    f'_reads_file={_reads_file!r}, '
-                    f'_reads_name={_reads_name!r}, '
-                    f'_file_type={_file_type!r}'
-                    f')'
-                )
+                    'process_reads_new_name(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
+                    _reads, _reads_file, _reads_name, _file_type)
 
                 return Reads(name=_reads_name, file_path=None, file_type=_file_type)
 
@@ -1932,13 +1910,8 @@ class Collection(NextGenerationBase):
                 :rtype: Reads | None
                 """
                 module_logger.debug(
-                    f'process_reads_old('
-                    f'_reads={_reads!r}, '
-                    f'_reads_file={_reads_file!r}, '
-                    f'_reads_name={_reads_name!r}, '
-                    f'_file_type={_file_type!r}'
-                    f')'
-                )
+                    'process_reads_old(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
+                    _reads, _reads_file, _reads_name, _file_type)
 
                 if _reads is None:
                     return
@@ -1955,12 +1928,8 @@ class Collection(NextGenerationBase):
                 return _reads
 
             module_logger.debug(
-                f'process_reads('
-                f'reads={reads!r}, '
-                f'suffix={suffix!r}, '
-                f'default_path={default_path!r}'
-                f')'
-            )
+                'process_reads(reads=%r, suffix=%r, default_path=%r)',
+                reads, suffix, default_path)
 
             # Cache the Python dict of function pointers as populating the dict is most likely expensive.
 
@@ -2082,14 +2051,14 @@ class Collection(NextGenerationBase):
                 _file_type=file_type)
 
             module_logger.debug(
-                f'process_reads final: '
-                f'suffix: {suffix!r} '
-                f'Reads: {reads!r} '
-                f'reads_file: {reads_file!r} '
-                f'reads_name: {reads_name!r} '
-                f'reads_status: {reads_status!r} '
-                f'reads_new: {reads_new!r}'
-            )
+                'process_reads final: '
+                'suffix: %r '
+                'Reads: %r '
+                'reads_file: %r '
+                'reads_name: %r '
+                'reads_status: %r '
+                'reads_new: %r',
+                suffix, reads, reads_file, reads_name, reads_status, reads_new)
 
             return reads_new
 
@@ -2155,14 +2124,8 @@ class Collection(NextGenerationBase):
                 :rtype: PairedReads | None
                 """
                 module_logger.debug(
-                    f'process_paired_reads_new('
-                    f'_sample.name={_sample.name!r}, '
-                    f'_pairedReads={_paired_reads!r}, '
-                    f'_file_type={_file_type!r}, '
-                    f'_reads_1={_reads_1!r}, '
-                    f'_reads_2={_reads_2!r}'
-                    f')'
-                )
+                    'process_paired_reads_new(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
+                    _sample, _paired_reads, _file_type, _reads_1, _reads_2)
 
                 _paired_reads = PairedReads(file_type=_file_type, reads_1=_reads_1, reads_2=_reads_2)
 
@@ -2188,13 +2151,8 @@ class Collection(NextGenerationBase):
                 :rtype: PairedReads | None
                 """
                 module_logger.debug(
-                    f'process_paired_reads_new_1('
-                    f'_sample.name={_sample.name!r}, '
-                    f'_pairedReads={_paired_reads!r}, '
-                    f'_reads_1={_reads_1!r}, '
-                    f'_reads_2={_reads_2!r}'
-                    f')'
-                )
+                    'process_paired_reads_new_1(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
+                    _sample, _paired_reads, _file_type, _reads_1, _reads_2)
 
                 _paired_reads = PairedReads(file_type=_file_type, reads_1=_reads_1, reads_2=None)
 
@@ -2220,13 +2178,8 @@ class Collection(NextGenerationBase):
                 :rtype: PairedReads | None
                 """
                 module_logger.debug(
-                    f'process_paired_reads_new_2('
-                    f'_sample.name={_sample.name!r}, '
-                    f'_paired_reads={_paired_reads!r}, '
-                    f'_reads_1={_reads_1!r}, '
-                    f'_reads_2={_reads_2!r}'
-                    f')'
-                )
+                    'process_paired_reads_new_2(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
+                    _sample, _paired_reads, _file_type, _reads_1, _reads_2)
 
                 _paired_reads = PairedReads(file_type=_file_type, reads_1=None, reads_2=_reads_2)
 
@@ -2251,13 +2204,8 @@ class Collection(NextGenerationBase):
                 :rtype: PairedReads | None
                 """
                 module_logger.debug(
-                    f'process_paired_reads_old('
-                    f'_sample.name={_sample.name!r}, '
-                    f'_paired_reads={_paired_reads!r}, '
-                    f'_reads_1={_reads_1!r}, '
-                    f'_reads_2={_reads_2!r}'
-                    f')'
-                )
+                    'process_paired_reads_old(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
+                    _sample, _paired_reads, _file_type, _reads_1, _reads_2)
 
                 if _paired_reads is None:
                     return
@@ -2274,12 +2222,8 @@ class Collection(NextGenerationBase):
                 return _paired_reads
 
             module_logger.debug(
-                f'process_paired_reads('
-                f'sample.name={sample.name!r}, '
-                f'paired_reads={paired_reads!r}, '
-                f'default_path={default_path!r}'
-                f')'
-            )
+                'process_paired_reads(sample=%r, paired_reads=%r, default_path=%r)',
+                sample, paired_reads, default_path)
 
             # Cache the Python dict of function pointers as populating the dict is most likely expensive.
 
@@ -2391,9 +2335,9 @@ class Collection(NextGenerationBase):
                         key_list.remove(_component)
                         if row_dict[_component]:
                             module_logger.warning(
-                                f'Dismissed PairedReads annotation '
-                                f'key: {_component} '
-                                f'value: {row_dict[_component]!r}')
+                                'Dismissed PairedReads annotation key: %r value: %r',
+                                _component,
+                                row_dict[_component])
 
                 return
 
@@ -2440,13 +2384,13 @@ class Collection(NextGenerationBase):
             paired_reads_new.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
 
             module_logger.debug(
-                f'process_paired_reads final: '
-                f'Sample.name: {sample.name!r} '
-                f'Reads_1: {reads_1!r} '
-                f'Reads_2: {reads_2!r} '
-                f'status: {paired_reads_status!r} '
-                f'paired_reads_new: {paired_reads_new!r}'
-            )
+                'process_paired_reads final: '
+                'Sample.name: %r '
+                'Reads_1: %r '
+                'Reads_2: %r '
+                'status: %r '
+                'paired_reads_new: %r',
+                sample.name, reads_1, reads_2, paired_reads_status, paired_reads_new)
 
             return paired_reads_new
 
@@ -2455,7 +2399,7 @@ class Collection(NextGenerationBase):
         current_collection = cls(file_path=file_path, file_type=file_type, name=name)
 
         for row_dict in sas.row_dicts:
-            module_logger.debug(f'from_sas: row_dict={row_dict!r}')
+            module_logger.debug('from_sas: row_dict=%r', row_dict)
 
             # Generate a Python list of key objects since the list is subsequently modified.
             key_list = [key for key in row_dict]
@@ -2469,7 +2413,7 @@ class Collection(NextGenerationBase):
                 default_path=current_collection.file_path)
 
             if len(key_list):
-                module_logger.warning(f'Unexpected keys in SampleAnnotationSheet: {key_list!r} Row: {row_dict!r}')
+                module_logger.warning('Unexpected keys in SampleAnnotationSheet: %r Row: %r', key_list, row_dict)
 
         # Quench empty default objects that are a consequence of empty lines in the sample annotation sheet.
         # Use a less efficient list() constructor here to allow for modification of the dict object while iterating.
@@ -2550,6 +2494,17 @@ class Collection(NextGenerationBase):
             self.sample_group_dict = sample_group_dict
 
         return
+
+    def __repr__(self):
+        """Return a printable representation of a :py:class:`bsf.ngs.Collection` object.
+
+        :return: A printable representation.
+        :rtype: str
+        """
+        return \
+            f'{super(Collection, self).__repr__()[:-1]}, ' \
+            f'processed_run_folder_dict={self.processed_run_folder_dict!r}, ' \
+            f'sample_group_dict={self.sample_group_dict!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.ngs.Collection` object.
@@ -3040,6 +2995,17 @@ class SampleGroup(object):
             self.sample_list = sample_list
 
         return
+
+    def __repr__(self):
+        """Return a printable representation of a :py:class:`bsf.ngs.SampleGroup` object.
+
+        :return: A printable representation.
+        :rtype: str
+        """
+        return \
+            f'{self.__class__.__name__}(' \
+            f'name={self.name!r}, ' \
+            f'sample_list={self.sample_list!r})'
 
     def add_sample(self, sample):
         """Add a :py:class:`bsf.ngs.Sample` object.

@@ -82,8 +82,6 @@ class Runnable(object):
         Python :py:class:`str` (file_path) value data of files that will be copied into the
         directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
     :type cache_path_dict: dict[str, str]
-    :ivar debug: An integer debugging level.
-    :type debug: int
     """
 
     runner_script = 'bsf_runner.py'
@@ -94,8 +92,7 @@ class Runnable(object):
             working_directory,
             code_module,
             cache_directory=None,
-            cache_path_dict=None,
-            debug=0):
+            cache_path_dict=None):
         """Initialise a :py:class:`bsf.procedure.Runnable` object.
 
         :param name: A name.
@@ -113,8 +110,6 @@ class Runnable(object):
             Python :py:class:`str` (file_path) value data of files that will be copied into the
             directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
         :type cache_path_dict: dict[str, str] | None
-        :param debug: An integer debugging level.
-        :type debug: int
         """
 
         super(Runnable, self).__init__()
@@ -128,12 +123,6 @@ class Runnable(object):
             self.cache_path_dict = dict()
         else:
             self.cache_path_dict = cache_path_dict
-
-        if debug is None:
-            self.debug = 0
-        else:
-            assert isinstance(debug, int)
-            self.debug = debug
 
         return
 
@@ -155,7 +144,6 @@ class Runnable(object):
         str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
         str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
         str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
-        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
 
         str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
         for key in sorted(self.cache_path_dict):
@@ -176,8 +164,8 @@ class Runnable(object):
         """Write this :py:class:`bsf.procedure.Runnable` as a Python :py:class:`pickle.Pickler` file into the
         working directory.
         """
-        with open(file=self.pickler_path, mode='wb') as output_file:
-            pickler = pickle.Pickler(file=output_file, protocol=pickle.HIGHEST_PROTOCOL)
+        with open(file=self.pickler_path, mode='wb') as output_binary_io:
+            pickler = pickle.Pickler(file=output_binary_io, protocol=pickle.HIGHEST_PROTOCOL)
             pickler.dump(self)
 
         return
@@ -192,8 +180,8 @@ class Runnable(object):
         :return: A :py:class:`bsf.procedure.Runnable` object.
         :rtype: Runnable
         """
-        with open(file=file_path, mode='rb') as input_file:
-            runnable: Runnable = pickle.Unpickler(input_file).load()
+        with open(file=file_path, mode='rb') as input_binary_io:
+            runnable: Runnable = pickle.Unpickler(input_binary_io).load()
 
         # Did the Unpickler really return a Runnable object?
         assert isinstance(runnable, Runnable)
@@ -245,16 +233,16 @@ class Runnable(object):
                 os.makedirs(cache_directory_path)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         # Copy files from the cache dictionary into the cache directory.
 
         for key in self.cache_path_dict:
             try:
                 shutil.copy2(src=self.cache_path_dict[key], dst=cache_directory_path)
-            except OSError:
+            except OSError as exception:
                 shutil.rmtree(path=cache_directory_path, ignore_errors=False)
-                raise
+                raise exception
 
         return
 
@@ -313,7 +301,7 @@ class Runnable(object):
                 os.makedirs(temporary_directory_path)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         return
 
@@ -372,14 +360,14 @@ class Runnable(object):
             os.remove(status_path)
         except OSError as exception:
             if exception.errno != errno.ENOENT:
-                raise
+                raise exception
 
         status_path = self.runnable_status_file_path(success=False)
         try:
             os.remove(status_path)
         except OSError as exception:
             if exception.errno != errno.ENOENT:
-                raise
+                raise exception
 
         return
 
@@ -440,14 +428,14 @@ class Runnable(object):
             os.remove(status_path)
         except OSError as exception:
             if exception.errno != errno.ENOENT:
-                raise
+                raise exception
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=False)
         try:
             os.remove(status_path)
         except OSError as exception:
             if exception.errno != errno.ENOENT:
-                raise
+                raise exception
 
         return
 
@@ -548,7 +536,6 @@ class ConsecutiveRunnable(Runnable):
             code_module='bsf.runnables.consecutive',
             cache_directory=None,
             cache_path_dict=None,
-            debug=0,
             runnable_step_list=None):
         """Initialise a :py:class:`bsf.ConsecutiveRunnable` object.
 
@@ -567,8 +554,6 @@ class ConsecutiveRunnable(Runnable):
           Python :py:class:`str` (file_path) value data of files that will be copied into the
           directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
         :type cache_path_dict: dict[str, str] | None
-        :param debug: An integer debugging level.
-        :type debug: int
         :param runnable_step_list: A Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects.
         :type runnable_step_list: list[RunnableStep]
         """
@@ -577,8 +562,7 @@ class ConsecutiveRunnable(Runnable):
             working_directory=working_directory,
             code_module=code_module,
             cache_directory=cache_directory,
-            cache_path_dict=cache_path_dict,
-            debug=debug)
+            cache_path_dict=cache_path_dict)
 
         if runnable_step_list is None:
             self.runnable_step_list = list()
@@ -606,7 +590,6 @@ class ConsecutiveRunnable(Runnable):
         str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
         str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
         str_list.append('{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list))
-        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
 
         str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
         for key in sorted(self.cache_path_dict):
@@ -663,7 +646,6 @@ class ConcurrentRunnable(Runnable):
             code_module='bsf.runnables.concurrent',
             cache_directory=None,
             cache_path_dict=None,
-            debug=0,
             runnable_step_list_prologue=None,
             runnable_step_list_concurrent=None,
             runnable_step_list_epilogue=None):
@@ -684,8 +666,6 @@ class ConcurrentRunnable(Runnable):
             Python :py:class:`str` (file_path) value data of files that will be copied into the
             directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
         :type cache_path_dict: dict[str, str] | None
-        :param debug: An integer debugging level.
-        :type debug: int
         :param runnable_step_list_prologue: A Python :py:class:`list` object of
             :py:class:´bsf.process.RunnableStep` objects run as prologue.
         :type runnable_step_list_prologue: list[RunnableStep] | None
@@ -701,8 +681,7 @@ class ConcurrentRunnable(Runnable):
             working_directory=working_directory,
             code_module=code_module,
             cache_directory=cache_directory,
-            cache_path_dict=cache_path_dict,
-            debug=debug)
+            cache_path_dict=cache_path_dict)
 
         if runnable_step_list_prologue is None:
             self.runnable_step_list_prologue = list()
@@ -742,7 +721,6 @@ class ConcurrentRunnable(Runnable):
         str_list.append('{}  runnable_step_list_prologue: {!r}\n'.format(indent, self.runnable_step_list_prologue))
         str_list.append('{}  runnable_step_list_concurrent: {!r}\n'.format(indent, self.runnable_step_list_concurrent))
         str_list.append('{}  runnable_step_list_epilogue: {!r}\n'.format(indent, self.runnable_step_list_epilogue))
-        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
 
         str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
         for key in sorted(self.cache_path_dict):

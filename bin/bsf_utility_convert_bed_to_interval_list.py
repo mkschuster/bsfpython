@@ -40,13 +40,6 @@ argument_parser = ArgumentParser(
     description='BSF utility to convert a BED file into a Picard interval list file.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--input-path',
     dest='input_path',
     help='BED file path',
@@ -94,11 +87,11 @@ else:
 sequence_name_dict: Dict[str, List[List[str]]] = dict()
 sequence_name_list: List[str] = list()
 
-with open(file=output_path, mode='wt') as output_file:
+with open(file=output_path, mode='wt') as output_text_io:
     # Read the SAM header dictionary and copy it to the output file.
-    with open(file=name_space.dictionary, mode='rt') as input_file:
-        for line_str in input_file:
-            output_file.write(line_str)
+    with open(file=name_space.dictionary, mode='rt') as input_text_io:
+        for line_str in input_text_io:
+            output_text_io.write(line_str)
             if line_str.startswith('@SQ'):
                 for sam_field in line_str.split('\t'):
                     if sam_field.startswith('SN:'):
@@ -106,8 +99,8 @@ with open(file=output_path, mode='wt') as output_file:
                         sequence_name_list.append(sam_field[3:])
 
     # Read the BED file.
-    with open(file=name_space.input_path, mode='rt') as input_file:
-        for line_str in input_file:
+    with open(file=name_space.input_path, mode='rt') as input_text_io:
+        for line_str in input_text_io:
             bed_fields = line_str.strip().split()
 
             if bed_fields[0] == 'browser':
@@ -145,4 +138,4 @@ with open(file=output_path, mode='wt') as output_file:
         interval_list.sort(key=lambda item: int(item[1]))
 
         for interval_fields in interval_list:
-            output_file.write('\t'.join(interval_fields) + "\n")
+            output_text_io.write('\t'.join(interval_fields) + "\n")

@@ -24,14 +24,13 @@
 #
 """The :py:mod:`bsf.process` module provides classes modelling processes.
 """
-import datetime
 import errno
+import logging
 import os
 import shutil
 import stat
 import sys
 import time
-import warnings
 from io import IOBase, TextIOWrapper
 from subprocess import Popen, PIPE, DEVNULL
 from threading import Lock, Thread
@@ -41,14 +40,7 @@ from bsf.argument import *
 from bsf.connector import *
 from bsf.standards import Configuration
 
-
-def get_timestamp():
-    """Get the current time stamp in ISO 8601 format.
-
-    :return: An ISO 8601 format time stamp.
-    :rtype: str
-    """
-    return '[' + datetime.datetime.now().isoformat() + ']'
+module_logger = logging.getLogger(name=__name__)
 
 
 def map_connector(connector=None, executable_list=None):
@@ -69,6 +61,7 @@ def map_connector(connector=None, executable_list=None):
             # A named pipe needs creating before it can be opened.
             if not os.path.exists(connector.file_path):
                 os.mkfifo(connector.file_path)
+
         return open(file=connector.file_path, mode=connector.file_mode)
 
     if isinstance(connector, ConnectorPipe):
@@ -84,22 +77,20 @@ def map_connector(connector=None, executable_list=None):
         for executable in executable_list:
             if executable.name == connector.name:
                 if executable.sub_process is None:
-                    raise Exception(
-                        'Sub-process ' + repr(executable.name) + ' not initialised, yet.')
+                    raise Exception(f'Sub-process {executable.name!r} not initialised, yet.')
+
                 return getattr(executable.sub_process, connector.connection)
         else:
-            raise Exception('Could not find a suitable Executable.name for Connector.name ' + repr(connector.name))
+            raise Exception(f'Could not find a suitable Executable.name for Connector.name {connector.name}.')
 
     return None
 
 
-def run_executables(executable_list, debug=0):
+def run_executables(executable_list):
     """Run a Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects concurrently.
 
     :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects
     :type executable_list: list[Executable]
-    :param debug: An integer debugging level.
-    :type debug: int
     :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
     :rtype: list[str] | None
     """
@@ -127,50 +118,51 @@ def run_executables(executable_list, debug=0):
                 text=True)
         except OSError as exception:
             if exception.errno == errno.ENOENT:
-                raise Exception(
-                    "For Executable.name {!r} Executable.program {!r} could not be found.".format(
-                        executable.name, executable.program))
-            else:
-                # Re-raise the Exception object.
-                raise exception
+                # Log an informative error upon ENOENT, but re-raise the Exception object in any case.
+                module_logger.error(
+                    'For Executable.name %r Executable.program %r could not be found.',
+                    executable.name,
+                    executable.program)
+
+            raise exception
 
         for attribute in ('stdin', 'stdout', 'stderr'):
             connector: Connector = getattr(executable, attribute)
 
             if isinstance(connector, StandardInputStream):
+                # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
                 if connector.thread_callable is None:
-                    # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
                     pass
                 else:
                     connector.thread = Thread(
                         target=connector.thread_callable,
-                        args=[executable.sub_process.stdin, thread_lock, debug],
+                        args=[executable.sub_process.stdin, thread_lock],
                         kwargs=connector.thread_kwargs)
 
             if isinstance(connector, StandardOutputStream):
+                # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
                 if connector.thread_callable is None:
-                    # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
                     connector.thread = Thread(
                         target=Executable.process_stdout,
-                        args=[executable.sub_process.stdout, thread_lock, debug],
+                        args=[executable.sub_process.stdout, thread_lock],
                         kwargs={'stdout_path': connector.file_path})
                 else:
                     connector.thread = Thread(
                         target=connector.thread_callable,
-                        args=[executable.sub_process.stdout, thread_lock, debug],
+                        args=[executable.sub_process.stdout, thread_lock],
                         kwargs=connector.thread_kwargs)
 
             if isinstance(connector, StandardErrorStream):
+                # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
                 if connector.thread_callable is None:
-                    # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
                     connector.thread = Thread(
                         target=Executable.process_stderr,
-                        args=[executable.sub_process.stderr, thread_lock, debug],
+                        args=[executable.sub_process.stderr, thread_lock],
                         kwargs={'stderr_path': connector.file_path})
                 else:
                     connector.thread = Thread(
                         target=connector.thread_callable,
-                        args=[executable.sub_process.stderr, thread_lock, debug],
+                        args=[executable.sub_process.stderr, thread_lock],
                         kwargs=connector.thread_kwargs)
 
             if isinstance(connector, StandardStream) and connector.thread:
@@ -191,14 +183,10 @@ def run_executables(executable_list, debug=0):
             if isinstance(connector, StandardStream) and connector.thread:
                 thread_join_counter = 0
                 while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
-                    if debug > 0:
-                        thread_lock.acquire(True)
-                        print("{} Waiting for Executable.name {!r} {!r} processor to finish.".format(
-                            get_timestamp(),
-                            executable.name,
-                            attribute))
-                        thread_lock.release()
-
+                    module_logger.debug(
+                        'Waiting for Executable.name %r %r processor to finish.',
+                        executable.name,
+                        attribute)
                     connector.thread.join(timeout=connector.thread_timeout)
                     thread_join_counter += 1
 
@@ -206,12 +194,12 @@ def run_executables(executable_list, debug=0):
 
         if child_return_code > 0:
             # Child return code.
-            exception_str_list.append("{} Child process Executable.name {!r} failed with return code {!r}.".format(
-                get_timestamp(), executable.name, +child_return_code))
+            exception_str_list.append(
+                f'Child process Executable.name {executable.name!r} failed with return code {+child_return_code!r}.')
         elif child_return_code < 0:
             # Child signal.
-            exception_str_list.append("{} Child process Executable.name {!r} received signal {!r}.".format(
-                get_timestamp(), executable.name, -child_return_code))
+            exception_str_list.append(
+                f'Child process Executable.name {executable.name!r} received signal {-child_return_code!r}.')
 
     return exception_str_list
 
@@ -285,6 +273,15 @@ class Command(object):
 
         return
 
+    def __repr__(self):
+        return \
+            f'{self.__class__.__name__}(' \
+            f'name={self.name!r}, ' \
+            f'program={self.program!r}, ' \
+            f'options={self.options!r}, ' \
+            f'arguments={self.arguments!r}, ' \
+            f'sub_command={self.sub_command!r})'
+
     def trace(self, level):
         """Trace a :py:class:`bsf.process.Command` object.
 
@@ -333,10 +330,9 @@ class Command(object):
         :type override: bool
         """
         if not override and argument.key in self.options:
-            warnings.warn(
-                'Adding an Argument with key ' + repr(argument.key) +
-                ' that exits already in Command.program ' + repr(self.program) + '.',
-                UserWarning)
+            module_logger.warning(
+                'Adding an Argument with key %r that exits already in Command.program %r.',
+                argument.key, self.program)
 
         if argument.key not in self.options:
             self.options[argument.key] = list()
@@ -507,10 +503,10 @@ class Command(object):
         :type override: bool
         """
         if not override and argument.key in self.options:
-            warnings.warn(
-                'Setting an Argument with key ' + repr(argument.key) +
-                ' that exits already in Command.program ' + repr(self.program) + '.',
-                UserWarning)
+            module_logger.warning(
+                'Setting an Argument with key %r that exits already in Command.program %r.',
+                argument.key,
+                self.program)
 
         self.options[argument.key] = [argument]
 
@@ -680,10 +676,10 @@ class Command(object):
         :type section: str
         """
         if not configuration.config_parser.has_section(section=section):
-            warnings.warn(
-                'Section ' + repr(section) + ' not defined in configuration files:\n' +
-                repr(configuration.from_file_path_list),
-                UserWarning)
+            module_logger.warning(
+                'Section %r not defined in configuration files: %r',
+                section,
+                configuration.from_file_path_list)
 
             return
 
@@ -788,20 +784,16 @@ class Executable(Command):
     """
 
     @staticmethod
-    def process_stream(file_handle, thread_lock, debug, file_type, file_path=None):
+    def process_stream(file_handle, thread_lock, file_type, file_path=None):
         """Process a :literal:`STDOUT` or :literal:`STDERR` text stream from the child process as a thread.
 
         If a file_path was provided, a corresponding Python :py:class:`io.TextIOWrapper` will be opened in text mode,
         if not, :py:class:`sys.stdout` or :py:class:`sys.stderr` will be used according to the :literal:`file_type`.
-        If a debug level was set, diagnostic output will be printed to :py:class:`sys.stdout`,
-        as well as the output stream.
 
         :param file_handle: A :literal:`STDOUT` or :literal:`STDERR` Python :py:class:`io.TextIOWrapper` object.
         :type file_handle: TextIOWrapper
         :param thread_lock: A Python :py:class:`threading.Lock` object.
         :type thread_lock: Lock
-        :param debug: An integer debugging level.
-        :type debug: int
         :param file_type: A file handle type :literal:`STDOUT` or :literal:`STDERR`.
         :type file_type: str
         :param file_path: A :literal:`STDOUT` file path.
@@ -809,84 +801,67 @@ class Executable(Command):
         :raise Exception: If file_type is neither :literal:`STDOUT` nor :literal:`STDERR`
         """
         if file_type not in ('STDOUT', 'STDERR'):
-            raise Exception('The file_type has to be either STDOUT or STDERR.')
+            raise Exception(f"The 'file_type' {file_type!r} is not a member of 'STDOUT' and 'STDERR'.")
 
-        thread_lock.acquire(True)
-        if debug > 0:
-            print(get_timestamp(),
-                  'Started Runner ' + repr(file_type) + ' processor in module ' + repr(__name__) + '.',
-                  file=sys.stdout, flush=True)
-        output_file = None
+        module_logger.debug('Started %r processor.', file_type)
+
+        output_text_io = None
+
         if file_path:
-            output_file = open(file=file_path, mode='wt')
-            if debug > 0:
-                print(get_timestamp(), 'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.',
-                      file=sys.stdout, flush=True)
+            output_text_io = open(file=file_path, mode='wt')
+            module_logger.debug('Opened %r file %r.', file_type, file_path)
         elif file_type == 'STDOUT':
-            output_file = sys.stdout
+            output_text_io = sys.stdout
         elif file_type == 'STDERR':
-            output_file = sys.stderr
-        thread_lock.release()
+            output_text_io = sys.stderr
 
         for line_str in file_handle:
+            line_str = line_str.rstrip()
+            module_logger.debug('%s: %r', file_type, line_str)
+
             thread_lock.acquire(True)
-            if debug > 0:
-                print(get_timestamp(), file_type + ': ' + line_str.rstrip(),
-                      file=output_file, flush=True)
-            else:
-                print(line_str.rstrip(), file=output_file, flush=True)
+            print(line_str, file=output_text_io, flush=True)
             thread_lock.release()
 
-        thread_lock.acquire(True)
-        if debug > 0:
-            print(get_timestamp(), 'Received EOF on ' + repr(file_type) + ' pipe.',
-                  file=sys.stdout, flush=True)
+        module_logger.debug('Received EOF on %r pipe.', file_type)
+
         if file_path:
-            output_file.close()
-            if debug > 0:
-                print(get_timestamp(), 'Closed ' + repr(file_type) + ' file ' + repr(file_path) + '.',
-                      file=sys.stdout, flush=True)
-        thread_lock.release()
+            output_text_io.close()
+            module_logger.debug('Closed %r file %r.', file_type, file_path)
 
         return
 
     @staticmethod
-    def process_stdout(stdout_handle, thread_lock, debug, stdout_path=None):
+    def process_stdout(stdout_handle, thread_lock, stdout_path=None):
         """Process :literal:`STDOUT` from the child process as a thread.
 
         :param stdout_handle: A :literal:`STDOUT` Python :py:class:`io.TextIOWrapper` object.
         :type stdout_handle: TextIOWrapper
         :param thread_lock: A Python :py:class:`threading.Lock` object.
         :type thread_lock: Lock
-        :param debug: An integer debugging level.
-        :type debug: int
         :param stdout_path: A :literal:`STDOUT` file path.
         :type stdout_path: str | None
         """
         return Executable.process_stream(
             file_handle=stdout_handle,
             thread_lock=thread_lock,
-            debug=debug,
             file_type='STDOUT',
             file_path=stdout_path)
 
     @staticmethod
-    def process_stderr(stderr_handle, thread_lock, debug, stderr_path=None):
+    def process_stderr(stderr_handle, thread_lock, stderr_path=None):
         """Process :literal:`STDERR` from the child process as a thread.
 
         :param stderr_handle: A :literal:`STDERR` Python :py:class:`io.TextIOWrapper` object.
         :type stderr_handle: TextIOWrapper
         :param thread_lock: A Python :py:class:`threading.Lock` object.
         :type thread_lock: Lock
-        :param debug: An integer debugging level.
-        :type debug: int
         :param stderr_path: A :literal:`STDERR` file path.
         :type stderr_path: str | None
         """
         return Executable.process_stream(
             file_handle=stderr_handle,
             thread_lock=thread_lock,
-            debug=debug,
             file_type='STDERR',
             file_path=stderr_path)
 
@@ -945,8 +920,7 @@ class Executable(Command):
 
         if not name:
             raise Exception(
-                'The Executable class requires a non-empty name option ' + repr(name) +
-                ' for program ' + repr(program) + '.')
+                f"The {self.__class__.__name__!s} class requires a non-empty 'name' option  for program {program!r}.")
 
         super(Executable, self).__init__(
             name=name,
@@ -978,6 +952,19 @@ class Executable(Command):
         self.sub_process = sub_process
 
         return
+
+    def __repr__(self):
+        return \
+            f'{super(Executable, self).__repr__()[:-1]}, ' \
+            f'stdin={self.stdin!r}, ' \
+            f'stdout={self.stdout!r}, ' \
+            f'stderr={self.stderr!r}, ' \
+            f'dependencies={self.dependencies!r}, ' \
+            f'hold={self.hold!r}, ' \
+            f'submit={self.submit!r}, ' \
+            f'process_identifier={self.process_identifier!r}, ' \
+            f'process_name={self.process_name!r}, ' \
+            f'sub_process={self.sub_process!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.process.Executable` object.
@@ -1015,15 +1002,13 @@ class Executable(Command):
 
         return str_list
 
-    def run(self, debug=0):
+    def run(self):
         """Run a :py:class:`bsf.process.Executable` object via the Python :py:class:`subprocess.Popen` class.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
-        return run_executables(executable_list=[self], debug=debug)
+        return run_executables(executable_list=[self])
 
 
 class RunnableStep(Executable):
@@ -1114,6 +1099,11 @@ class RunnableStep(Executable):
             self.obsolete_file_path_list = obsolete_file_path_list
 
         return
+
+    def __repr__(self):
+        return \
+            f'{super(RunnableStep, self).__repr__()[:-1]}, ' \
+            f'obsolete_file_path_list={self.obsolete_file_path_list!r})'
 
     def trace(self, level=1):
         """Trace a :py:class:`bsf.process.RunnableStep` object.
@@ -1252,11 +1242,16 @@ class RunnableStepChangeMode(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepChangeMode, self).__repr__()[:-1]}, ' \
+            f'file_path={self.file_path!r}, ' \
+            f'mode_directory={self.mode_directory!r}, ' \
+            f'mode_file={self.mode_file!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepChangeMode` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -1407,11 +1402,15 @@ class RunnableStepCopy(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepCopy, self).__repr__()[:-1]}, ' \
+            f'source_path={self.source_path!r}, ' \
+            f'target_path={self.target_path!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepLink` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -1767,11 +1766,15 @@ class RunnableStepLink(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepLink, self).__repr__()[:-1]}, ' \
+            f'source_path={self.source_path!r}, ' \
+            f'target_path={self.target_path!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepLink` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -1780,7 +1783,7 @@ class RunnableStepLink(RunnableStep):
                 os.symlink(self.source_path, self.target_path)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         return None
 
@@ -1872,11 +1875,14 @@ class RunnableStepMakeDirectory(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepMakeDirectory, self).__repr__()[:-1]}, ' \
+            f'directory_path={self.directory_path!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepMakeDirectory` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -1885,7 +1891,7 @@ class RunnableStepMakeDirectory(RunnableStep):
                 os.makedirs(self.directory_path)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         return None
 
@@ -1977,11 +1983,14 @@ class RunnableStepMakeNamedPipe(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepMakeNamedPipe, self).__repr__()[:-1]}, ' \
+            f'file_path={self.file_path!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepMakeNamedPipe` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -1990,7 +1999,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
                 os.mkfifo(self.file_path)
             except OSError as exception:
                 if exception.errno != errno.EEXIST:
-                    raise
+                    raise exception
 
         return None
 
@@ -2098,11 +2107,16 @@ class RunnableStepMove(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepMove, self).__repr__()[:-1]}, ' \
+            f'source_path={self.source_path!r}, ' \
+            f'target_path={self.target_path!r}, ' \
+            f'use_shutil={self.use_shutil!r})'
+
+    def run(self):
         """Run a:py:class:`bsf.process.RunnableStepMove` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -2111,7 +2125,7 @@ class RunnableStepMove(RunnableStep):
                 shutil.move(src=self.source_path, dst=self.target_path)
                 return None
             else:
-                return super(RunnableStepMove, self).run(debug=debug)
+                return super(RunnableStepMove, self).run()
 
 
 class RunnableStepRemoveDirectory(RunnableStep):
@@ -2201,13 +2215,16 @@ class RunnableStepRemoveDirectory(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepRemoveDirectory, self).__repr__()[:-1]}, ' \
+            f'directory_path={self.directory_path!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableRemoveDirectory` object.
 
-        :py:class:`FileNotFoundError` and :py:class:`OSError` :py:const:`ENOTEMPTY` Exceptions are caught.
+        :py:class:`FileNotFoundError` and :py:class:`OSError` :py:const:`errno.ENOTEMPTY` Exceptions are caught.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -2218,7 +2235,7 @@ class RunnableStepRemoveDirectory(RunnableStep):
                 pass
             except OSError as exception:
                 if exception.errno != errno.ENOTEMPTY:
-                    raise
+                    raise exception
 
         return None
 
@@ -2304,11 +2321,14 @@ class RunnableStepRemoveFile(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepRemoveFile, self).__repr__()[:-1]}, ' \
+            f'file_path={self.file_path!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepRemoveFile` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -2410,11 +2430,15 @@ class RunnableStepRemoveTree(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepRemoveTree, self).__repr__()[:-1]}, ' \
+            f'file_path={self.file_path!r}, ' \
+            f'ignore_errors={self.ignore_errors!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableRemoveTree` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -2515,11 +2539,14 @@ class RunnableStepSleep(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepSleep, self).__repr__()[:-1]}, ' \
+            f'sleep_time={self.sleep_time!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepSleep` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -2620,11 +2647,15 @@ class RunnableStepSetEnvironment(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def __repr__(self):
+        return \
+            f'{super(RunnableStepSetEnvironment, self).__repr__()[:-1]}, ' \
+            f'key={self.key!r}, ' \
+            f'value={self.value!r})'
+
+    def run(self):
         """Run a :py:class:`bsf.process.RunnableStepSetEnvironment` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """

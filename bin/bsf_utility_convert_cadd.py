@@ -35,19 +35,16 @@ from bsf.connector import StandardOutputStream
 from bsf.process import Executable
 
 
-def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
+def process_stdout(input_file_handle, thread_lock, output_file_path):
     thread_lock.acquire(True)
-    output_file = open(file=output_file_path, mode='wb')
+    output_binary_io = open(file=output_file_path, mode='wb')
     output_process = Popen(
         args=['bgzip'],
         stdin=PIPE,
-        stdout=output_file,
+        stdout=output_binary_io,
         stderr=None,
         text=True)
     thread_lock.release()
-
-    if debug > 0:
-        pass  # Just make debug, which has to be part of the function interface, used.
 
     # Write the new VCF header declaring the file format and the two CADD INFO fields.
 
@@ -103,7 +100,7 @@ def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
     output_process.stdin.close()
     output_return_code = output_process.wait()
     print('Output process return code:', repr(output_return_code))
-    output_file.close()
+    output_binary_io.close()
     thread_lock.release()
 
     return
@@ -118,13 +115,6 @@ os.environ['LANG'] = 'C'
 argument_parser = ArgumentParser(
     description='BSF utility to convert a Picard sequence dictionary (SAM header) '
                 'into a UCSC chromosome sizes file.')
-
-argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
 
 argument_parser.add_argument(
     '--input-path',
@@ -170,7 +160,7 @@ stdin_executable.add_switch_long(key='decompress')
 stdin_executable.add_switch_long(key='stdout')
 stdin_executable.arguments.append(name_space.input_path)
 
-exception_str_list = stdin_executable.run(debug=name_space.debug)
+exception_str_list = stdin_executable.run()
 
 if exception_str_list:
     exception_str_list.append('Command list representation: ' + repr(stdin_executable.command_list()))

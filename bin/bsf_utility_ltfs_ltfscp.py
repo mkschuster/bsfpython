@@ -31,6 +31,7 @@
 #  Linear Tape File System Copy (ltfscp) tool gets written into the current directory.
 #
 import os
+import logging
 from argparse import ArgumentParser
 from xml.etree.ElementTree import ElementTree, Element
 
@@ -380,43 +381,43 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     'cartridge',
-    help='cartridge barcode',
-    type=str)
+    help='cartridge barcode')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--total-buffer-size',
     default='4G',
     dest='total_buffer_size',
     help='The default total buffer size is 400M. The maximum total buffer size is 4G. [4G]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--buffer-size',
     default='1G',
     dest='buffer_size',
     help='The default buffer size is 128K. The maximum buffer size is 1G. [1G]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--no-sparse',
     action='store_false',
     dest='sparse',
-    help='do not support sparse files')
+    help='do not support sparse files',
+    required=False)
 
 argument_parser.add_argument(
     '--recursive',
     action='store_true',
     dest='recursive',
-    help='process recursively')
+    help='process recursively',
+    required=False)
 
 argument_parser.add_argument(
     '--log-level',
@@ -424,32 +425,36 @@ argument_parser.add_argument(
     default='INFO',
     dest='log_level',
     help='log level [INFO]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--target-path',
     default='/mnt/ltfs',
     dest='target_path',
     help='default target path [/mnt/ltfs]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--source-specification',
     default='',
     dest='source_specification',
     help='source specification pattern []',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--mounted-cartridge',
     action='store_true',
     dest='mounted_cartridge',
-    help='calculate remaining space for a mounted cartridge')
+    help='calculate remaining space for a mounted cartridge',
+    required=False)
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 linear_tape_file_system_copy = LinearTapeFileSystemCopy(
     total_buffer_size=name_space.total_buffer_size,

@@ -164,7 +164,6 @@ class Star(Aligner):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -198,8 +197,6 @@ class Star(Aligner):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -231,7 +228,6 @@ class Star(Aligner):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list,
@@ -400,12 +396,12 @@ class Star(Aligner):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # STAR requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_version' configuration option.")
 
         # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
@@ -414,7 +410,7 @@ class Star(Aligner):
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a valid 'transcriptome_version' configuration option.")
 
         if not self.transcriptome_index:
             self.transcriptome_index = StandardFilePath.get_resource_transcriptome_index(
@@ -434,8 +430,8 @@ class Star(Aligner):
 
         two_pass_mapping_tuple = ('none', 'basic', 'full')
         if self.two_pass_mapping not in two_pass_mapping_tuple:
-            raise ('The ' + self.name + " 'two_pass_mapping' option can only take values " +
-                   repr(two_pass_mapping_tuple) + ' not ' + repr(self.two_pass_mapping) + '.')
+            raise Exception(f"The 'two_pass_mapping' option {self.two_pass_mapping!r} "
+                            f"is not a member of {two_pass_mapping_tuple!r}.")
 
         super(Star, self).run()
 

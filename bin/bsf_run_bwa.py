@@ -47,13 +47,6 @@ argument_parser = ArgumentParser(
     description='BSF Runner for the Burrows Wheeler Aligner (BWA).')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--pickler_path',
     help='file path to a Python Pickler file',
     required=True)

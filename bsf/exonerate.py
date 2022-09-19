@@ -166,8 +166,8 @@ def parse_alignment_file(file_path):
     """
     vulgar_list: List[VULGAR] = list()
 
-    with open(file=file_path, mode='rt') as text_io:
-        for line_str in text_io:
+    with open(file=file_path, mode='rt') as input_text_io:
+        for line_str in input_text_io:
             vulgar_match = re.search(pattern=vulgar_pattern, string=line_str)
             if vulgar_match:
                 vulgar = VULGAR.from_vulgar_str(vulgar_str=vulgar_match.group(1))

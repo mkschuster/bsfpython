@@ -26,8 +26,8 @@
 specific for Illumina sequencing systems.
 """
 import datetime
+import logging
 import os
-import warnings
 from typing import Dict, List, Optional, Tuple
 from xml.etree.ElementTree import ElementTree
 
@@ -35,6 +35,8 @@ import dateutil.tz
 from Bio.Seq import Seq
 
 from bsf.annotation import AnnotationSheet
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class Adaptors(object):
@@ -298,7 +300,7 @@ class RunInformation(object):
         component_list = run_identifier.split('_')
 
         if len(component_list) != 4:
-            warnings.warn('Cannot split Illumina Run Identifier ' + repr(run_identifier) + ' into its components.')
+            module_logger.warning('Cannot split Illumina Run Identifier %r into its components.', run_identifier)
             return
 
         # Strip leading zeros from the <Number>, split <FCPosition> and >Flowcell> elements.
@@ -323,7 +325,7 @@ class RunInformation(object):
         run_info_tree = ElementTree(file=file_path)
         run_element = run_info_tree.find(path='Run')
         if run_element is None:
-            raise Exception('Cannot find the <Run> Element in the ElementTree of XML file ' + repr(file_path))
+            raise Exception(f'Cannot find the <Run> Element in the ElementTree of XML file {file_path!r}.')
 
         # Parse meta-information about the Illumina run
 
@@ -374,11 +376,9 @@ class RunInformation(object):
             if 'NumCycles' in read_element.keys():
                 is_index = read_element.get(key='IsIndexedRead')
                 if is_index not in ('Y', 'N'):
-                    warnings.warn(
-                        'Unexpected value <Read IsIndexedRead="' +
-                        read_element.get(key='IsIndexedRead') +
-                        '"> in Read element attribute IsIndexedRead ',
-                        UserWarning)
+                    module_logger.warning(
+                        'Unexpected value <Read IsIndexedRead="%s"> in Read element attribute IsIndexedRead.',
+                        read_element.get(key='IsIndexedRead'))
 
                 run_information_read_list.append(RunInformationRead(
                     number=int(read_element.get(key='Number')),
@@ -414,9 +414,7 @@ class RunInformation(object):
 
         non_index_reads_list = [item for item in run_information_read_list if not item.index]
         if len(non_index_reads_list) == 0:
-            warnings.warn(
-                'No non-index read in Illumina RunInformation: ' + repr(file_path),
-                UserWarning)
+            module_logger.warning('No non-index read in Illumina RunInformation: %r', file_path)
 
         # Set a paired_end attribute if more than one read without index is defined?
 
@@ -1230,7 +1228,7 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in self.rta_dict:
-            raise Exception('Unsupported RTA version: ' + repr(rta))
+            raise Exception(f'Unsupported RTA version: {rta!r}')
 
         # On all instruments.
         str_list.append('Config')
@@ -1277,7 +1275,7 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in self.rta_dict:
-            raise Exception('Unsupported RTA version: ' + repr(rta))
+            raise Exception(f'Unsupported RTA version: {rta!r}')
 
         if rta in (
                 '1.18.54',
@@ -1315,7 +1313,7 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in self.rta_dict:
-            raise Exception('Unsupported RTA version: ' + repr(rta))
+            raise Exception(f'Unsupported RTA version: {rta!r}')
 
         if rta in (
                 '1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.61', '1.18.64',  # HiSeq 2000
@@ -1421,7 +1419,7 @@ class RunFolder(object):
             return False
 
     @staticmethod
-    def _check_file_names(directory_dict, directory_path, file_name_list, debug=0):
+    def _check_file_names(directory_dict, directory_path, file_name_list):
         """Check a Python :py:class:`list` of file names against a Python :py:class:`dict` of directory entries.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -1431,12 +1429,8 @@ class RunFolder(object):
         :type directory_path: str
         :param file_name_list: A Python :py:class:`list` object of Python :py:class:`str` (file name) objects.
         :type file_name_list: list[str]
-        :param debug: An integer debugging level.
-        :type debug: int
         """
-        if debug > 0:
-            # print('Processing directory', directory_path)
-            pass
+        module_logger.debug('Processing directory: %r', directory_path)
 
         for file_name in file_name_list:
             file_path = os.path.join(directory_path, file_name)
@@ -1448,7 +1442,7 @@ class RunFolder(object):
         return
 
     @staticmethod
-    def _check_file_suffixes(directory_dict, directory_path, file_suffix_list, debug=0):
+    def _check_file_suffixes(directory_dict, directory_path, file_suffix_list):
         """Check a Python :py:class:`list` of file suffixes against a Python :py:class:`dict` of directory entries.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -1458,12 +1452,8 @@ class RunFolder(object):
         :type directory_path: str
         :param file_suffix_list: A Python :py:class:`list` object of Python :py:class:`str` (file name) objects.
         :type file_suffix_list: list[str]
-        :param debug: An integer debugging level.
-        :type debug: int
         """
-        if debug > 0:
-            # print('Processing directory', directory_path)
-            pass
+        module_logger.debug('Processing directory: %r', directory_path)
 
         for file_suffix in file_suffix_list:
             for file_name in directory_dict:
@@ -1476,7 +1466,7 @@ class RunFolder(object):
 
         return
 
-    def _check_config(self, directory_dict, directory_path, debug=0):
+    def _check_config(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Config/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -1484,8 +1474,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
         # flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
@@ -1501,8 +1489,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         _file_name_list: List[str] = list()
         _file_suffix_list: List[str] = list()
@@ -1551,14 +1538,12 @@ class RunFolder(object):
         self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
-            file_name_list=_file_name_list,
-            debug=debug)
+            file_name_list=_file_name_list)
 
         self._check_file_suffixes(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
-            file_suffix_list=_file_suffix_list,
-            debug=debug)
+            file_suffix_list=_file_suffix_list)
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
@@ -1566,7 +1551,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data_intensities_base_calls_matrix(self, directory_dict, directory_path, debug=0):
+    def _check_data_intensities_base_calls_matrix(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/Intensities/BaseCalls/Matrix/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -1574,8 +1559,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An :literal:`IRF/Data/Intensities/BaseCalls/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1591,8 +1574,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         if rta in (
                 '2.5.2',  # HiSeq 3000/4000
@@ -1611,8 +1593,7 @@ class RunFolder(object):
 
                 lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
-                if debug > 1:
-                    print('Processing directory', lane_path)
+                module_logger.log(logging.DEBUG - 1, 'Processing directory: %r', lane_path)
 
                 # Process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8]/C[0-9]+.1/ directories.
 
@@ -1626,8 +1607,7 @@ class RunFolder(object):
                         continue
                     cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
-                    if debug > 2:
-                        print('Processing directory', cycle_path)
+                    module_logger.log(logging.DEBUG - 2, 'Processing directory: %r', cycle_path)
 
                     for surface in range(0 + 1, fcl.surface_count + 1):
                         for swath in range(0 + 1, fcl.swath_count + 1):
@@ -1697,7 +1677,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data_intensities_base_calls_phasing(self, directory_dict, directory_path, debug=0):
+    def _check_data_intensities_base_calls_phasing(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/Intensities/BaseCalls/Phasing/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -1705,8 +1685,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An :literal:`IRF/Data/intensities/BaseCalls/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1722,8 +1700,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         for run_information_read in self.run_information.run_information_read_list:
             # Process read phasing files.
@@ -1814,7 +1791,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data_intensities_base_calls(self, directory_dict, directory_path, debug=0):
+    def _check_data_intensities_base_calls(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/Intensities/BaseCalls/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -1822,8 +1799,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An :literal:`IRF/Data/Intensities/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -1839,8 +1814,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
@@ -1872,8 +1846,7 @@ class RunFolder(object):
 
             lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
-            if debug > 1:
-                print('Processing directory', lane_path)
+            module_logger.log(logging.DEBUG - 1, 'Processing directory: %r', lane_path)
 
             # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/C[0-9]+.1 directories.
 
@@ -1917,8 +1890,7 @@ class RunFolder(object):
 
                     cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
-                    if debug > 2:
-                        print('Processing directory', cycle_path)
+                    module_logger.log(logging.DEBUG - 2, 'Processing directory: %r', cycle_path)
 
                     for surface in range(0 + 1, fcl.surface_count + 1):
                         if rta in (
@@ -2029,14 +2001,12 @@ class RunFolder(object):
             # Process the IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             self._check_data_intensities_base_calls_matrix(
                 directory_dict=_directory_dict,
-                directory_path=_directory_path,
-                debug=debug)
+                directory_path=_directory_path)
 
             # Process the IRF/Data/Intensities/BaseCalls/Phasing/ directory.
             self._check_data_intensities_base_calls_phasing(
                 directory_dict=_directory_dict,
-                directory_path=_directory_path,
-                debug=debug)
+                directory_path=_directory_path)
 
         # Check the IRF/Data/Intensities/BaseCalls/SampleSheet.csv file.
 
@@ -2055,7 +2025,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data_intensities_offsets(self, directory_dict, directory_path, debug=0):
+    def _check_data_intensities_offsets(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/Intensities/Offsets/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2063,8 +2033,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An :literal:`IRF/Data/Intensities/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2082,8 +2050,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         # Check the IRF/Data/Intensities/Offsets/offsets.txt file.
 
@@ -2107,7 +2074,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data_intensities(self, directory_dict, directory_path, debug=0):
+    def _check_data_intensities(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/Intensities/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2115,8 +2082,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An :literal:`IRF/Data/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2132,8 +2097,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         # Build a list of cycle numbers that have no error map such as the last cycle of a read and index cycles.
         no_error_cycles: List[int] = list()
@@ -2146,15 +2110,13 @@ class RunFolder(object):
                 no_error_cycles.append(cycles + run_information_read.cycles - 1)
             cycles += run_information_read.cycles
 
-        if debug > 0:
-            print('Cycles without errorMap files:', no_error_cycles)
+        module_logger.debug('Cycles without errorMap files: %r', no_error_cycles)
 
         # Process the IRF/Data/Intensities/BaseCalls/ directory.
 
         self._check_data_intensities_base_calls(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         if rta in (
                 '2.5.2', '2.7.3', '2.7.6', '2.7.7',  # HiSeq 3000/4000
@@ -2202,8 +2164,7 @@ class RunFolder(object):
 
                 lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
-                if debug > 1:
-                    print('Processing directory', lane_path)
+                module_logger.log(logging.DEBUG - 1, 'Processing directory: %r', lane_path)
 
                 if rta in (
                         '2.4.11',  # NextSeq 500/550
@@ -2264,8 +2225,7 @@ class RunFolder(object):
                             continue
                         cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
-                        if debug > 2:
-                            print('Processing directory', cycle_path)
+                        module_logger.log(logging.DEBUG - 2, 'Processing directory: %r', cycle_path)
 
                         for surface in range(0 + 1, fcl.surface_count + 1):
                             for swath in range(0 + 1, fcl.swath_count + 1):
@@ -2325,8 +2285,7 @@ class RunFolder(object):
                 # Process the IRF/Data/Intensities/Offsets/ directory.
                 self._check_data_intensities_offsets(
                     directory_dict=_directory_dict,
-                    directory_path=_directory_path,
-                    debug=debug)
+                    directory_path=_directory_path)
 
                 # Process the IRF/Data/Intensities/RTAConfiguration.xml file.
                 _entry_name = 'RTAConfiguration.xml'
@@ -2358,7 +2317,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data_tile_status(self, directory_dict, directory_path, debug=0):
+    def _check_data_tile_status(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/TileStatus/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2366,8 +2325,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An :literal:`IRF/Data/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -2382,8 +2339,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         for lane in range(0 + 1, fcl.lane_count + 1):
             for surface in range(0 + 1, fcl.surface_count + 1):
@@ -2415,7 +2371,7 @@ class RunFolder(object):
 
         return
 
-    def _check_data(self, directory_dict, directory_path, debug=0):
+    def _check_data(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Data/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2423,8 +2379,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2439,15 +2393,13 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         # Check the IRF/Data/Intensities/ directory.
 
         self._check_data_intensities(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         if rta in (
                 '1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.61', '1.18.64',  # HiSeq 2000
@@ -2506,8 +2458,7 @@ class RunFolder(object):
             # Process the IRF/Data/TileStatus/ directory.
             self._check_data_tile_status(
                 directory_path=_directory_path,
-                directory_dict=_directory_dict,
-                debug=debug)
+                directory_dict=_directory_dict)
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
@@ -2515,7 +2466,7 @@ class RunFolder(object):
 
         return
 
-    def _check_inter_op(self, directory_dict, directory_path, debug=0):
+    def _check_inter_op(self, directory_dict, directory_path):
         """Check the :literal:`IRF/InterOp/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2523,8 +2474,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2539,8 +2488,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         _file_name_list = [
             'CorrectedIntMetricsOut.bin',
@@ -2682,8 +2630,7 @@ class RunFolder(object):
         self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
-            file_name_list=_file_name_list,
-            debug=debug)
+            file_name_list=_file_name_list)
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
@@ -2691,7 +2638,7 @@ class RunFolder(object):
 
         return
 
-    def _check_periodic_save_rates(self, directory_dict, directory_path, debug=0):
+    def _check_periodic_save_rates(self, directory_dict, directory_path):
         """Check the :literal:`IRF/PeriodicSaveRates/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2699,8 +2646,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         _directory_name = 'PeriodicSaveRates'
         _directory_path = os.path.join(directory_path, _directory_name)
@@ -2713,8 +2658,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         _file_name_list = [
             'Save All Thumbnails.xml'
@@ -2723,8 +2667,7 @@ class RunFolder(object):
         self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
-            file_name_list=_file_name_list,
-            debug=debug)
+            file_name_list=_file_name_list)
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
@@ -2732,7 +2675,7 @@ class RunFolder(object):
 
         return
 
-    def _check_recipe(self, directory_dict, directory_path, debug=0):
+    def _check_recipe(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Recipe/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2740,8 +2683,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
@@ -2757,8 +2698,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         _file_name_list: List[str] = list()
 
@@ -2792,8 +2732,7 @@ class RunFolder(object):
         self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
-            file_name_list=_file_name_list,
-            debug=debug)
+            file_name_list=_file_name_list)
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
@@ -2801,7 +2740,7 @@ class RunFolder(object):
 
         return
 
-    def _check_thumbnail_images(self, directory_dict, directory_path, debug=0):
+    def _check_thumbnail_images(self, directory_dict, directory_path):
         """Check the :literal:`IRF/Thumbnail_Images/` directory.
 
         :param directory_dict: A Python :py:class:`dict` object of
@@ -2809,8 +2748,6 @@ class RunFolder(object):
         :type directory_dict: dict[str, int]
         :param directory_path: An Illumina Run Folder :literal:`IRF/` directory path.
         :type directory_path: str
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2842,8 +2779,7 @@ class RunFolder(object):
 
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         # Process the IRF/Thumbnail_Images/L00[1-8]/ directories.
 
@@ -2859,8 +2795,7 @@ class RunFolder(object):
             lane_path = os.path.join(_directory_path, lane_name)
             lane_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
-            if debug > 1:
-                print('Processing directory', lane_path)
+            module_logger.log(logging.DEBUG - 1, 'Processing directory: %r', lane_path)
 
             # Process the IRF/Thumbnail_Images/L00[1-8]/C[0-9]+.1/ directories.
 
@@ -2880,8 +2815,7 @@ class RunFolder(object):
 
                 cycle_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
 
-                if debug > 2:
-                    print('Processing directory', cycle_path)
+                module_logger.log(logging.DEBUG - 2, 'Processing directory: %r', cycle_path)
 
                 for surface in range(0 + 1, fcl.surface_count + 1):
                     for swath in range(0 + 1, fcl.swath_count + 1):
@@ -2978,46 +2912,39 @@ class RunFolder(object):
 
         return
 
-    def check(self, debug=0):
+    def check(self):
         """Check an Illumina Run Folder in regard to its internal directory and file structure.
 
         Both, missing and additional files are printed to :literal:`STDOUT`.
-
-        :param debug: An integer debugging level.
-        :type debug: int
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in self.rta_dict:
-            raise Exception('Unsupported RTA version: ' + repr(rta))
+            raise Exception(f'Unsupported RTA version: {rta!r}')
 
         # _directory_name = os.path.basename(self.file_path)
         _directory_path = self.file_path
         _directory_dict: Dict[str, int] = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
 
-        if debug > 0:
-            print('Processing directory', _directory_path)
+        module_logger.debug('Processing directory: %r', _directory_path)
 
         # Check the IRF/Config directory.
 
         self._check_config(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         # Check the IRF/Data/ directory.
 
         self._check_data(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         # Check the IRF/InterOp/ directory.
 
         self._check_inter_op(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         if rta in (
                 '1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.61', '1.18.64',  # HiSeq 2000
@@ -3027,22 +2954,19 @@ class RunFolder(object):
 
             self._check_periodic_save_rates(
                 directory_dict=_directory_dict,
-                directory_path=_directory_path,
-                debug=debug)
+                directory_path=_directory_path)
 
         # Check the IRF/Recipe/ directory.
 
         self._check_recipe(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         # Check the IRF/Thumbnail_Images/ directory.
 
         self._check_thumbnail_images(
             directory_dict=_directory_dict,
-            directory_path=_directory_path,
-            debug=debug)
+            directory_path=_directory_path)
 
         # Check IRF/ files.
 
@@ -3134,8 +3058,7 @@ class RunFolder(object):
         self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
-            file_name_list=_file_name_list,
-            debug=debug)
+            file_name_list=_file_name_list)
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))

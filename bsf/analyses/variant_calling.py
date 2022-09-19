@@ -25,9 +25,9 @@
 """The :py:mod:`bsf.analyses.variant_calling` module provides classes and methods supporting variant calling analyses.
 """
 import errno
+import logging
 import os
 import pickle
-import sys
 import warnings
 from subprocess import Popen
 from typing import Dict, List, Optional, Tuple, Union
@@ -43,6 +43,8 @@ from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
 from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -904,17 +906,17 @@ class VariantCallingGATKAmplicons(object):
         if 'Amplicons Name' in sample.annotation_dict:
             amplicons_name_list = sample.annotation_dict['Amplicons Name']
             if len(amplicons_name_list) > 1:
-                raise Exception('More than one Amplicons Name annotation per sample is not allowed.\n'
-                                'Sample: {!r} Amplicons Name list: {!r}'.
-                                format(sample.name, amplicons_name_list))
+                raise Exception(f"More than one 'Amplicons Name' annotation for Sample {sample.name!r}.\n"
+                                f"'Amplicons Name' list:{amplicons_name_list!r}")
+
             amplicons.name = amplicons_name_list[0]
 
         if 'Amplicons' in sample.annotation_dict:
             amplicons_path_list = sample.annotation_dict['Amplicons']
             if len(amplicons_path_list) > 1:
-                raise Exception('More than one Amplicons annotation per sample is not allowed.\n'
-                                'Sample: {!r} Amplicons list: {!r}'.
-                                format(sample.name, amplicons_path_list))
+                raise Exception(f"More than one 'Amplicons' annotation for Sample {sample.name!r}.\n"
+                                f"'Amplicons' list: {amplicons_path_list!r}")
+
             amplicons.amplicons_path = amplicons_path_list[0]
             if amplicons.amplicons_path and not os.path.isabs(amplicons.amplicons_path):
                 amplicons.calling_path = Configuration.get_absolute_path(
@@ -962,17 +964,17 @@ class VariantCallingGATKCallingIntervals(object):
         if 'Calling Name' in sample.annotation_dict:
             calling_name_list = sample.annotation_dict['Calling Name']
             if len(calling_name_list) > 1:
-                raise Exception('More than one Calling Name annotation per sample is not allowed.\n'
-                                'Sample: {!r} Calling Name list: {!r}'.
-                                format(sample.name, calling_name_list))
+                raise Exception(f"More than one 'Calling Name' annotation for Sample{sample.name!r}.\n"
+                                f"'Calling Name' list: {calling_name_list!r}")
+
             calling_intervals.name = calling_name_list[0]
 
         if 'Calling Intervals' in sample.annotation_dict:
             calling_interval_list = sample.annotation_dict['Calling Intervals']
             if len(calling_interval_list) > 1:
-                raise Exception('More than one Calling Intervals annotation per sample is not allowed.\n'
-                                'Sample: {!r} Calling Intervals list: {!r}'.
-                                format(sample.name, calling_interval_list))
+                raise Exception(f"More than one 'Calling Intervals' annotation for Sample {sample.name!r}.\n"
+                                f"'Calling Intervals' list: {calling_interval_list!r}")
+
             calling_intervals.calling_path = calling_interval_list[0]
             if calling_intervals.calling_path and not os.path.isabs(calling_intervals.calling_path):
                 calling_intervals.calling_path = Configuration.get_absolute_path(
@@ -1021,17 +1023,17 @@ class VariantCallingGATKTargetIntervals(object):
         if 'Target Name' in sample.annotation_dict:
             target_name_list = sample.annotation_dict['Target Name']
             if len(target_name_list) > 1:
-                raise Exception('More than one Target Name annotation per sample is not allowed.\n'
-                                'Sample: {!r} Target Name list: {!r}'.
-                                format(sample.name, target_name_list))
+                raise Exception(f"More than one 'Target Name' annotation for Sample {sample.name!r}.\n"
+                                f"'Target Name' list: {target_name_list!r}")
+
             target_intervals.name = target_name_list[0]
 
         if 'Target Intervals' in sample.annotation_dict:
             target_interval_list = sample.annotation_dict['Target Intervals']
             if len(target_interval_list) > 1:
-                raise Exception('More than one Target Intervals annotation per sample is not allowed.\n'
-                                'Sample: {!r} Target Intervals list: {!r}'.
-                                format(sample.name, target_interval_list))
+                raise Exception(f"More than one 'Target Intervals' annotation for Sample {sample.name!r}.\n"
+                                f"'Target Intervals' list: {target_interval_list!r}")
+
             target_intervals.targets_path = target_interval_list[0]
             if target_intervals.targets_path and not os.path.isabs(target_intervals.targets_path):
                 target_intervals.targets_path = Configuration.get_absolute_path(
@@ -1041,9 +1043,9 @@ class VariantCallingGATKTargetIntervals(object):
         if 'Probe Intervals' in sample.annotation_dict:
             probe_interval_list = sample.annotation_dict['Probe Intervals']
             if len(probe_interval_list) > 1:
-                raise Exception('More than one Probe Intervals annotation per sample is not allowed.\n'
-                                'Sample: {!r} Probe Intervals list: {!r}'.
-                                format(sample.name, probe_interval_list))
+                raise Exception(f"More than one 'Probe Intervals' annotation for Sample {sample.name!r}.\n"
+                                f"'Probe Intervals' list: {probe_interval_list!r}")
+
             target_intervals.probes_path = probe_interval_list[0]
             if target_intervals.probes_path and not os.path.isabs(target_intervals.probes_path):
                 target_intervals.probes_path = Configuration.get_absolute_path(
@@ -1738,7 +1740,6 @@ class VariantCallingGATK(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -1821,8 +1822,6 @@ class VariantCallingGATK(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -1976,7 +1975,6 @@ class VariantCallingGATK(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -2113,7 +2111,7 @@ class VariantCallingGATK(Analysis):
             :rtype: dict[str, dict[str, str]] | None
             """
             if variation_type not in ('indel', 'snp'):
-                raise Exception("Variation type has to be 'indel' or 'snp', not " + repr(variation_type) + '.')
+                raise Exception(f"The variation type {variation_type!r} is not a member of 'indel' and 'snp'.")
 
             # The vqsr_resources_indel|snp options of the current configuration section hold a comma-separated list
             # of resources that should correspond to a subsection in the configuration file.
@@ -2136,14 +2134,12 @@ class VariantCallingGATK(Analysis):
                                     section=resource_section,
                                     option=resource_option)
                             else:
-                                raise Exception(
-                                    'Missing configuration option ' + repr(resource_option) +
-                                    ' in section ' + repr(resource_section) + '.')
+                                raise Exception(f'The configuration option {resource_option!r} is missing from '
+                                                f'section {resource_section!r}.')
                     else:
-                        raise Exception(
-                            'Missing configuration section ' + repr(resource_section) +
-                            ' declared in option ' + repr(vqsr_option) + ' ' +
-                            repr(config_parser.get(section=section, option=vqsr_option)) + '.')
+                        raise Exception(f'The configuration section {resource_section!r} declared in '
+                                        f'option {vqsr_option!r} '
+                                        f'{config_parser.get(section=section, option=vqsr_option)!r} is missing.')
 
             return vqsr_resources_dict
 
@@ -2176,9 +2172,8 @@ class VariantCallingGATK(Analysis):
                         if config_parser.has_option(section=resource_section, option=resource_option):
                             file_path = config_parser.get(section=resource_section, option=resource_option)
                         else:
-                            raise Exception(
-                                'Missing configuration option ' + repr(resource_option) +
-                                ' in configuration section ' + repr(resource_section) + '.')
+                            raise Exception(f'The configuration option {resource_option!r} is missing from '
+                                            f'configuration section {resource_section!r}.')
                         resource_option = 'annotations'
                         if config_parser.has_option(section=resource_section, option=resource_option):
                             # Split the annotation list on a comma, split white space characters and
@@ -2187,16 +2182,14 @@ class VariantCallingGATK(Analysis):
                                 section=resource_section,
                                 option=resource_option)
                         else:
-                            raise Exception(
-                                'Missing configuration option ' + repr(resource_option) +
-                                ' in configuration section ' + repr(resource_section) + '.')
+                            raise Exception(f'The configuration option {resource_option!r} is missing from '
+                                            f' configuration section {resource_section!r}.')
                         # Create a dict key and a tuple of a Python str and Python list.
                         annotation_resources_dict[resource_name] = file_path, annotation_list
                     else:
-                        raise Exception(
-                            'Missing configuration section ' + repr(resource_section) +
-                            ' declared in option ' + repr(annotation_option) + ' ' +
-                            repr(config_parser.get(section=section, option=annotation_option)) + '.')
+                        raise Exception(f'The configuration section {resource_section!r} '
+                                        f'declared in option {annotation_option!r} '
+                                        f'{config_parser.get(section=section, option=annotation_option)!r} is missing.')
 
             return annotation_resources_dict
 
@@ -2470,8 +2463,7 @@ class VariantCallingGATK(Analysis):
                     name='Somatic Comparisons')
 
                 for row_dict in annotation_sheet.row_dicts:
-                    if self.debug > 0:
-                        print('Comparison sheet row_dict:', row_dict)
+                    module_logger.debug('Comparison sheet row_dict: %r', row_dict)
 
                     comparison = VariantCallingGATKComparison()
 
@@ -2481,10 +2473,8 @@ class VariantCallingGATK(Analysis):
                             prefix=prefix)
                         if group_name and len(group_samples):
                             if len(group_samples) != 1:
-                                raise Exception(
-                                    'Got more than one Sample for class {!r} in comparison {!r}'.format(
-                                        prefix,
-                                        row_dict))
+                                raise Exception(f'More than one Sample for class {prefix!r} and '
+                                                f'comparison {row_dict!r}.')
 
                             if prefix == 'Normal':
                                 comparison.normal_sample = group_samples[0]
@@ -2669,8 +2659,7 @@ class VariantCallingGATK(Analysis):
                         name=prefix_merge_cohort_scatter,
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_scatter = self.set_stage_runnable(
                     stage=analysis_stage,
                     runnable=runnable_scatter)
@@ -2760,8 +2749,7 @@ class VariantCallingGATK(Analysis):
                                 name=prefix_merge_cohort_gather,
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
-                                cache_path_dict=self._cache_path_dict,
-                                debug=self.debug))
+                                cache_path_dict=self._cache_path_dict))
                         executable_gather = self.set_stage_runnable(
                             stage=analysis_stage,
                             runnable=runnable_gather)
@@ -2885,8 +2873,7 @@ class VariantCallingGATK(Analysis):
                         name=prefix_process_cohort_scatter,
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_scatter = self.set_stage_runnable(
                     stage=stage_process_cohort,
                     runnable=runnable_scatter)
@@ -2970,8 +2957,7 @@ class VariantCallingGATK(Analysis):
                                 name=prefix_process_cohort_gather,
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
-                                cache_path_dict=self._cache_path_dict,
-                                debug=self.debug))
+                                cache_path_dict=self._cache_path_dict))
                         executable_gather = self.set_stage_runnable(
                             stage=stage_process_cohort,
                             runnable=runnable_gather)
@@ -3124,8 +3110,7 @@ class VariantCallingGATK(Analysis):
                         name=prefix_somatic_scatter,
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_scatter = self.set_stage_runnable(
                     stage=stage_somatic,
                     runnable=runnable_scatter)
@@ -3245,8 +3230,7 @@ class VariantCallingGATK(Analysis):
                                 name=prefix_somatic_gather,
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
-                                cache_path_dict=self._cache_path_dict,
-                                debug=self.debug))
+                                cache_path_dict=self._cache_path_dict))
                         executable_gather = self.set_stage_runnable(
                             stage=stage_somatic,
                             runnable=runnable_gather)
@@ -3355,8 +3339,7 @@ class VariantCallingGATK(Analysis):
                     name=prefix_annotate,
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
 
             if use_cache:
                 reference_annotate = runnable_annotate.get_cache_file_path(
@@ -3510,8 +3493,7 @@ class VariantCallingGATK(Analysis):
                     name=prefix_annotate,
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
 
             # reference_annotate = runnable_annotate.get_absolute_cache_file_path(
             #     file_path=self.bwa_genome_db)
@@ -3692,57 +3674,57 @@ class VariantCallingGATK(Analysis):
         # VariantCallingGATK requires a genome version, which gets configured by the super-class.
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'genome_version' configuration option.")
 
         if not self.bwa_genome_db:
-            raise Exception('A ' + self.name + " requires a 'bwa_genome_db' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'bwa_genome_db' configuration option.")
 
         if not self.cohort_name:
             self.cohort_name = self.project_name  # The cohort_name used to default to just 'default'.
 
         if not self.gatk_bundle_version:
-            raise Exception('A ' + self.name + " requires a 'gatk_bundle_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'gatk_bundle_version' configuration option.")
 
         if not self.snpeff_genome_version:
-            raise Exception('A ' + self.name + " requires a 'snpeff_genome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'snpeff_genome_version' configuration option.")
 
         if not self.vep_annotation:
             self.vep_annotation = 'ensembl'
 
         if self.vep_annotation not in ('ensembl', 'refseq', 'merged'):
             raise Exception(
-                'The ' + self.name + " option 'vep_annotation' has to be 'ensembl', 'refseq' or 'merged', " +
-                'not ' + repr(self.vep_annotation) + '.')
+                f"The 'vep_annotation' option {self.vep_annotation!r} is not a member of "
+                f"'ensembl', 'refseq' or 'merged'.")
 
         if not self.vep_assembly:
             self.vep_assembly = EnsemblVEP.get_name_assembly(genome_version=self.genome_version)
             if not self.vep_assembly:
-                raise Exception('A ' + self.name + " requires a 'vep_assembly' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_assembly' configuration option.")
 
         if not self.vep_cache:
             self.vep_cache = EnsemblVEP.get_directory_cache(genome_version=self.genome_version)
             if not self.vep_cache:
-                raise Exception('A ' + self.name + " requires a 'vep_cache' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_cache' configuration option.")
 
         if not self.vep_fasta:
             self.vep_fasta = EnsemblVEP.get_directory_fasta(genome_version=self.genome_version)
             if not self.vep_fasta:
-                raise Exception('A ' + self.name + " requires a 'vep_fasta' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_fasta' configuration option.")
 
         if not self.vep_plugin:
             self.vep_plugin = EnsemblVEP.get_directory_plugin(genome_version=self.genome_version)
             if not self.vep_plugin:
-                raise Exception('A ' + self.name + " requires a 'vep_plugin' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_plugin' configuration option.")
 
         if not self.vep_source:
             self.vep_source = EnsemblVEP.get_directory_source(genome_version=self.genome_version)
             if not self.vep_source:
-                raise Exception('A ' + self.name + " requires a 'vep_source' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_source' configuration option.")
 
         if not self.vep_species:
             self.vep_species = EnsemblVEP.get_name_species(genome_version=self.genome_version)
             if not self.vep_species:
-                raise Exception('A ' + self.name + " requires a 'vep_species' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_species' configuration option.")
 
         if not self.vep_sql_user:
             self.vep_sql_user = EnsemblVEP.get_sql_user(genome_version=self.genome_version)
@@ -3759,18 +3741,18 @@ class VariantCallingGATK(Analysis):
         if not self.vep_ofc_path:
             self.vep_ofc_path = EnsemblVEP.get_ofc_path(genome_version=self.genome_version)
             if not self.vep_ofc_path:
-                raise Exception('A ' + self.name + " requires a 'vep_ofc_path' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_ofc_path' configuration option.")
 
         if not self.vep_soc_path:
             self.vep_soc_path = EnsemblVEP.get_soc_path(genome_version=self.genome_version)
             if not self.vep_soc_path:
-                raise Exception('A ' + self.name + " requires a 'vep_soc_path' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_soc_path' configuration option.")
 
         if not self.vep_refseq_alignments_path:
             self.vep_refseq_alignments_path = EnsemblVEP.get_refseq_alignments_path(
                 genome_version=self.genome_version)
             if not self.vep_refseq_alignments_path:
-                raise Exception('A ' + self.name + " requires a 'vep_refseq_alignments_path' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'vep_refseq_alignments_path' configuration option.")
 
         if not self.vep_plugin_cadd_path:
             self.vep_plugin_cadd_path = EnsemblVEP.get_cadd_path(genome_version=self.genome_version)
@@ -3782,27 +3764,27 @@ class VariantCallingGATK(Analysis):
         if not self.java_archive_fgbio:
             self.java_archive_fgbio = JavaArchive.get_fgbio()
             if not self.java_archive_fgbio:
-                raise Exception('A ' + self.name + " requires a 'java_archive_fgbio' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_fgbio' configuration option.")
 
         if not self.java_archive_gatk:
             self.java_archive_gatk = JavaArchive.get_gatk()
             if not self.java_archive_gatk:
-                raise Exception('A ' + self.name + " requires a 'java_archive_gatk' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_gatk' configuration option.")
 
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception('A ' + self.name + " requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         if not self.java_archive_snpeff:
             self.java_archive_snpeff = JavaArchive.get_snpeff()
             if not self.java_archive_snpeff:
-                raise Exception('A ' + self.name + " requires a 'java_archive_snpeff' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_snpeff' configuration option.")
 
         if not self.java_archive_vcf_filter:
             self.java_archive_vcf_filter = JavaArchive.get_vcf_filter()
             if not self.java_archive_vcf_filter:
-                raise Exception('A ' + self.name + " requires a 'java_archive_vcf_filter' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_vcf_filter' configuration option.")
 
         # Check for absolute paths and adjust if required before checking for existence.
 
@@ -3810,8 +3792,7 @@ class VariantCallingGATK(Analysis):
             file_path=self.bwa_genome_db,
             default_path=self.get_gatk_bundle_path)
         if not os.path.exists(self.bwa_genome_db):
-            raise Exception('The file path ' + repr(self.bwa_genome_db) +
-                            " in option 'bwa_genome_db' does not exist.")
+            raise Exception(f"The 'bwa_genome_db' file path {self.bwa_genome_db!r} does not exist.")
 
         # GATK does a lot of read requests from the reference FASTA file.
         # Place it and the accompanying *.fasta.fai and *.dict files in the cache directory.
@@ -3832,8 +3813,7 @@ class VariantCallingGATK(Analysis):
                 if os.path.exists(file_path):
                     self.accessory_cohort_gvcfs[i] = file_path
                 else:
-                    raise Exception('The file path ' + repr(file_path) +
-                                    " in option 'accessory_cohort_gvcf' does not exist.")
+                    raise Exception(f"The 'accessory_cohort_gvcf' file path {file_path!r} does not exist.")
                     # TODO: Check the cohorts so that their sample names do not clash.
 
         # Dict of annotation resources
@@ -3846,8 +3826,8 @@ class VariantCallingGATK(Analysis):
                 if os.path.exists(file_path):
                     self.annotation_resources_dict[resource_name] = file_path, annotation_list
                 else:
-                    raise Exception('The file path ' + repr(file_path) +
-                                    ' in annotation resource ' + repr(resource_name) + ' does not exist.')
+                    raise Exception(f"The {resource_name!r} annotation resource file path {file_path!r} "
+                                    f"does not exist.")
 
         # Known sites for cohort variant discovery
 
@@ -3856,8 +3836,7 @@ class VariantCallingGATK(Analysis):
                 file_path=self.known_sites_discovery,
                 default_path=self.get_gatk_bundle_path)
             if not os.path.exists(self.known_sites_discovery):
-                raise Exception('The file path ' + repr(self.known_sites_discovery) +
-                                " in option 'known_sites_discovery' does not exist.")
+                raise Exception(f"The 'known_sites_discovery' file path {self.known_sites_discovery!r} does not exist.")
 
         # List of known sites for InDel re-alignment
 
@@ -3869,8 +3848,7 @@ class VariantCallingGATK(Analysis):
                 if os.path.exists(file_path):
                     self.known_sites_realignment[i] = file_path
                 else:
-                    raise Exception('The file path ' + repr(file_path) +
-                                    " in option 'known_sites_realignment' does not exist.")
+                    raise Exception(f"The 'known_sites_realignment' file path {file_path!r} does not exist.")
 
         # List of known sites for BQSR
 
@@ -3882,8 +3860,7 @@ class VariantCallingGATK(Analysis):
                 if os.path.exists(file_path):
                     self.known_sites_recalibration[i] = file_path
                 else:
-                    raise Exception('The file path ' + repr(file_path) +
-                                    " in option 'known_sites_recalibration' does not exist.")
+                    raise Exception(f"The 'known_sites_recalibration' file path {file_path!r} does not exist.")
 
         # List of known Catalogue Of Somatic Mutations In Cancer (COSMIC) sites for somatic variant calling
 
@@ -3895,8 +3872,7 @@ class VariantCallingGATK(Analysis):
                 if os.path.exists(file_path):
                     self.known_somatic_discovery[i] = file_path
                 else:
-                    raise Exception('The file path ' + repr(file_path) +
-                                    " in option 'known_somatic_discovery' does not exist.")
+                    raise Exception(f"The 'known_somatic_discovery' file path {file_path!r} does not exist.")
 
         # Dict of VQSR InDel resources
 
@@ -3906,8 +3882,8 @@ class VariantCallingGATK(Analysis):
                     file_path=resource_dict['file_path'],
                     default_path=self.get_gatk_bundle_path)
                 if not os.path.exists(resource_dict['file_path']):
-                    raise Exception('The file path ' + repr(resource_dict['file_path']) +
-                                    " in option 'vqsr_resources_indel' " + repr(resource_name) + ' does not exist.')
+                    raise Exception(f"The 'vqsr_resources_indel' {resource_name!r} file path "
+                                    f"{resource_dict['file_path']} does not exist.")
 
         # Dict of VQSR SNP resources
 
@@ -3917,8 +3893,8 @@ class VariantCallingGATK(Analysis):
                     file_path=resource_dict['file_path'],
                     default_path=self.get_gatk_bundle_path)
                 if not os.path.exists(resource_dict['file_path']):
-                    raise Exception('The file path ' + repr(resource_dict['file_path']) +
-                                    " in option 'vqsr_resources_snp' " + repr(resource_name) + ' does not exist.')
+                    raise Exception(f"The 'vqsr_resources_snp' {resource_name!r} file path "
+                                    f"{resource_dict['file_path']} does not exist.")
 
         # List of excluded intervals
 
@@ -3931,8 +3907,7 @@ class VariantCallingGATK(Analysis):
                     if os.path.exists(interval):
                         self.exclude_intervals_list[i] = interval
                     else:
-                        raise Exception('The file path ' + repr(interval) +
-                                        " in option 'exclude_intervals' does not exist.")
+                        raise Exception(f"The 'exclude_intervals' file path {interval!r} does not exist.")
 
         # List of included intervals
 
@@ -3945,8 +3920,7 @@ class VariantCallingGATK(Analysis):
                     if os.path.exists(interval):
                         self.include_intervals_list[i] = interval
                     else:
-                        raise Exception('The file path ' + repr(interval) +
-                                        " in option 'include_intervals' does not exist.")
+                        raise Exception(f"The 'include_intervals' file path {interval!r} does not exist.")
 
         # Genome Annotation GTF file path, defaults to the interval files directory.
 
@@ -3966,8 +3940,8 @@ class VariantCallingGATK(Analysis):
 
         if self.scatter_intervals_path:
             if not os.path.exists(self.scatter_intervals_path):
-                raise Exception('Picard ScatterIntervalsByNs interval file ' + repr(self.scatter_intervals_path) +
-                                ' does not exist.')
+                raise Exception(f'The Picard ScatterIntervalsByNs interval file {self.scatter_intervals_path!r}  '
+                                f'does not exist.')
 
             self._tile_region_cohort_list = get_interval_tiles(
                 interval_path=self.scatter_intervals_path,
@@ -3980,7 +3954,7 @@ class VariantCallingGATK(Analysis):
             dictionary_path = os.path.splitext(self.bwa_genome_db)[0] + '.dict'
 
             if not os.path.exists(dictionary_path):
-                raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
+                raise Exception(f'The Picard sequence dictionary {dictionary_path!r} does not exist.')
 
             self._tile_region_cohort_list = get_genome_tiles(
                 dictionary_path=dictionary_path,
@@ -4022,9 +3996,8 @@ class VariantCallingGATK(Analysis):
         self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -4053,7 +4026,7 @@ class VariantCallingGATK(Analysis):
                     sub_command=Command(program='mem'))
                 # NOTE: The variant_calling_align_lane stage does not follow the standard.
                 # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.ConsecutiveRunnable,
-                # it gets serialised into a separate pickler_file.
+                # it gets serialised into a separate pickler file.
 
                 # Read configuration sections
                 # [bsf.analyses.variant_calling.VariantCallingGATK.align_lane_bwa]
@@ -4129,8 +4102,8 @@ class VariantCallingGATK(Analysis):
                 pickler_path = os.path.join(
                     self.genome_directory,
                     stage_align_lane.name + '_' + paired_reads_name + '_run_bwa.pkl')
-                with open(file=pickler_path, mode='wb') as pickler_file:
-                    pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
+                with open(file=pickler_path, mode='wb') as output_binary_io:
+                    pickler = pickle.Pickler(file=output_binary_io, protocol=pickle.HIGHEST_PROTOCOL)
                     pickler.dump(pickler_dict_align_lane)
 
                 # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for aligning each read group.
@@ -4140,8 +4113,7 @@ class VariantCallingGATK(Analysis):
                         name=self.get_prefix_align_lane(paired_reads_name=paired_reads_name),
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_align_lane = self.set_stage_runnable(
                     stage=stage_align_lane,
                     runnable=runnable_align_lane)
@@ -4152,7 +4124,6 @@ class VariantCallingGATK(Analysis):
                 runnable_align_lane.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_option_long(key='pickler_path', value=pickler_path)
-                runnable_step.add_option_long(key='debug', value=str(self.debug))
 
                 ###################################
                 # Step 2: Process per read group. #
@@ -4179,8 +4150,7 @@ class VariantCallingGATK(Analysis):
                         name=self.get_prefix_process_lane(paired_reads_name=paired_reads_name),
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_process_lane = self.set_stage_runnable(
                     stage=stage_process_lane,
                     runnable=runnable_process_lane)
@@ -4471,8 +4441,7 @@ class VariantCallingGATK(Analysis):
                     name=self.get_prefix_process_sample(sample_name=sample.name),
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
             executable_process_sample = self.set_stage_runnable(
                 stage=stage_process_sample,
                 runnable=runnable_process_sample)
@@ -4614,7 +4583,7 @@ class VariantCallingGATK(Analysis):
                         key='METRICS_FILE',
                         value=file_path_process_sample.duplicate_metrics)
                     # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
-                    # as otherwise optical duplicates could not be detected. This is a consequence of using
+                    # as otherwise, optical duplicates could not be detected. This is a consequence of using
                     # Illumina2bam rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and
                     # IlluminaBasecallsToSam.
                     # See BioStar post: http://www.biostars.org/p/12538/
@@ -4834,8 +4803,7 @@ class VariantCallingGATK(Analysis):
                     name=self.get_prefix_diagnose_sample(sample_name=sample.name),
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
             executable_diagnose_sample = self.set_stage_runnable(
                 stage=stage_diagnose_sample,
                 runnable=runnable_diagnose_sample)
@@ -5156,8 +5124,7 @@ class VariantCallingGATK(Analysis):
                 name=self.get_prefix_process_cohort(cohort_name=self.cohort_name),
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
-                cache_path_dict=self._cache_path_dict,
-                debug=self.debug))
+                cache_path_dict=self._cache_path_dict))
         executable_process_cohort = self.set_stage_runnable(
             stage=stage_process_cohort,
             runnable=runnable_process_cohort)
@@ -5387,8 +5354,7 @@ class VariantCallingGATK(Analysis):
                     name=self.get_prefix_split_cohort_snpeff(sample_name=sample.name),
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
             executable_split_cohort_snpeff = self.set_stage_runnable(
                 stage=stage_split_cohort_snpeff,
                 runnable=runnable_split_cohort_snpeff)
@@ -5465,8 +5431,7 @@ class VariantCallingGATK(Analysis):
                     name=self.get_prefix_split_cohort_vep(sample_name=sample.name),
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
             executable_split_cohort_vep = self.set_stage_runnable(
                 stage=stage_split_cohort_vep,
                 runnable=runnable_split_cohort_vep)
@@ -5540,8 +5505,7 @@ class VariantCallingGATK(Analysis):
                 name=self.get_prefix_summary(cohort_name=self.cohort_name),
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
-                cache_path_dict=self._cache_path_dict,
-                debug=self.debug))
+                cache_path_dict=self._cache_path_dict))
         executable_summary = self.set_stage_runnable(
             stage=stage_summary,
             runnable=runnable_summary)
@@ -5581,8 +5545,7 @@ class VariantCallingGATK(Analysis):
                     name=self.get_prefix_somatic(comparison_name=comparison_name),
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    debug=self.debug))
+                    cache_path_dict=self._cache_path_dict))
             executable_somatic = self.set_stage_runnable(
                 stage=stage_somatic,
                 runnable=runnable_somatic)
@@ -5646,8 +5609,7 @@ class VariantCallingGATK(Analysis):
                         name=self.get_prefix_split_somatic_snpeff(comparison_name=comparison_name),
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_split_somatic_snpeff = self.set_stage_runnable(
                     stage=stage_split_somatic_snpeff,
                     runnable=runnable_split_somatic_snpeff)
@@ -5708,8 +5670,7 @@ class VariantCallingGATK(Analysis):
                         name=self.get_prefix_split_somatic_vep(comparison_name=comparison_name),
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        debug=self.debug))
+                        cache_path_dict=self._cache_path_dict))
                 executable_split_somatic_vep = self.set_stage_runnable(
                     stage=stage_split_somatic_vep,
                     runnable=runnable_split_somatic_vep)
@@ -5770,7 +5731,7 @@ class VariantCallingGATK(Analysis):
                     os.makedirs(path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
-                        raise
+                        raise exception
 
             return path
 
@@ -5787,12 +5748,12 @@ class VariantCallingGATK(Analysis):
                 #     os.remove(target_path)
                 # except OSError as exception:
                 #     if exception.errno != errno.ENOENT:
-                #         raise
+                #         raise exception
                 try:
                     os.symlink(source_path, target_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
-                        raise
+                        raise exception
 
             return
 
@@ -5822,9 +5783,8 @@ class VariantCallingGATK(Analysis):
             # Process per sample.
 
             for sample in self.sample_list:
-                if self.debug > 0:
-                    print(self, 'Sample name:', sample.name)
-                    sys.stdout.writelines(sample.trace(level=1))
+                module_logger.debug('Sample name: %r', sample.name)
+                module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,
@@ -6084,9 +6044,8 @@ class VariantCallingGATK(Analysis):
             str_list.append('<tbody>\n')
 
             for sample in self.sample_list:
-                if self.debug > 0:
-                    print(self, 'Sample name:', sample.name)
-                    sys.stdout.writelines(sample.trace(level=1))
+                module_logger.debug('Sample name: %r', sample.name)
+                module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,

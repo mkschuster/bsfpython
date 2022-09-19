@@ -24,8 +24,8 @@
 #
 """The :py:mod:`bsf.analyses.fastqc` module provides classes supporting the FastQC tool.
 """
+import logging
 import os
-import sys
 import urllib.parse
 from typing import List
 
@@ -34,6 +34,8 @@ from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepMakeDirectory
 from bsf.standards import Configuration
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class FilePathFastQCReadGroup(FilePath):
@@ -134,7 +136,6 @@ class FastQC(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None):
@@ -162,8 +163,6 @@ class FastQC(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -184,7 +183,6 @@ class FastQC(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -245,17 +243,16 @@ class FastQC(Analysis):
         self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             # The FastQC analysis does not obey excluded PairedReads objects,
             # more high-level analyses generally do.
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping, exclude=False)
             for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
+                    module_logger.debug('PairedReads name: %r', paired_reads.get_name())
+                    module_logger.log(logging.DEBUG - 2, 'PairedReads: %r', paired_reads)
 
                     prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 

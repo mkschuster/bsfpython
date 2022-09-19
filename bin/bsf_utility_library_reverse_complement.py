@@ -36,32 +36,22 @@ argument_parser = ArgumentParser(
     description='BSF Python utility script to reverse complement a Library Annotation Sheet.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='Debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--input-path',
     dest='input_path',
     help='Input Library Annotation Sheet',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     '--output-path',
     dest='output_path',
     help='Output Library Annotation Sheet',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     '--lane-list',
     dest='lane_list',
     help='Comma-separated list of lanes to reverse complement',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--barcode_1',

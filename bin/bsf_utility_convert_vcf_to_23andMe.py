@@ -35,34 +35,28 @@ argument_parser = ArgumentParser(
     description='BSF utility to convert from VCF to 23andMe format.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
-    '--input',
+    '--input-path',
+    dest='input_path',
     help='VCF file path',
     required=True)
 
 argument_parser.add_argument(
-    '--output',
+    '--output-path',
+    dest='output_path',
     help='23andMe file path',
     required=True)
 
 name_space = argument_parser.parse_args()
 
-with open(file=name_space.output, mode='wt') as output_file:
-    with open(file=name_space.input, mode='rt') as input_file:
-        for line_str in input_file:
+with open(file=name_space.output_path, mode='wt') as output_text_io:
+    with open(file=name_space.input_path, mode='rt') as input_text_io:
+        for line_str in input_text_io:
             # Ignore comment lines.
             if line_str.startswith('#'):
                 continue
 
             # Split VCF lines on tabs into VCF fields.
             vcf_field_list = line_str.rstrip().split('\t')
-            alleles = '..'
 
             # The genotype (GT) is in field 10, the REF in field 4 and ALT in field 5.
 
@@ -86,7 +80,9 @@ with open(file=name_space.output, mode='wt') as output_file:
             elif sample_field_list[genotype_index] == './.':
                 continue
             else:
-                print('Unexpected genotype {!r} in line: {}'.format(vcf_field_list[9], line_str))
+                alleles = '..'
+                print(f'Unexpected genotype {vcf_field_list[9]!r} in line {line_str!r}')
 
-            # The identifier (ID) is in field 2,  the chromosome (CHROM) in field 0 and the position (POS) in field 1.
-            output_file.write('\t'.join((vcf_field_list[2], vcf_field_list[0], vcf_field_list[1], alleles)) + '\n')
+            # The identifier (ID) is in field 2, the chromosome (CHROM) in field 0 and the position (POS) in field 1.
+
+            print(vcf_field_list[2], vcf_field_list[0], vcf_field_list[1], alleles, sep='\t', file=output_text_io)

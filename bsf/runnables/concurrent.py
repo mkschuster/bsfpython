@@ -85,7 +85,7 @@ def run(runnable):
 
     # Run the RunnableStep objects on the concurrent list.
 
-    exception_str_list = run_executables(runnable.runnable_step_list_concurrent, debug=runnable.debug)
+    exception_str_list = run_executables(executable_list=runnable.runnable_step_list_concurrent)
 
     if exception_str_list:
         # If an exception occurred, remove the ConcurrentRunnable-specific cache and temporary directories

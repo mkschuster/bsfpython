@@ -46,29 +46,25 @@ argument_parser = ArgumentParser(
                 'into a UCSC chromosome sizes file.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
-    '--input_path',
+    '--input-path',
+    dest='input_path',
     help='file path to a Picard sequence dictionary file.',
     required=True)
 
 argument_parser.add_argument(
-    '--output_path',
+    '--output-path',
+    dest='output_path',
     help='file path to a UCSC chromosome sizes file.',
     required=True)
 
 name_space = argument_parser.parse_args()
 
-with open(file=name_space.output_path, mode='wt') as output_file:
-    with open(file=name_space.input_path, mode='rt') as input_file:
-        for line_str in input_file:
+with open(file=name_space.output_path, mode='wt') as output_text_io:
+    with open(file=name_space.input_path, mode='rt') as input_text_io:
+        for line_str in input_text_io:
             if not line_str.startswith('@SQ'):
                 continue
+
             column_list = line_str.rstrip().split("\t")
             sequence_name = str()
             sequence_length = str()
@@ -85,4 +81,4 @@ with open(file=name_space.output_path, mode='wt') as output_file:
                     sequence_length = column_str[3:]
                     break
 
-            output_file.write('\t'.join((sequence_name, sequence_length)) + '\n')
+            print(sequence_name, sequence_length, sep='/t', file=output_text_io)

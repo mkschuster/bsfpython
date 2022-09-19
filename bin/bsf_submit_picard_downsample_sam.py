@@ -26,7 +26,7 @@
 #
 #  BSF Python script to drive the Picard DownsampleSam analysis.
 #
-import sys
+import logging
 from argparse import ArgumentParser
 
 from bsf.analyses.picard import DownsampleSam
@@ -36,11 +36,20 @@ argument_parser = ArgumentParser(
     description=DownsampleSam.name + ' driver script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--dry-run',
+    action='store_false',
+    default=True,
+    dest='drms_submit',
+    help='dry run',
+    required=False)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--stage',
@@ -52,22 +61,19 @@ argument_parser.add_argument(
     '--configuration',
     default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--project-name',
     dest='project_name',
     help='project name',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--sas-file',
     dest='sas_file',
     help='sample annotation sheet (*.csv) file path',
-    required=False,
-    type=str)
+    required=False)
 
 name_space = argument_parser.parse_args()
 
@@ -75,17 +81,18 @@ name_space = argument_parser.parse_args()
 # --project-name and --sas-file argument.
 
 if name_space.configuration == Configuration.global_file_path:
-    if name_space.project_name is None:
+    if not name_space.project_name:
         raise Exception("argument --project-name is required if --configuration is not set")
-    if name_space.sas_file is None:
+    if not name_space.sas_file:
         raise Exception("argument --sas-file is required if --configuration is not set")
 
-# Create a Picard DownsampleSam analysis and run it.
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 analysis = DownsampleSam.from_config_file_path(config_path=name_space.configuration)
-
-if name_space.debug:
-    analysis.debug = name_space.debug
 
 if name_space.project_name:
     analysis.project_name = name_space.project_name
@@ -95,14 +102,10 @@ if name_space.sas_file:
 
 annotation_sheet = analysis.run()
 analysis.check_state()
-analysis.submit(name=name_space.stage)
+analysis.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
 print(analysis.name)
 print('Project name:      ', analysis.project_name)
 print('Input directory:   ', analysis.input_directory)
 print('Project directory: ', analysis.project_directory)
 print('Genome directory:  ', analysis.genome_directory)
-
-if analysis.debug >= 2:
-    print(repr(analysis), 'final trace:')
-    sys.stdout.writelines(analysis.trace(level=1))

@@ -129,12 +129,15 @@ class Argument(object):
         super(Argument, self).__init__()
 
         if not key:
-            raise Exception('The key argument has to be defined.')
+            raise Exception("The 'key' argument has to be defined.")
 
         self.key = key
         self.value = None
 
         return
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(key={self.key!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.argument.Argument` object.
@@ -230,11 +233,14 @@ class Option(Switch):
         super(Option, self).__init__(key=key)
 
         if not value:
-            raise Exception('The value argument has to be defined.')
+            raise Exception("The 'value' argument has to be defined.")
 
         self.value = value
 
         return
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(key={self.key!r}, value={self.value!r})'
 
     def trace(self, level):
         """Trace a :py:class:`bsf.argument.Option` object.

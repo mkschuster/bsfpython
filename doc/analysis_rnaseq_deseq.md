@@ -103,7 +103,7 @@ The following configuration files should obey a naming schema to allow for autom
 
 ## Process Submission
 
-Once the above configuration files are complete, enter the configuration directory and call the process submission script. Help on arguments and options is available via `bsf_submit_rnaseq_deseq.py --help`. The most commonly used option is `--debug` followed by an integer to activate debugging output. The higher the integer number, the more verbose the output. Please note, upon setting the `--debug` option, processes are __not__ submitted.
+Once the above configuration files are complete, enter the configuration directory and call the process submission script. Help on arguments and options is available via `bsf_submit_rnaseq_deseq.py --help`. The most commonly used option are `--logging-level` to set logging verbosity and `--dry-run` to __not__ submit any processes to the distributed resource management system.
 
 By default, the script computes the complete process graph and submits it to the distributed resource management system (DMRS). Processes from individual stages can be submitted by adding the `--stage` option followed by the analysis stage name. The DESeq analysis supports the `rnaseq_deseq_analsis` and `rnaseq_deseq_results` stages.  
 

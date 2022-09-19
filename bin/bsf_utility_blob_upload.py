@@ -26,6 +26,7 @@
 #
 #  BSF Python script to upload to the Microsoft Azure Storage Blob Service.
 #
+import logging
 import os
 from argparse import ArgumentParser
 
@@ -35,30 +36,28 @@ argument_parser = ArgumentParser(
     description='Microsoft Azure Storage Blob Service upload script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--account',
     help='Microsoft Azure Storage Account name',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     '--container',
     help='Microsoft Azure Storage Blob Service container name',
-    required=True,
-    type=str)
+    required=True)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--standard-blob-tier',
     dest='standard_blob_tier',
     help='Microsoft Azure Standard Blob Tier name (i.e., Archive, Cool or Hot)',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--threads',
@@ -71,7 +70,8 @@ argument_parser.add_argument(
     '--retain-path',
     action='store_true',
     dest='retain_path',
-    help='retain the local path in the blob path')
+    help='retain the local path in the blob path',
+    required=False)
 
 argument_parser.add_argument(
     'file_path',
@@ -79,6 +79,12 @@ argument_parser.add_argument(
     nargs='+')
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 azure_blob_service_client = get_azure_blob_service_client(account_name=name_space.account)
 
@@ -89,7 +95,7 @@ if not azure_container_exists(
 
 for file_path in name_space.file_path:
     if not os.path.isfile(file_path):
-        raise Exception('File path ' + repr(file_path) + ' does not exist.')
+        raise Exception(f'File path {file_path!r} does not exist.')
 
     if name_space.retain_path:
         # The local path needs rewriting into a URL schema.
@@ -111,18 +117,17 @@ for file_path in name_space.file_path:
     else:
         blob_path = None
 
-    print('Uploading local path:', repr(file_path), 'blob path:', repr(blob_path))
+    logging.debug('Uploading local path: %r blob path: %r', file_path, blob_path)
 
-    if name_space.debug == 0:
-        blob_properties = azure_block_blob_upload(
-            file_path=file_path,
-            azure_blob_service_client=azure_blob_service_client,
-            container=name_space.container,
-            blob=blob_path,
-            standard_blob_tier=name_space.standard_blob_tier,
-            max_concurrency=name_space.threads)
+    blob_properties = azure_block_blob_upload(
+        file_path=file_path,
+        azure_blob_service_client=azure_blob_service_client,
+        container=name_space.container,
+        blob=blob_path,
+        standard_blob_tier=name_space.standard_blob_tier,
+        max_concurrency=name_space.threads)
 
-        print('  Azure Blob name:', blob_properties.name)
-        print('  Azure Blob size:', blob_properties.size)
-        print('  Azure Blob ETag:', blob_properties.etag)
-        print('  Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
+    logging.info('Azure Blob name: %r', blob_properties.name)
+    logging.info('Azure Blob size: %r', blob_properties.size)
+    logging.info('Azure Blob ETag: %r', blob_properties.etag)
+    logging.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())

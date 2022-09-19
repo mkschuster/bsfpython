@@ -24,9 +24,9 @@
 #
 """The :py:mod:`bsf.analyses.picard` module provides classes modelling Picard analyses data files and data directories.
 """
+import logging
 import os
 import re
-import sys
 import warnings
 import weakref
 from typing import Callable, Dict, List, Optional
@@ -44,6 +44,8 @@ from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
     RunnableStepMove, RunnableStepPicard
 from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaArchive, Operator, VendorQualityFilter
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class PicardIlluminaRunFolder(Analysis):
@@ -125,7 +127,6 @@ class PicardIlluminaRunFolder(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -159,8 +160,6 @@ class PicardIlluminaRunFolder(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -195,7 +194,6 @@ class PicardIlluminaRunFolder(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -262,8 +260,7 @@ class PicardIlluminaRunFolder(Analysis):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception(
-                'The ' + self.name + " requires a 'run_directory' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'run_directory' configuration option.")
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
@@ -272,14 +269,12 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception(
-                'The ' + self.name + " 'run_directory' " + repr(self.run_directory) + ' is not a valid directory.')
+            raise Exception(f"The 'run_directory' {self.run_directory} does not exist.")
 
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise RunFolderNotComplete(
-                'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
+            raise RunFolderNotComplete(f'The Illumina Run Folder {self.run_directory!r} is not complete.')
 
         # Define an 'Intensities' directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -297,9 +292,7 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the "Intensities" directory exists.
 
         if not os.path.isdir(self.intensity_directory):
-            raise Exception(
-                'The ' + self.name + " 'intensity_directory' " + repr(self.intensity_directory) +
-                ' is not a valid directory.')
+            raise Exception(f"The 'intensity_directory' {self.intensity_directory!r} does not exist.")
 
         # Define a 'BaseCalls' directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -317,9 +310,7 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the BaseCalls directory exists.
 
         if not os.path.isdir(self.basecalls_directory):
-            raise Exception(
-                'The ' + self.name + " 'basecalls_directory' " + repr(self.basecalls_directory) +
-                ' is not a valid directory.')
+            raise Exception(f"The 'basecalls_directory' {self.basecalls_directory!r} does not exist.")
 
         self._irf = RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -330,9 +321,8 @@ class PicardIlluminaRunFolder(Analysis):
         if not self.experiment_name:
             self.experiment_name = self._irf.run_parameters.get_experiment_name
             if not self.experiment_name:
-                raise Exception(
-                    'The ' + self.name + " 'experiment_name' was not provided " +
-                    'and could not be read from the Illumina Run Folder configuration.')
+                raise Exception(f"The 'experiment_name' was not provided and could not be read from the "
+                                f"Illumina Run Folder configuration.")
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the
@@ -346,8 +336,7 @@ class PicardIlluminaRunFolder(Analysis):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception(
-                    'The ' + self.name + " requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         # Call the run method of the super class after the project_name has been defined.
 
@@ -604,7 +593,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -647,8 +635,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -703,7 +689,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list,
@@ -816,9 +801,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
         if not os.path.isdir(self.samples_directory):
-            raise Exception(
-                'The ' + self.name + " 'samples_directory' " + repr(self.samples_directory) +
-                ' is not a valid directory.')
+            raise Exception(f"The 'samples_directory' {self.samples_directory!r} does not exist.")
 
         # Get the experiment_directory once.
 
@@ -829,8 +812,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         if not self.sequencing_centre:
             self.sequencing_centre = Operator.get_sequencing_centre()
             if not self.sequencing_centre:
-                raise Exception(
-                    'The ' + self.name + " requires a 'sequencing_centre' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'sequencing_centre' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -846,8 +828,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not os.path.exists(self.library_path):
-            raise Exception(
-                'The ' + self.name + " 'library_path' " + repr(self.library_path) + ' is not a valid file.')
+            raise Exception(f"The 'library_path' {self.library_path!r} is not a valid file.")
 
         # Load the LibraryAnnotationSheet and validate.
 
@@ -1383,7 +1364,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -1427,8 +1407,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -1485,7 +1463,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list,
@@ -1588,8 +1565,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception(
-                'The ' + self.name + "requires a 'run_directory' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'run_directory' configuration option.")
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
@@ -1598,14 +1574,12 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception(
-                'The ' + self.name + " 'run_directory' " + repr(self.run_directory) + ' is not a valid directory.')
+            raise Exception(f"The 'run_directory' {self.run_directory!r} does not exist.")
 
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise RunFolderNotComplete(
-                'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
+            raise RunFolderNotComplete(f'The Illumina Run Folder {self.run_directory!r} is not complete.')
 
         irf = RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -1628,7 +1602,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         if not self.sequencing_centre:
             self.sequencing_centre = Operator.get_sequencing_centre()
             if not self.sequencing_centre:
-                raise Exception('The ' + self.name + "requires a 'sequencing_centre' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'sequencing_centre' configuration option.")
 
         # Define the sequence directory in which to create the experiment directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -1644,8 +1618,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
         if not os.path.isdir(self.sequences_directory):
-            raise Exception('The ' + self.name + " 'sequences_directory' " + repr(self.sequences_directory) +
-                            ' does not provide a valid directory.')
+            raise Exception(f"The 'sequences_directory' {self.sequences_directory!r} does not exist.")
 
         # Get the experiment_directory once.
 
@@ -1656,7 +1629,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception('The ' + self.name + " requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -2108,7 +2081,6 @@ class IlluminaDemultiplexSam(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -2149,8 +2121,6 @@ class IlluminaDemultiplexSam(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -2198,7 +2168,6 @@ class IlluminaDemultiplexSam(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -2349,7 +2318,7 @@ class IlluminaDemultiplexSam(Analysis):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception('The ' + self.name + " requires a 'run_directory' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'run_directory' configuration option.")
 
         # Illumina Run Folders are kept either in the 'active' or the 'archive' location.
         # Upon re-running of the de-multiplexing stage, the IRF may have been archived already.
@@ -2359,8 +2328,7 @@ class IlluminaDemultiplexSam(Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception('The ' + self.name + " 'run_directory' " + repr(self.run_directory) +
-                            ' is not a valid directory.')
+            raise Exception(f"The 'run_directory' {self.run_directory!r} does not exist.")
 
         irf = RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -2391,8 +2359,7 @@ class IlluminaDemultiplexSam(Analysis):
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
         if not os.path.isdir(self.samples_directory):
-            raise Exception('The ' + self.name + " 'samples_directory' " + repr(self.samples_directory) +
-                            ' is not a valid directory.')
+            raise Exception(f"The 'samples_directory' {self.samples_directory!r} does not exist.")
 
         # Get the experiment_directory once.
 
@@ -2406,8 +2373,7 @@ class IlluminaDemultiplexSam(Analysis):
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not os.path.exists(self.library_path):
-            raise Exception('The ' + self.name + " 'library_path' " + repr(self.library_path) +
-                            ' is not a valid file.')
+            raise Exception(f"The 'library_path' {self.library_path!r} does not exist.")
 
         # Load the LibraryAnnotationSheet and validate.
 
@@ -2437,7 +2403,7 @@ class IlluminaDemultiplexSam(Analysis):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception('The ' + self.name + " requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
@@ -2967,7 +2933,6 @@ class DownsampleSam(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -2996,8 +2961,6 @@ class DownsampleSam(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -3019,7 +2982,6 @@ class DownsampleSam(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -3079,8 +3041,7 @@ class DownsampleSam(Analysis):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception("A 'DownsampleSam' analysis requires a "
-                                "'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} analysis requires a 'java_archive_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -3089,26 +3050,27 @@ class DownsampleSam(Analysis):
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
             for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
+                    module_logger.debug('PairedReads name: %r', paired_reads.get_name())
+                    module_logger.log(logging.DEBUG - 2, 'PairedReads: %r', paired_reads)
 
                     # Apply some sanity checks.
 
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
-                        raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
+                        raise Exception(f"The PairedReads object {paired_reads.get_name()!r} has a 'reads_2', "
+                                        f"but no 'reads_1' object.")
 
                     reads = paired_reads.reads_1
                     if not (reads.file_path.endswith('.bam') or reads.file_path.endswith('.sam')):
                         raise Exception(
-                            'Picard DownsampleSam can only work on BAM or SAM files. ' + reads.file_path)
+                            f'The {self.name!s} can only work on BAM or SAM files. '
+                            f'Reads.file_path: {reads.file_path!r}')
 
                     prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
@@ -3352,7 +3314,6 @@ class SamToFastq(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -3384,8 +3345,6 @@ class SamToFastq(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -3413,7 +3372,6 @@ class SamToFastq(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -3488,7 +3446,7 @@ class SamToFastq(Analysis):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception('The ' + self.name + " requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         self._read_comparisons()
 
@@ -3500,21 +3458,21 @@ class SamToFastq(Analysis):
         project_dependency_list: List[str] = list()
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
             for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
+                    module_logger.debug('PairedReads name: %r', paired_reads.get_name())
+                    module_logger.log(logging.DEBUG - 2, 'PairedReads: %r', paired_reads)
 
                     # Apply some sanity checks.
 
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
-                        raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
+                        raise Exception(f"PairedReads object {paired_reads.get_name()!r} has a 'reads_2', "
+                                        f"but no 'reads_1' object.")
 
                     reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):
@@ -3727,20 +3685,18 @@ class SamToFastq(Analysis):
 
         self._read_comparisons()
 
-        if self.debug > 0:
-            print('Prune!')
+        module_logger.debug('Prune!')
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 1, 'Sample: %r', sample)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
             for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
+                    module_logger.debug('PairedReads name: %r', paired_reads.get_name())
+                    module_logger.log(logging.DEBUG - 2, 'PairedReads: %r', paired_reads)
 
                     file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 

@@ -84,14 +84,14 @@ def process_json_files(top_directory_path):
     re_pattern = re.compile(pattern=name_space.json_pattern)
 
     for directory_path, directory_name_list, file_name_list in os.walk(top=top_directory_path):
-        logging.debug("directory_path: '%s'", directory_path)
-        logging.debug("directory_name_list: '%s'", directory_name_list)
-        logging.debug("file_name_list: '%s'", file_name_list)
+        logging.debug('directory_path: %r', directory_path)
+        logging.debug('directory_name_list: %r', directory_name_list)
+        logging.debug('file_name_list: %r', file_name_list)
 
         for file_name in file_name_list:
             re_match = re_pattern.search(string=file_name)
             if re_match is None:
-                logging.debug("Excluding: '%s'", file_name)
+                logging.debug('Excluding file_name: %r', file_name)
                 continue
 
             # The tape name could be parsed from the file name via a regular expression, or better, retrieved from
@@ -125,14 +125,14 @@ def process_ltfscp_files(top_directory_path):
     re_pattern = re.compile(pattern=name_space.ltfscp_pattern)
 
     for directory_path, directory_name_list, file_name_list in os.walk(top=top_directory_path):
-        logging.debug("directory_path: '%s'", directory_path)
-        logging.debug("directory_name_list: '%s'", directory_name_list)
-        logging.debug("file_name_list: '%s'", file_name_list)
+        logging.debug('directory_path: %r', directory_path)
+        logging.debug('directory_name_list: %r', directory_name_list)
+        logging.debug('file_name_list: %r', file_name_list)
 
         for file_name in file_name_list:
             re_match = re_pattern.search(string=file_name)
             if re_match is None:
-                logging.debug("Excluding: '%s'", file_name)
+                logging.debug('Excluding file_name: %r', file_name)
                 continue
 
             # Parse the volume name from the file name (e.g., BS0048L6_log.txt)
@@ -148,7 +148,7 @@ def process_ltfscp_files(top_directory_path):
                     line_list = line_str.split()
                     base_name = line_list[2].split('/')[-1]
 
-                    logging.debug("File name: '%s'", base_name)
+                    logging.debug('File name: %r', base_name)
 
                     if base_name not in ltfs_dict:
                         ltfs_dict[base_name] = list()
@@ -166,46 +166,43 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     'directory_path',
-    help='directory path',
-    type=str)
+    help='directory path')
 
 argument_parser.add_argument(
     '--json-pattern',
     default='^([0-9A-Z]{6,6}L[5-6])\\.json$',
     dest='json_pattern',
     help='JSON file name regular expression [^([0-9A-Z]{6,6}L[5-6])\\.json$]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--ltfscp-pattern',
     default='^([0-9A-Z]{6,6}L[5-6])_log\\.txt$',
     dest='ltfscp_pattern',
     help='LTFSCP file name regular expression [^([0-9A-Z]{6,6}L[5-6])_log\\.txt$]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--file-path',
     dest='file_path',
     help='LTFS archive file path',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 name_space = argument_parser.parse_args()
 
-if name_space.debug:
-    if name_space.debug > 1:
-        logging.basicConfig(level=logging.DEBUG)
-    elif name_space.debug > 0:
-        logging.basicConfig(level=logging.INFO)
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 # Read the initial LTFS content file that needs updating.
 read_ltfs_archive(archive_file_path=name_space.file_path)

@@ -27,6 +27,7 @@
 #  BSF Python script to download from the Microsoft Azure Storage Blob Service.
 #
 import errno
+import logging
 import os
 from argparse import ArgumentParser
 
@@ -37,23 +38,22 @@ argument_parser = ArgumentParser(
     description='Microsoft Azure Storage Blob Service sequence download script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--account',
     help='Microsoft Azure Storage Account name',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     '--container',
     help='Microsoft Azure Storage Blob Service container name',
-    required=True,
-    type=str)
+    required=True)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--threads',
@@ -67,20 +67,24 @@ argument_parser.add_argument(
     default=StandardsFilePath.get_sequences(),
     dest='sequence_path',
     help=f'sequence directory path for storing sequence items [{StandardsFilePath.get_sequences()}]',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     'sequence_item',
     dest='sequence_items',
     help='sequence item names (i.e., experiment_flowcell_lane)',
-    nargs='+',
-    type=str)
+    nargs='+')
 
 name_space = argument_parser.parse_args()
 
 if not os.path.isdir(name_space.sequence_path):
     raise Exception(f'Sequences directory {name_space.sequence_path!r} does not exist.')
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 azure_blob_service_client = get_azure_blob_service_client(account_name=name_space.account)
 
@@ -90,11 +94,11 @@ if not azure_container_exists(
     raise Exception(f'Azure Blob Container {name_space.container!r} does not exist.')
 
 for sequence_item in name_space.sequence_item:
-    print('Sequence item:', sequence_item)
+    logging.debug('Sequence item: %r', sequence_item)
 
     # Get the experiment directory name by removing the lane suffix.
     experiment_name = '_'.join(sequence_item.split('_')[:-1])
-    print('Experiment name:', experiment_name)
+    logging.debug('Experiment name: %r', experiment_name)
 
     experiment_directory = os.path.join(name_space.sequence_path, experiment_name)
 
@@ -109,7 +113,7 @@ for sequence_item in name_space.sequence_item:
         file_path = os.path.join(experiment_directory, sequence_item + suffix)
 
         if os.path.exists(file_path):
-            print('File exists already:', file_path)
+            logging.info('File exists already: %r', file_path)
             continue
 
         blob_properties = azure_block_blob_download(
@@ -119,7 +123,7 @@ for sequence_item in name_space.sequence_item:
             file_path=file_path,
             max_concurrency=name_space.threads)
 
-        print('Azure Blob name:', blob_properties.name)
-        print('Azure Blob size:', blob_properties.size)
-        print('Azure Blob ETag:', blob_properties.etag)
-        print('Azure Blob Last Modified:', blob_properties.last_modified.isoformat())
+        logging.info('Azure Blob name: %r', blob_properties.name)
+        logging.info('Azure Blob size: %r', blob_properties.size)
+        logging.info('Azure Blob ETag: %r', blob_properties.etag)
+        logging.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())

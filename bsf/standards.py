@@ -196,8 +196,7 @@ class Configuration(object):
         configuration._config_path_list = configuration.config_parser.read(filenames=configuration.file_path_list)
 
         if len(configuration._config_path_list) == 0:
-            raise Exception(
-                'None of the configuration files exists:\n' + repr(configuration.file_path_list))
+            raise Exception(f'None of the configuration files exist:\n{configuration.file_path_list!r}')
 
         return configuration
 
@@ -1164,7 +1163,7 @@ class StandardFilePath(BaseSection):
         index_directory = Index.get(option=genome_index)
 
         if index_directory is None:
-            raise Exception("Unknown genome index name '" + repr(genome_index) + "'.")
+            raise Exception(f'Unknown genome index name {genome_index!r}.')
         else:
             return os.path.join(
                 cls.get_resource_genome(genome_version=genome_version, absolute=absolute),
@@ -1248,7 +1247,7 @@ class StandardFilePath(BaseSection):
         index_directory = Index.get(option=transcriptome_index)
 
         if index_directory is None:
-            raise Exception("Unknown transcriptome index name '" + repr(transcriptome_index) + "'.")
+            raise Exception(f'Unknown transcriptome index name {transcriptome_index!r}.')
         else:
             return os.path.join(
                 cls.get_resource_transcriptome(transcriptome_version=transcriptome_version, absolute=absolute),
@@ -1577,10 +1576,8 @@ class VendorQualityFilter(BaseSection):
         if not Configuration.get_global_configuration().config_parser.has_option(
                 section=cls.section,
                 option=flow_cell_type):
-            raise Exception('Flow cell type ' + repr(flow_cell_type) +
-                            ' is not defined in the ' + repr(cls.section) +
-                            ' section of the standard configuration file ' +
-                            repr(Configuration.global_file_path) + '\n')
+            raise Exception(f'The flow cell type {flow_cell_type!r} is not defined in the {cls.section!r} '
+                            f'section of the standard configuration file {Configuration.global_file_path!r}.')
 
         return cls.getboolean(option=flow_cell_type)
 

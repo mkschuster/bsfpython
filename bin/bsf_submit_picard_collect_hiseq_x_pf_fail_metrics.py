@@ -26,8 +26,8 @@
 #
 #  BSF Python script to drive the Picard CollectHiSeqXPfFailMetrics analysis.
 #
+import logging
 from argparse import ArgumentParser
-import sys
 
 from bsf.analyses.picard import CollectHiSeqXPfFailMetrics
 from bsf.standards import Configuration
@@ -36,30 +36,36 @@ argument_parser = ArgumentParser(
     description=CollectHiSeqXPfFailMetrics.name + ' driver script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--dry-run',
+    action='store_false',
+    default=True,
+    dest='drms_submit',
+    help='dry run',
+    required=False)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--stage',
     help='limit job submission to a particular Analysis stage',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--configuration',
     default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--irf',
     help='Illumina Run Folder name or file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--force',
@@ -72,17 +78,16 @@ name_space = argument_parser.parse_args()
 # --irf argument.
 
 if name_space.configuration == Configuration.global_file_path:
-    if name_space.irf is None:
+    if not name_space.irf:
         raise Exception("argument --irf is required if --configuration is not set")
 
-# Create a CollectHiSeqXPfFailMetrics analysis, run and submit it.
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 analysis = CollectHiSeqXPfFailMetrics.from_config_file_path(config_path=name_space.configuration)
-
-# Set arguments that override the configuration file.
-
-if name_space.debug:
-    analysis.debug = name_space.debug
 
 if name_space.irf:
     analysis.run_directory = name_space.irf
@@ -90,17 +95,11 @@ if name_space.irf:
 if name_space.force:
     analysis.force = name_space.force
 
-# Do the work.
-
 analysis.run()
 analysis.check_state()
-analysis.submit(name=name_space.stage)
+analysis.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
 print(analysis.name)
 print('Project name:           ', analysis.project_name)
 print('Project directory:      ', analysis.project_directory)
 print('Illumina run directory: ', analysis.run_directory)
-
-if analysis.debug >= 2:
-    print(repr(analysis), 'final trace:')
-    sys.stdout.writelines(analysis.trace(level=1))

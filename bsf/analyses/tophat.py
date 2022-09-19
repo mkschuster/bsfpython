@@ -168,7 +168,6 @@ class Tophat2(Aligner):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -206,8 +205,6 @@ class Tophat2(Aligner):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -248,7 +245,6 @@ class Tophat2(Aligner):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list,
@@ -520,12 +516,12 @@ class Tophat2(Aligner):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Tophat2 requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_version' configuration option.")
 
         # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
@@ -534,7 +530,7 @@ class Tophat2(Aligner):
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a valid 'transcriptome_version' configuration option.")
 
         # The Bowtie2 genome index is quite peculiar as it has to be the index file path without file extensions.
 
@@ -562,8 +558,8 @@ class Tophat2(Aligner):
                     absolute=True))
 
             if not os.path.isdir(self.transcriptome_index):
-                raise Exception('Reference transcriptome index directory {!r} does not exist.'.
-                                format(self.transcriptome_index))
+                raise Exception(f'The reference transcriptome index directory {self.transcriptome_index!r} '
+                                f'does not exist.')
 
             transcriptome_prefix = os.path.basename(self.transcriptome_index)
 
@@ -585,8 +581,7 @@ class Tophat2(Aligner):
                 '.'.join((transcriptome_prefix, 'gtf')))
 
             if not os.path.exists(self.transcriptome_gtf):
-                raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
-                                format(self.transcriptome_gtf))
+                raise Exception(f'The reference transcriptome GTF file {self.transcriptome_gtf!r} does not exist.')
         elif self.transcriptome_gtf:
             # Check, if transcriptome_gtf_path is absolute and if not,
             # prepend the default transcriptome directory.
@@ -597,8 +592,7 @@ class Tophat2(Aligner):
                     absolute=True))
 
             if not os.path.exists(self.transcriptome_gtf):
-                raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
-                                format(self.transcriptome_gtf))
+                raise Exception(f'The reference transcriptome GTF file {self.transcriptome_gtf!r} does not exist.')
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index = os.path.join(
@@ -614,12 +608,10 @@ class Tophat2(Aligner):
                 basic=True)
 
             if not os.path.exists(self.transcriptome_gtf):
-                raise Exception('Reference transcriptome GTF file path {!r} does not exist.'.
-                                format(self.transcriptome_gtf))
+                raise Exception(f'The reference transcriptome GTF file path {self.transcriptome_gtf!r} does not exist.')
 
         if not self.transcriptome_gtf:
-            raise Exception('Reference transcriptome GTF file not defined.\n' +
-                            'A ' + self.name + " requires a 'transcriptome_index' or 'transcriptome_gtf' " +
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_index' or 'transcriptome_gtf' "
                             "configuration option.")
 
         if not self.threads_number:

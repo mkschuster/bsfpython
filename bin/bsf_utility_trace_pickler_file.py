@@ -28,6 +28,7 @@
 #  The script un-pickles the Runnable object from a file path
 #  and calls Runnable.trace().
 #
+import logging
 import sys
 from argparse import ArgumentParser
 
@@ -44,10 +45,24 @@ argument_parser.add_argument(
     required=False)
 
 argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
+
+argument_parser.add_argument(
     'pickler_path',
     help='file path to a pickled Runnable object')
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
 

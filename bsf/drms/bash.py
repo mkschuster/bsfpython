@@ -31,16 +31,17 @@ from typing import List
 from bsf.connector import ConnectorFile
 
 
-def submit(stage, debug=0):
+def submit(stage, drms_submit=None):
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
-    Submits each :py:class:`bsf.process.Executable` object by writing a GNU Bourne-Again Shell (BASH) script
+    Submits each :py:class:`bsf.process.Executable` object by writing a
+    :emphasis:`GNU Bourne-Again Shell` (BASH) script
     into the :py:attr:`bsf.analysis.Stage.work_directory`.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
     :type stage: bsf.analysis.Stage
-    :param debug: An integer debugging level.
-    :type debug: int
+    :param drms_submit: Submit to the DRMS.
+    :type drms_submit: bool | None
     """
 
     output_list: List[str] = list()
@@ -48,12 +49,8 @@ def submit(stage, debug=0):
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
 
-    if debug > 0:
-        output_list.append('# BSF-Python debug mode: ' + repr(debug) + '\n')
-        output_list.append('\n')
-
     for executable in stage.executable_list:
-        if not executable.submit:
+        if not (executable.submit and drms_submit):
             output_list.append('# ')
         output_list.append(executable.command_str())
         if isinstance(executable.stdout, ConnectorFile):
@@ -64,25 +61,19 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_bash_' + repr(stage.name) + '.bash')
-    with open(file=script_path, mode='wt') as script_file:
-        script_file.writelines(output_list)
+    with open(file=script_path, mode='wt') as output_text_io:
+        output_text_io.writelines(output_list)
 
     return
 
 
-def check_state(stage, debug=0):
+def check_state(stage):
     """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
     :type stage: bsf.analysis.Stage
-    :param debug: An integer debugging level.
-    :type debug: int
     """
-
     if stage:
-        pass
-
-    if debug:
         pass
 
     return

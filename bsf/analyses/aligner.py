@@ -24,10 +24,9 @@
 #
 """The :py:mod:`bsf.analyses.aligner` module provides classes supporting Aligner analyses.
 """
+import logging
 import os
 import re
-import sys
-import warnings
 from typing import Dict, List, Optional, Tuple
 
 from bsf.analysis import Analysis, Stage
@@ -37,6 +36,8 @@ from bsf.procedure import FilePath, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
     RunnableStepMove, RunnableStep, RunnableStepLink
 from bsf.standards import Configuration, StandardFilePath, JavaArchive
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class FilePathAlign(FilePath):
@@ -150,7 +151,7 @@ class FilePathSample(FilePath):
     :type sample_bw: str
     :ivar sample_bwi: A sample bigWig info file path.
     :type sample_bwi: str
-    :ivar prefix_prefix: A double prefix for RSeQC bam2wig.py.
+    :ivar prefix_prefix: A double prefix for RSeQC :literal:`bam2wig.py`.
     :type prefix_prefix: str
     """
 
@@ -454,7 +455,6 @@ class Aligner(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -486,8 +486,6 @@ class Aligner(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -515,7 +513,6 @@ class Aligner(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -642,7 +639,7 @@ class Aligner(Analysis):
 
                 return bam_name, _paired_reads.annotation_dict['BAM File'][0]
             else:
-                warnings.warn('PairedReads object ' + _paired_reads.get_name() + " without 'BAM File' annotation.")
+                module_logger.warning("PairedReads object %r without 'BAM File' annotation.", _paired_reads.get_name())
                 return _paired_reads.get_name(), None
 
         # Start of the run() method body.
@@ -650,23 +647,23 @@ class Aligner(Analysis):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Get the sample annotation sheet before calling the run() method of the bsf.analysis.Analysis super-class.
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         # The Aligner analysis requires a genome version.
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'genome_version' configuration option.")
 
         super(Aligner, self).run()
 
@@ -680,7 +677,7 @@ class Aligner(Analysis):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception('A ' + self.name + " requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -707,9 +704,8 @@ class Aligner(Analysis):
         self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', repr(sample.name))
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample.name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             # To run Picard MergeBamAlignment, all alignments from a BAM file need merging into one.
 
@@ -736,12 +732,12 @@ class Aligner(Analysis):
 
                 # Get the file paths for Reads1 and Reads2 and check for FASTQ files.
                 if paired_reads.reads_1 is None:
-                    raise Exception('A ' + self.name + ' requires a Reads1 object.')
+                    raise Exception(f'A {self.name!s} requires a Reads1 object.')
                 else:
                     if paired_reads.reads_1.file_path is not None:
                         if not (paired_reads.reads_1.file_path.endswith('.fastq') or
                                 paired_reads.reads_1.file_path.endswith('.fastq.gz')):
-                            raise Exception('A ' + self.name + ' requires a (GNU Zip compressed) FASTQ file.')
+                            raise Exception(f'A {self.name!s} requires a (GNU Zip compressed) FASTQ file.')
                     file_path_1 = paired_reads.reads_1.file_path
 
                 if paired_reads.reads_2 is None:
@@ -750,7 +746,7 @@ class Aligner(Analysis):
                     if paired_reads.reads_2.file_path is not None:
                         if not (paired_reads.reads_2.file_path.endswith('.fastq') or
                                 paired_reads.reads_2.file_path.endswith('.fastq.gz')):
-                            raise Exception('A ' + self.name + ' requires a (GNU Zip compressed) FASTQ file.')
+                            raise Exception(f'A {self.name!s} requires a (GNU Zip compressed) FASTQ file.')
                     file_path_2 = paired_reads.reads_2.file_path
 
                 ###################
@@ -769,8 +765,7 @@ class Aligner(Analysis):
                     runnable=ConcurrentRunnable(
                         name=self.get_prefix_align(paired_reads_name=paired_reads_name),
                         working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        debug=self.debug))
+                        cache_directory=self.cache_directory))
                 self.set_stage_runnable(
                     stage=stage_align,
                     runnable=runnable_align)
@@ -903,8 +898,7 @@ class Aligner(Analysis):
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_read_group(read_group_name=bam_file_name),
                         working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        debug=self.debug))
+                        cache_directory=self.cache_directory))
                 executable_read_group = self.set_stage_runnable(
                     stage=stage_read_group,
                     runnable=runnable_read_group)
@@ -1066,8 +1060,7 @@ class Aligner(Analysis):
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_sample(sample_name=sample.name),
                     working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    debug=self.debug))
+                    cache_directory=self.cache_directory))
             executable_sample = self.set_stage_runnable(
                 stage=stage_sample,
                 runnable=runnable_sample)
@@ -1319,8 +1312,7 @@ class Aligner(Analysis):
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_summary(),
                 working_directory=self.genome_directory,
-                cache_directory=self.cache_directory,
-                debug=self.debug))
+                cache_directory=self.cache_directory))
         executable_summary = self.set_stage_runnable(
             stage=stage_summary,
             runnable=runnable_summary)

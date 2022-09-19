@@ -35,22 +35,15 @@ argument_parser = ArgumentParser(
     description='Count samples per lane based on BamIndexDecoder library annotation files.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--directory',
     help='directory of IlluminaToBam tools BamIndexDecoder library annotation files',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--ascending',
     action='store_true',
-    help='sort flow cells in ascending order rather than in descending by default')
+    help='sort flow cells in ascending order rather than in descending by default',
+    required=False)
 
 name_space = argument_parser.parse_args()
 

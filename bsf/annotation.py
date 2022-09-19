@@ -26,11 +26,13 @@
 Comma-Separated Value (CSV) and
 Tab-Separated Value (TSV) annotation files.
 """
+import logging
 import re
-import warnings
 from csv import DictReader, DictWriter
 from io import TextIOWrapper
 from typing import Callable, Dict, List, Optional
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class AnnotationSheet(object):
@@ -708,9 +710,9 @@ class AnnotationSheet(object):
         else:
             self.row_dicts = row_dicts
 
-        self._csv_reader_file: Optional[TextIOWrapper] = None
+        self._csv_reader_text_io: Optional[TextIOWrapper] = None
         self._csv_reader_object: Optional[DictReader] = None
-        self._csv_writer_file: Optional[TextIOWrapper] = None
+        self._csv_writer_text_io: Optional[TextIOWrapper] = None
         self._csv_writer_object: Optional[DictWriter] = None
 
         return
@@ -747,7 +749,7 @@ class AnnotationSheet(object):
         for reading and initialise a Python :py:class:`csv.DictReader` object.
         """
         if not self.file_path:
-            raise Exception('Cannot read an AnnotationSheet without a valid file_name.')
+            raise Exception("Cannot read an AnnotationSheet without a valid 'file_name'.")
 
         # Although the AnnotationSheet is initialised with an empty Python list object,
         # the DictReader really needs None to automatically populate the fieldnames instance variable.
@@ -766,9 +768,9 @@ class AnnotationSheet(object):
 
         # For Python2.7, the open() function has to use the binary 'b' flag.
         # For Python3, the open() function has to use newline=''.
-        self._csv_reader_file = open(file=self.file_path, mode='r', newline='')
+        self._csv_reader_text_io = open(file=self.file_path, mode='r', newline='')
         self._csv_reader_object = DictReader(
-            f=self._csv_reader_file,
+            f=self._csv_reader_text_io,
             fieldnames=csv_field_names,
             dialect=csv_file_type)
 
@@ -785,8 +787,8 @@ class AnnotationSheet(object):
         for reading.
         """
         self._csv_reader_object = None
-        self._csv_reader_file.close()
-        self._csv_reader_file = None
+        self._csv_reader_text_io.close()
+        self._csv_reader_text_io = None
 
         return
 
@@ -796,10 +798,10 @@ class AnnotationSheet(object):
         if one has been defined.
         """
         if not self.file_path:
-            raise Exception('Cannot write an AnnotationSheet without a valid file_name.')
+            raise Exception("Cannot write an AnnotationSheet without a valid 'file_name'.")
 
         if not self.field_names:
-            raise Exception('A csv.DictWriter object requires a Python list of field_names.')
+            raise Exception("A csv.DictWriter object requires a Python list of 'field_names'.")
 
         if self.file_type:
             csv_file_type = self.file_type
@@ -808,9 +810,9 @@ class AnnotationSheet(object):
 
         # For Python2.7, the open() function has to use the binary 'b' flag.
         # For Python3, the open() function has to use newline=''.
-        self._csv_writer_file = open(file=self.file_path, mode='w', newline='')
+        self._csv_writer_text_io = open(file=self.file_path, mode='w', newline='')
         self._csv_writer_object = DictWriter(
-            f=self._csv_writer_file,
+            f=self._csv_writer_text_io,
             fieldnames=self.field_names,
             dialect=csv_file_type)
 
@@ -834,8 +836,8 @@ class AnnotationSheet(object):
         for writing.
         """
         self._csv_writer_object = None
-        self._csv_writer_file.close()
-        self._csv_writer_file = None
+        self._csv_writer_text_io.close()
+        self._csv_writer_text_io = None
 
         return
 
@@ -854,8 +856,8 @@ class AnnotationSheet(object):
             if value in self._boolean_states:
                 return self._boolean_states[value]
             else:
-                raise ValueError('Value ' + repr(row_dict[key]) + ' in field ' + repr(key) +
-                                 ' of AnnotationSheet ' + repr(self.name) + ' is not a boolean.')
+                raise ValueError(
+                    f'Value {row_dict[key]!r} in field {key!r} of AnnotationSheet {self.name!r} is not a boolean.')
 
     def sort(self):
         """Sort a :py:class:`bsf.annotation.AnnotationSheet` object.
@@ -863,9 +865,9 @@ class AnnotationSheet(object):
         This method has to implemented in the subclass,
         as it requires information about field-specific sorting.
         """
-        warnings.warn(
-            'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
-            UserWarning)
+        module_logger.warning(
+            'Sorting of AnnotationSheet objects has to implemented in the %r sub-class.',
+            self.__class__.__name__)
 
         return
 

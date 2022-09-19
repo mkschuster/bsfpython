@@ -26,6 +26,7 @@
 """The :py:mod:`bsf.executables.bed` module provides classes and functions to rescale
 Browser Extensible Data (BED) scores from 0 to 1000.
 """
+import logging
 from argparse import ArgumentParser
 from subprocess import Popen
 from typing import Optional
@@ -133,11 +134,9 @@ class RunnableStepRescaleScore(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def run(self):
         """Run a :py:class:`bsf.executables.bed.RunnableStepRescaleScore` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -216,11 +215,12 @@ if __name__ == '__main__':
         description='Module driver script.')
 
     argument_parser.add_argument(
-        '--debug',
-        default=0,
-        help='Debug level',
-        required=False,
-        type=int)
+        '--logging-level',
+        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+        default='INFO',
+        dest='logging_level',
+        help='Logging level [INFO]',
+        required=False)
 
     argument_parser.add_argument(
         '--keep-header-lines',
@@ -228,24 +228,27 @@ if __name__ == '__main__':
         default=False,
         dest='keep_header_lines',
         help='Keep header (browser and track) lines',
-        required=False,
-        type=bool)
+        required=False)
 
     argument_parser.add_argument(
         '--old-bed-path',
         dest='bed_vcf_path',
         help='Old (input) BED file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--new-bed-path',
         dest='new_bed_path',
         help='New (output) BED file path',
-        required=True,
-        type=str)
+        required=True)
 
     name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
 
     runnable_step = RunnableStepRescaleScore(
         name='rescale_bed_score',
@@ -253,4 +256,4 @@ if __name__ == '__main__':
         file_path_new=name_space.new_bed_path,
         keep_header_lines=name_space.keep_header_lines)
 
-    runnable_step.run(debug=name_space.debug)
+    runnable_step.run()

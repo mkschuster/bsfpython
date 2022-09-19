@@ -27,7 +27,7 @@
 Ensembl VEP annotation in the :literal:`CSQ` field of Variant Calling Format (VCF)
 `output <http://www.ensembl.org/info/docs/tools/vep/vep_formats.html#vcfout>`_ into :literal:`VEP_*` fields.
 """
-import warnings
+import logging
 from argparse import ArgumentParser
 from csv import DictReader
 from subprocess import Popen
@@ -37,6 +37,8 @@ from pysam import VariantFile
 
 from bsf.connector import Connector
 from bsf.process import Command, Executable, RunnableStep
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class RunnableStepCsqToVep(RunnableStep):
@@ -145,11 +147,9 @@ class RunnableStepCsqToVep(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def run(self):
         """Run a :py:class:`bsf.executables.vcf.RunnableStepCsqToVep` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -196,9 +196,10 @@ class RunnableStepCsqToVep(RunnableStep):
             :return: A consequence index.
             :rtype: int
             """
-            # print('get_consequence_index:', consequence)
+            # module_logger.debug('get_consequence_index(consequence=%r)', consequence)
             for _so_index, _so_string in enumerate(sequence_ontology_list):
-                # print('get_consequence_index', consequence, '_so_index:', _so_index, '_so_string:', _so_string)
+                # module_logger.debug('get_consequence_index: consequence: %r _so_index: %r _so_string: %r',
+                #                     consequence, _so_index, _so_string)
                 if consequence == _so_string:
                     return _so_index
 
@@ -206,15 +207,15 @@ class RunnableStepCsqToVep(RunnableStep):
         # This file provides consequence prioritisation.
         sequence_ontology_list: List[str] = list()
 
-        with open(file=self.soc_path, mode='rt') as text_io:
-            for row_dict in DictReader(f=text_io, dialect='excel-tab'):
+        with open(file=self.soc_path, mode='rt') as input_text_io:
+            for row_dict in DictReader(f=input_text_io, dialect='excel-tab'):
                 sequence_ontology_list.append(row_dict['SO term'])
 
         # Load the VEP output field (TSV) configuration file.
         vep_header_dict: Dict[str, Dict[str, str]] = dict()
 
-        with open(file=self.ofc_path, mode='rt') as text_io:
-            for row_dict in DictReader(f=text_io, dialect='excel-tab'):
+        with open(file=self.ofc_path, mode='rt') as input_text_io:
+            for row_dict in DictReader(f=input_text_io, dialect='excel-tab'):
                 # NOTE: Override all types with 'String' to allow multiple values joined by '&' characters.
                 row_dict['Type'] = 'String'
                 vep_header_dict[row_dict['ID']] = row_dict
@@ -285,21 +286,16 @@ class RunnableStepCsqToVep(RunnableStep):
                         description=vep_header_dict[new_field]['Description'])
                 continue
 
-            warnings.warn('CSQ VEP field ' + repr(csq_key) + ' missing from field configuration file.', UserWarning)
+            module_logger.warning('CSQ VEP field %r missing from field configuration file.', csq_key)
 
-        if debug > 1:
-            # Print the new header.
-            for key, vmd in variant_header_new.info.items():
-                print(
-                    'Key:', repr(key),
-                    'Value:', repr(vmd),
-                    # The ID property is not exposed by pysam.
-                    # 'ID:', repr(vmd.id),
-                    'Name:', repr(vmd.name),
-                    'Number:', repr(vmd.number),
-                    'Type:', repr(vmd.type),
-                    'Description:', repr(vmd.description))
-            print()
+        #     # Print the new header.
+        #     for key, vmd in variant_header_new.info.items():
+        #         # module_logger.debug('Key: %r VariantMetadata: %r', key, vmd)
+        #         # module_logger.debug('VariantMetadata: type: %r, dir: %r', type(vmd), dir(vmd))
+        #         # The ID property (vmd.id) is not exposed by pysam.
+        #         module_logger.debug(
+        #             'Key: %r Value: %r Name: %r Number: %r Type: %r Description: %r',
+        #             key, vmd, vmd.name, vmd.number, vmd.type, vmd.description)
 
         # Open the new VariantFile for writing.
 
@@ -405,30 +401,28 @@ class RunnableStepCsqToVep(RunnableStep):
                     for value in vep_consequence.split('&'):
                         consequence_tuple_list.append((vep_consequence_index, value))
 
-                if debug > 1:
-                    print('Consequence list old:', repr(consequence_tuple_list))
+                module_logger.log(logging.DEBUG - 1, 'Consequence list old: %r', consequence_tuple_list)
 
                 consequence_tuple_list.sort(key=lambda item: get_consequence_index(item[1]))
 
-                if debug > 1:
-                    print('Consequence list new:', repr(consequence_tuple_list))
-                    if consequence_tuple_list:
-                        print('Prioritised index:', consequence_tuple_list[0][0],
-                              'consequence:', consequence_tuple_list[0][1])
-                    print()
+                module_logger.log(logging.DEBUG - 1, 'Consequence list new: %r', consequence_tuple_list)
+                if consequence_tuple_list:
+                    module_logger.log(
+                        logging.DEBUG - 1,
+                        'Prioritised index: %r consequence: %r',
+                        consequence_tuple_list[0][0],
+                        consequence_tuple_list[0][1])
 
                 if consequence_tuple_list:
                     # Search for the entry with the highest consequence priority, which is also picked.
                     for consequence_tuple in consequence_tuple_list:
                         if vep_dict['VEP_PICK'][i][consequence_tuple[0]] == '1':
-                            if debug > 1:
-                                print('PICK flag set:', consequence_tuple[0])
+                            module_logger.log(logging.DEBUG - 1, 'PICK flag set: %r', consequence_tuple[0])
                             priority_list.append(consequence_tuple[0])
                             break
                     else:
                         # Failing an entry with the PICK flag, select the top entry of the priority list.
-                        if debug > 1:
-                            print('PICK flag not set:', consequence_tuple_list[0][0])
+                        module_logger.log(logging.DEBUG - 1, 'PICK flag not set: %r', consequence_tuple_list[0][0])
                         priority_list.append(consequence_tuple_list[0][0])
                 else:
                     # Always append to keep the order of allele indices.
@@ -488,41 +482,44 @@ if __name__ == '__main__':
         description='Module driver script.')
 
     argument_parser.add_argument(
-        '--debug',
-        default=0,
-        help='Debug level',
-        required=False,
-        type=int)
+        '--logging-level',
+        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+        default='INFO',
+        dest='logging_level',
+        help='Logging level [INFO]',
+        required=False)
 
     argument_parser.add_argument(
         '--soc-path',
         dest='soc_path',
         help='Sequence Ontology terms (TSV) configuration file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--ofc-path',
         dest='ofc_path',
         help='Output fields (TSV) configuration file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--old-vcf-path',
         dest='old_vcf_path',
         help='Old (input) VCF file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--new-vcf-path',
         dest='new_vcf_path',
         help='New (output) VCF file path',
-        required=True,
-        type=str)
+        required=True)
 
     name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
 
     runnable_step = RunnableStepCsqToVep(
         name='csq_to_vep',
@@ -531,4 +528,4 @@ if __name__ == '__main__':
         vcf_path_old=name_space.old_vcf_path,
         vcf_path_new=name_space.new_vcf_path)
 
-    runnable_step.run(debug=name_space.debug)
+    runnable_step.run()

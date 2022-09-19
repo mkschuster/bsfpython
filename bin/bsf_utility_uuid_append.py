@@ -34,8 +34,7 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     'input',
-    help="input string, can be empty by supplying ''",
-    type=str)
+    help="input string, can be empty by supplying ''")
 
 name_space = argument_parser.parse_args()
 

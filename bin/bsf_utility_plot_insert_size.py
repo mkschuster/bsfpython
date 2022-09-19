@@ -42,13 +42,11 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--output',
-    help='Output .png file',
-    type=str)
+    help='Output .png file')
 
 argument_parser.add_argument(
     '--input',
     help='Input bam file(s)',
-    type=str,
     nargs='+')
 
 argument_parser.add_argument(

@@ -26,7 +26,7 @@
 #
 #  BSF Python script to archive an Illumina Run Folder (IRF) from a magnetic tape library.
 #
-import sys
+import logging
 from argparse import ArgumentParser
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderArchive
@@ -36,44 +36,48 @@ argument_parser = ArgumentParser(
     description=IlluminaRunFolderArchive.name + ' driver script.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--dry-run',
+    action='store_false',
+    default=True,
+    dest='drms_submit',
+    help='dry run',
+    required=False)
+
+argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--stage',
     help='limit job submission to a particular Analysis stage',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--configuration',
     default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--project-name',
     dest='project_name',
     help='project name (i.e., instrument run identifier)',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--archive-directory',
     dest='archive_directory',
     help='archive directory',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--irf',
     help='Illumina Run Folder name or file path',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     '--force',
@@ -83,15 +87,13 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-# Create a BSF IlluminaRunFolderRestore analysis, run and submit it.
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
 
-analysis = IlluminaRunFolderArchive.from_config_file_path(
-    config_path=name_space.configuration)
+    logging.basicConfig(level=name_space.logging_level)
 
-# Set arguments that override the configuration file.
-
-if name_space.debug:
-    analysis.debug = name_space.debug
+analysis = IlluminaRunFolderArchive.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.project_name:
     analysis.project_name = name_space.project_name
@@ -107,14 +109,10 @@ if name_space.force:
 
 analysis.run()
 analysis.check_state()
-analysis.submit(name=name_space.stage)
+analysis.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
 print(analysis.name)
 print('Project name:           ', analysis.project_name)
 print('Project directory:      ', analysis.project_directory)
 print('Illumina run directory: ', analysis.run_directory)
 print('Archive directory:      ', analysis.archive_directory)
-
-if analysis.debug >= 2:
-    print('{!r} final trace:'.format(analysis))
-    sys.stdout.writelines(analysis.trace(level=1))

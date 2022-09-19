@@ -51,13 +51,13 @@ def process_md5_files(md5sum_archive, directory_path, file_pattern):
     re_pattern = re.compile(pattern=file_pattern)
 
     for directory_path, directory_name_list, file_name_list in os.walk(top=directory_path):
-        logging.debug("directory_path: '%s'", directory_path)
-        logging.debug("directory_name_list: '%s'", directory_name_list)
-        logging.debug("file_name_list: '%s'", file_name_list)
+        logging.debug('directory_path: %r', directory_path)
+        logging.debug('directory_name_list: %r', directory_name_list)
+        logging.debug('file_name_list: %r', file_name_list)
 
         for file_name in file_name_list:
             if re_pattern.search(string=file_name) is None:
-                logging.debug("Excluding: '%s'", file_name)
+                logging.debug('Excluding file_name: %r', file_name)
                 continue
 
             with open(file=os.path.join(directory_path, file_name), mode='rt') as text_io:
@@ -85,37 +85,35 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     'directory_path',
-    help='directory path',
-    type=str)
+    help='directory path')
 
 argument_parser.add_argument(
     '--file-pattern',
     default='\\.md5$',
     dest='file_pattern',
-    help='File name regular expression pattern [\\.md5$]',
-    type=str)
+    help='File name regular expression pattern [\\.md5$]')
 
 argument_parser.add_argument(
     '--file-path',
     dest='file_path',
     help='MD5 sum archive file path',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 name_space = argument_parser.parse_args()
 
-if name_space.debug:
-    if name_space.debug > 1:
-        logging.basicConfig(level=logging.DEBUG)
-    elif name_space.debug > 0:
-        logging.basicConfig(level=logging.INFO)
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 archive_object = MD5SumArchive.from_file_path(file_path=name_space.file_path)
 

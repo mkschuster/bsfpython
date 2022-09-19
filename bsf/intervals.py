@@ -173,14 +173,14 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
     :rtype: list[Container]
     """
     if not os.path.exists(interval_path):
-        raise Exception('Interval file ' + repr(interval_path) + ' does not exists.')
+        raise Exception(f'The interval file {interval_path!r} does not exist.')
 
     container_list: List[Container] = list()
     interval_list: List[Interval] = list()
     total_length: int = 0
 
-    with open(file=interval_path, mode='rt') as input_file:
-        for line_str in input_file:
+    with open(file=interval_path, mode='rt') as input_text_io:
+        for line_str in input_text_io:
             if line_str.startswith('@'):
                 continue
             field_list = line_str.strip().split('\t')
@@ -261,7 +261,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     :rtype: list[Container]
     """
     if not os.path.exists(dictionary_path):
-        raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
+        raise Exception(f'The Picard sequence dictionary {dictionary_path!r} does not exist.')
 
     sq_dict: Dict
     container_list: List[Container] = list()
@@ -340,15 +340,13 @@ if __name__ == '__main__':
         '--dictionary-path',
         dest='dictionary_path',
         help='Picard CreateSequenceDictionary sequence dictionary file path',
-        required=False,
-        type=str)
+        required=False)
 
     argument_parser.add_argument(
         '--interval-path',
         dest='interval_path',
         help='Picard interval list file path',
-        required=False,
-        type=str)
+        required=False)
 
     argument_parser.add_argument(
         '--tile-number',

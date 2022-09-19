@@ -24,9 +24,8 @@
 #
 """The :py:mod:`bsf.analyses.chipseq` module provides classes and methods supporting ChIP-Seq analyses.
 """
+import logging
 import os
-import sys
-import warnings
 from typing import Callable, Dict, List
 
 from bsf.analyses.bowtie import Bowtie2
@@ -37,6 +36,8 @@ from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepMakeDirectory, RunnableStepLink
 from bsf.standards import Configuration, StandardFilePath, Genome, Transcriptome
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class ChIPSeqComparison(object):
@@ -846,7 +847,6 @@ class ChIPSeq(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -886,8 +886,6 @@ class ChIPSeq(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -933,7 +931,6 @@ class ChIPSeq(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -1097,31 +1094,34 @@ class ChIPSeq(Analysis):
                 # For a successful comparison, at least a Python list of Sample objects has to be defined.
 
                 if not len(t_sample_list):
-                    if self.debug > 1:
-                        print(
-                            'Redundant comparison line with Treatment:', repr(t_name),
-                            'samples:', len(t_sample_list),
-                            'and Control:', repr(c_name),
-                            'samples:', len(c_sample_list))
+                    module_logger.log(
+                        logging.DEBUG - 1,
+                        'Redundant comparison line for '
+                        'Treatment %r (sample number: %d) and '
+                        'Control %r (sample number: %d)',
+                        t_name, len(t_sample_list), repr(c_name), len(c_sample_list))
                     continue
 
                 # Add all control Sample or SampleGroup objects to the Sample list.
 
                 for c_sample in c_sample_list:
-                    if self.debug > 1:
-                        print('  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path)
-                    if self.debug > 2:
-                        sys.stdout.writelines(c_sample.trace(level=1))
-                        # Find the Sample in the unified sample dictionary.
+                    module_logger.log(
+                        logging.DEBUG - 1,
+                        'Control Sample.name: %r Sample.file_path: %r',
+                        c_sample.name, c_sample.file_path)
+                    module_logger.log(logging.DEBUG - 2, 'Control Sample: %r', c_sample)
+
                     self.add_sample(sample=c_sample)
 
                 # Add all treatment Sample or SampleGroup objects to the Sample list.
 
                 for t_sample in t_sample_list:
-                    if self.debug > 1:
-                        print('  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path)
-                    if self.debug > 2:
-                        sys.stdout.writelines(t_sample.trace(level=1))
+                    module_logger.log(
+                        logging.DEBUG - 1,
+                        'Treatment Sample.name: %r Sample.file_path: %r',
+                        t_sample.name, t_sample.file_path)
+                    module_logger.log(logging.DEBUG - 2, 'Treatment Sample: %r', t_sample)
+
                     self.add_sample(sample=t_sample)
 
                 if 'Tissue' in row_dict:
@@ -1204,8 +1204,7 @@ class ChIPSeq(Analysis):
                 runnable_alignment = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_alignment(sample_name=sample.name),
-                        working_directory=self.genome_directory,
-                        debug=self.debug))
+                        working_directory=self.genome_directory))
                 self.set_stage_runnable(stage=stage_alignment, runnable=runnable_alignment)
                 # No dependencies at this stage.
 
@@ -1319,8 +1318,7 @@ class ChIPSeq(Analysis):
                     runnable_peak_calling = self.add_runnable_consecutive(
                         runnable=ConsecutiveRunnable(
                             name=prefix_peak_calling,
-                            working_directory=self.genome_directory,
-                            debug=self.debug))
+                            working_directory=self.genome_directory))
                     executable_peak_calling = self.set_stage_runnable(
                         stage=stage_peak_calling,
                         runnable=runnable_peak_calling)
@@ -1410,8 +1408,7 @@ class ChIPSeq(Analysis):
                     runnable_peak_calling = self.add_runnable_consecutive(
                         runnable=ConsecutiveRunnable(
                             name=prefix_peak_calling,
-                            working_directory=self.genome_directory,
-                            debug=self.debug))
+                            working_directory=self.genome_directory))
                     executable_peak_calling = self.set_stage_runnable(
                         stage=stage_peak_calling,
                         runnable=runnable_peak_calling)
@@ -1591,8 +1588,7 @@ class ChIPSeq(Analysis):
 
             for comparison_name in sorted(self._factor_dict):
                 for factor_name in sorted(self._factor_dict[comparison_name]):
-                    if self.debug > 0:
-                        print('chipseq factor_name:', factor_name)
+                    module_logger.debug('chipseq factor_name:', factor_name)
 
                     # No comparison for less than two items.
                     if len(self._factor_dict[comparison_name][factor_name]) < 2:
@@ -1617,8 +1613,7 @@ class ChIPSeq(Analysis):
                             self.genome_directory,
                             file_path_diff_bind.sample_annotation_sheet))
 
-                    if self.debug > 0:
-                        print('ChIPSeqDiffBindSheet file_path:', dbs.file_path)
+                    module_logger.debug('ChIPSeqDiffBindSheet.file_path: %r', dbs.file_path)
 
                     for chipseq_comparison in sorted(
                             self._factor_dict[comparison_name][factor_name],
@@ -1663,8 +1658,7 @@ class ChIPSeq(Analysis):
                     runnable_diff_bind = self.add_runnable_consecutive(
                         runnable=ConsecutiveRunnable(
                             name=prefix_diff_bind,
-                            working_directory=self.genome_directory,
-                            debug=self.debug))
+                            working_directory=self.genome_directory))
                     executable_diff_bind = self.set_stage_runnable(
                         stage=stage_diff_bind,
                         runnable=runnable_diff_bind)
@@ -1757,41 +1751,41 @@ class ChIPSeq(Analysis):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # ChIPSeq requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_version' configuration option.")
 
         if not self.genome_version:
             self.genome_version = Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a valid 'transcriptome_version' configuration option.")
 
         # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         # Get the comparison annotation sheet before calling the run() method of the Analysis super-class.
 
         if self.comparison_path:
             self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
             if not os.path.exists(self.comparison_path):
-                raise Exception('Comparison annotation file ' + repr(self.comparison_path) + ' does not exist.')
+                raise Exception(f'Comparison annotation sheet {self.comparison_path!r} does not exist.')
         else:
             self.comparison_path = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='comparisons.csv')
             if not self.comparison_path:
-                raise Exception('No suitable comparison annotation file in the current working directory.')
+                raise Exception('No suitable comparison annotation sheet in the current working directory.')
 
         if not self.transcriptome_gtf_path:
             self.transcriptome_gtf_path = StandardFilePath.get_resource_transcriptome_gtf(
@@ -1813,7 +1807,7 @@ class ChIPSeq(Analysis):
             self.colour_default = '0,0,0'
 
         if self.colour_dict is None:
-            raise Exception('A ' + self.name + " requires a TrackHubColours configuration section.")
+            raise Exception(f"A {self.name!s} requires a 'TrackHubColours' configuration section.")
 
         if not self.factor_default:
             self.factor_default = 'OTHER'
@@ -2278,9 +2272,7 @@ class ChIPSeq(Analysis):
                     file_path = os.path.join(self.genome_directory, file_path_diff_bind.contrasts_csv)
 
                     if not os.path.exists(file_path):
-                        warnings.warn(
-                            'Contrasts table does not exist: ' + file_path,
-                            UserWarning)
+                        module_logger.warning('Contrasts table %r does not exist.', file_path)
                         continue
 
                     annotation_sheet = AnnotationSheet.from_file_path(
@@ -2871,8 +2863,7 @@ class ChIPSeq(Analysis):
 
             for comparison_name in sorted(self._factor_dict):
                 for factor_name in sorted(self._factor_dict[comparison_name]):
-                    if self.debug > 0:
-                        print('chipseq factor_name:', factor_name)
+                    module_logger.debug('chipseq factor_name: %r', factor_name)
 
                     # No comparison for less than two items.
                     if len(self._factor_dict[comparison_name][factor_name]) < 2:

@@ -25,8 +25,8 @@
 """The :py:mod`bsf.analyses.trimmomatic` module classes supporting the
 `Trimmomatic <http://www.usadellab.org/cms/?page=trimmomatic>`_ tool.
 """
+import logging
 import os
-import sys
 from typing import List
 
 from bsf.analysis import Analysis, Stage
@@ -35,6 +35,8 @@ from bsf.ngs import Collection, Sample, PairedReads, Reads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
 from bsf.standards import Configuration, JavaArchive
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class FilePathTrimmomaticReadGroup(FilePath):
@@ -231,7 +233,6 @@ class Trimmomatic(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -263,8 +264,6 @@ class Trimmomatic(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -292,7 +291,6 @@ class Trimmomatic(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -391,16 +389,16 @@ class Trimmomatic(Analysis):
         if not self.java_archive_trimmomatic:
             self.java_archive_trimmomatic = JavaArchive.get_trimmomatic()
             if not self.java_archive_trimmomatic:
-                raise Exception('A ' + self.name + "requires a 'java_archive_trimmomatic' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_trimmomatic' configuration option.")
 
         if not (self.adapter_path and os.path.isabs(self.adapter_path)):
             self.adapter_path = os.path.join(os.path.dirname(self.java_archive_trimmomatic), 'adapters')
 
         if self.trimming_step_pe_list is None:
-            raise Exception('A ' + self.name + " requires a 'trimming_steps_pe' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'trimming_steps_pe' configuration option.")
 
         if self.trimming_step_se_list is None:
-            raise Exception('A ' + self.name + " requires a 'trimming_steps_se' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'trimming_steps_se' configuration option.")
 
         run_adjust_illumina_clip_path(trimming_step_list=self.trimming_step_pe_list)
         run_adjust_illumina_clip_path(trimming_step_list=self.trimming_step_se_list)
@@ -420,9 +418,8 @@ class Trimmomatic(Analysis):
         self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             sample_step_list: List[str] = list()
             if 'Trimmomatic Steps' in sample.annotation_dict:
@@ -436,8 +433,8 @@ class Trimmomatic(Analysis):
 
             for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
+                    module_logger.debug('PairedReads name: %r', paired_reads.get_name())
+                    module_logger.log(logging.DEBUG - 2, 'PairedReads: %r', paired_reads)
 
                     paired_reads_step_list = list()
                     if 'Trimmomatic Steps' in paired_reads.annotation_dict:
@@ -450,7 +447,8 @@ class Trimmomatic(Analysis):
                     # Maybe this case should be allowed after Trimmomatic trimming,
                     # where only the second Read survives.
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
-                        raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
+                        raise Exception(f"PairedReads object {paired_reads.get_name()!r} has a 'reads_2', "
+                                        f"but no reads_1 object.")
 
                     file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 

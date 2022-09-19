@@ -31,7 +31,6 @@ import os
 import pickle
 import re
 import shutil
-import sys
 from argparse import ArgumentParser
 from typing import List
 
@@ -151,13 +150,6 @@ argument_parser = ArgumentParser(
     description='BSF Runner for running the Tuxedo Tophat application.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
-
-argument_parser.add_argument(
     '--pickler_path',
     help='file path to a Python Pickler file',
     required=True)
@@ -203,9 +195,8 @@ if not os.path.isdir(path_temporary):
 runnable_step_tophat: RunnableStep = pickler_dict['runnable_step']
 assert isinstance(runnable_step_tophat, RunnableStep)
 
-if name_space.debug > 1:
-    print('Executable before conversion')
-    sys.stdout.writelines(runnable_step_tophat.trace(level=1))
+# print('Executable before conversion')
+# sys.stdout.writelines(runnable_step_tophat.trace(level=1))
 
 # Check the list of file paths in the second and third arguments for FASTQ versus BAM files.
 
@@ -262,9 +253,8 @@ else:
     # If the list of arguments is now empty truncate it to just two (0: genome index, 1: R1 FASTQ files).
     runnable_step_tophat.arguments = runnable_step_tophat.arguments[:2]
 
-if name_space.debug > 1:
-    print('Executable after conversion')
-    sys.stdout.writelines(runnable_step_tophat.trace(level=1))
+# print('Executable after conversion')
+# sys.stdout.writelines(runnable_step_tophat.trace(level=1))
 
 exception_str_list = runnable_step_tophat.run()
 

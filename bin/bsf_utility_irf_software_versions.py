@@ -26,6 +26,7 @@
 #
 #  BSF Python utility script to report software versions for Illumina Run Folders.
 #
+import logging
 import os
 import re
 from argparse import ArgumentParser
@@ -38,24 +39,23 @@ argument_parser = ArgumentParser(
     description='List software version of Illumina Run Folders.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='debug level',
-    required=False,
-    type=int)
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--directory',
     help='directory of illumina run folders',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     '--output-file',
     dest='output_file',
     help='output (*.csv) file path',
-    required=True,
-    type=str)
+    required=True)
 
 argument_parser.add_argument(
     '--ascending',
@@ -63,6 +63,12 @@ argument_parser.add_argument(
     help='sort flow cells in ascending order rather than in descending by default')
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 file_name_list = os.listdir(name_space.directory)
 file_name_list.sort()
@@ -93,32 +99,29 @@ annotation_sheet = AnnotationSheet(
 irf_pattern = re.compile(pattern=r'^[0-9]{6,6}_.*(?:_sav)?$')
 
 for file_name in file_name_list:
-    if name_space.debug:
-        print('File name:', repr(file_name))
+    logging.debug('File name: %r', file_name)
 
     # Process just entries that obey the Illumina Run Folder pattern.
-    match = re.search(pattern=irf_pattern, string=file_name)
-    if not match:
-        print('No match:', repr(file_name))
+    re_match = re.search(pattern=irf_pattern, string=file_name)
+    if not re_match:
+        logging.debug('No match: %r', file_name)
         continue
 
     file_path = os.path.join(name_space.directory, file_name)
     if not (os.path.exists(os.path.join(file_path, 'runParameters.xml')) or
             os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
-        print('Directory ' + repr(file_name) + ' not an Illumina Run Folder')
+        logging.debug('Directory %r does not seem to be an Illumina Run Folder.', file_name)
         continue
 
     # Temporarily catch OSError and xml.etree.ElementTree.ParseError exceptions
     # that result from a broken FhGFS file system.
     try:
         irf = RunFolder.from_file_path(file_path=file_path)
-    except OSError:
-        if name_space.debug:
-            print('\t'.join((file_name, '?', '?', '?')))
+    except OSError as exception:
+        logging.debug('Encountered OSError %s on %r.', exception, file_name)
         continue
-    except ParseError:
-        if name_space.debug:
-            print('\t'.join((file_name, '?', '?', '?')))
+    except ParseError as exception:
+        logging.debug('Encountered ParseError %s on %r', exception, file_name)
         continue
 
     annotation_sheet.row_dicts.append({

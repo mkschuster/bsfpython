@@ -32,14 +32,16 @@ A :py:class:`bsf.ngs.Reads` object is retained, if a file with a size equal to o
 configured minimum file size or an (empty) status file (:literal:`*.truncated`) exists in the file system.
 Files smaller than the configured minimum file size are automatically deleted.
 """
+import logging
 import os
-import sys
 from argparse import ArgumentParser
 from subprocess import Popen
 
 from bsf.connector import Connector
 from bsf.ngs import Collection
 from bsf.process import Command, Executable, RunnableStep
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class RunnableStepCollectionPruneFastq(RunnableStep):
@@ -154,11 +156,9 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
 
         return
 
-    def run(self, debug=0):
+    def run(self):
         """Run a :py:class:`bsf.executables.collection.RunnableStepCollectionPruneFastq` object.
 
-        :param debug: An integer debugging level.
-        :type debug: int
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
@@ -169,9 +169,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
             sas_path=self.file_path_old,
             sas_prefix=None)
 
-        if debug > 0:
-            print('Initial Collection:')
-            sys.stdout.writelines(collection.trace(level=1))
+        module_logger.debug('Initial Collection: %r', collection)
 
         for prf in collection.processed_run_folder_dict.values():
             for project in prf.project_dict.values():
@@ -217,9 +215,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
 
         collection.to_sas_path(name='picard_sam_to_fastq', file_path=self.file_path_new)
 
-        if debug > 0:
-            print('Final Collection:')
-            sys.stdout.writelines(collection.trace(level=1))
+        module_logger.debug('Final Collection: %r', collection)
 
         return None
 
@@ -229,25 +225,24 @@ if __name__ == '__main__':
         description='Module driver script.')
 
     argument_parser.add_argument(
-        '--debug',
-        default=0,
-        help='Debug level',
-        required=False,
-        type=int)
+        '--logging-level',
+        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+        default='INFO',
+        dest='logging_level',
+        help='Logging level [INFO]',
+        required=False)
 
     argument_parser.add_argument(
         '--old-sas-path',
         dest='old_sas_path',
         help='Old sample annotation sheet file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--new-sas-path',
         dest='new_sas_path',
         help='New sample annotation sheet file path',
-        required=True,
-        type=str)
+        required=True)
 
     argument_parser.add_argument(
         '--minimum-size',
@@ -273,6 +268,12 @@ if __name__ == '__main__':
 
     name_space = argument_parser.parse_args()
 
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
     runnable_step = RunnableStepCollectionPruneFastq(
         name='prune_sample_annotation_sheet',
         file_path_old=name_space.old_sas_path,
@@ -281,4 +282,4 @@ if __name__ == '__main__':
         drop_read_1=name_space.drop_read_1,
         drop_read_2=name_space.drop_read_2)
 
-    runnable_step.run(debug=name_space.debug)
+    runnable_step.run()

@@ -36,7 +36,8 @@ class Connector(object):
     """The :py:class:`bsf.connector.Connector` class represents an abstract super-class of inter-process connections.
     """
 
-    pass
+    def __repr__(self):
+        return f'{self.__class__.__name__}()'
 
 
 class ConnectorFile(Connector):
@@ -62,6 +63,12 @@ class ConnectorFile(Connector):
         self.file_mode = file_mode
 
         return
+
+    def __repr__(self):
+        return \
+            f'{self.__class__.__name__}(' \
+            f'file_path={self.file_path!r}, ' \
+            f'file_mode={self.file_mode!r})'
 
 
 class ConnectorPipe(Connector):
@@ -105,6 +112,12 @@ class ConcurrentProcess(Connector):
         self.connection = connection
 
         return
+
+    def __repr__(self):
+        return \
+            f'{self.__class__.__name__}(' \
+            f'name={self.name!r}, ' \
+            f'connection={self.connection!r})'
 
 
 class ElectronicSink(Connector):
@@ -171,6 +184,16 @@ class StandardStream(Connector):
         self.thread = thread
 
         return
+
+    def __repr__(self):
+        return \
+            f'{self.__class__.__name__}(' \
+            f'file_path={self.file_path!r}, ' \
+            f'thread_callable={self.thread_callable!r}, ' \
+            f'thread_kwargs={self.thread_kwargs!r}, ' \
+            f'thread_joins={self.thread_joins!r}, ' \
+            f'thread_timeout={self.thread_timeout!r}, ' \
+            f'thread={self.thread!r})'
 
 
 class StandardInputStream(StandardStream):

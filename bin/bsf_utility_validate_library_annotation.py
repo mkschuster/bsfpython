@@ -27,6 +27,7 @@
 #  BSF Python utility script to validate a Library Annotation Sheet file
 #  used by the BamIndexDecoder Analysis.
 #
+import logging
 import warnings
 from argparse import ArgumentParser
 
@@ -36,24 +37,30 @@ argument_parser = ArgumentParser(
     description='BSF Python utility script to validate Library Annotation Sheet files.')
 
 argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='Debug level',
-    required=False,
-    type=int)
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
 
 argument_parser.add_argument(
     '--mode',
     default='high',
     help='HiSeq run mode i.e. "high" (high-output) or "rapid" (rapid run) or "miseq" for a MiSeq run',
-    required=False,
-    type=str)
+    required=False)
 
 argument_parser.add_argument(
     'library_path',
     help='library annotation sheet (*.csv) file path')
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
     file_path=name_space.library_path)

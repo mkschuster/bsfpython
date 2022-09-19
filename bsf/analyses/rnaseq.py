@@ -32,11 +32,10 @@
         `Cufflinks <http://cole-trapnell-lab.github.io/cufflinks/>`_ package.
 """
 import errno
+import logging
 import os
 import pickle
 import re
-import sys
-import warnings
 from typing import Callable, Dict, List
 
 from bsf.analyses.hisat import Hisat2
@@ -51,6 +50,8 @@ from bsf.process import Command, Executable, \
     RunnableStep, RunnableStepCopy, RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove, \
     RunnableStepSetEnvironment
 from bsf.standards import Configuration, StandardFilePath, Index, Transcriptome
+
+module_logger = logging.getLogger(name=__name__)
 
 
 class FilePathTophat(FilePath):
@@ -783,7 +784,6 @@ class Tuxedo(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -829,8 +829,6 @@ class Tuxedo(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -887,7 +885,6 @@ class Tuxedo(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -1125,11 +1122,11 @@ class Tuxedo(Analysis):
                                     # bsf.ngs.Sample objects that this bsf.analysis.Analysis needs considering.
                                     for _sample in _sample_list_new:
                                         self.add_sample(sample=_sample)
-                                        if self.debug > 1:
-                                            print('  ', prefix, 'Sample name:', _sample.name,
-                                                  'file_path:', _sample.file_path)
-                                        if self.debug > 2:
-                                            sys.stdout.writelines(sample.trace(level=1))
+                                        module_logger.log(
+                                            logging.DEBUG - 1,
+                                            'prefix: %r Sample.name: %r Sample.file_path: %r',
+                                            prefix, _sample.name, _sample.file_path)
+                                        module_logger.log(logging.DEBUG - 2, 'Sample: %r', _sample)
                             elif i < 1:
                                 # A Control and Treatment prefix is not required.
                                 continue
@@ -1162,20 +1159,21 @@ class Tuxedo(Analysis):
             # Check for comparisons without SampleGroup objects or SampleGroup objects without Sample.
             # FIXME: The complication is that Sample or ReadGroup objects could be excluded from the Analysis.
             for _comparison_name, _sample_group_list in self._comparison_dict.items():
-                if self.debug > 0:
-                    print('Comparison name:', _comparison_name)
-                    print('SampleGroup list:')
+                module_logger.debug('Comparison name: %r', _comparison_name)
+                module_logger.debug('SampleGroup list:')
+
                 if len(_sample_group_list) < 1:
-                    warnings.warn('Comparison ' + _comparison_name + ' without SampleGroup objects', UserWarning)
+                    module_logger.warning('Comparison name %r without SampleGroup objects.', _comparison_name)
+
                 for _sample_group in _sample_group_list:
-                    if self.debug > 0:
-                        print('  SampleGroup name:', _sample_group.name)
-                        print('  SampleGroup Sample list:')
+                    module_logger.debug('SampleGroup.name: %r', _sample_group.name)
+                    module_logger.debug('SampleGroup Sample list:')
+
                     if len(_sample_group.sample_list) < 1:
-                        warnings.warn('SampleGroup ' + _sample_group.name + ' without Sample objects')
+                        module_logger.warning('SampleGroup.name %r without Sample objects.', _sample_group.name)
+
                     for _sample in _sample_group.sample_list:
-                        if self.debug > 0:
-                            print('    Sample name:', _sample.name)
+                        module_logger.debug('Sample.name: %r', _sample.name)
 
             return
 
@@ -1187,11 +1185,11 @@ class Tuxedo(Analysis):
             :param annotation_dict: Annotation :py:class:`dict` object.
             :type annotation_dict: dict[str, list[str]]
             """
-            with open(file=annotation_path, mode='wt') as _annotation_file:
-                _annotation_file.write('sample_id\tgroup_label\n')
+            with open(file=annotation_path, mode='wt') as _output_text_io:
+                _output_text_io.write('sample_id\tgroup_label\n')
                 for _group_name in sorted(annotation_dict):
                     for _file_path in annotation_dict[_group_name]:
-                        _annotation_file.write(_file_path + '\t' + _group_name + '\n')
+                        _output_text_io.write(_file_path + '\t' + _group_name + '\n')
 
             return
 
@@ -1200,12 +1198,12 @@ class Tuxedo(Analysis):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # Tuxedo requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_version' configuration option.")
 
         # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
@@ -1214,18 +1212,18 @@ class Tuxedo(Analysis):
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a valid 'transcriptome_version' configuration option.")
 
         # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         # Get the comparison annotation sheet before calling the run() method of the Analysis super-class.
 
@@ -1235,11 +1233,13 @@ class Tuxedo(Analysis):
             if self.comparison_path:
                 if not os.path.exists(self.comparison_path):
                     self.comparison_path = None
-                    if self.debug > 0:
-                        print('Standard comparison file not in current working directory:', self.comparison_path)
+                    module_logger.debug(
+                        'Standard comparison file not in current working directory: %r',
+                        self.comparison_path)
                 else:
-                    if self.debug > 0:
-                        print('Standard comparison file in current working directory:', self.comparison_path)
+                    module_logger.debug(
+                        'Standard comparison file in current working directory: %r',
+                        self.comparison_path)
 
         super(Tuxedo, self).run()
 
@@ -1266,7 +1266,7 @@ class Tuxedo(Analysis):
                 genome_index='bowtie2')
 
         if not os.path.exists(self.genome_fasta_path):
-            raise Exception('Genome FASTA file path {!r} does not exists.'.format(self.genome_fasta_path))
+            raise Exception(f'The genome FASTA file path {self.genome_fasta_path!r} does not exist.')
 
         if not self.genome_sizes_path:
             self.genome_sizes_path = StandardFilePath.get_resource_genome_fasta_index(
@@ -1274,7 +1274,7 @@ class Tuxedo(Analysis):
                 genome_index='bowtie2')
 
         if not os.path.exists(self.genome_sizes_path):
-            raise Exception('Genome sizes file path {!r} does not exists.'.format(self.genome_sizes_path))
+            raise Exception(f'The genome sizes file path {self.genome_sizes_path!r} does not exist.')
 
         # Define a reference transcriptome index directory or a GTF file path.
 
@@ -1288,8 +1288,8 @@ class Tuxedo(Analysis):
                     absolute=True))
 
             if not os.path.isdir(self.transcriptome_index):
-                raise Exception('Reference transcriptome index directory {!r} does not exist.'.
-                                format(self.transcriptome_index))
+                raise Exception(f'The reference transcriptome index directory {self.transcriptome_index!r} '
+                                f'does not exist.')
 
             transcriptome_prefix = os.path.basename(self.transcriptome_index)
 
@@ -1311,8 +1311,7 @@ class Tuxedo(Analysis):
                 '.'.join((transcriptome_prefix, 'gtf')))
 
             if not os.path.exists(self.transcriptome_gtf):
-                raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
-                                format(self.transcriptome_gtf))
+                raise Exception(f'The reference transcriptome GTF file {self.transcriptome_gtf!r} does not exist.')
         elif self.transcriptome_gtf:
             # Check if transcriptome_gtf is absolute and if not,
             # prepend the default transcriptome directory.
@@ -1323,8 +1322,7 @@ class Tuxedo(Analysis):
                     absolute=True))
 
             if not os.path.exists(self.transcriptome_gtf):
-                raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
-                                format(self.transcriptome_gtf))
+                raise Exception(f'The reference transcriptome GTF file {self.transcriptome_gtf!r} does not exist.')
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index = os.path.join(
@@ -1340,28 +1338,25 @@ class Tuxedo(Analysis):
                 basic=False)
 
             if not os.path.exists(self.transcriptome_gtf):
-                raise Exception('Reference transcriptome GTF file path {!r} does not exist.'.
-                                format(self.transcriptome_gtf))
+                raise Exception(f'The reference transcriptome GTF file {self.transcriptome_gtf!r} does not exist.')
 
         if not self.transcriptome_gtf:
-            raise Exception('Reference transcriptome GTF file not defined.\n' +
-                            'A ' + self.name + " requires a 'transcriptome_index' or 'transcriptome_gtf' " +
-                            "configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_index' or 'transcriptome_gtf' "
+                            f"configuration option.")
 
         if not self.library_type:
-            raise Exception('A ' + self.name + " requires a 'library_type' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'library_type' configuration option.")
 
         library_type_tuple = ('fr-unstranded', 'fr-firststrand', 'fr-secondstrand')
         if self.library_type not in library_type_tuple:
-            raise Exception("Invalid 'library_type' configuration option: " + self.library_type + '\n' +
-                            'Supported types: ' + repr(library_type_tuple))
-
+            raise Exception(f"The 'library_type' configuration option {self.library_type!r} "
+                            f"is not a member of {library_type_tuple!r}.")
         if self.aligner:
             # Defaults to '',
             aligner_tuple = ('hisat2', 'star', 'tophat2')
             if self.aligner not in aligner_tuple:
-                raise Exception("Invalid 'aligner' configuration option: " + self.aligner + '\n' +
-                                'Supported aligners: ' + repr(aligner_tuple))
+                raise Exception(f"The 'aligner' configuration option {self.aligner!r} "
+                                f"is not a member of {aligner_tuple!r}.")
 
         # Read configuration options.
 
@@ -1383,9 +1378,8 @@ class Tuxedo(Analysis):
         self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
+            module_logger.debug('Sample.name: %r', sample.name)
+            module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -1407,15 +1401,14 @@ class Tuxedo(Analysis):
                 runnable_run_tophat = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_run_tophat(sample_name=sample.name),
-                        working_directory=self.genome_directory,
-                        debug=self.debug))
+                        working_directory=self.genome_directory))
                 executable_run_tophat = self.set_stage_runnable(
                     stage=stage_run_tophat,
                     runnable=runnable_run_tophat)
 
                 # NOTE: The rnaseq_run_tophat stage does not follow the standard.
                 # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.ConsecutiveRunnable,
-                # it gets serialised into a separate pickler_file.
+                # it gets serialised into a separate pickler file.
                 # Create a new Tophat bsf.process.RunnableStep.
 
                 runnable_step = RunnableStep(
@@ -1464,8 +1457,7 @@ class Tuxedo(Analysis):
 
                 for paired_reads_name in sorted(paired_reads_dict):
                     for paired_reads in paired_reads_dict[paired_reads_name]:
-                        if self.debug > 0:
-                            print(self, 'PairedReads name:', paired_reads.get_name())
+                        module_logger.debug('PairedReads name: %r', paired_reads.get_name())
 
                         if paired_reads.reads_1 is not None:
                             reads_1_file_path_list.append(paired_reads.reads_1.file_path)
@@ -1481,9 +1473,7 @@ class Tuxedo(Analysis):
                 # TODO: The following code block is required as long as the bsf_run_rnaseq_tophat.py script
                 # has not been retired.
 
-                if self.debug > 0:
-                    print('Tophat bsf.process.Executable')
-                    sys.stdout.writelines(runnable_step.trace(level=1))
+                module_logger.log(logging.DEBUG - 1, 'Tophat Executable: %r', runnable_step)
 
                 pickler_dict_run_tophat = {
                     'prefix': stage_run_tophat.name,
@@ -1495,22 +1485,20 @@ class Tuxedo(Analysis):
                     self.genome_directory,
                     stage_run_tophat.name + '_' + sample.name + '_run_tophat.pkl')
 
-                with open(file=pickler_path, mode='wb') as pickler_file:
-                    pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
+                with open(file=pickler_path, mode='wb') as output_binary_io:
+                    pickler = pickle.Pickler(file=output_binary_io, protocol=pickle.HIGHEST_PROTOCOL)
                     pickler.dump(pickler_dict_run_tophat)
 
                 runnable_step = RunnableStep(name='run_tophat2', program='bsf_run_rnaseq_tophat.py')
                 runnable_run_tophat.add_runnable_step(runnable_step=runnable_step)
                 runnable_step.add_option_long(key='pickler_path', value=pickler_path)
-                runnable_step.add_option_long(key='debug', value=str(self.debug))
 
                 # Create a process_tophat Runnable per sample.name.
 
                 runnable_process_tophat = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_process_tophat(sample_name=sample.name),
-                        working_directory=self.genome_directory,
-                        debug=self.debug))
+                        working_directory=self.genome_directory))
                 executable_process_tophat = self.set_stage_runnable(
                     stage=stage_process_tophat,
                     runnable=runnable_process_tophat)
@@ -1552,8 +1540,7 @@ class Tuxedo(Analysis):
             runnable_run_cufflinks = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_run_cufflinks(sample_name=sample.name),
-                    working_directory=self.genome_directory,
-                    debug=self.debug))
+                    working_directory=self.genome_directory))
             # Set dependencies for subsequent Runnable or bsf.process.Executable objects.
             runnable_run_cufflinks_list.append(runnable_run_cufflinks)
             executable_run_cufflinks = self.set_stage_runnable(
@@ -1768,8 +1755,7 @@ class Tuxedo(Analysis):
             runnable_process_cufflinks = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_process_cufflinks(),
-                    working_directory=self.genome_directory,
-                    debug=self.debug))
+                    working_directory=self.genome_directory))
             executable_process_cufflinks = self.set_stage_runnable(
                 stage=stage_process_cufflinks,
                 runnable=runnable_process_cufflinks)
@@ -1806,8 +1792,7 @@ class Tuxedo(Analysis):
         executable_cuffmerge_dict: Dict[str, Executable] = dict()
 
         for comparison_name in sorted(self._comparison_dict):
-            if self.debug > 0:
-                print('  Comparison name:', comparison_name)
+            module_logger.debug('Comparison name: %r', comparison_name)
 
             sample_group_list = self._comparison_dict[comparison_name]
 
@@ -1831,8 +1816,7 @@ class Tuxedo(Analysis):
             runnable_run_cuffmerge = self.add_runnable_consecutive(
                 runnable=ConsecutiveRunnable(
                     name=prefix_run_cuffmerge,
-                    working_directory=self.genome_directory,
-                    debug=self.debug))
+                    working_directory=self.genome_directory))
             executable_run_cuffmerge = self.set_stage_runnable(
                 stage=stage_run_cuffmerge,
                 runnable=runnable_run_cuffmerge)
@@ -1998,15 +1982,13 @@ class Tuxedo(Analysis):
                 header=True)
 
             for sample_group in sample_group_list:
-                if self.debug > 0:
-                    print('    SampleGroup name:', sample_group.name)
+                module_logger.debug('SampleGroup.name: %r', sample_group.name)
 
                 per_group_abundances_list: List[str] = list()
                 per_group_alignments_list: List[str] = list()
 
                 for sample in sample_group.sample_list:
-                    if self.debug > 0:
-                        print('      Sample name:', sample.name)
+                    module_logger.debug('Sample.name: %r', sample.name)
 
                     paired_reads_dict = sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping,
@@ -2037,8 +2019,7 @@ class Tuxedo(Analysis):
                             name=self.get_prefix_run_cuffquant(
                                 comparison_name=comparison_name,
                                 sample_name=sample.name),
-                            working_directory=self.genome_directory,
-                            debug=self.debug))
+                            working_directory=self.genome_directory))
                     executable_run_cuffquant = self.set_stage_runnable(
                         stage=stage_run_cuffquant,
                         runnable=runnable_run_cuffquant)
@@ -2161,8 +2142,8 @@ class Tuxedo(Analysis):
                 # job submission.
                 with open(
                         file=os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt),
-                        mode='wt') as assembly_file:
-                    assembly_file.writelines(cuffmerge_transcript_gtf_list)
+                        mode='wt') as output_text_io:
+                    output_text_io.writelines(cuffmerge_transcript_gtf_list)
 
             if len(self._comparison_dict[comparison_name]) >= 2:
                 # Create a Cuffnorm Runnable per comparison, if there are at least two SampleGroup objects.
@@ -2172,8 +2153,7 @@ class Tuxedo(Analysis):
                 runnable_run_cuffnorm = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_run_cuffnorm(comparison_name=comparison_name),
-                        working_directory=self.genome_directory,
-                        debug=self.debug))
+                        working_directory=self.genome_directory))
                 executable_run_cuffnorm = self.set_stage_runnable(
                     stage=stage_run_cuffnorm,
                     runnable=runnable_run_cuffnorm)
@@ -2244,8 +2224,7 @@ class Tuxedo(Analysis):
                 runnable_run_cuffdiff = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_run_cuffdiff(comparison_name=comparison_name),
-                        working_directory=self.genome_directory,
-                        debug=self.debug))
+                        working_directory=self.genome_directory))
                 executable_run_cuffdiff = self.set_stage_runnable(
                     stage=stage_run_cuffdiff,
                     runnable=runnable_run_cuffdiff)
@@ -2367,8 +2346,7 @@ class Tuxedo(Analysis):
                 runnable_process_cuffdiff = self.add_runnable_consecutive(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_process_cuffdiff(comparison_name=comparison_name),
-                        working_directory=self.genome_directory,
-                        debug=self.debug))
+                        working_directory=self.genome_directory))
                 executable_process_cuffdiff = self.set_stage_runnable(
                     stage=stage_process_cuffdiff,
                     runnable=runnable_process_cuffdiff)
@@ -2594,9 +2572,8 @@ class Tuxedo(Analysis):
             str_list.append('<tbody>\n')
 
             for sample in self.sample_list:
-                if self.debug > 0:
-                    print(self, 'Sample name:', sample.name)
-                    sys.stdout.writelines(sample.trace(level=1))
+                module_logger.debug('Sample.name: %r', sample.name)
+                module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,
@@ -2614,7 +2591,7 @@ class Tuxedo(Analysis):
                         file_path_aligner_sample = Star.get_file_path_sample(
                             sample_name=sample.name)
                     else:
-                        raise Exception()
+                        raise Exception('Program error.')
 
                     path_prefix = 'rnaseq_cufflinks_' + sample.name
 
@@ -3376,10 +3353,6 @@ class Tuxedo(Analysis):
 
             self.report_to_file(content=str_list)
 
-            if self.debug > 0:
-                print('Report list:')
-                print(repr(str_list))
-
             return
 
         def report_hub():
@@ -3694,7 +3667,6 @@ class DESeq(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -3728,8 +3700,6 @@ class DESeq(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -3762,7 +3732,6 @@ class DESeq(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -3829,19 +3798,19 @@ class DESeq(Analysis):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'project_name' configuration option.")
 
         # DESeq requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'transcriptome_version' configuration option.")
 
         if not self.genome_version:
             self.genome_version = Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+            raise Exception(f"A {self.name!s} requires a valid 'transcriptome_version' configuration option.")
 
         # Get the annotation sheets before calling the run() method of the Analysis super-class.
         # If file paths were not provided, try to find them in the current directory.
@@ -3852,27 +3821,26 @@ class DESeq(Analysis):
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(
                 prefix_list=[DESeq.prefix, Tuxedo.prefix],
                 suffix='samples.csv')
             if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+                raise Exception('No suitable sample annotation sheet in the current working directory.')
 
         # Get the design annotation sheet.
 
         if self.comparison_path:
             self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
             if not os.path.exists(self.comparison_path):
-                raise Exception(
-                    'Comparison (design) annotation file ' + repr(self.comparison_path) + ' does not exist.')
+                raise Exception(f'Comparison (design) annotation sheet {self.comparison_path!r} does not exist.')
         else:
             self.comparison_path = self.get_annotation_file(
                 prefix_list=[DESeq.prefix, Tuxedo.prefix],
                 suffix='designs.csv')
             if not self.comparison_path:
-                raise Exception('No suitable comparison (design) annotation file in the current working directory.')
+                raise Exception('No suitable comparison (design) annotation sheet in the current working directory.')
 
         # Get the contrast annotation sheet.
 
@@ -3929,7 +3897,7 @@ class DESeq(Analysis):
                     os.makedirs(comparison_directory)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
-                        raise
+                        raise exception
 
             annotation_sheet = AnnotationSheet(
                 file_path=os.path.join(comparison_directory, prefix + '_samples.tsv'),
@@ -3943,9 +3911,8 @@ class DESeq(Analysis):
             self.sample_list.sort(key=lambda item: item.name)
 
             for sample in self.sample_list:
-                if self.debug > 0:
-                    print(self, 'Sample name:', sample.name)
-                    sys.stdout.writelines(sample.trace(level=1))
+                module_logger.debug('Sample.name: %r', sample.name)
+                module_logger.log(logging.DEBUG - 2, 'Sample: %r', sample)
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 
@@ -4003,8 +3970,7 @@ class DESeq(Analysis):
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_analysis(design_name=design_name),
                     working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    debug=self.debug))
+                    cache_directory=self.cache_directory))
             executable_analysis = self.set_stage_runnable(
                 stage=stage_analysis,
                 runnable=runnable_analysis)
@@ -4028,8 +3994,7 @@ class DESeq(Analysis):
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_results(design_name=design_name),
                         working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        debug=self.debug))
+                        cache_directory=self.cache_directory))
                 executable_results = self.set_stage_runnable(
                     stage=stage_results,
                     runnable=runnable_results)
@@ -4814,10 +4779,6 @@ class DESeq(Analysis):
             str_list.append('\n')
 
             self.report_to_file(content=str_list)
-
-            if self.debug > 0:
-                print('Report list:')
-                print(repr(str_list))
 
             return
 

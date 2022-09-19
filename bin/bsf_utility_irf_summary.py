@@ -27,20 +27,14 @@
 #  BSF Python utility script to summarise an Illumina Run Folder.
 #
 import datetime
+import logging
 import os
 from argparse import ArgumentParser
 
-from bsf.standards import get_irf_path
 from bsf.illumina import RunFolder
+from bsf.standards import get_irf_path
 
 argument_parser = ArgumentParser(description='Summarise an Illumina Run Folder.')
-
-argument_parser.add_argument(
-    '--debug',
-    default=0,
-    help='Debug level',
-    required=False,
-    type=int)
 
 argument_parser.add_argument(
     '--check',
@@ -49,10 +43,24 @@ argument_parser.add_argument(
     required=False)
 
 argument_parser.add_argument(
+    '--logging-level',
+    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
+    default='INFO',
+    dest='logging_level',
+    help='Logging level [INFO]',
+    required=False)
+
+argument_parser.add_argument(
     'file_path',
     help='File path to an Illumina Run Folder')
 
 name_space = argument_parser.parse_args()
+
+if name_space.logging_level:
+    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+    logging.basicConfig(level=name_space.logging_level)
 
 file_path = get_irf_path(name=name_space.file_path)
 if file_path is None:
@@ -110,4 +118,4 @@ if sbs_type:
     print('SBS Type:             ', sbs_type)
 
 if name_space.check:
-    irf.check(debug=name_space.debug)
+    irf.check()

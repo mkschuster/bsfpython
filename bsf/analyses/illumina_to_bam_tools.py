@@ -81,8 +81,8 @@ class LibraryAnnotationSheet(AnnotationSheet):
         'barcode_sequence_1',  # Index read sequence 1
         'barcode_sequence_2',  # Index read sequence 2
         'barcode_start',  # Start position of the barcode in the barcode read (numeric)
-        'sample_name',  # Sample name (alphanumeric including '_' characters)
-        'library_name',  # Library name (alphanumeric including '_' characters)
+        'sample_name',  # Sample name (alphanumeric including underscore characters)
+        'library_name',  # Library name (alphanumeric including underscore characters)
         'library_size',  # Library size (numeric)
         'read_structure',  # Picard tools Read Structure
     ]
@@ -600,7 +600,6 @@ class IlluminaToBam(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -641,8 +640,6 @@ class IlluminaToBam(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -676,7 +673,7 @@ class IlluminaToBam(Analysis):
         :type java_classpath_illumina2bam: str | None
         :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
         :type java_archive_picard: str | None
-        :param vendor_quality_filter: Reqzest vendor quality filtering.
+        :param vendor_quality_filter: Request vendor quality filtering.
         :type vendor_quality_filter: bool | None
         :param force: Request processing of incomplete Illumina Run Folder entities.
         :type force: bool | None
@@ -693,7 +690,6 @@ class IlluminaToBam(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -813,7 +809,7 @@ class IlluminaToBam(Analysis):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception('An Illumina run directory or file path has not been defined.')
+            raise Exception(f"An {self.name!s} requires a 'run_directory' configuration option.")
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
@@ -822,14 +818,12 @@ class IlluminaToBam(Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception(
-                'The Illumina run directory {!r} does not exist.'.format(self.run_directory))
+            raise Exception(f"The Illumina Run Folder ('run_directory') {self.run_directory!r} does not exist.")
 
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise RunFolderNotComplete(
-                'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
+            raise RunFolderNotComplete(f'The Illumina Run Folder {self.run_directory!r} is not complete.')
 
         # Define an 'Intensities' directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -847,8 +841,7 @@ class IlluminaToBam(Analysis):
         # Check that the "Intensities" directory exists.
 
         if not os.path.isdir(intensity_directory):
-            raise Exception(
-                'The Intensity directory {!r} does not exist.'.format(intensity_directory))
+            raise Exception(f"The 'intensity_directory' {intensity_directory!r} does not exist.")
 
         # Define a 'BaseCalls' directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -866,8 +859,7 @@ class IlluminaToBam(Analysis):
         # Check that the BaseCalls directory exists.
 
         if not os.path.isdir(basecalls_directory):
-            raise Exception(
-                'The BaseCalls directory {!r} does not exist.'.format(basecalls_directory))
+            raise Exception(f"The 'basecalls_directory' {basecalls_directory!r} does not exist.")
 
         irf = RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -890,8 +882,7 @@ class IlluminaToBam(Analysis):
         if not self.sequencing_centre:
             self.sequencing_centre = Operator.get_sequencing_centre()
             if not self.sequencing_centre:
-                raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'sequencing_centre' configuration option.")
+                raise Exception(f"An {self.name!s} analysis requires a 'sequencing_centre' configuration option.")
 
         # Define the "Sequences" directory in which to create the experiment directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -907,8 +898,7 @@ class IlluminaToBam(Analysis):
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
         if not os.path.isdir(self.sequences_directory):
-            raise Exception(
-                'The IlluminaToBam sequences_directory {!r} does not exist.'.format(self.sequences_directory))
+            raise Exception(f"The 'sequences_directory' {self.sequences_directory!r} does not exist.")
 
         # Get the experiment_directory once.
 
@@ -919,16 +909,16 @@ class IlluminaToBam(Analysis):
         if not self.java_classpath_illumina2bam:
             self.java_classpath_illumina2bam = JavaClassPath.get_illumina2bam()
             if not self.java_classpath_illumina2bam:
-                raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'java_classpath_illumina2bam' configuration option.")
+                raise Exception(
+                    f"An {self.name!s} analysis requires a 'java_classpath_illumina2bam' configuration option.")
 
         # Get the Picard tools Java Archive (JAR) file path.
 
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'java_archive_picard' configuration option.")
+                raise Exception(
+                    f"An {self.name!s} analysis requires a 'java_archive_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -1420,7 +1410,6 @@ class BamIndexDecoder(Analysis):
             report_header_path=None,
             report_footer_path=None,
             e_mail=None,
-            debug=0,
             stage_list=None,
             collection=None,
             sample_list=None,
@@ -1458,8 +1447,6 @@ class BamIndexDecoder(Analysis):
         :type report_footer_path: str | None
         :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
         :type e_mail: str | None
-        :param debug: An integer debugging level.
-        :type debug: int | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
         :param collection: A :py:class:`bsf.ngs.Collection` object.
@@ -1501,7 +1488,6 @@ class BamIndexDecoder(Analysis):
             report_header_path=report_header_path,
             report_footer_path=report_footer_path,
             e_mail=e_mail,
-            debug=debug,
             stage_list=stage_list,
             collection=collection,
             sample_list=sample_list)
@@ -1634,8 +1620,7 @@ class BamIndexDecoder(Analysis):
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
         if not os.path.isdir(self.samples_directory):
-            raise Exception(
-                'The BamIndexDecoder samples_directory {!r} does not exist.'.format(self.samples_directory))
+            raise Exception(f"The 'samples_directory' {self.samples_directory!r} does not exist.")
 
         # Get the experiment_directory once.
 
@@ -1649,7 +1634,7 @@ class BamIndexDecoder(Analysis):
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not os.path.exists(self.library_path):
-            raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
+            raise Exception(f'The library annotation sheet {self.library_path!r} does not exist.')
 
         # Load the LibraryAnnotationSheet and validate.
 
@@ -1670,16 +1655,16 @@ class BamIndexDecoder(Analysis):
         if not self.java_classpath_illumina2bam:
             self.java_classpath_illumina2bam = JavaClassPath.get_illumina2bam()
             if not self.java_classpath_illumina2bam:
-                raise Exception("An 'BamIndexDecoder' analysis requires a "
-                                "'java_classpath_illumina2bam' configuration option.")
+                raise Exception(
+                    f"A {self.name!s} analysis requires a 'java_classpath_illumina2bam' configuration option.")
 
         # Get the Picard tools Java Archive (JAR) file path.
 
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception("An 'BamIndexDecoder' analysis requires a "
-                                "'java_archive_picard' configuration option.")
+                raise Exception(
+                    f"An {self.name!s} analysis requires a 'java_archive_picard' configuration option.")
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
@@ -1828,10 +1813,10 @@ class BamIndexDecoder(Analysis):
                 # MAX_NO_CALLS defaults to '2'.
                 # CONVERT_LOW_QUALITY_TO_NO_CALL defaults to 'false'.
                 # MAX_LOW_QUALITY_TO_CONVERT defaults to '15'.
-                # USE_HASH_DEMULTIPLEXING defaults to false.
+                # USE_HASH_DEMULTIPLEXING defaults to 'false'.
                 if self.hash_algorithm:
                     runnable_step.add_itb_option(key='USE_HASH_DEMULTIPLEXING', value='true')
-                # BARCODE_STARTBASE_INDEX defaults to 0.
+                # BARCODE_STARTBASE_INDEX defaults to '0'.
                 if 'barcode_start' in library_annotation_dict[lane_int][0] and \
                         library_annotation_dict[lane_int][0]['barcode_start']:
                     runnable_step.add_itb_option(
