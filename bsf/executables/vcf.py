@@ -33,8 +33,7 @@ from csv import DictReader
 from subprocess import Popen
 from typing import Dict, List, Optional, Tuple
 
-import pysam
-from pysam import VariantFile, VariantHeader, VariantRecord
+from pysam import VariantFile
 
 from bsf.connector import Connector
 from bsf.process import Command, Executable, RunnableStep
@@ -220,13 +219,13 @@ class RunnableStepCsqToVep(RunnableStep):
                 row_dict['Type'] = 'String'
                 vep_header_dict[row_dict['ID']] = row_dict
 
-        vf_old = VariantFile(self.vcf_path_old, 'r')
+        variant_file_old = VariantFile(filename=self.vcf_path_old, mode='r')
 
         # Copy the header for a new VCF instance.
 
-        vh_new: VariantHeader = vf_old.header.copy()
+        variant_header_new = variant_file_old.header.copy()
 
-        if 'CSQ' not in vf_old.header.info:
+        if 'CSQ' not in variant_file_old.header.info:
             raise Exception("Cannot convert a VCF file without a 'CSQ' INFO field.")
 
         # Remove the CSQ info field from the new header.
@@ -236,23 +235,23 @@ class RunnableStepCsqToVep(RunnableStep):
         # VariantHeaderMetadata.remove_header().
         # https://github.com/pysam-developers/pysam/blob/16ecfee0c12908f5b42ff0542d75666475ca4d1a/pysam/libcbcf.pyx#L1616
         #
-        # vh_new.info.remove_header('CSQ')
+        # variant_header_new.info.remove_header('CSQ')
 
-        csq: pysam.libcbcf.VariantMetadata = vf_old.header.info['CSQ']
+        csq_vmd = variant_file_old.header.info['CSQ']
 
         # Build a new header with VEP_ INFO fields.
         # Split the description on white space first, the pipe-separated list of VEP field declarations
         # is then in the last block.
 
-        csq_key_list: List[str] = csq.description.split()[-1].split('|')
+        csq_key_list: List[str] = csq_vmd.description.split()[-1].split('|')
         csq_index_allele_num: Optional[int] = None
 
-        for index, csq_key in enumerate(csq_key_list):
+        for csq_index, csq_key in enumerate(csq_key_list):
             if csq_key == 'ALLELE_NUM':
-                csq_index_allele_num = index
+                csq_index_allele_num = csq_index
 
             if csq_key in vep_header_dict:
-                vh_new.info.add(
+                variant_header_new.info.add(
                     id='VEP_' + csq_key,
                     number=vep_header_dict[csq_key]['Number'],
                     type=vep_header_dict[csq_key]['Type'],
@@ -265,7 +264,7 @@ class RunnableStepCsqToVep(RunnableStep):
             if csq_key in ('INTRON', 'EXON'):
                 for suffix in ('AFFECTED', 'TOTAL'):
                     new_field = '_'.join((csq_key, suffix))
-                    vh_new.info.add(
+                    variant_header_new.info.add(
                         id='_'.join(('VEP', csq_key, suffix)),
                         number=vep_header_dict[new_field]['Number'],
                         type=vep_header_dict[new_field]['Type'],
@@ -279,7 +278,7 @@ class RunnableStepCsqToVep(RunnableStep):
             if csq_key in ('cDNA_position', 'CDS_position', 'Protein_position'):
                 for suffix in ('start', 'end'):
                     new_field = '_'.join((csq_key, suffix))
-                    vh_new.info.add(
+                    variant_header_new.info.add(
                         id='_'.join(('VEP', csq_key, suffix)),
                         number=vep_header_dict[new_field]['Number'],
                         type=vep_header_dict[new_field]['Type'],
@@ -290,15 +289,12 @@ class RunnableStepCsqToVep(RunnableStep):
 
         if debug > 1:
             # Print the new header.
-            key: str
-            vmd: pysam.libcbcf.VariantMetadata
-            for key, vmd in vh_new.info.items():
-                # print('Key:', repr(key), 'VariantMetadata:', repr(vmd))
-                # print(type(vmd), 'dir:', dir(vmd))
+            for key, vmd in variant_header_new.info.items():
                 print(
                     'Key:', repr(key),
                     'Value:', repr(vmd),
-                    'ID:', repr(vmd.id),
+                    # The ID property is not exposed by pysam.
+                    # 'ID:', repr(vmd.id),
                     'Name:', repr(vmd.name),
                     'Number:', repr(vmd.number),
                     'Type:', repr(vmd.type),
@@ -307,14 +303,13 @@ class RunnableStepCsqToVep(RunnableStep):
 
         # Open the new VariantFile for writing.
 
-        vf_new = VariantFile(self.vcf_path_new, 'w', header=vh_new)
+        variant_file_new = VariantFile(filename=self.vcf_path_new, mode='w', header=variant_header_new)
 
         # Parse the CSQ INFO field of each VariantRecord.
 
-        vr: VariantRecord
-        for vr in vf_old.fetch():
-            vr.translate(vh_new)
-            vri: pysam.libcbcf.VariantRecordInfo = vr.info
+        for variant_record in variant_file_old.fetch():
+            variant_record.translate(dst_header=variant_header_new)
+            variant_record_info = variant_record.info
 
             # Initialise a Python dict of VEP key and Python list value data.
             # {
@@ -331,16 +326,16 @@ class RunnableStepCsqToVep(RunnableStep):
             vep_dict: Dict[str, List[List[str]]] = dict()
 
             # Total number of alleles including REF and ALT.
-            allele_length = len(vr.alleles)
+            allele_length = len(variant_record.alleles)
 
-            if 'CSQ' not in vri:
-                vf_new.write(vr)
+            if 'CSQ' not in variant_record_info:
+                variant_file_new.write(record=variant_record)
                 continue
 
             # Iterate over all comma-separated allele-transcript blocks.
-            csq_component: str
-            for csq_component in vri['CSQ']:
-                csq_value_list = csq_component.split('|')
+            csq_record_info: str
+            for csq_record_info in variant_record_info['CSQ']:
+                csq_value_list = csq_record_info.split('|')
 
                 allele_number = int(csq_value_list[csq_index_allele_num])
 
@@ -406,9 +401,9 @@ class RunnableStepCsqToVep(RunnableStep):
             for i in range(0, allele_length):
                 # VEP consequences can be '&' separated values (e.g., splice_region_variant&synonymous_variant).
                 consequence_tuple_list: List[Tuple[int, str]] = list()
-                for index, vep_consequence in enumerate(vep_dict['VEP_Consequence'][i]):
+                for vep_consequence_index, vep_consequence in enumerate(vep_dict['VEP_Consequence'][i]):
                     for value in vep_consequence.split('&'):
-                        consequence_tuple_list.append((index, value))
+                        consequence_tuple_list.append((vep_consequence_index, value))
 
                 if debug > 1:
                     print('Consequence list old:', repr(consequence_tuple_list))
@@ -468,18 +463,22 @@ class RunnableStepCsqToVep(RunnableStep):
                 # since 0 represents the reference allele.
                 if vep_header_dict[vep_key]['Allele'] == 'collate':
                     # Only select the first value for each alternative allele.
-                    vri[new_key] = [collate_allele_values(_allele_list) for _allele_list in vep_dict[new_key]][1:]
+                    variant_record_info[new_key] = \
+                        [collate_allele_values(_allele_list) for _allele_list in vep_dict[new_key]][1:]
                 elif vep_header_dict[vep_key]['Allele'] == 'exclude':
                     pass
                 else:
                     # Join all values for each alternative allele, but start at index 1,
                     # since 0 represents the reference allele.
-                    vri[new_key] = ['|'.join(_allele_list) for _allele_list in vep_dict[new_key]][1:]
+                    variant_record_info[new_key] = ['|'.join(_allele_list) for _allele_list in vep_dict[new_key]][1:]
 
             # Remove the original CSQ field from the record.
-            del vri['CSQ']
+            del variant_record_info['CSQ']
 
-            vf_new.write(vr)
+            variant_file_new.write(record=variant_record)
+
+        variant_file_new.close()
+        variant_file_old.close()
 
         return None
 

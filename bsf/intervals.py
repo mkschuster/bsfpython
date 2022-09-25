@@ -263,15 +263,17 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     if not os.path.exists(dictionary_path):
         raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
 
-    sq_entry: Dict
+    sq_dict: Dict
     container_list: List[Container] = list()
     total_length: int = 0
 
     alignment_file = AlignmentFile(filename=dictionary_path, mode='r')
 
+    alignment_header_dict = alignment_file.header.to_dict()
+
     # Summarise sequence lengths to get the total length.
-    for sq_entry in alignment_file.header['SQ']:
-        total_length += int(sq_entry['LN'])
+    for sq_dict in alignment_header_dict['SQ']:
+        total_length += int(sq_dict['LN'])
 
     if natural:
         # The intervals are just the natural sequence regions.
@@ -280,9 +282,9 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
         # start = 1
         # end = 9
         # length = end - start + 1 = 9 - 1 + 1 = 9
-        for sq_entry in alignment_file.header['SQ']:
+        for sq_dict in alignment_header_dict['SQ']:
             container = Container()
-            container.append(Interval(name=str(sq_entry['SN']), start=1, end=int(sq_entry['LN'])))
+            container.append(Interval(name=str(sq_dict['SN']), start=1, end=int(sq_dict['LN'])))
             container_list.append(container)
 
         return container_list
@@ -302,16 +304,16 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
 
     current_length: float = 0.0
     container = Container()
-    for sq_entry in alignment_file.header['SQ']:
+    for sq_dict in alignment_header_dict['SQ']:
         sq_start: float = 0.0
-        sq_length: float = float(sq_entry['LN'])
+        sq_length: float = float(sq_dict['LN'])
         while sq_start < sq_length:  # float
             # The sequence end is the minimum of the sequence start plus remaining tile length or
             # the sequence length.
             sq_end: float = min(sq_start + tile_length - current_length, sq_length)
             container.append(
                 Interval(
-                    name=str(sq_entry['SN']),
+                    name=str(sq_dict['SN']),
                     start=int(math.floor(sq_start + 1.0)),
                     end=int(math.floor(sq_end))))
             current_length += sq_end - sq_start

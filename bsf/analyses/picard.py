@@ -31,7 +31,7 @@ import warnings
 import weakref
 from typing import Callable, Dict, List, Optional
 
-import pysam
+from pysam import AlignmentFile
 
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, LibraryAnnotationSheet
 from bsf.analysis import Analysis, Stage
@@ -3257,8 +3257,8 @@ class SamToFastq(Analysis):
     :type stage_name_project: str
     :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
     :type java_archive_picard: str | None
-    :ivar include_non_pf_reads: Request including non-pass filter reads.
-    :type include_non_pf_reads: bool | None
+    :ivar include_non_pass_filter_reads: Request including non-pass filter reads.
+    :type include_non_pass_filter_reads: bool | None
     :ivar drop_read_1: Request dropping of read 1.
     :type drop_read_1: bool | None
     :ivar drop_read_2: Request dropping of read 2.
@@ -3528,21 +3528,21 @@ class SamToFastq(Analysis):
                         # Open the BAM file, while not checking sequence (@SQ) entries.
                         # De-multiplexed, unaligned BAM files have no reference sequence dictionary.
 
-                        alignment_file = pysam.AlignmentFile(reads.file_path, 'rb', check_sq=False)
+                        alignment_file = AlignmentFile(filename=reads.file_path, mode='rb', check_sq=False)
 
-                        read_group_dict: Dict[str, str]
-                        for read_group_dict in alignment_file.header['RG']:
+                        alignment_header_dict = alignment_file.header.to_dict()
+
+                        rg_dict: Dict[str, str]
+                        for rg_index, rg_dict in enumerate(alignment_header_dict['RG']):
                             # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
                             # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
                             platform_unit = re.sub(
                                 pattern='[\\s!"#$%&\'()*/:;<=>?@\\[\\]\\\\^`{|}~]',
                                 repl='_',
-                                string=read_group_dict['PU'])
+                                string=rg_dict['PU'])
                             read_group_list = ['@RG']
-                            read_group_list.extend([':'.join((key, value)) for key, value in read_group_dict.items()])
-                            if read_group_dict == alignment_file.header['RG'][0]:
-                                # Use the '==' rather than the 'is' operator, since dictionaries do not seem to be
-                                # at the same memory address.
+                            read_group_list.extend([':'.join((key, value)) for key, value in rg_dict.items()])
+                            if rg_index == 0:
                                 # For the first read group, modify the PairedReads object in place.
                                 paired_reads.read_group = '\\t'.join(read_group_list)
                                 paired_reads.reads_1.name = platform_unit + '_1'

@@ -39,7 +39,6 @@ from typing import Dict, List
 
 import pysam
 from pysam import AlignmentFile
-from pysam.libcalignedsegment import AlignedSegment
 
 
 def write_gzip_file(task_gzip_file, task_fifo_queue):
@@ -95,16 +94,18 @@ name_space = argument_parser.parse_args()
 
 vendor_filter = not name_space.npf_reads
 
-alignment_file = AlignmentFile(name_space.input_path, 'rb', check_sq=False)
+alignment_file = AlignmentFile(filename=name_space.input_path, mode='rb', check_sq=False)
+
+alignment_header_dict = alignment_file.header.to_dict()
 
 # Open a GzipFile object for each ReadGroup on the basis of @RG PU entries.
 
 # This procedure only works for query name sorted SAM files.
 
-header_dict = alignment_file.header['HD']
+hd_dict = alignment_header_dict['HD']
 
-if 'SO' in header_dict:
-    if header_dict['SO'] not in ('queryname', 'unsorted'):
+if 'SO' in hd_dict:
+    if hd_dict['SO'] not in ('queryname', 'unsorted'):
         raise Exception("Can only work on 'queryname' or 'unsorted' BAM files")
 else:
     warnings.warn("Could not find a 'SO' tag in the '@HD' line.")
@@ -113,28 +114,28 @@ gzip_file_dict: Dict[str, List[GzipFile]] = dict()
 
 fifo_queue_dict: Dict[str, List[Queue]] = dict()
 
-read_group_dict: Dict[str, str]
-for read_group_dict in alignment_file.header['RG']:
+rg_dict: Dict[str, str]
+for rg_dict in alignment_header_dict['RG']:
     # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
     # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
     platform_unit = re.sub(
         pattern='[\\s!"#$%&\'()*/:;<=>?@\\[\\]\\\\^`{|}~]',
         repl='_',
-        string=read_group_dict['PU'])
+        string=rg_dict['PU'])
 
-    if read_group_dict['ID'] not in gzip_file_dict:
-        gzip_file_dict[read_group_dict['ID']] = list()
+    if rg_dict['ID'] not in gzip_file_dict:
+        gzip_file_dict[rg_dict['ID']] = list()
     else:
-        warnings.warn('ReadGroup ID already present in gzip_file_dict: ' + read_group_dict['ID'])
+        warnings.warn('ReadGroup ID already present in gzip_file_dict: ' + rg_dict['ID'])
 
-    if read_group_dict['ID'] not in fifo_queue_dict:
-        fifo_queue_dict[read_group_dict['ID']] = list()
+    if rg_dict['ID'] not in fifo_queue_dict:
+        fifo_queue_dict[rg_dict['ID']] = list()
     else:
-        warnings.warn('ReadGroup ID already present in fifo_queue_dict: ' + read_group_dict['ID'])
+        warnings.warn('ReadGroup ID already present in fifo_queue_dict: ' + rg_dict['ID'])
 
-    gzip_file_list = gzip_file_dict[read_group_dict['ID']]
+    gzip_file_list = gzip_file_dict[rg_dict['ID']]
 
-    fifo_queue_list = fifo_queue_dict[read_group_dict['ID']]
+    fifo_queue_list = fifo_queue_dict[rg_dict['ID']]
 
     for suffix in ('1', '2', 'i'):
         # Create a GzipFile.
@@ -158,8 +159,7 @@ for read_group_dict in alignment_file.header['RG']:
         read_thread.daemon = True
         read_thread.start()
 
-aligned_segment: AlignedSegment
-for aligned_segment in alignment_file:
+for aligned_segment in alignment_file.fetch(until_eof=True):
     if vendor_filter and aligned_segment.is_qcfail:
         continue
 
