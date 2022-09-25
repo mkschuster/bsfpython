@@ -105,6 +105,7 @@ setuptools.setup(
 
         # Utility scripts.
         'bin/bsf_utility_blob_download.py',
+        'bin/bsf_utility_blob_download_sequence.py',
         'bin/bsf_utility_blob_upload.py',
         'bin/bsf_utility_check_md5sums.py',
         'bin/bsf_utility_convert_bed_to_interval_list.py',

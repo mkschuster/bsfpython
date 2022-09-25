@@ -29,7 +29,7 @@
 import os
 from argparse import ArgumentParser
 
-from bsf.cloud import get_azure_blob_service_client, azure_block_blob_upload
+from bsf.cloud import get_azure_blob_service_client, azure_block_blob_upload, azure_container_exists
 
 argument_parser = ArgumentParser(
     description='Microsoft Azure Storage Blob Service upload script.')
@@ -74,22 +74,27 @@ argument_parser.add_argument(
     help='retain the local path in the blob path')
 
 argument_parser.add_argument(
-    'files',
-    help='file paths',
+    'file_path',
+    help='file path (e.g., archive_file.tar.gz)',
     nargs='+')
 
 name_space = argument_parser.parse_args()
 
 azure_blob_service_client = get_azure_blob_service_client(account_name=name_space.account)
 
-for file_path in name_space.files:
-    if not os.path.isfile(path=file_path):
+if not azure_container_exists(
+        azure_blob_service_client=azure_blob_service_client,
+        container=name_space.container):
+    raise Exception(f'Azure Blob Container {name_space.container!r} does not exist.')
+
+for file_path in name_space.file_path:
+    if not os.path.isfile(file_path):
         raise Exception('File path ' + repr(file_path) + ' does not exist.')
 
     if name_space.retain_path:
         # The local path needs rewriting into a URL schema.
         path_list = []
-        drive_str, path_str = os.path.splitdrive(p=file_path)
+        drive_str, path_str = os.path.splitdrive(file_path)
         while 1:
             path_str, folder_str = os.path.split(path_str)
 

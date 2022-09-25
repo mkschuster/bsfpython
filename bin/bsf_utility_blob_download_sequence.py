@@ -26,13 +26,15 @@
 #
 #  BSF Python script to download from the Microsoft Azure Storage Blob Service.
 #
+import errno
 import os
 from argparse import ArgumentParser
 
 from bsf.cloud import get_azure_blob_service_client, azure_block_blob_download, azure_container_exists
+from bsf.standards import StandardFilePath as StandardsFilePath
 
 argument_parser = ArgumentParser(
-    description='Microsoft Azure Storage Blob Service download script.')
+    description='Microsoft Azure Storage Blob Service sequence download script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -61,23 +63,24 @@ argument_parser.add_argument(
     type=int)
 
 argument_parser.add_argument(
-    '--blob-path',
-    default='.',
-    dest='blob_path',
-    help='directory path for storing downloaded blobs [.]',
+    '--sequence-path',
+    default=StandardsFilePath.get_sequences(),
+    dest='sequence_path',
+    help=f'sequence directory path for storing sequence items [{StandardsFilePath.get_sequences()}]',
     required=False,
     type=str)
 
 argument_parser.add_argument(
-    'blob_item',
-    help='blob item (e.g., archive_file.tar.gz)',
+    'sequence_item',
+    dest='sequence_items',
+    help='sequence item names (i.e., experiment_flowcell_lane)',
     nargs='+',
     type=str)
 
 name_space = argument_parser.parse_args()
 
-if not os.path.isdir(name_space.blob_path):
-    raise Exception(f'Blob path {name_space.blob_path!r} does not exist.')
+if not os.path.isdir(name_space.sequence_path):
+    raise Exception(f'Sequences directory {name_space.sequence_path!r} does not exist.')
 
 azure_blob_service_client = get_azure_blob_service_client(account_name=name_space.account)
 
@@ -86,11 +89,24 @@ if not azure_container_exists(
         container=name_space.container):
     raise Exception(f'Azure Blob Container {name_space.container!r} does not exist.')
 
-for blob_item in name_space.blob_item:
-    print('Blob item:', blob_item)
+for sequence_item in name_space.sequence_item:
+    print('Sequence item:', sequence_item)
 
-    for suffix in ('', '.md5'):
-        file_path = os.path.join(name_space.blob_path, blob_item + suffix)
+    # Get the experiment directory name by removing the lane suffix.
+    experiment_name = '_'.join(sequence_item.split('_')[:-1])
+    print('Experiment name:', experiment_name)
+
+    experiment_directory = os.path.join(name_space.sequence_path, experiment_name)
+
+    if not os.path.exists(experiment_directory):
+        try:
+            os.makedirs(experiment_directory)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise exception
+
+    for suffix in ('.bam', '.bam.md5'):
+        file_path = os.path.join(experiment_directory, sequence_item + suffix)
 
         if os.path.exists(file_path):
             print('File exists already:', file_path)
@@ -99,7 +115,7 @@ for blob_item in name_space.blob_item:
         blob_properties = azure_block_blob_download(
             azure_blob_service_client=azure_blob_service_client,
             container=name_space.container,
-            blob=blob_item + suffix,
+            blob=experiment_name + '/' + sequence_item + suffix,
             file_path=file_path,
             max_concurrency=name_space.threads)
 
