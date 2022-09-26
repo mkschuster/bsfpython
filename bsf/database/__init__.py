@@ -125,7 +125,7 @@ class SQLiteMaster(object):
     :type sql_table_name: str | None
     :ivar root_page: The B-Tree root page.
     :type root_page: int | None
-    :ivar sql_statement: A 'literal:`SQLite` :literal:`CREATE TABLE` statement.
+    :ivar sql_statement: A :literal:`SQLite` :literal:`CREATE TABLE` statement.
     :type sql_statement: str | None
     """
 
@@ -318,7 +318,7 @@ class SQLiteTableInfo(object):
         self.column_identifier = column_identifier
         self.column_name = column_name
         self.column_type = column_type
-        self.not_null = column_not_null
+        self.column_not_null = column_not_null
         self.default_value = default_value
         self.primary_key = primary_key
 
