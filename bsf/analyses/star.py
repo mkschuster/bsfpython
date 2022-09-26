@@ -119,8 +119,6 @@ class Star(Aligner):
     :type transcriptome_index: str | None
     :ivar two_pass_mapping: Basic two-pass mapping
     :type two_pass_mapping: str | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
-    :type java_archive_picard: str | None
     """
 
     name = 'STAR Analysis'

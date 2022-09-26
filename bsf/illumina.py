@@ -950,11 +950,6 @@ class XMLConfiguration(object):
 class AnalysisConfiguration(XMLConfiguration):
     """The :py:class:`bsf.illumina.AnalysisConfiguration` class models Image and Base Call analysis
     XML configuration files inside an Illumina Run Folder.
-
-    :ivar file_path: A file path.
-    :type file_path: str
-    :ivar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
-    :type element_tree: ElementTree
     """
 
     def __init__(self, file_path=None, element_tree=None):
@@ -1213,7 +1208,7 @@ class RunFolder(object):
 
     @property
     def get_name(self):
-        """Get a Illumina Run Folder name.
+        """Get an Illumina Run Folder name.
 
         :return: An Illumina Run Folder name.
         :rtype: str

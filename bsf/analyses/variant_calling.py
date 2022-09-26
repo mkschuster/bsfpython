@@ -48,15 +48,6 @@ from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchi
 class RunnableStepGATK(RunnableStepJava):
     """The :py:class:`bsf.analyses.variant_calling.RunnableStepGATK` class represents a
     Genome Analysis Toolkit (GATK) program.
-
-    :ivar java_temporary_path: A temporary directory path for the Java Virtual Machine.
-    :type java_temporary_path: str | None
-    :ivar java_heap_minimum: A Java heap minimum size (-Xms option).
-    :type java_heap_minimum: str | None
-    :ivar java_heap_maximum: A Java heap maximum size (-Xmx option).
-    :type java_heap_maximum: str | None
-    :ivar java_jar_path: A Java Archive (JAR) file path.
-    :type java_jar_path: str | None
     """
 
     def __init__(

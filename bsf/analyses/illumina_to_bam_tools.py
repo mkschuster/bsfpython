@@ -326,11 +326,6 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
     IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
     Java Archive (JAR) file.
-
-    :ivar itb_classpath: An IlluminaToBam Java Class Path directory.
-    :type itb_classpath: str | None
-    :ivar itb_command: An IlluminaToBam command.
-    :type itb_command: str | None
     """
 
     def __init__(
