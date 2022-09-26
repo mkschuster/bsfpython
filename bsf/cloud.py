@@ -75,7 +75,7 @@ def get_azure_blob_name(blob: Union[BlobProperties, str]) -> str:
         raise Exception("The 'blob' option has to be of type 'BlobProperties' or 'str'.")
 
 
-def get_container_name(container: Union[ContainerProperties, str]) -> str:
+def get_azure_container_name(container: Union[ContainerProperties, str]) -> str:
     """Get a container name from a :py:class:`azure.storage.blob.ContainerProperties` or a
     Python :py:class:`str` object.
 
@@ -174,7 +174,7 @@ def azure_container_exists(
     :return: :py:const:`True` if the container exists, :py:const:`False` otherwise.
     :rtype: bool
     """
-    container_name = get_container_name(container=container)
+    container_name = get_azure_container_name(container=container)
 
     result = False
     for container_properties in azure_blob_service_client.list_containers(name_starts_with=container_name):
@@ -219,7 +219,7 @@ def azure_block_blob_upload(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            'Container ' + repr(get_container_name(container=container)) + ' does not exist in this account.')
+            'Container ' + repr(get_azure_container_name(container=container)) + ' does not exist in this account.')
 
     if blob is None:
         blob = os.path.basename(file_path)
@@ -275,7 +275,7 @@ def azure_block_blob_download_io(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            'Container ' + repr(get_container_name(container=container)) + ' does not exist in this account.')
+            'Container ' + repr(get_azure_container_name(container=container)) + ' does not exist in this account.')
 
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
@@ -315,7 +315,7 @@ def azure_block_blob_download(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            'Container ' + repr(get_container_name(container=container)) + ' does not exist in this account.')
+            'Container ' + repr(get_azure_container_name(container=container)) + ' does not exist in this account.')
 
     if not file_path:
         # The Azure Storage Blob Service always uses URL-compliant slash characters as path separators.
