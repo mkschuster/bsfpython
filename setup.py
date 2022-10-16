@@ -38,7 +38,7 @@ setuptools.setup(
     # metadata_version='2.1',
     # Additional Meta-Data
     name='bsfpython-MSchuster',
-    version='2022.10.13',
+    version='2022.10.16',
     author='Michael Schuster',
     author_email='mschuster@cemm.oeaw.ac.at',
     maintainer='Michael Schuster',

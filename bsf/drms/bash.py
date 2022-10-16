@@ -31,7 +31,7 @@ from typing import List
 from bsf.connector import ConnectorFile
 
 
-def submit(stage, drms_submit=None):
+def submit(stage, drms_submit=None, write_script=None):
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object by writing a
@@ -42,7 +42,13 @@ def submit(stage, drms_submit=None):
     :type stage: bsf.analysis.Stage
     :param drms_submit: Submit to the DRMS.
     :type drms_submit: bool | None
+    :param write_script: Write a :py:class:`bsf.analysis.Stage`-specific GNU Bash script.
+    :type write_script: bool | None
     """
+    # Since write_script is required for compatibility of the function interface with the
+    # SLURM and SGE modules, it always needs overriding here.
+    if not write_script:
+        write_script = True
 
     output_list: List[str] = list()
 
@@ -60,9 +66,11 @@ def submit(stage, drms_submit=None):
         output_list.append('\n')
         output_list.append('\n')
 
-    script_path = os.path.join(stage.working_directory, 'bsfpython_bash_' + repr(stage.name) + '.bash')
-    with open(file=script_path, mode='wt') as output_text_io:
-        output_text_io.writelines(output_list)
+    if write_script:
+        with open(
+                file=os.path.join(stage.working_directory, 'bsfpython_bash_' + repr(stage.name) + '.bash'),
+                mode='wt') as output_text_io:
+            output_text_io.writelines(output_list)
 
     return
 

@@ -424,7 +424,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
         return
 
 
-def submit(stage, drms_submit=None):
+def submit(stage, drms_submit=None, write_script=None):
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object into the
@@ -435,6 +435,8 @@ def submit(stage, drms_submit=None):
     :type stage: bsf.analysis.Stage
     :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
     :type drms_submit: bool | None
+    :param write_script: Write a :py:class:`bsf.analysis.Stage`-specific GNU Bash script.
+    :type write_script: bool | None
     """
 
     def submit_qsub_stdout(_file_handle, _thread_lock, _executable):
@@ -605,9 +607,11 @@ def submit(stage, drms_submit=None):
         output_list.append(executable_drms.command_str() + '\n')
         output_list.append('\n')
 
-    script_path = os.path.join(stage.working_directory, 'bsfpython_sge_' + stage.name + '.bash')
-    with open(file=script_path, mode='wt') as output_text_io:
-        output_text_io.writelines(output_list)
+    if write_script:
+        with open(
+                file=os.path.join(stage.working_directory, 'bsfpython_sge_' + stage.name + '.bash'),
+                mode='wt') as output_text_io:
+            output_text_io.writelines(output_list)
 
     return
 
