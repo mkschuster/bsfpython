@@ -25,6 +25,7 @@
 """The :py:mod:`bsf.standards` module provides classes modelling configuration and default information.
 """
 import os
+import re
 import stat
 from configparser import ConfigParser
 from typing import Dict, List, Optional
@@ -65,6 +66,34 @@ def get_irf_path(name):
         return file_path
 
     return
+
+
+class SafeFileName(object):
+    """The :py:class:`bsf.standards.SafeFileName` class represents a regular expression pattern
+    to make file names safe.
+    """
+    re_pattern: Optional[re.Pattern] = None
+
+    @staticmethod
+    def get_safe_file_name(file_name):
+        """Get a safe file name by replacing special characters with underscore characters.
+
+        This function is modelled after the `HTSJDK <http://samtools.github.io/htsjdk/>`_
+        :literal:`makeFileNameSafe()` method of the
+        :literal:`htsjdk.samtools.util.IOUtil` class and uses the following pattern.
+
+        :literal:`[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]`
+
+        :param file_name: File name
+        :type file_name: str
+        :return: Safe file name
+        :rtype: str
+        """
+        # https://github.com/samtools/htsjdk/blob/master/src/main/java/htsjdk/samtools/util/IOUtil.java#L779
+        if not SafeFileName.re_pattern:
+            SafeFileName.re_pattern = re.compile(pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]")
+
+        return re.sub(pattern=SafeFileName.re_pattern, repl='_', string=file_name)
 
 
 class Configuration(object):

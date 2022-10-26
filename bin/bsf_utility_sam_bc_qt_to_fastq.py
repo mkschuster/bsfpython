@@ -29,7 +29,6 @@
 #
 import os
 import queue
-import re
 import threading
 import warnings
 from argparse import ArgumentParser
@@ -39,6 +38,8 @@ from typing import Dict, List
 
 import pysam
 from pysam import AlignmentFile
+
+from bsf.standards import SafeFileName
 
 
 def write_gzip_file(task_gzip_file, task_fifo_queue):
@@ -109,12 +110,7 @@ fifo_queue_dict: Dict[str, List[Queue]] = dict()
 
 rg_dict: Dict[str, str]
 for rg_dict in alignment_header_dict['RG']:
-    # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
-    # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
-    platform_unit = re.sub(
-        pattern='[\\s!"#$%&\'()*/:;<=>?@\\[\\]\\\\^`{|}~]',
-        repl='_',
-        string=rg_dict['PU'])
+    platform_unit = SafeFileName.get_safe_file_name(file_name=rg_dict['PU'])
 
     if rg_dict['ID'] not in gzip_file_dict:
         gzip_file_dict[rg_dict['ID']] = list()

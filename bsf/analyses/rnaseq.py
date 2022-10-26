@@ -1075,7 +1075,7 @@ class Tuxedo(Analysis):
                     # Read and process the comparison file, which includes adding only those Sample objects,
                     # which are referenced in a comparison.
                     annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
-                    regular_expression = re.compile(pattern='\\W')
+                    re_pattern = re.compile(pattern=r'\W')
 
                     for row_dict in annotation_sheet.row_dicts:
                         _sample_group_list: List[SampleGroup] = list()
@@ -1138,8 +1138,7 @@ class Tuxedo(Analysis):
                             # For ridiculously large comparisons involving loads of groups or samples a
                             # comparison name can be explicitly specified.
                             # Any non-word characters get replaced by underscore characters.
-                            _comparison_name = re.sub(pattern=regular_expression, repl='_',
-                                                      string=row_dict['Comparison Name'])
+                            _comparison_name = re.sub(pattern=re_pattern, repl='_', string=row_dict['Comparison Name'])
                         else:
                             _comparison_name = '__'.join(_comparison_name_list)
 

@@ -26,7 +26,6 @@
 """
 import logging
 import os
-import re
 import warnings
 import weakref
 from typing import Callable, Dict, List, Optional
@@ -43,7 +42,8 @@ from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
     RunnableStepMove, RunnableStepPicard
-from bsf.standards import get_irf_path, Configuration, StandardFilePath, JavaArchive, Operator, VendorQualityFilter
+from bsf.standards import get_irf_path, SafeFileName, Configuration, StandardFilePath, JavaArchive, Operator, \
+    VendorQualityFilter
 
 module_logger = logging.getLogger(name=__name__)
 
@@ -3492,22 +3492,21 @@ class SamToFastq(Analysis):
 
                         rg_dict: Dict[str, str]
                         for rg_index, rg_dict in enumerate(alignment_header_dict['RG']):
-                            # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
-                            # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
-                            platform_unit = re.sub(
-                                pattern='[\\s!"#$%&\'()*/:;<=>?@\\[\\]\\\\^`{|}~]',
-                                repl='_',
-                                string=rg_dict['PU'])
+                            platform_unit = SafeFileName.get_safe_file_name(file_name=rg_dict['PU'])
+
                             read_group_list = ['@RG']
                             read_group_list.extend([':'.join((key, value)) for key, value in rg_dict.items()])
+
                             if rg_index == 0:
                                 # For the first read group, modify the PairedReads object in place.
                                 paired_reads.read_group = '\\t'.join(read_group_list)
                                 paired_reads.reads_1.name = platform_unit + '_1'
+
                                 paired_reads.reads_1.file_path = os.path.join(
                                     self.project_directory,
                                     file_path_read_group.output_directory,
                                     platform_unit + '_1.fastq.gz')
+
                                 paired_reads.reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
@@ -3519,6 +3518,7 @@ class SamToFastq(Analysis):
                                     read=paired_reads.reads_1.read,
                                     chunk=paired_reads.reads_1.chunk,
                                     weak_reference_paired_reads=weakref.ReferenceType(paired_reads))
+
                                 # Retain the original BAM file path as annotation.
                                 paired_reads.add_annotation(key='BAM File', value=bam_file_path)
                             else:
@@ -3533,6 +3533,7 @@ class SamToFastq(Analysis):
                                     lane=paired_reads.reads_1.lane,
                                     read='R1',
                                     chunk=paired_reads.reads_1.chunk)
+
                                 reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
@@ -3543,10 +3544,12 @@ class SamToFastq(Analysis):
                                     lane=paired_reads.reads_1.lane,
                                     read='R2',
                                     chunk=paired_reads.reads_1.chunk)
+
                                 new_paired_reads = PairedReads(
                                     reads_1=reads_1,
                                     reads_2=reads_2,
                                     read_group='\\t'.join(read_group_list))
+
                                 # Retain the original BAM file path as annotation.
                                 new_paired_reads.add_annotation(key='BAM File', value=bam_file_path)
 

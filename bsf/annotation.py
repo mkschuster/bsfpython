@@ -62,19 +62,19 @@ class AnnotationSheet(object):
     """
 
     # Regular expression for non-alphanumeric characters
-    _regular_expression_non_alpha = re.compile(pattern='\\W')
+    _regular_expression_non_alpha = re.compile(pattern=r'\W')
 
     # Regular expression for non-numeric characters
-    _regular_expression_non_numeric = re.compile(pattern='\\D')
+    _regular_expression_non_numeric = re.compile(pattern=r'\D')
 
     # Regular expression for non-sequence characters
-    _regular_expression_non_sequence = re.compile(pattern='[^ACGTacgt]')
+    _regular_expression_non_sequence = re.compile(pattern=r'[^ACGTacgt]')
 
     # Regular expression for non-ambiguous sequence characters
-    _regular_expression_non_ambiguous_sequence = re.compile(pattern='[^ACGTacgtWSMKRYwsmkryBDHVbdhvNn]')
+    _regular_expression_non_ambiguous_sequence = re.compile(pattern=r'[^ACGTacgtWSMKRYwsmkryBDHVbdhvNn]')
 
     # Regular expression for multiple underscore characters
-    _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
+    _regular_expression_multiple_underscore = re.compile(pattern=r'_{2,}')
 
     # File type (i.e., 'excel' or 'excel-tab' defined in the csv.Dialect class)
     _file_type = 'excel'

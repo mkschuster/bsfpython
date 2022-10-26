@@ -29,14 +29,13 @@
 import errno
 import os
 import pickle
-import re
 import shutil
 from argparse import ArgumentParser
 from typing import List
 
 from bsf.connector import ConnectorFile
 from bsf.process import Command, Executable, RunnableStep
-from bsf.standards import JavaArchive
+from bsf.standards import SafeFileName, JavaArchive
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
@@ -124,11 +123,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
             if field.startswith('PU:'):
                 platform_unit = field[3:]
 
-        # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
-        # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
-        # https://github.com/samtools/htsjdk/blob/master/src/main/java/htsjdk/samtools/util/IOUtil.java#L779
-        # file_name_prefix = re.sub(pattern='[^0-9A-Za-z_-]', repl='_', string=platform_unit)
-        file_name_prefix = re.sub(pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]", repl='_', string=platform_unit)
+        file_name_prefix = SafeFileName.get_safe_file_name(file_name=platform_unit)
         file_name_1 = os.path.join(path_temporary, file_name_prefix + '_1.fastq')
         file_name_2 = os.path.join(path_temporary, file_name_prefix + '_2.fastq')
 

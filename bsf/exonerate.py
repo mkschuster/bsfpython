@@ -27,8 +27,6 @@
 import re
 from typing import List
 
-vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
-
 
 class VULGAR(object):
     """The :py:class:`bsf.exonerate.VULGAR` class models the Verbose Useful Labelled Gapped Alignment Report (VULGAR)
@@ -164,6 +162,8 @@ def parse_alignment_file(file_path):
     :return: A Python :py:class:`list` object of :py:class:`bsf.exonerate.VULGAR` objects.
     :rtype: list[VULGAR]
     """
+    vulgar_pattern = re.compile(pattern=r'^vulgar: (.*)')
+
     vulgar_list: List[VULGAR] = list()
 
     with open(file=file_path, mode='rt') as input_text_io:

@@ -34,8 +34,8 @@ import numpy
 
 from bsf.exonerate import parse_alignment_file
 
-vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
-identifier_pattern = re.compile(pattern='^\\w+\\|(\\w+)\\|([^ ]+)')
+vulgar_pattern = re.compile(pattern=r'^vulgar: (.*)')
+identifier_pattern = re.compile(pattern=r'^\w+\|(\w+)\|([^ ]+)')
 
 # sample_name = 'Plasmid'
 sample_name = 'cDNA'
@@ -91,7 +91,7 @@ for vulgar in vulgar_list:
             description=True)
         q_record = q_reverse_complement
 
-    identifier_match = re.match(pattern=identifier_pattern, string=vulgar.t_name)
+    identifier_match = re.search(pattern=identifier_pattern, string=vulgar.t_name)
     if identifier_match:
         identifier = identifier_match.group(1)
     else:

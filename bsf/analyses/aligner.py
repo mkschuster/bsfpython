@@ -26,7 +26,6 @@
 """
 import logging
 import os
-import re
 from typing import Dict, List, Optional, Tuple
 
 from bsf.analysis import Analysis, Stage
@@ -35,7 +34,7 @@ from bsf.ngs import Collection, PairedReads, Sample
 from bsf.procedure import FilePath, ConcurrentRunnable, ConsecutiveRunnable
 from bsf.process import RunnableStepMakeDirectory, RunnableStepMakeNamedPipe, RunnableStepPicard, \
     RunnableStepMove, RunnableStep, RunnableStepLink
-from bsf.standards import Configuration, StandardFilePath, JavaArchive
+from bsf.standards import SafeFileName, Configuration, StandardFilePath, JavaArchive
 
 module_logger = logging.getLogger(name=__name__)
 
@@ -629,13 +628,7 @@ class Aligner(Analysis):
                 bam_name, bam_extension = os.path.splitext(
                     os.path.basename(_paired_reads.annotation_dict['BAM File'][0]))
 
-                # TODO: This should be centralised.
-                # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
-                # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
-                bam_name = re.sub(
-                    pattern='[\\s!"#$%&\'()*/:;<=>?@\\[\\]\\\\^`{|}~]',
-                    repl='_',
-                    string=bam_name)
+                bam_name = SafeFileName.get_safe_file_name(file_name=bam_name)
 
                 return bam_name, _paired_reads.annotation_dict['BAM File'][0]
             else:
