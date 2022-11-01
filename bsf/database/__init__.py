@@ -686,7 +686,8 @@ class DatabaseAdaptor(object):
         primary_name = self._get_column_name_for_primary()
 
         if not primary_name:
-            raise Exception(f'Cannot create an SQL UPDATE statement {self.table_name} without a primary key.')
+            raise Exception(f'Cannot create an SQL UPDATE statement for table {self.table_name} '
+                            f'without a primary key.')
 
         statement_list: List[str] = list()
 
@@ -778,7 +779,8 @@ class DatabaseAdaptor(object):
         object_length = len(object_list)
 
         if object_length > 1:
-            raise Exception(f'SQL database returned more than one row for primary key {primary_key!r}.')
+            raise Exception(f'The SQL database returned more than one row for primary key {primary_key!r} '
+                            f'in table {self.table_name!r}.')
         elif object_length == 1:
             return object_list[0]
         else:
@@ -952,7 +954,8 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
         object_length = len(object_list)
 
         if object_length > 1:
-            raise Exception("SQL database returned more than one row for unique field 'name'.")
+            raise Exception(f"The SQL database returned more than one row for unique field 'name' "
+                            f"in table {self.table_name!r}.")
         elif object_length == 1:
             return object_list[0]
         else:

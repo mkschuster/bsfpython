@@ -269,7 +269,7 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception(f"The 'run_directory' {self.run_directory} does not exist.")
+            raise Exception(f"The 'run_directory' {self.run_directory!r} does not exist.")
 
         # Check that the Illumina Run Folder is complete.
 
@@ -321,8 +321,8 @@ class PicardIlluminaRunFolder(Analysis):
         if not self.experiment_name:
             self.experiment_name = self._irf.run_parameters.get_experiment_name
             if not self.experiment_name:
-                raise Exception(f"The 'experiment_name' was not provided and could not be read from the "
-                                f"Illumina Run Folder configuration.")
+                raise Exception("The 'experiment_name' was not provided and could not be read from the "
+                                "Illumina Run Folder configuration.")
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the
@@ -844,11 +844,11 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         if validation_messages:
             if self.force:
-                warnings.warn('Validation of library annotation sheet ' +
-                              repr(self.library_path) + ':\n' + validation_messages)
+                warnings.warn(f'Validation of library annotation sheet {self.library_path!r}:\n'
+                              f'{validation_messages}', UserWarning)
             else:
-                raise Exception('Validation of library annotation sheet ' +
-                                repr(self.library_path) + ':\n' + validation_messages)
+                raise Exception(f'Validation of library annotation sheet {self.library_path!r}:\n'
+                                f'{validation_messages}')
 
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
@@ -2389,11 +2389,11 @@ class IlluminaDemultiplexSam(Analysis):
 
         if validation_messages:
             if self.force:
-                warnings.warn('Validation of library annotation sheet ' + repr(self.library_path) + ':\n' +
-                              validation_messages)
+                warnings.warn(f'Validation of library annotation sheet {self.library_path!r}:\n'
+                              f'{validation_messages}', UserWarning)
             else:
-                raise Exception('Validation of library annotation sheet ' + repr(self.library_path) + ':\n' +
-                                validation_messages)
+                raise Exception(f'Validation of library annotation sheet {self.library_path!r}:\n'
+                                f'{validation_messages}')
 
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
@@ -3041,7 +3041,7 @@ class DownsampleSam(Analysis):
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception(f"A {self.name!s} analysis requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -3068,9 +3068,8 @@ class DownsampleSam(Analysis):
 
                     reads = paired_reads.reads_1
                     if not (reads.file_path.endswith('.bam') or reads.file_path.endswith('.sam')):
-                        raise Exception(
-                            f'The {self.name!s} can only work on BAM or SAM files. '
-                            f'Reads.file_path: {reads.file_path!r}')
+                        raise Exception(f'The {self.name!s} can only work on BAM or SAM files. '
+                                        f'Reads.file_path: {reads.file_path!r}')
 
                     prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 

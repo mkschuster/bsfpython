@@ -920,7 +920,7 @@ class Executable(Command):
 
         if not name:
             raise Exception(
-                f"The {self.__class__.__name__!s} class requires a non-empty 'name' option  for program {program!r}.")
+                f"The {self.__class__.__name__!s} class requires a non-empty 'name' option for program {program!r}.")
 
         super(Executable, self).__init__(
             name=name,

@@ -168,7 +168,7 @@ key = 'replicate_key'
 if key in pickler_dict and pickler_dict[key]:
     replicate_key = pickler_dict[key]
 else:
-    raise Exception('The pickler dict in the pickler file needs to contain key {!r}.'.format(key))
+    raise Exception(f'The pickler dict in the pickler file needs to contain key {key!r}.')
 
 key = 'java_archive_picard'
 if key in pickler_dict and pickler_dict[key]:
@@ -185,7 +185,7 @@ if not os.path.isdir(path_temporary):
         os.makedirs(path_temporary)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
-            raise
+            raise exception
 
 runnable_step_tophat: RunnableStep = pickler_dict['runnable_step']
 assert isinstance(runnable_step_tophat, RunnableStep)

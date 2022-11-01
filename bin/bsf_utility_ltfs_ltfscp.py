@@ -30,8 +30,8 @@
 #  barcode or a mounted cartridge. An XML file, which can be used as a batch file for the
 #  Linear Tape File System Copy (ltfscp) tool gets written into the current directory.
 #
-import os
 import logging
+import os
 from argparse import ArgumentParser
 from xml.etree.ElementTree import ElementTree, Element
 
@@ -471,8 +471,7 @@ if cartridge_code.endswith('.txt'):
     cartridge_code = name_space.cartridge[:-4]
 
 if cartridge_code[-2:] not in cartridge_dict:
-    raise Exception('The cartridge barcode media characters ' + repr(cartridge_code[-2:]) +
-                    ' are currently not supported.')
+    raise Exception(f'The cartridge barcode media characters {cartridge_code[-2:]!r} are currently not supported.')
 
 if name_space.mounted_cartridge:
     # If a cartridge is mounted, stat the virtual file system.

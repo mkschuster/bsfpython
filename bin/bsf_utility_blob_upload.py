@@ -91,11 +91,11 @@ azure_blob_service_client = get_azure_blob_service_client(account_name=name_spac
 if not azure_container_exists(
         azure_blob_service_client=azure_blob_service_client,
         container=name_space.container):
-    raise Exception(f'Azure Blob Container {name_space.container!r} does not exist.')
+    raise Exception(f'The Azure Blob Container {name_space.container!r} does not exist.')
 
 for file_path in name_space.file_path:
     if not os.path.isfile(file_path):
-        raise Exception(f'File path {file_path!r} does not exist.')
+        raise Exception(f'The file path {file_path!r} does not exist.')
 
     if name_space.retain_path:
         # The local path needs rewriting into a URL schema.

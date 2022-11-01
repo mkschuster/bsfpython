@@ -102,7 +102,7 @@ if name_space.mode:
     elif name_space.mode == 'novaseq':
         analysis.lanes = 4
     else:
-        raise Exception("Unknown output mode " + name_space.mode)
+        raise Exception(f'The mode option {name_space.mode!r} is not supported.')
 
 if name_space.force:
     analysis.force = name_space.force

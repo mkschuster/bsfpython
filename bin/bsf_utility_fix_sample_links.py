@@ -82,13 +82,13 @@ def scan_directory(directory_path, commit=None):
                             os.remove(file_path)
                         except OSError as exception:
                             if exception.errno != errno.ENOENT:
-                                raise
+                                raise exception
 
                         try:
                             os.symlink(source_path, file_path)
                         except OSError as exception:
                             if exception.errno != errno.EEXIST:
-                                raise
+                                raise exception
                 else:
                     print('No write permission for link in directory:', repr(directory_path))
 

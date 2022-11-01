@@ -430,7 +430,7 @@ class Analysis(object):
         :return: A :py:class:`bsf.analysis.Stage` object.
         :rtype: Stage
         """
-        # Check if a Stage with this the name already exists and if so, return it.
+        # Check if a Stage with this name already exists and if so, return it.
         for stage in self.stage_list:
             if stage.name == name:
                 return stage
@@ -479,7 +479,7 @@ class Analysis(object):
         """
         if not configuration.config_parser.has_section(section=section):
             raise Exception(f'Section {section!r} is not defined in Configuration files:\n'
-                            f'{configuration.file_path_list}')
+                            f'{configuration.file_path_list!r}')
 
         # The configuration section is available.
 
@@ -628,7 +628,7 @@ class Analysis(object):
             raise Exception(f'A Stage.name {stage.name!r} does not exist in Analysis {self.project_name!r}.')
 
         if runnable.name not in self.runnable_dict:
-            raise Exception(f'A Runnable.name {runnable.name!r} does not exist in Analysis {self.project_name}.')
+            raise Exception(f'A Runnable.name {runnable.name!r} does not exist in Analysis {self.project_name!r}.')
 
         if stage.template_script:
             if os.path.isabs(stage.template_script):
@@ -1881,7 +1881,8 @@ class Stage(object):
         """
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                f'A section {section!r} is not defined in Configuration files:\n{configuration.file_path_list!r}')
+                f'A section {section!r} is not defined in Configuration files:\n'
+                f'{configuration.file_path_list!r}')
 
         # The configuration section is available.
 

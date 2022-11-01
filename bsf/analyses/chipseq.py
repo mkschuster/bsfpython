@@ -1770,7 +1770,7 @@ class ChIPSeq(Analysis):
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
+                raise Exception(f'The sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='samples.csv')
             if not self.sas_file:
@@ -1781,7 +1781,7 @@ class ChIPSeq(Analysis):
         if self.comparison_path:
             self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
             if not os.path.exists(self.comparison_path):
-                raise Exception(f'Comparison annotation sheet {self.comparison_path!r} does not exist.')
+                raise Exception(f'The comparison annotation sheet {self.comparison_path!r} does not exist.')
         else:
             self.comparison_path = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='comparisons.csv')
             if not self.comparison_path:

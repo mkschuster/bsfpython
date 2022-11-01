@@ -26,8 +26,8 @@
 #
 #  BSF Python script to drive the IlluminaToBamTools BamIndexDecoder analysis.
 #
-import os
 import logging
+import os
 from argparse import ArgumentParser
 
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder
@@ -94,7 +94,7 @@ name_space = argument_parser.parse_args()
 
 if name_space.configuration == Configuration.global_file_path:
     if not name_space.project_name:
-        raise Exception("argument --project-name is required if --configuration is not set")
+        raise Exception('The argument --project-name is required if --configuration is not set.')
 
 if name_space.logging_level:
     logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
@@ -105,7 +105,11 @@ if name_space.logging_level:
 analysis = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.project_name:
-    analysis.project_name = name_space.project_name
+    project_name: str = name_space.project_name
+    if project_name.endswith('.ini'):
+        raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+    analysis.project_name = project_name
 
 if name_space.mode:
     if name_space.mode == 'high':
@@ -117,7 +121,7 @@ if name_space.mode:
     elif name_space.mode == 'nextseq':
         analysis.lanes = 4
     else:
-        raise Exception("Unknown output mode " + name_space.mode)
+        raise Exception(f'The --mode option {name_space.mode!r} is not supported.')
 
 if name_space.force:
     analysis.force = name_space.force

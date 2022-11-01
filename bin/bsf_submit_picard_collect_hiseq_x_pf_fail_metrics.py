@@ -79,7 +79,7 @@ name_space = argument_parser.parse_args()
 
 if name_space.configuration == Configuration.global_file_path:
     if not name_space.irf:
-        raise Exception("argument --irf is required if --configuration is not set")
+        raise Exception('The argument --irf is required if --configuration is not set.')
 
 if name_space.logging_level:
     logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')

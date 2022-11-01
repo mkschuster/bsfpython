@@ -220,7 +220,8 @@ def azure_block_blob_upload(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            f'A Container {get_azure_container_name(container=container)!r} does not exist in this account.')
+            f'An Azure Blob Container {get_azure_container_name(container=container)!r} '
+            f'does not exist in this account.')
 
     if blob is None:
         blob = os.path.basename(file_path)
@@ -276,7 +277,8 @@ def azure_block_blob_download_io(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            f'A Container {get_azure_container_name(container=container)!r} does not exist in this account.')
+            f'An Azure Blob Container {get_azure_container_name(container=container)!r} '
+            f'does not exist in this account.')
 
     azure_blob_client = azure_blob_service_client.get_blob_client(container=container, blob=blob)
 
@@ -316,7 +318,8 @@ def azure_block_blob_download(
     # Test if the container exists.
     if not azure_container_exists(azure_blob_service_client=azure_blob_service_client, container=container):
         raise Exception(
-            f'A Container {get_azure_container_name(container=container)!r} does not exist in this account.')
+            f'An Azure Blob Container {get_azure_container_name(container=container)!r} '
+            f'does not exist in this account.')
 
     if not file_path:
         # The Azure Storage Blob Service always uses URL-compliant slash characters as path separators.

@@ -70,7 +70,7 @@ def process_md5_files(md5sum_archive, directory_path, file_pattern):
                         if file_name.endswith('.md5'):
                             md5sum.file_path = file_name[:-4]
                         else:
-                            raise Exception('Unexpected suffix of (Picard) md5sum file: ' + repr(file_name))
+                            raise Exception(f'The (Picard) md5sum file prefix is unsupported: {file_name!r}')
 
                     # Archive just the base name of the file path.
                     md5sum.file_path = os.path.basename(md5sum.file_path)

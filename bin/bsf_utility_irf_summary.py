@@ -64,12 +64,12 @@ if name_space.logging_level:
 
 file_path = get_irf_path(name=name_space.file_path)
 if file_path is None:
-    raise Exception("Could not resolve the --file-name value to a valid Illumina Run Folder location.")
+    raise Exception('The --file-name option could not be resolved to a valid Illumina Run Folder location.')
 
 irf = RunFolder.from_file_path(file_path=file_path)
 
 if not irf.run_parameters.get_experiment_name:
-    raise Exception("No experiment name set in the Illumina Run Folder configuration.")
+    raise Exception('No experiment name set in the Illumina Run Folder configuration.')
 
 print('Flow Cell Identifier: ', '_'.join((irf.run_parameters.get_experiment_name,
                                           irf.run_parameters.get_flow_cell_barcode)))

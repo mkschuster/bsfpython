@@ -75,7 +75,7 @@ argument_parser.add_argument(
 name_space = argument_parser.parse_args()
 
 if not os.path.isdir(name_space.blob_path):
-    raise Exception(f'Blob path {name_space.blob_path!r} does not exist.')
+    raise Exception(f'The blob directory path {name_space.blob_path!r} does not exist.')
 
 if name_space.logging_level:
     logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
@@ -88,7 +88,7 @@ azure_blob_service_client = get_azure_blob_service_client(account_name=name_spac
 if not azure_container_exists(
         azure_blob_service_client=azure_blob_service_client,
         container=name_space.container):
-    raise Exception(f'Azure Blob Container {name_space.container!r} does not exist.')
+    raise Exception(f'The Azure Blob Container {name_space.container!r} does not exist.')
 
 for blob_item in name_space.blob_item:
     logging.debug('Blob item: %r', blob_item)

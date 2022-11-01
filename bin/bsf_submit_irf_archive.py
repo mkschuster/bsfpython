@@ -96,7 +96,11 @@ if name_space.logging_level:
 analysis = IlluminaRunFolderArchive.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.project_name:
-    analysis.project_name = name_space.project_name
+    project_name: str = name_space.project_name
+    if project_name.endswith('.ini'):
+        raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+    analysis.project_name = project_name
 
 if name_space.archive_directory:
     analysis.archive_directory = name_space.archive_directory

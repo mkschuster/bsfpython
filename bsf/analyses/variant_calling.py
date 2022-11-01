@@ -3692,9 +3692,8 @@ class VariantCallingGATK(Analysis):
             self.vep_annotation = 'ensembl'
 
         if self.vep_annotation not in ('ensembl', 'refseq', 'merged'):
-            raise Exception(
-                f"The 'vep_annotation' option {self.vep_annotation!r} is not a member of "
-                f"'ensembl', 'refseq' or 'merged'.")
+            raise Exception(f"The 'vep_annotation' option {self.vep_annotation!r} is not a member of "
+                            f"'ensembl', 'refseq' or 'merged'.")
 
         if not self.vep_assembly:
             self.vep_assembly = EnsemblVEP.get_name_assembly(genome_version=self.genome_version)
@@ -4079,9 +4078,9 @@ class VariantCallingGATK(Analysis):
                     bwa_mem.arguments.append(','.join(reads1))
                     bwa_mem.arguments.append(','.join(reads2))
                 elif not len(reads1) and len(reads2):
-                    warnings.warn('Only second reads, but no first reads have been defined.')
+                    warnings.warn('Only second reads, but no first reads have been defined.', UserWarning)
                 else:
-                    warnings.warn('No reads have been defined.')
+                    warnings.warn('No reads have been defined.', UserWarning)
 
                 # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
                 # It is currently based on the stage_align_lane.name and paired_reads_name.

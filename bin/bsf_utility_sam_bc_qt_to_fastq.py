@@ -100,9 +100,9 @@ hd_dict = alignment_header_dict['HD']
 
 if 'SO' in hd_dict:
     if hd_dict['SO'] not in ('queryname', 'unsorted'):
-        raise Exception("Can only work on 'queryname' or 'unsorted' BAM files")
+        raise Exception("Can only work on 'queryname' or 'unsorted' BAM files.")
 else:
-    warnings.warn("Could not find a 'SO' tag in the '@HD' line.")
+    warnings.warn("Could not find an 'SO' tag in the '@HD' line.", UserWarning)
 
 gzip_file_dict: Dict[str, List[GzipFile]] = dict()
 
@@ -115,12 +115,12 @@ for rg_dict in alignment_header_dict['RG']:
     if rg_dict['ID'] not in gzip_file_dict:
         gzip_file_dict[rg_dict['ID']] = list()
     else:
-        warnings.warn('ReadGroup ID already present in gzip_file_dict: ' + rg_dict['ID'])
+        warnings.warn(f'The ReadGroup ID {rg_dict["ID"]!r} is already present in the gzip_file_dict.', UserWarning)
 
     if rg_dict['ID'] not in fifo_queue_dict:
         fifo_queue_dict[rg_dict['ID']] = list()
     else:
-        warnings.warn('ReadGroup ID already present in fifo_queue_dict: ' + rg_dict['ID'])
+        warnings.warn(f'The ReadGroup ID {rg_dict["ID"]!r} is already present in the fifo_queue_dict.', UserWarning)
 
     gzip_file_list = gzip_file_dict[rg_dict['ID']]
 

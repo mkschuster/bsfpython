@@ -216,7 +216,7 @@ class EGACryptor(Analysis):
         run_read_comparisons()
 
         if not self.java_archive_ega_cryptor:
-            raise Exception(f"A {self.name!s} analysis requires a 'java_archive_ega_cryptor' configuration option.")
+            raise Exception(f"A {self.name!s} requires a 'java_archive_ega_cryptor' configuration option.")
 
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 

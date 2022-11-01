@@ -105,7 +105,7 @@ name_space = argument_parser.parse_args()
 
 if name_space.configuration == Configuration.global_file_path:
     if not (name_space.project_name or name_space.irf):
-        raise Exception("argument --project-name or --irf are required if --configuration is not set")
+        raise Exception('The arguments --project-name or --irf are required if --configuration is not set.')
 
 if name_space.logging_level:
     logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
@@ -119,7 +119,11 @@ if name_space.irf:
     analysis.run_directory = name_space.irf
 
 if name_space.project_name:
-    analysis.project_name = name_space.project_name
+    project_name: str = name_space.project_name
+    if project_name.endswith('.ini'):
+        raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+    analysis.project_name = project_name
 
 if name_space.lane_list:
     analysis.lane_list = name_space.lane_list.split(',')
@@ -139,7 +143,7 @@ if name_space.mode:
     elif name_space.mode == 'novaseq':
         analysis.lanes = 4
     else:
-        raise Exception("Unknown output mode " + name_space.mode)
+        raise Exception(f'The --mode option {name_space.mode!r} is not supported.')
 
 if name_space.force:
     analysis.force = name_space.force

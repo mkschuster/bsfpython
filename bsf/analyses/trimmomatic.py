@@ -447,7 +447,7 @@ class Trimmomatic(Analysis):
                     # Maybe this case should be allowed after Trimmomatic trimming,
                     # where only the second Read survives.
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
-                        raise Exception(f"PairedReads object {paired_reads.get_name()!r} has a 'reads_2', "
+                        raise Exception(f"The PairedReads object {paired_reads.get_name()!r} has a 'reads_2', "
                                         f"but no reads_1 object.")
 
                     file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)

@@ -737,7 +737,8 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         object_length = len(object_list)
 
         if object_length > 1:
-            raise Exception("SQL database returned more than one row for unique field 'job_id'.")
+            raise Exception(f"The SQL database returned more than one row for unique field 'job_id' "
+                            f"in table {self.table_name!r}.")
         elif object_length == 1:
             return object_list[0]
         else:

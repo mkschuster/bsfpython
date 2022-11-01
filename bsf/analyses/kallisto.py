@@ -288,7 +288,7 @@ class Kallisto(Analysis):
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(self.sas_file):
-                raise Exception(f'Sample annotation sheet {self.sas_file!r} does not exist.')
+                raise Exception(f'The sample annotation sheet {self.sas_file!r} does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
             if not self.sas_file:

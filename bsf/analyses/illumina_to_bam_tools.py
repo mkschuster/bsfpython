@@ -155,8 +155,8 @@ class LibraryAnnotationSheet(AnnotationSheet):
                 continue
             for index in range(0, 1 + 1):
                 if flow_cell_dict[lane_int][index] != len(row_dict['barcode_sequence_' + str(index + 1)]):
-                    warnings.warn("The length of 'barcode_sequence_" + str(index + 1) +
-                                  "' does not match previous records.\n" + repr(row_dict))
+                    warnings.warn(f"The length of 'barcode_sequence_{index + 1!s}' does not match previous records.\n"
+                                  f"{row_dict!r}", UserWarning)
 
         return flow_cell_dict
 
@@ -882,7 +882,7 @@ class IlluminaToBam(Analysis):
         if not self.sequencing_centre:
             self.sequencing_centre = Operator.get_sequencing_centre()
             if not self.sequencing_centre:
-                raise Exception(f"An {self.name!s} analysis requires a 'sequencing_centre' configuration option.")
+                raise Exception(f"An {self.name!s} requires a 'sequencing_centre' configuration option.")
 
         # Define the "Sequences" directory in which to create the experiment directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -909,16 +909,14 @@ class IlluminaToBam(Analysis):
         if not self.java_classpath_illumina2bam:
             self.java_classpath_illumina2bam = JavaClassPath.get_illumina2bam()
             if not self.java_classpath_illumina2bam:
-                raise Exception(
-                    f"An {self.name!s} analysis requires a 'java_classpath_illumina2bam' configuration option.")
+                raise Exception(f"An {self.name!s} requires a 'java_classpath_illumina2bam' configuration option.")
 
         # Get the Picard tools Java Archive (JAR) file path.
 
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception(
-                    f"An {self.name!s} analysis requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"An {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -1644,27 +1642,25 @@ class BamIndexDecoder(Analysis):
 
         if validation_messages:
             if self.force:
-                warnings.warn('Validation of library annotation sheet {!r}:\n{}'.
-                              format(self.library_path, validation_messages))
+                warnings.warn(f'Validation of library annotation sheet {self.library_path!r}:\n'
+                              f'{validation_messages}', UserWarning)
             else:
-                raise Exception('Validation of library annotation sheet {!r}:\n{}'.
-                                format(self.library_path, validation_messages))
+                raise Exception(f'Validation of library annotation sheet {self.library_path!r}:\n'
+                                f'{validation_messages}')
 
         # Get the Illumina2Bam tools Java Class Path directory.
 
         if not self.java_classpath_illumina2bam:
             self.java_classpath_illumina2bam = JavaClassPath.get_illumina2bam()
             if not self.java_classpath_illumina2bam:
-                raise Exception(
-                    f"A {self.name!s} analysis requires a 'java_classpath_illumina2bam' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_classpath_illumina2bam' configuration option.")
 
         # Get the Picard tools Java Archive (JAR) file path.
 
         if not self.java_archive_picard:
             self.java_archive_picard = JavaArchive.get_picard()
             if not self.java_archive_picard:
-                raise Exception(
-                    f"An {self.name!s} analysis requires a 'java_archive_picard' configuration option.")
+                raise Exception(f"A {self.name!s} requires a 'java_archive_picard' configuration option.")
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())

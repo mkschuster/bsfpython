@@ -183,7 +183,7 @@ class MD5SumArchive(object):
 
                     if not self.add_md5sum(md5sum=md5sum):
                         raise Exception(
-                            f'The MD5SumArchive file {file_path!r} '
+                            f"The MD5SumArchive file {file_path!r} "
                             "does not obey the standard 'MD5SUM *file_path' format.")
         else:
             module_logger.warning('The MD5SumArchive.file_path %r does not exist.', file_path)

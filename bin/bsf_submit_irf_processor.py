@@ -233,7 +233,7 @@ if name_space.illumina2bam:
         elif name_space.mode == 'novaseq':
             analysis_bid.lanes = 4
         else:
-            raise Exception("Unknown output mode " + name_space.mode)
+            raise Exception(f'The --mode option {name_space.mode!r} is not supported.')
     else:
         analysis_bid.lanes = RunFolder.from_file_path(
             file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
@@ -323,7 +323,7 @@ else:
         elif name_space.mode == 'novaseq':
             analysis_ids.lanes = 4
         else:
-            raise Exception("Unknown output mode " + name_space.mode)
+            raise Exception(f'The --mode option {name_space.mode!r} is not supported.')
     else:
         analysis_ids.lanes = RunFolder.from_file_path(
             file_path=analysis_ims.run_directory).run_information.flow_cell_layout.lane_count

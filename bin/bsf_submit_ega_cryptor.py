@@ -81,9 +81,9 @@ name_space = argument_parser.parse_args()
 
 if name_space.configuration == Configuration.global_file_path:
     if not name_space.project_name:
-        raise Exception("argument --project-name is required if --configuration is not set")
+        raise Exception('The argument --project-name is required if --configuration is not set.')
     if not name_space.sas_file:
-        raise Exception("argument --sas-file is required if --configuration is not set")
+        raise Exception('The argument --sas-file is required if --configuration is not set.')
 
 if name_space.logging_level:
     logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
@@ -94,10 +94,18 @@ if name_space.logging_level:
 analysis = EGACryptor.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.project_name:
-    analysis.project_name = name_space.project_name
+    project_name: str = name_space.project_name
+    if project_name.endswith('.ini'):
+        raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+    analysis.project_name = project_name
 
 if name_space.sas_file:
-    analysis.sas_file = name_space.sas_file
+    sas_file: str = name_space.sas_file
+    if not sas_file.endswith('.csv'):
+        raise Exception('The --sas-file option requires a comma-separated value (CSV) file.')
+
+    analysis.sas_file = sas_file
 
 analysis.run()
 analysis.check_state()

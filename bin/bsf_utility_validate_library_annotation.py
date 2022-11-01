@@ -74,9 +74,9 @@ elif name_space.mode == 'miseq':
 elif name_space.mode == 'nextseq':
     lanes = 4
 else:
-    raise Exception("Unknown output mode " + name_space.mode)
+    raise Exception(f'The --output mode option {name_space.mode!r} is not supported.')
 
 messages = library_annotation_sheet.validate(lanes=lanes)
 
 if messages:
-    warnings.warn('\n' + messages)
+    warnings.warn('\n' + messages, UserWarning)

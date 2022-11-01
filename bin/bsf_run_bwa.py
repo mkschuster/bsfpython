@@ -70,7 +70,7 @@ key = 'replicate_key'
 if key in pickler_dict and pickler_dict[key]:
     replicate_key = pickler_dict[key]
 else:
-    raise Exception('The pickler dict in the pickler file needs to contain key {!r}.'.format(key))
+    raise Exception(f'The pickler dict in the pickler file needs to contain key {key!r}.')
 
 key = 'java_archive_picard'
 if key in pickler_dict and pickler_dict[key]:
@@ -87,7 +87,7 @@ if not os.path.isdir(path_temporary):
         os.makedirs(path_temporary)
     except OSError as exception:
         if exception.errno != errno.EEXIST:
-            raise
+            raise exception
 
 path_fastq_1 = "{}{}_R1.fastq.gz".format(prefix, replicate_key)
 path_fastq_2 = "{}{}_R2.fastq.gz".format(prefix, replicate_key)
@@ -217,8 +217,9 @@ if runnable_step_bwa.sub_command.program == 'mem' and runnable_step_bwa.sub_comm
     # TODO: So far, this module only works with one read group per BAM file.
     if len(sam_header_rg) > 1:
         raise Exception(
-            "BAM file {!r} contains more than one read group line, which is not supported, yet.\n"
-            "RGs: {!r}".format(runnable_step_bwa.sub_command.arguments[1], sam_header_rg))
+            f'BAM file {runnable_step_bwa.sub_command.arguments[1]!r} contains more than one read group line, '
+            f'which is not supported, yet.\n'
+            f'RGs: {sam_header_rg!r}')
 
     runnable_step_bwa.sub_command.add_option_short(key='R', value=sam_header_rg[0].rstrip().replace("\t", "\\t"))
 

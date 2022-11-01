@@ -225,7 +225,8 @@ class Configuration(object):
         configuration._config_path_list = configuration.config_parser.read(filenames=configuration.file_path_list)
 
         if len(configuration._config_path_list) == 0:
-            raise Exception(f'None of the configuration files exist:\n{configuration.file_path_list!r}')
+            raise Exception(f'None of the configuration files exist:\n'
+                            f'{configuration.file_path_list!r}')
 
         return configuration
 
@@ -1643,7 +1644,7 @@ class Secrets(BaseSection):
 
         if path_stat_result.st_mode & cls.user_mask:
             raise Exception(
-                f'Secrets configuration file {file_path} has file mode {path_stat_result.st_mode:#0o}, '
+                f'The secrets configuration file {file_path!r} has file mode {path_stat_result.st_mode:#0o}, '
                 f'but should obey user mask {cls.user_mask:#0o}.')
 
         return file_path
@@ -1677,7 +1678,7 @@ class Central(BaseSection):
     :cvar section: A :py:class:`configparser.ConfigParser` section.
     :type section: str
     :cvar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
-    :type element_tree: ElementTree
+    :type element_tree: ElementTree | None
     """
 
     section = 'central'
@@ -1782,3 +1783,5 @@ class CentralVendorQualityFilters(object):
                 continue
 
             self.filter_dict[element.text] = self.str_to_bool(value=element.get('filter'))
+
+        return

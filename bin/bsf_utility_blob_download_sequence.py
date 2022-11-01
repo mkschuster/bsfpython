@@ -78,7 +78,7 @@ argument_parser.add_argument(
 name_space = argument_parser.parse_args()
 
 if not os.path.isdir(name_space.sequence_path):
-    raise Exception(f'Sequences directory {name_space.sequence_path!r} does not exist.')
+    raise Exception(f'The sequences directory {name_space.sequence_path!r} does not exist.')
 
 if name_space.logging_level:
     logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
@@ -91,7 +91,7 @@ azure_blob_service_client = get_azure_blob_service_client(account_name=name_spac
 if not azure_container_exists(
         azure_blob_service_client=azure_blob_service_client,
         container=name_space.container):
-    raise Exception(f'Azure Blob Container {name_space.container!r} does not exist.')
+    raise Exception(f'The Azure Blob Container {name_space.container!r} does not exist.')
 
 for sequence_item in name_space.sequence_item:
     logging.debug('Sequence item: %r', sequence_item)
