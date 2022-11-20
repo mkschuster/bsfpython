@@ -30,7 +30,7 @@ import os
 import pickle
 import warnings
 from subprocess import Popen
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional, TypeVar, Union
 
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
@@ -43,6 +43,16 @@ from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
 from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive
 
+VariantCallingGATKAmpliconsType = TypeVar(
+    name='VariantCallingGATKAmpliconsType',
+    bound='VariantCallingGATKAmplicons')
+VariantCallingGATKCallingIntervalsType = TypeVar(
+    name='VariantCallingGATKCallingIntervalsType',
+    bound='VariantCallingGATKCallingIntervals')
+VariantCallingGATKTargetIntervalsType = TypeVar(
+    name='VariantCallingGATKTargetIntervalsType',
+    bound='VariantCallingGATKTargetIntervals')
+
 module_logger = logging.getLogger(name=__name__)
 
 
@@ -53,25 +63,25 @@ class RunnableStepGATK(RunnableStepJava):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            java_temporary_path=None,
-            java_heap_minimum=None,
-            java_heap_maximum=None,
-            java_jar_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            java_temporary_path: Optional[str] = None,
+            java_heap_minimum: Optional[str] = None,
+            java_heap_maximum: Optional[str] = None,
+            java_jar_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.RunnableStepGATK` object.
 
         :param name: A name.
@@ -116,7 +126,7 @@ class RunnableStepGATK(RunnableStepJava):
         :type java_heap_minimum: str | None
         :param java_heap_maximum: A Java heap maximum size (-Xmx option).
         :type java_heap_maximum: str | None
-        :param java_jar_path: A Java Archive (JAR) file path.
+        :param java_jar_path: A :emphasis:`Java Archive` (JAR) file path.
         :type java_jar_path: str | None
         """
         super(RunnableStepGATK, self).__init__(
@@ -146,7 +156,7 @@ class RunnableStepGATK(RunnableStepJava):
 
         return
 
-    def add_gatk_option(self, key, value, override=False):
+    def add_gatk_option(self, key: str, value: str, override: bool = False) -> None:
         """Add a :py:class:`bsf.argument.OptionPair` object to a
         :py:class:`bsf.analyses.variant_calling.RunnableStepGATK` object.
 
@@ -160,7 +170,7 @@ class RunnableStepGATK(RunnableStepJava):
 
         return self.sub_command.sub_command.add_option_long(key=key, value=value, override=override)
 
-    def add_gatk_switch(self, key):
+    def add_gatk_switch(self, key: str) -> None:
         """Add a :py:class:`bsf.argument.SwitchLong` object to a
         :py:class:`bsf.analyses.variant_calling.RunnableStepGATK` object.
 
@@ -179,11 +189,11 @@ class FilePathAlignment(FilePath):
     :type aligned_bam: str
     :ivar aligned_bai: An alignment BAI file path.
     :type aligned_bai: str
-    :ivar aligned_md5: An alignment MD5 check sum file path.
+    :ivar aligned_md5: An alignment MD5 checksum file path.
     :type aligned_md5: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathAlignment` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -206,13 +216,13 @@ class FilePathProcessReadGroup(FilePath):
     :type trimmed_bam: str
     :ivar trimmed_bai: A Fulcrum Genomics (fgbio) TrimPrimer BAI file path.
     :type trimmed_bai: str
-    :ivar trimmed_md5: A Fulcrum Genomics (fgbio) TrimPrimer MD5 check sum file path.
+    :ivar trimmed_md5: A Fulcrum Genomics (fgbio) TrimPrimer MD5 checksum file path.
     :type trimmed_md5: str
     :ivar duplicates_marked_bam: A Picard :literal:`MarkDuplicates` BAM file path.
     :type duplicates_marked_bam: str
     :ivar duplicates_marked_bai: A Picard :literal:`MarkDuplicates` BAI file path.
     :type duplicates_marked_bai: str
-    :ivar duplicates_marked_md5: A Picard :literal:`MarkDuplicates` MD5 check sum file path.
+    :ivar duplicates_marked_md5: A Picard :literal:`MarkDuplicates` MD5 checksum file path.
     :type duplicates_marked_md5: str
     :ivar duplicate_metrics: A Picard :literal:`MarkDuplicates` Metrics TSV file path.
     :type duplicate_metrics: str
@@ -222,7 +232,7 @@ class FilePathProcessReadGroup(FilePath):
     :type realigned_bam: str
     :ivar realigned_bai: A GATK re-aligned BAI file path.
     :type realigned_bai: str
-    :ivar realigned_md5: A GATK re-aligned MD5 check sum file path.
+    :ivar realigned_md5: A GATK re-aligned MD5 checksum file path.
     :type realigned_md5: str
     :ivar recalibration_table_pre: A GATK pre-recalibration table file path.
     :type recalibration_table_pre: str
@@ -234,11 +244,11 @@ class FilePathProcessReadGroup(FilePath):
     :type recalibrated_bam: str
     :ivar recalibrated_bai: A recalibrated BAI file path.
     :type recalibrated_bai: str
-    :ivar recalibrated_md5: A recalibrated BAM MD5 check sum file path.
+    :ivar recalibrated_md5: A recalibrated BAM MD5 checksum file path.
     :type recalibrated_md5: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathProcessReadGroup` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -275,13 +285,13 @@ class FilePathProcessSample(FilePath):
     :type merged_bam: str
     :ivar merged_bai: A merged BAI file path.
     :type merged_bai: str
-    :ivar merged_md5: A merged MD5 check sum file path.
+    :ivar merged_md5: A merged MD5 checksum file path.
     :type merged_md5: str
     :ivar duplicates_marked_bam: A duplicates-marked BAM file path.
     :type duplicates_marked_bam: str
     :ivar duplicates_marked_bai: A duplicates-marked BAI file path.
     :type duplicates_marked_bai: str
-    :ivar duplicates_marked_md5: A duplicates-marked MD5 check sum file path.
+    :ivar duplicates_marked_md5: A duplicates-marked MD5 checksum file path.
     :type duplicates_marked_md5: str
     :ivar duplicate_metrics: A duplicate metrics TSV file path.
     :type duplicate_metrics: str
@@ -291,7 +301,7 @@ class FilePathProcessSample(FilePath):
     :type realigned_bam: str
     :ivar realigned_bai: A re-aligned BAI file path.
     :type realigned_bai: str
-    :ivar realigned_md5: A re-aligned MD5 check sum file path.
+    :ivar realigned_md5: A re-aligned MD5 checksum file path.
     :type realigned_md5: str
     :ivar realigned_bam_bai: A re-aligned BAM BAI file path.
     :type realigned_bam_bai: str
@@ -303,7 +313,7 @@ class FilePathProcessSample(FilePath):
     :type raw_variants_gvcf_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathProcessSample` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -366,7 +376,7 @@ class FilePathDiagnoseSample(FilePath):
     :type insert_size_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathDiagnoseSample` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -405,7 +415,7 @@ class FilePathMergeCohort(FilePath):
     :type combined_gvcf_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathMergeCohort` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -429,7 +439,7 @@ class FilePathGenotypeCohort(FilePath):
     :type genotyped_raw_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathGenotypeCohort` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -473,7 +483,7 @@ class FilePathProcessCohort(FilePath):
     :type plots_snp: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathProcessCohort` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -527,7 +537,7 @@ class FilePathAnnotateSnpEff(FilePath):
     :type annotated_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathAnnotateSnpEff` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -579,7 +589,7 @@ class FilePathAnnotateVEP(FilePath):
     :type filtered_vcf_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathAnnotateVEP` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -617,7 +627,7 @@ class FilePathSplitCohort(FilePath):
     :type sample_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathSplitCohort` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -713,7 +723,7 @@ class FilePathSummary(FilePath):
     :type non_callable_percentage_sample_png: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathSummary` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -773,7 +783,7 @@ class FilePathSomatic(FilePath):
     :type somatic_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathSomatic` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -797,7 +807,7 @@ class FilePathSomaticScatterGather(FilePath):
     :type somatic_tbi: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathSomaticScatterGather` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -819,7 +829,7 @@ class FilePathSplitSomatic(FilePath):
     :type comparison_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.FilePathSplitSomatic` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -845,9 +855,9 @@ class VariantCallingGATKComparison(object):
 
     def __init__(
             self,
-            normal_sample=None,
-            tumor_sample=None,
-            panel_of_normal_path=None):
+            normal_sample: Optional[Sample] = None,
+            tumor_sample: Optional[Sample] = None,
+            panel_of_normal_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKComparison` object.
 
         :param normal_sample: A :literal:`normal` :py:class:`bsf.ngs.Sample` object.
@@ -865,7 +875,7 @@ class VariantCallingGATKComparison(object):
         return
 
     @property
-    def get_name(self):
+    def get_name(self) -> Optional[str]:
         """Get the name of a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKComparison` object.
 
         :return: A comparison name.
@@ -891,7 +901,7 @@ class VariantCallingGATKAmplicons(object):
     """
 
     @classmethod
-    def from_sample(cls, sample):
+    def from_sample(cls, sample: Sample) -> VariantCallingGATKAmpliconsType:
         """Create a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKAmplicons` object from a
         :py:class:`bsf.ngs.Sample` object.
 
@@ -924,7 +934,7 @@ class VariantCallingGATKAmplicons(object):
 
         return amplicons
 
-    def __init__(self, name=None, amplicons_path=None):
+    def __init__(self, name: Optional[str] = None, amplicons_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKAmplicons` object.
 
         :param name: A name.
@@ -949,7 +959,7 @@ class VariantCallingGATKCallingIntervals(object):
     """
 
     @classmethod
-    def from_sample(cls, sample):
+    def from_sample(cls, sample: Sample) -> VariantCallingGATKCallingIntervalsType:
         """Create a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals` object from a
         :py:class:`bsf.ngs.Sample` object.
 
@@ -982,7 +992,7 @@ class VariantCallingGATKCallingIntervals(object):
 
         return calling_intervals
 
-    def __init__(self, name=None, calling_path=None):
+    def __init__(self, name: Optional[str] = None, calling_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKCallingIntervals` object.
 
         :param name: A name.
@@ -1008,7 +1018,7 @@ class VariantCallingGATKTargetIntervals(object):
     """
 
     @classmethod
-    def from_sample(cls, sample):
+    def from_sample(cls, sample: Sample) -> VariantCallingGATKTargetIntervalsType:
         """Create a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKTargetIntervals` object from a
         :py:class:`bsf.ngs.Sample` object.
 
@@ -1053,7 +1063,11 @@ class VariantCallingGATKTargetIntervals(object):
 
         return target_intervals
 
-    def __init__(self, name=None, probes_path=None, targets_path=None):
+    def __init__(
+            self,
+            name: Optional[str] = None,
+            probes_path: Optional[str] = None,
+            targets_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.VariantCallingGATKTargetIntervals` object.
 
         :param name: A name.
@@ -1076,9 +1090,10 @@ class VariantCallingGATK(Analysis):
 
     :cvar variants_to_table: Run GATK :literal:`VariantsToTable` to convert VCF to TSV files.
     :type variants_to_table: bool
-    :ivar replicate_grouping: Group individual :py:Class:`bsf.ngs.PairedReads` objects for separate processing.
+    :ivar replicate_grouping: Request grouping individual :py:Class:`bsf.ngs.PairedReads` objects for
+        separate processing.
     :type replicate_grouping: bool | None
-    :ivar bwa_genome_db: A genome sequence FASTA file path with BWA index.
+    :ivar bwa_genome_db: A genome sequence :emphasis:`FASTA` file path with BWA index.
     :type bwa_genome_db: str | None
     :ivar comparison_path: A comparison file path.
     :type comparison_path: str | None
@@ -1174,7 +1189,7 @@ class VariantCallingGATK(Analysis):
     :type vep_assembly: str | None
     :ivar vep_cache: An Ensembl Variant Effect Predictor (VEP) cache directory path.
     :type vep_cache: str | None
-    :ivar vep_fasta: An Ensembl Variant Effect Predictor (VEP) FASTA directory path.
+    :ivar vep_fasta: An Ensembl Variant Effect Predictor (VEP) :emphasis:`FASTA` directory path.
     :type vep_fasta: str | None
     :ivar vep_plugin: An Ensembl Variant Effect Predictor (VEP) plug-in directory path.
     :type vep_plugin: str | None
@@ -1198,15 +1213,15 @@ class VariantCallingGATK(Analysis):
     :type vep_refseq_alignments_path: str | None
     :ivar vep_plugin_cadd_path: An Ensembl Variant Effect Predictor (VEP) CADD file path.
     :type vep_plugin_cadd_path: str | None
-    :ivar java_archive_fgbio: A Fulcrum Genomics (fgbio) Java Archive (JAR) file path.
+    :ivar java_archive_fgbio: A Fulcrum Genomics (fgbio) :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_fgbio: str | None
-    :ivar java_archive_gatk: A Genome Analysis Tool Kit Java Archive (JAR) file path.
+    :ivar java_archive_gatk: A Genome Analysis Tool Kit :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_gatk: str | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
-    :ivar java_archive_snpeff: A snpEff tool Java Archive (JAR) file path.
+    :ivar java_archive_snpeff: A snpEff tool :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_snpeff: str | None
-    :ivar java_archive_vcf_filter: A VCF.Filter tool Java Archive (JAR) file path.
+    :ivar java_archive_vcf_filter: A VCF.Filter tool :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_vcf_filter: str | None
     """
 
@@ -1215,7 +1230,7 @@ class VariantCallingGATK(Analysis):
     variants_to_table = False
 
     @classmethod
-    def get_stage_name_align_lane(cls):
+    def get_stage_name_align_lane(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1224,7 +1239,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'align_lane'))
 
     @classmethod
-    def get_stage_name_process_lane(cls):
+    def get_stage_name_process_lane(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1233,7 +1248,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'process_lane'))
 
     @classmethod
-    def get_stage_name_process_sample(cls):
+    def get_stage_name_process_sample(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1242,7 +1257,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'process_sample'))
 
     @classmethod
-    def get_stage_name_diagnose_sample(cls):
+    def get_stage_name_diagnose_sample(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1251,7 +1266,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'diagnose_sample'))
 
     @classmethod
-    def get_stage_name_merge_cohort(cls):
+    def get_stage_name_merge_cohort(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1260,7 +1275,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'merge_cohort'))
 
     @classmethod
-    def get_stage_name_process_cohort(cls):
+    def get_stage_name_process_cohort(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1269,7 +1284,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'process_cohort'))
 
     @classmethod
-    def get_stage_name_annotate_cohort_snpeff(cls):
+    def get_stage_name_annotate_cohort_snpeff(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1278,7 +1293,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'annotate_cohort_snpeff'))
 
     @classmethod
-    def get_stage_name_annotate_cohort_vep(cls):
+    def get_stage_name_annotate_cohort_vep(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1287,7 +1302,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'annotate_cohort_vep'))
 
     @classmethod
-    def get_stage_name_split_cohort_snpeff(cls):
+    def get_stage_name_split_cohort_snpeff(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1296,7 +1311,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'split_cohort_snpeff'))
 
     @classmethod
-    def get_stage_name_split_cohort_vep(cls):
+    def get_stage_name_split_cohort_vep(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1305,7 +1320,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'split_cohort_vep'))
 
     @classmethod
-    def get_stage_name_summary(cls):
+    def get_stage_name_summary(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1314,7 +1329,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'summary'))
 
     @classmethod
-    def get_stage_name_somatic(cls):
+    def get_stage_name_somatic(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1323,7 +1338,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'somatic'))
 
     @classmethod
-    def get_stage_name_annotate_somatic_snpeff(cls):
+    def get_stage_name_annotate_somatic_snpeff(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1332,7 +1347,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'annotate_somatic_snpeff'))
 
     @classmethod
-    def get_stage_name_annotate_somatic_vep(cls):
+    def get_stage_name_annotate_somatic_vep(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1341,7 +1356,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'annotate_somatic_vep'))
 
     @classmethod
-    def get_stage_name_split_somatic_snpeff(cls):
+    def get_stage_name_split_somatic_snpeff(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1350,7 +1365,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'split_somatic_snpeff'))
 
     @classmethod
-    def get_stage_name_split_somatic_vep(cls):
+    def get_stage_name_split_somatic_vep(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1359,7 +1374,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.prefix, 'split_somatic_vep'))
 
     @classmethod
-    def get_prefix_align_lane(cls, paired_reads_name):
+    def get_prefix_align_lane(cls, paired_reads_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -1370,7 +1385,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_align_lane(), paired_reads_name))
 
     @classmethod
-    def get_prefix_process_lane(cls, paired_reads_name):
+    def get_prefix_process_lane(cls, paired_reads_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -1381,7 +1396,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_process_lane(), paired_reads_name))
 
     @classmethod
-    def get_prefix_process_sample(cls, sample_name):
+    def get_prefix_process_sample(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1392,7 +1407,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_process_sample(), sample_name))
 
     @classmethod
-    def get_prefix_diagnose_sample(cls, sample_name):
+    def get_prefix_diagnose_sample(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1403,7 +1418,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_diagnose_sample(), sample_name))
 
     @classmethod
-    def get_prefix_merge_cohort(cls, cohort_name):
+    def get_prefix_merge_cohort(cls, cohort_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param cohort_name: A cohort name.
@@ -1414,7 +1429,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_merge_cohort(), cohort_name))
 
     @classmethod
-    def get_prefix_process_cohort(cls, cohort_name):
+    def get_prefix_process_cohort(cls, cohort_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param cohort_name: A cohort name.
@@ -1425,7 +1440,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_process_cohort(), cohort_name))
 
     @classmethod
-    def get_prefix_annotate_cohort_snpeff(cls, cohort_name):
+    def get_prefix_annotate_cohort_snpeff(cls, cohort_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param cohort_name: A cohort name.
@@ -1436,7 +1451,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_annotate_cohort_snpeff(), cohort_name))
 
     @classmethod
-    def get_prefix_annotate_cohort_vep(cls, cohort_name):
+    def get_prefix_annotate_cohort_vep(cls, cohort_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param cohort_name: A cohort name.
@@ -1447,7 +1462,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_annotate_cohort_vep(), cohort_name))
 
     @classmethod
-    def get_prefix_split_cohort_snpeff(cls, sample_name):
+    def get_prefix_split_cohort_snpeff(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1458,7 +1473,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_split_cohort_snpeff(), sample_name))
 
     @classmethod
-    def get_prefix_split_cohort_vep(cls, sample_name):
+    def get_prefix_split_cohort_vep(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1469,7 +1484,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_split_cohort_vep(), sample_name))
 
     @classmethod
-    def get_prefix_summary(cls, cohort_name):
+    def get_prefix_summary(cls, cohort_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param cohort_name: A cohort name.
@@ -1480,7 +1495,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_summary(), cohort_name))
 
     @classmethod
-    def get_prefix_somatic(cls, comparison_name):
+    def get_prefix_somatic(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -1491,7 +1506,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_somatic(), comparison_name))
 
     @classmethod
-    def get_prefix_annotate_somatic_snpeff(cls, comparison_name):
+    def get_prefix_annotate_somatic_snpeff(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -1502,7 +1517,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_annotate_somatic_snpeff(), comparison_name))
 
     @classmethod
-    def get_prefix_annotate_somatic_vep(cls, comparison_name):
+    def get_prefix_annotate_somatic_vep(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -1513,7 +1528,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_annotate_somatic_vep(), comparison_name))
 
     @classmethod
-    def get_prefix_split_somatic_snpeff(cls, comparison_name):
+    def get_prefix_split_somatic_snpeff(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -1524,7 +1539,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_split_somatic_snpeff(), comparison_name))
 
     @classmethod
-    def get_prefix_split_somatic_vep(cls, comparison_name):
+    def get_prefix_split_somatic_vep(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -1535,7 +1550,7 @@ class VariantCallingGATK(Analysis):
         return '_'.join((cls.get_stage_name_split_somatic_vep(), comparison_name))
 
     @classmethod
-    def get_file_path_align_lane(cls, paired_reads_name):
+    def get_file_path_align_lane(cls, paired_reads_name: str) -> FilePathAlignment:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathAlignment` object.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -1547,7 +1562,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_align_lane(paired_reads_name=paired_reads_name))
 
     @classmethod
-    def get_file_path_process_read_group(cls, paired_reads_name):
+    def get_file_path_process_read_group(cls, paired_reads_name: str) -> FilePathProcessReadGroup:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathProcessReadGroup` object.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -1559,7 +1574,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_process_lane(paired_reads_name=paired_reads_name))
 
     @classmethod
-    def get_file_path_process_sample(cls, sample_name):
+    def get_file_path_process_sample(cls, sample_name: str) -> FilePathProcessSample:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathProcessSample` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1571,7 +1586,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_process_sample(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_diagnose_sample(cls, sample_name):
+    def get_file_path_diagnose_sample(cls, sample_name: str) -> FilePathDiagnoseSample:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathDiagnoseSample` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1583,7 +1598,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_diagnose_sample(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_merge_cohort(cls, cohort_name):
+    def get_file_path_merge_cohort(cls, cohort_name: str) -> FilePathMergeCohort:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathMergeCohort` object.
 
         :param cohort_name: A cohort name.
@@ -1595,7 +1610,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_merge_cohort(cohort_name=cohort_name))
 
     @classmethod
-    def get_file_path_process_cohort(cls, cohort_name):
+    def get_file_path_process_cohort(cls, cohort_name: str) -> FilePathProcessCohort:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathProcessCohort` object.
 
         :param cohort_name: A cohort name
@@ -1607,7 +1622,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_process_cohort(cohort_name=cohort_name))
 
     @classmethod
-    def get_file_path_annotate_cohort_snpeff(cls, cohort_name):
+    def get_file_path_annotate_cohort_snpeff(cls, cohort_name: str) -> FilePathAnnotateSnpEff:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathAnnotateSnpEff` object.
 
         :param cohort_name: A cohort name.
@@ -1619,7 +1634,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_annotate_cohort_snpeff(cohort_name=cohort_name))
 
     @classmethod
-    def get_file_path_annotate_cohort_vep(cls, cohort_name):
+    def get_file_path_annotate_cohort_vep(cls, cohort_name: str) -> FilePathAnnotateVEP:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathAnnotateVEP` object.
 
         :param cohort_name: A cohort name.
@@ -1631,7 +1646,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_annotate_cohort_vep(cohort_name=cohort_name))
 
     @classmethod
-    def get_file_path_annotate_somatic_snpeff(cls, comparison_name):
+    def get_file_path_annotate_somatic_snpeff(cls, comparison_name: str) -> FilePathAnnotateSnpEff:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathAnnotateSnpEff` object.
 
         :param comparison_name: A comparison name.
@@ -1643,7 +1658,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_annotate_somatic_snpeff(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_annotate_somatic_vep(cls, comparison_name):
+    def get_file_path_annotate_somatic_vep(cls, comparison_name: str) -> FilePathAnnotateVEP:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathAnnotateVEP` object.
 
         :param comparison_name: A comparison name.
@@ -1655,7 +1670,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_annotate_somatic_vep(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_split_cohort_snpeff(cls, sample_name):
+    def get_file_path_split_cohort_snpeff(cls, sample_name: str) -> FilePathSplitCohort:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathSplitCohort` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1667,7 +1682,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_split_cohort_snpeff(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_split_cohort_vep(cls, sample_name):
+    def get_file_path_split_cohort_vep(cls, sample_name: str) -> FilePathSplitCohort:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathSplitCohort` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -1679,7 +1694,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_split_cohort_vep(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_summary(cls, cohort_name):
+    def get_file_path_summary(cls, cohort_name: str) -> FilePathSummary:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathSummary` object.
 
         :param cohort_name: A cohort name.
@@ -1691,7 +1706,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_summary(cohort_name=cohort_name))
 
     @classmethod
-    def get_file_path_somatic(cls, comparison_name):
+    def get_file_path_somatic(cls, comparison_name: str) -> FilePathSomatic:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathSomatic` object.
 
         :param comparison_name: A comparison name.
@@ -1703,7 +1718,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_somatic(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_split_somatic_snpeff(cls, comparison_name):
+    def get_file_path_split_somatic_snpeff(cls, comparison_name: str) -> FilePathSplitSomatic:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathSplitSomatic` object.
 
         :param comparison_name: A comparison name.
@@ -1715,7 +1730,7 @@ class VariantCallingGATK(Analysis):
             prefix=cls.get_prefix_split_somatic_snpeff(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_split_somatic_vep(cls, comparison_name):
+    def get_file_path_split_somatic_vep(cls, comparison_name: str) -> FilePathSplitSomatic:
         """Get a :py:class:`bsf.analyses.variant_calling.FilePathSplitSomatic` object.
 
         :param comparison_name: A comparison name.
@@ -1728,75 +1743,75 @@ class VariantCallingGATK(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            replicate_grouping=False,
-            bwa_genome_db=None,
-            comparison_path=None,
-            cohort_name=None,
-            accessory_cohort_gvcfs=None,
-            skip_mark_duplicates=None,
-            skip_indel_realignment=None,
-            known_sites_discovery=None,
-            known_sites_realignment=None,
-            known_sites_recalibration=None,
-            known_somatic_discovery=None,
-            annotation_resources_dict=None,
-            truth_sensitivity_filter_level_indel=None,
-            truth_sensitivity_filter_level_snp=None,
-            vqsr_skip_indel=None,
-            vqsr_skip_snp=None,
-            vqsr_resources_indel_dict=None,
-            vqsr_resources_snp_dict=None,
-            vqsr_annotations_indel_list=None,
-            vqsr_annotations_snp_list=None,
-            vqsr_bad_lod_cutoff_indel=None,
-            vqsr_bad_lod_cutoff_snp=None,
-            vqsr_max_gaussians_pos_indel=4,
-            vqsr_max_gaussians_pos_snp=None,
-            exclude_intervals_list=None,
-            include_intervals_list=None,
-            interval_padding=None,
-            scatter_intervals_path=None,
-            number_of_tiles_cohort=None,
-            number_of_chunks_cohort=None,
-            number_of_tiles_somatic=None,
-            number_of_chunks_somatic=None,
-            gatk_bundle_version=None,
-            snpeff_genome_version=None,
-            genome_annotation_gtf=None,
-            vep_annotation=None,
-            vep_assembly=None,
-            vep_cache=None,
-            vep_fasta=None,
-            vep_plugin=None,
-            vep_species=None,
-            vep_source=None,
-            vep_sql_user=None,
-            vep_sql_pass=None,
-            vep_sql_host=None,
-            vep_sql_port=None,
-            vep_ofc_path=None,
-            vep_soc_path=None,
-            vep_refseq_alignments_path=None,
-            vep_plugin_cadd_path=None,
-            java_archive_fgbio=None,
-            java_archive_gatk=None,
-            java_archive_picard=None,
-            java_archive_snpeff=None,
-            java_archive_vcf_filter=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            replicate_grouping: Optional[bool] = False,
+            bwa_genome_db: Optional[str] = None,
+            comparison_path: Optional[str] = None,
+            cohort_name: Optional[str] = None,
+            accessory_cohort_gvcfs: Optional[list[str]] = None,
+            skip_mark_duplicates: Optional[bool] = None,
+            skip_indel_realignment: Optional[bool] = None,
+            known_sites_discovery: Optional[str] = None,
+            known_sites_realignment: Optional[list[str]] = None,
+            known_sites_recalibration: Optional[list[str]] = None,
+            known_somatic_discovery: Optional[list[str]] = None,
+            annotation_resources_dict: Optional[dict[str, tuple[str, list[str]]]] = None,
+            truth_sensitivity_filter_level_indel: Optional[str] = None,
+            truth_sensitivity_filter_level_snp: Optional[str] = None,
+            vqsr_skip_indel: Optional[bool] = None,
+            vqsr_skip_snp: Optional[bool] = None,
+            vqsr_resources_indel_dict: Optional[dict[str, dict[str, str]]] = None,
+            vqsr_resources_snp_dict: Optional[dict[str, dict[str, str]]] = None,
+            vqsr_annotations_indel_list: Optional[list[str]] = None,
+            vqsr_annotations_snp_list: Optional[list[str]] = None,
+            vqsr_bad_lod_cutoff_indel: Optional[float] = None,
+            vqsr_bad_lod_cutoff_snp: Optional[float] = None,
+            vqsr_max_gaussians_pos_indel: Optional[int] = 4,
+            vqsr_max_gaussians_pos_snp: Optional[int] = None,
+            exclude_intervals_list: Optional[list[str]] = None,
+            include_intervals_list: Optional[list[str]] = None,
+            interval_padding: Optional[int] = None,
+            scatter_intervals_path: Optional[str] = None,
+            number_of_tiles_cohort: Optional[int] = None,
+            number_of_chunks_cohort: Optional[int] = None,
+            number_of_tiles_somatic: Optional[int] = None,
+            number_of_chunks_somatic: Optional[int] = None,
+            gatk_bundle_version: Optional[str] = None,
+            snpeff_genome_version: Optional[str] = None,
+            genome_annotation_gtf: Optional[str] = None,
+            vep_annotation: Optional[str] = None,
+            vep_assembly: Optional[str] = None,
+            vep_cache: Optional[str] = None,
+            vep_fasta: Optional[str] = None,
+            vep_plugin: Optional[str] = None,
+            vep_species: Optional[str] = None,
+            vep_source: Optional[str] = None,
+            vep_sql_user: Optional[str] = None,
+            vep_sql_pass: Optional[str] = None,
+            vep_sql_host: Optional[str] = None,
+            vep_sql_port: Optional[str] = None,
+            vep_ofc_path: Optional[str] = None,
+            vep_soc_path: Optional[str] = None,
+            vep_refseq_alignments_path: Optional[str] = None,
+            vep_plugin_cadd_path: Optional[str] = None,
+            java_archive_fgbio: Optional[str] = None,
+            java_archive_gatk: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            java_archive_snpeff: Optional[str] = None,
+            java_archive_vcf_filter: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.variant_calling.VariantCallingGATK` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -1813,13 +1828,13 @@ class VariantCallingGATK(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -1827,9 +1842,10 @@ class VariantCallingGATK(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param replicate_grouping: Group individual :py:Class:`bsf.ngs.PairedReads` objects for separate processing.
+        :param replicate_grouping: Request grouping individual :py:Class:`bsf.ngs.PairedReads` objects for
+            separate processing.
         :type replicate_grouping: bool | None
-        :param bwa_genome_db: A genome sequence FASTA file path with BWA index.
+        :param bwa_genome_db: A genome sequence :emphasis:`FASTA` file path with BWA index.
         :type bwa_genome_db: str | None
         :param comparison_path: A comparison file path.
         :type comparison_path: str | None
@@ -1925,7 +1941,7 @@ class VariantCallingGATK(Analysis):
         :type vep_assembly: str | None
         :param vep_cache: An Ensembl Variant Effect Predictor (VEP) cache directory path.
         :type vep_cache: str | None
-        :param vep_fasta: An Ensembl Variant Effect Predictor (VEP) FASTA directory path.
+        :param vep_fasta: An Ensembl Variant Effect Predictor (VEP) :emphasis:`FASTA` directory path.
         :type vep_fasta: str | None
         :param vep_plugin: An Ensembl Variant Effect Predictor (VEP) plug-in directory path.
         :type vep_plugin: str | None
@@ -1950,15 +1966,15 @@ class VariantCallingGATK(Analysis):
         :type vep_refseq_alignments_path: str | None
         :param vep_plugin_cadd_path: An Ensembl Variant Effect Predictor (VEP) CADD file path.
         :type vep_plugin_cadd_path: str | None
-        :param java_archive_fgbio: A Fulcrum Genomics (fgbio) Java Archive (JAR) file path.
+        :param java_archive_fgbio: A Fulcrum Genomics (fgbio) :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_fgbio: str | None
-        :param java_archive_gatk: A Genome Analysis Tool Kit Java Archive (JAR) file path.
+        :param java_archive_gatk: A Genome Analysis Tool Kit :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_gatk: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
-        :param java_archive_snpeff: A snpEff tool Java Archive (JAR) file path.
+        :param java_archive_snpeff: A snpEff tool :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_snpeff: str | None
-        :param java_archive_vcf_filter: A VCF.Filter tool Java Archive (JAR) file path.
+        :param java_archive_vcf_filter: A VCF.Filter tool :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_vcf_filter: str | None
         """
 
@@ -2045,18 +2061,18 @@ class VariantCallingGATK(Analysis):
         self.java_archive_snpeff = java_archive_snpeff
         self.java_archive_vcf_filter = java_archive_vcf_filter
 
-        self._comparison_dict: Dict[str, VariantCallingGATKComparison] = dict()
-        self._cache_path_dict: Optional[Dict[str, str]] = None
+        self._comparison_dict: dict[str, VariantCallingGATKComparison] = dict()
+        self._cache_path_dict: Optional[dict[str, str]] = None
 
         # Initialise the Python list of genome tile regions with an empty region to run a single process by default.
 
-        self._tile_region_cohort_list: Optional[List[Container]] = None
-        self._tile_region_somatic_list: Optional[List[Container]] = None
+        self._tile_region_cohort_list: Optional[list[Container]] = None
+        self._tile_region_somatic_list: Optional[list[Container]] = None
 
         return
 
     @property
-    def get_gatk_bundle_path(self):
+    def get_gatk_bundle_path(self) -> str:
         """Get the absolute GATK bundle directory
         :py:mod:`bsf.standards.StandardFilePath.get_resource_gatk_bundle` for the
         :py:attr:`bsf.analyses.variant_calling.VariantCallingGATK.gatk_bundle_version` and
@@ -2070,7 +2086,7 @@ class VariantCallingGATK(Analysis):
             genome_version=self.genome_version,
             absolute=True)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.variant_calling.VariantCallingGATK` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -2082,7 +2098,9 @@ class VariantCallingGATK(Analysis):
         :type section: str
         """
 
-        def set_vqsr_configuration(vqsr_resources_dict, variation_type):
+        def set_vqsr_configuration(
+                vqsr_resources_dict: Optional[dict[str, dict[str, str]]],
+                variation_type: str) -> Optional[dict[str, dict[str, str]]]:
             """Private function to read variant quality score recalibration (VQSR) configuration information.
 
             Configuration options :literal:´vqsr_resources_indel` and :literal:`vqsr_resources_snp` provide a
@@ -2142,7 +2160,8 @@ class VariantCallingGATK(Analysis):
 
             return vqsr_resources_dict
 
-        def set_annotation_configuration(annotation_resources_dict):
+        def set_annotation_configuration(
+                annotation_resources_dict: dict[str, tuple[str, list[str]]]) -> dict[str, tuple[str, list[str]]]:
             """Private function to read variant annotation configuration information.
 
             :param annotation_resources_dict: A Python :py:class:`dict` object of
@@ -2425,29 +2444,39 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.variant_calling.VariantCallingGATK` object.
         """
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
-                - Column headers for CASAVA folders
-                    - Normal/Tumor ProcessedRunFolder
-                        - CASAVA processed run folder name or
-                        - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
-                    - Normal/Tumor Project
-                        - CASAVA Project name or
-                        - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
-                    - Normal/Tumor Sample
-                        - CASAVA Sample name, no default
-                - Column headers for independent samples
-                    - Normal/Tumor Sample
-                    - Normal/Tumor Reads
-                    - Normal/Tumor File
-                - PON Path
-                    - File path to a Panel-Of-Normal (PON) VCF file
+            - Column headers for CASAVA folders
+
+              - Normal/Tumor ProcessedRunFolder
+
+                - CASAVA processed run folder name or
+                - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
+
+              - Normal/Tumor Project
+
+                - CASAVA Project name or
+                - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
+
+              - Normal/Tumor Sample
+
+                - CASAVA Sample name, no default
+
+            - Column headers for independent samples
+
+              - Normal/Tumor Sample
+              - Normal/Tumor Reads
+              - Normal/Tumor File
+
+            - PON Path
+
+              - File path to a Panel-Of-Normal (PON) VCF file
             """
             # For variant calling, all samples need adding to the bsf.analysis.Analysis regardless.
             for _sample in self.collection.get_all_samples():
@@ -2602,7 +2631,10 @@ class VariantCallingGATK(Analysis):
             ),
         }
 
-        def run_merge_cohort_scatter_gather(analysis_stage, cohort_runnable_dict, cohort_name):
+        def run_merge_cohort_scatter_gather(
+                analysis_stage: Stage,
+                cohort_runnable_dict: dict[str, list[tuple[Union[ConsecutiveRunnable, str], str]]],
+                cohort_name: str) -> tuple[ConsecutiveRunnable, str]:
             """Private method to hierarchically merge samples into cohorts using a scatter gather approach.
 
             This method merges GVCF file paths from individual
@@ -2644,7 +2676,7 @@ class VariantCallingGATK(Analysis):
             cohort_object_list = cohort_runnable_dict[cohort_name]
 
             # Scatter
-            runnable_scatter_list: List[ConsecutiveRunnable] = list()
+            runnable_scatter_list: list[ConsecutiveRunnable] = list()
 
             tile_index_list_old = range(0, len(self._tile_region_cohort_list))
 
@@ -2653,7 +2685,7 @@ class VariantCallingGATK(Analysis):
 
                 file_path_merge_cohort_scatter = FilePathMergeCohort(prefix=prefix_merge_cohort_scatter)
 
-                runnable_scatter = self.add_runnable_consecutive(
+                runnable_scatter = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=prefix_merge_cohort_scatter,
                         working_directory=self.genome_directory,
@@ -2713,7 +2745,7 @@ class VariantCallingGATK(Analysis):
                     value=file_path_merge_cohort_scatter.combined_gvcf_vcf)
 
             # Gather
-            runnable_gather_list: List[ConsecutiveRunnable] = list()
+            runnable_gather_list: list[ConsecutiveRunnable] = list()
 
             if len(self._tile_region_cohort_list) == 1:
                 # If there is only one tile, no need to gather.
@@ -2726,8 +2758,8 @@ class VariantCallingGATK(Analysis):
                 runnable_gather_list_old = runnable_scatter_list
                 gather_level = 0
                 while len(tile_index_list_old) > 1:
-                    tile_index_list_new: List[int] = list()
-                    runnable_gather_list_new: List[ConsecutiveRunnable] = list()
+                    tile_index_list_new: list[int] = list()
+                    runnable_gather_list_new: list[ConsecutiveRunnable] = list()
                     # Partition the index list into chunks of given size.
                     partition_list = [tile_index_list_old[offset:offset + self.number_of_chunks_cohort]
                                       for offset in range(0, len(tile_index_list_old), self.number_of_chunks_cohort)]
@@ -2743,7 +2775,7 @@ class VariantCallingGATK(Analysis):
 
                         file_path_merge_cohort_gather = FilePathMergeCohort(prefix=prefix_merge_cohort_gather)
 
-                        runnable_gather = self.add_runnable_consecutive(
+                        runnable_gather = self.add_runnable(
                             runnable=ConsecutiveRunnable(
                                 name=prefix_merge_cohort_gather,
                                 working_directory=self.genome_directory,
@@ -2836,7 +2868,7 @@ class VariantCallingGATK(Analysis):
 
             return runnable_gather, file_path_merge_cohort_final.combined_gvcf_vcf
 
-        def run_genotype_cohort_scatter_gather(file_path_cohort_gvcf):
+        def run_genotype_cohort_scatter_gather(file_path_cohort_gvcf: str) -> ConsecutiveRunnable:
             """Private function to genotype a cohort in a scatter and gather approach.
 
             :param file_path_cohort_gvcf: A cohort-level gVCF file path.
@@ -2857,7 +2889,7 @@ class VariantCallingGATK(Analysis):
             else:
                 final_index_exists = True
 
-            runnable_scatter_list: List[ConsecutiveRunnable] = list()
+            runnable_scatter_list: list[ConsecutiveRunnable] = list()
 
             tile_index_list_old = range(0, len(self._tile_region_cohort_list))
 
@@ -2867,7 +2899,7 @@ class VariantCallingGATK(Analysis):
 
                 file_path_genotype_cohort_scatter = FilePathGenotypeCohort(prefix=prefix_process_cohort_scatter)
 
-                runnable_scatter = self.add_runnable_consecutive(
+                runnable_scatter = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=prefix_process_cohort_scatter,
                         working_directory=self.genome_directory,
@@ -2921,7 +2953,7 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='out', value=file_path_genotype_cohort_scatter.genotyped_raw_vcf)
 
             # Gather
-            runnable_gather_list: List[ConsecutiveRunnable] = list()
+            runnable_gather_list: list[ConsecutiveRunnable] = list()
 
             if len(self._tile_region_cohort_list) == 1:
                 # If there is only one tile, no need to gather.
@@ -2934,8 +2966,8 @@ class VariantCallingGATK(Analysis):
                 runnable_gather_list_old = runnable_scatter_list
                 gather_level = 0
                 while len(tile_index_list_old) > 1:
-                    runnable_gather_list_new: List[ConsecutiveRunnable] = list()
-                    tile_index_list_new: List[int] = list()
+                    runnable_gather_list_new: list[ConsecutiveRunnable] = list()
+                    tile_index_list_new: list[int] = list()
                     # Partition the index list into chunks of given size.
                     partition_list = [tile_index_list_old[offset:offset + self.number_of_chunks_cohort]
                                       for offset in range(0, len(tile_index_list_old), self.number_of_chunks_cohort)]
@@ -2951,7 +2983,7 @@ class VariantCallingGATK(Analysis):
 
                         file_path_genotype_cohort_gather = FilePathGenotypeCohort(prefix=prefix_process_cohort_gather)
 
-                        runnable_gather = self.add_runnable_consecutive(
+                        runnable_gather = self.add_runnable(
                             runnable=ConsecutiveRunnable(
                                 name=prefix_process_cohort_gather,
                                 working_directory=self.genome_directory,
@@ -3041,7 +3073,7 @@ class VariantCallingGATK(Analysis):
 
             return runnable_gather
 
-        def run_somatic_scatter_gather(comparison_key):
+        def run_somatic_scatter_gather(comparison_key: str) -> ConsecutiveRunnable:
             """Private method to run somatic variant calling in a scatter and gather approach.
 
             :param comparison_key: A :py:attr:`VariantCallingGATKComparison.name` attribute.
@@ -3094,7 +3126,7 @@ class VariantCallingGATK(Analysis):
             #         tile_number=self.number_of_tiles_somatic)
 
             # Scatter
-            runnable_scatter_list: List[ConsecutiveRunnable] = list()
+            runnable_scatter_list: list[ConsecutiveRunnable] = list()
 
             tile_index_list_old = range(0, len(self._tile_region_somatic_list))
 
@@ -3104,7 +3136,7 @@ class VariantCallingGATK(Analysis):
 
                 file_path_somatic_scatter = FilePathSomaticScatterGather(prefix=prefix_somatic_scatter)
 
-                runnable_scatter = self.add_runnable_consecutive(
+                runnable_scatter = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=prefix_somatic_scatter,
                         working_directory=self.genome_directory,
@@ -3198,7 +3230,7 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='out', value=file_path_somatic_scatter.somatic_vcf)
 
             # Gather
-            runnable_gather_list: List[ConsecutiveRunnable] = list()
+            runnable_gather_list: list[ConsecutiveRunnable] = list()
 
             if len(self._tile_region_somatic_list) == 1:
                 # If there is only one tile, no need to gather.
@@ -3211,8 +3243,8 @@ class VariantCallingGATK(Analysis):
                 runnable_gather_list_old = runnable_scatter_list
                 gather_level = 0
                 while len(tile_index_list_old) > 1:
-                    runnable_gather_list_new: List[ConsecutiveRunnable] = list()
-                    tile_index_list_new: List[int] = list()
+                    runnable_gather_list_new: list[ConsecutiveRunnable] = list()
+                    tile_index_list_new: list[int] = list()
                     # Partition the index list into chunks of given size.
                     partition_list = [tile_index_list_old[offset:offset + self.number_of_chunks_somatic]
                                       for offset in range(0, len(tile_index_list_old), self.number_of_chunks_somatic)]
@@ -3224,7 +3256,7 @@ class VariantCallingGATK(Analysis):
 
                         file_path_somatic_gather = FilePathSomaticScatterGather(prefix=prefix_somatic_gather)
 
-                        runnable_gather = self.add_runnable_consecutive(
+                        runnable_gather = self.add_runnable(
                             runnable=ConsecutiveRunnable(
                                 name=prefix_somatic_gather,
                                 working_directory=self.genome_directory,
@@ -3311,7 +3343,7 @@ class VariantCallingGATK(Analysis):
 
             return runnable_gather
 
-        def run_annotate_snpeff(prefix, vcf_file_path):
+        def run_annotate_snpeff(prefix: str, vcf_file_path: str) -> ConsecutiveRunnable:
             """Private function to annotate a VCF file via the snpEff tool.
 
             This function is used in both, cohort and somatic variant calling annotation.
@@ -3333,7 +3365,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_annotate = FilePathAnnotateSnpEff(prefix=prefix_annotate)
 
-            runnable_annotate = self.add_runnable_consecutive(
+            runnable_annotate = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=prefix_annotate,
                     working_directory=self.genome_directory,
@@ -3461,7 +3493,7 @@ class VariantCallingGATK(Analysis):
 
             return runnable_annotate
 
-        def run_annotate_vep(prefix, vcf_file_path):
+        def run_annotate_vep(prefix: str, vcf_file_path: str) -> ConsecutiveRunnable:
             """Private function to annotate a VCF file via the Ensembl Variant Effect Predictor (VEP).
 
             This function is used in both, cohort and somatic variant calling annotation.
@@ -3487,7 +3519,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_annotate = FilePathAnnotateVEP(prefix=prefix_annotate)
 
-            runnable_annotate = self.add_runnable_consecutive(
+            runnable_annotate = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=prefix_annotate,
                     working_directory=self.genome_directory,
@@ -3983,11 +4015,11 @@ class VariantCallingGATK(Analysis):
         # process_sample bsf.procedure.ConsecutiveRunnable object value data.
         # This dictionary is required by the merge_cohort stage to hierarchically merge cohorts.
 
-        runnable_process_sample_dict: Dict[str, List[Tuple[ConsecutiveRunnable, str]]] = dict()
+        runnable_process_sample_dict: dict[str, list[tuple[ConsecutiveRunnable, str]]] = dict()
 
         # Create a Python list of diagnose_sample bsf.procedure.Runnable objects.
 
-        runnable_diagnose_sample_list: List[ConsecutiveRunnable] = list()
+        runnable_diagnose_sample_list: list[ConsecutiveRunnable] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -4003,7 +4035,7 @@ class VariantCallingGATK(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
-            runnable_process_read_group_list: List[ConsecutiveRunnable] = list()
+            runnable_process_read_group_list: list[ConsecutiveRunnable] = list()
 
             for paired_reads_name in sorted(paired_reads_dict):
                 if not paired_reads_dict[paired_reads_name]:
@@ -4106,7 +4138,7 @@ class VariantCallingGATK(Analysis):
 
                 # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for aligning each read group.
 
-                runnable_align_lane = self.add_runnable_consecutive(
+                runnable_align_lane = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_align_lane(paired_reads_name=paired_reads_name),
                         working_directory=self.genome_directory,
@@ -4143,7 +4175,7 @@ class VariantCallingGATK(Analysis):
 
                 # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for processing each read group.
 
-                runnable_process_lane = self.add_runnable_consecutive(
+                runnable_process_lane = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_process_lane(paired_reads_name=paired_reads_name),
                         working_directory=self.genome_directory,
@@ -4434,7 +4466,7 @@ class VariantCallingGATK(Analysis):
 
             # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for processing each Sample.
 
-            runnable_process_sample = self.add_runnable_consecutive(
+            runnable_process_sample = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_process_sample(sample_name=sample.name),
                     working_directory=self.genome_directory,
@@ -4475,7 +4507,7 @@ class VariantCallingGATK(Analysis):
                     target_path=file_path_process_sample.realigned_bai)
                 runnable_process_sample.add_runnable_step(runnable_step=runnable_step)
 
-                # Rename the MD5 file.
+                # Rename the MD5 checksum file.
                 runnable_step = RunnableStepMove(
                     name='process_sample_move_recalibrated_md5',
                     source_path=file_path_process_read_group.recalibrated_md5,
@@ -4796,7 +4828,7 @@ class VariantCallingGATK(Analysis):
 
             # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for diagnosing each sample.
 
-            runnable_diagnose_sample = self.add_runnable_consecutive(
+            runnable_diagnose_sample = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_diagnose_sample(sample_name=sample.name),
                     working_directory=self.genome_directory,
@@ -5035,7 +5067,7 @@ class VariantCallingGATK(Analysis):
         # value data.
         # Initialise a single key with the final cohort name and an empty list for merging the final cohort.
 
-        runnable_merge_cohort_dict: Dict[str, List[Tuple[Union[ConsecutiveRunnable, str], str]]] = {
+        runnable_merge_cohort_dict: dict[str, list[tuple[Union[ConsecutiveRunnable, str], str]]] = {
             self.cohort_name: []
         }
 
@@ -5117,7 +5149,7 @@ class VariantCallingGATK(Analysis):
 
         # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for processing the cohort.
 
-        runnable_process_cohort = self.add_runnable_consecutive(
+        runnable_process_cohort = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_process_cohort(cohort_name=self.cohort_name),
                 working_directory=self.genome_directory,
@@ -5347,7 +5379,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_split_cohort_snpeff = self.get_file_path_split_cohort_snpeff(sample_name=sample.name)
 
-            runnable_split_cohort_snpeff = self.add_runnable_consecutive(
+            runnable_split_cohort_snpeff = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_split_cohort_snpeff(sample_name=sample.name),
                     working_directory=self.genome_directory,
@@ -5424,7 +5456,7 @@ class VariantCallingGATK(Analysis):
 
             file_path_split_cohort_vep = self.get_file_path_split_cohort_vep(sample_name=sample.name)
 
-            runnable_split_cohort_vep = self.add_runnable_consecutive(
+            runnable_split_cohort_vep = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_split_cohort_vep(sample_name=sample.name),
                     working_directory=self.genome_directory,
@@ -5498,7 +5530,7 @@ class VariantCallingGATK(Analysis):
 
         # Create a bsf.procedure.ConsecutiveRunnable and bsf.process.Executable for summarising the cohort.
 
-        runnable_summary = self.add_runnable_consecutive(
+        runnable_summary = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_summary(cohort_name=self.cohort_name),
                 working_directory=self.genome_directory,
@@ -5538,7 +5570,7 @@ class VariantCallingGATK(Analysis):
 
             # Create a bsf.procedure.ConsecutiveRunnable for processing the somatic calls.
 
-            runnable_somatic = self.add_runnable_consecutive(
+            runnable_somatic = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_somatic(comparison_name=comparison_name),
                     working_directory=self.genome_directory,
@@ -5602,7 +5634,7 @@ class VariantCallingGATK(Analysis):
                 file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(
                     comparison_name=comparison_name)
 
-                runnable_split_somatic_snpeff = self.add_runnable_consecutive(
+                runnable_split_somatic_snpeff = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_split_somatic_snpeff(comparison_name=comparison_name),
                         working_directory=self.genome_directory,
@@ -5663,7 +5695,7 @@ class VariantCallingGATK(Analysis):
             if self.variants_to_table:
                 file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(comparison_name=comparison_name)
 
-                runnable_split_somatic_vep = self.add_runnable_consecutive(
+                runnable_split_somatic_vep = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_split_somatic_vep(comparison_name=comparison_name),
                         working_directory=self.genome_directory,
@@ -5712,11 +5744,11 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    def report(self):
-        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
+    def report(self) -> None:
+        """Create a :literal:`XHTML 1.0` report and a :emphasis:`UCSC Genome Browser Track Hub`.
         """
 
-        def report_create_directory(path):
+        def report_create_directory(path: str) -> str:
             """Private function to create a directory avoiding race conditions.
 
             :param path: A directory path.
@@ -5733,7 +5765,7 @@ class VariantCallingGATK(Analysis):
 
             return path
 
-        def report_create_symbolic_link(source_path, target_path):
+        def report_create_symbolic_link(source_path: str, target_path: str) -> None:
             """Private function to set a symbolic link.
 
             :param source_path: A source path.
@@ -5755,7 +5787,7 @@ class VariantCallingGATK(Analysis):
 
             return
 
-        def report_link():
+        def report_link() -> None:
             """Private function to create simpler symbolic links in structured subdirectories.
 
             The simplified symbolic links facilitate file system browsing.
@@ -5999,7 +6031,7 @@ class VariantCallingGATK(Analysis):
 
             return
 
-        def report_html():
+        def report_html() -> None:
             """Private function to create a :literal:`XHTML 1.0` report.
             """
             # Create a symbolic link containing the project name and a UUID.
@@ -6009,7 +6041,7 @@ class VariantCallingGATK(Analysis):
 
             # Write a HTML document.
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -6678,11 +6710,11 @@ class VariantCallingGATK(Analysis):
 
             self.report_to_file(content=str_list)
 
-        def report_hub():
-            """Private function to create a :literal:`UCSC Genome Browser Track Hub`.
+        def report_hub() -> None:
+            """Private function to create a :emphasis:`UCSC Genome Browser Track Hub`.
             """
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             # Group via UCSC super tracks.
 

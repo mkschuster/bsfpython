@@ -36,7 +36,9 @@ import logging
 import os
 from argparse import ArgumentParser
 from subprocess import Popen
+from typing import Optional
 
+from bsf.argument import Argument
 from bsf.connector import Connector
 from bsf.ngs import Collection
 from bsf.process import Command, RunnableStep
@@ -62,26 +64,26 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            file_path_old=None,
-            file_path_new=None,
-            minimum_size=1024,
-            drop_read_1=False,
-            drop_read_2=False):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            file_path_old: Optional[str] = None,
+            file_path_new: Optional[str] = None,
+            minimum_size: int = 1024,
+            drop_read_1: bool = False,
+            drop_read_2: bool = False) -> None:
         """Initialise a :py:class:`bsf.executables.collection.RunnableStepCollectionPruneFastq` object.
 
         :param name: A name.
@@ -156,7 +158,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.executables.collection.RunnableStepCollectionPruneFastq` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.

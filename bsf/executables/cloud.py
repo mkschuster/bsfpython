@@ -29,7 +29,9 @@
 import logging
 from argparse import ArgumentParser
 from subprocess import Popen
+from typing import Optional
 
+from bsf.argument import Argument
 from bsf.cloud import get_azure_blob_service_client, azure_block_blob_download, azure_block_blob_upload
 from bsf.connector import Connector
 from bsf.process import Command, RunnableStep
@@ -58,27 +60,27 @@ class RunnableStepAzureBlockBlob(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            account_name=None,
-            container_name=None,
-            source_path=None,
-            target_path=None,
-            max_concurrency=4,
-            logging_enable=False):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            account_name: str = None,
+            container_name: str = None,
+            source_path: Optional[str] = None,
+            target_path: Optional[str] = None,
+            max_concurrency: int = 4,
+            logging_enable: bool = False) -> None:
         """Initialise a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlob` object.
 
         :param name: A name.
@@ -158,7 +160,7 @@ class RunnableStepAzureBlockBlob(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepAzureBlockBlob, self).__repr__()[:-1]}, ' \
             f'account_name={self.account_name!r}, ' \
@@ -181,28 +183,28 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            account_name=None,
-            container_name=None,
-            source_path=None,
-            target_path=None,
-            max_concurrency=4,
-            logging_enable=False,
-            standard_blob_tier=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            account_name: str = None,
+            container_name: str = None,
+            source_path: Optional[str] = None,
+            target_path: Optional[str] = None,
+            max_concurrency: int = 4,
+            logging_enable: bool = False,
+            standard_blob_tier: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlob` object.
 
         :param name: A name.
@@ -288,7 +290,7 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepAzureBlockBlob, self).__repr__()[:-1]}, ' \
             f'account_name={self.account_name!r}, ' \
@@ -299,7 +301,7 @@ class RunnableStepAzureBlockBlobUpload(RunnableStepAzureBlockBlob):
             f'logging_enable={self.logging_enable!r}, ' \
             f'standard_blob_tier={self.standard_blob_tier!r})'
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobUpload` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -327,7 +329,7 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
     local file paths.
     """
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.executables.cloud.RunnableStepAzureBlockBlobDownload` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.

@@ -26,12 +26,13 @@
 Distributed Resource Management System (DRMS) module.
 """
 import os
-from typing import List
+from typing import Optional
 
+from bsf.analysis import Stage
 from bsf.connector import ConnectorFile
 
 
-def submit(stage, drms_submit=None, write_script=None):
+def submit(stage, drms_submit: Optional[bool] = None, write_script: Optional[bool] = None) -> None:
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object by writing a
@@ -50,7 +51,7 @@ def submit(stage, drms_submit=None, write_script=None):
     if not write_script:
         write_script = True
 
-    output_list: List[str] = list()
+    output_list: list[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -79,7 +80,7 @@ def check_state(stage):
     """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
-    :type stage: bsf.analysis.Stage
+    :type stage: Stage
     """
     if stage:
         pass

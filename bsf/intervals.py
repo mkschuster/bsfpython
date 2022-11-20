@@ -27,7 +27,7 @@
 import math
 import os
 from argparse import ArgumentParser
-from typing import Dict, List
+from typing import Optional
 
 from pysam import AlignmentFile
 
@@ -45,7 +45,7 @@ class Interval(object):
     :type end: int
     """
 
-    def __init__(self, name, start, end):
+    def __init__(self, name: str, start: int, end: int) -> None:
         """Initialise a :py:class:`bsf.intervals.Interval` object.
 
         :param name: Sequence region name
@@ -61,7 +61,7 @@ class Interval(object):
 
         return
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """Test for truth.
 
         Since Picard-style interval lists are 1-based, all components need to be defined.
@@ -71,7 +71,7 @@ class Interval(object):
         """
         return bool(self.name) and bool(self.start) and bool(self.end)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Calculate the length.
 
         :return: The length.
@@ -79,7 +79,7 @@ class Interval(object):
         """
         return self.end - self.start + 1
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Convert into a string representation
 
         :return: A string representation.
@@ -88,7 +88,7 @@ class Interval(object):
         return f'Interval(name={self.name!r}, start={self.start!r}, end={self.end!r})'
         # return ':'.join((self.name, str(self.start), str(self.end)))
 
-    def to_gatk_interval(self):
+    def to_gatk_interval(self) -> str:
         """Convert into a GATK interval string (i.e., name:start-end).
 
         :return: A GATK interval string.
@@ -106,7 +106,7 @@ class Container(object):
     :type sum: int
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise a :py:class:`bsf.intervals.Container` object.
         """
         self.interval_list = list()
@@ -115,7 +115,7 @@ class Container(object):
 
         return
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Calculate the length of a :py:class:`bsf.intervals.Container`,
         which is the number of :py:class:`bsf.intervals.Interval` objects.
 
@@ -124,7 +124,7 @@ class Container(object):
         """
         return len(self.interval_list)
 
-    def append(self, interval):
+    def append(self, interval: Interval) -> None:
         """Append an :py:class:`bsf.intervals.Interval` object.
 
         :param interval: A :py:class:`bsf.intervals.Interval` object
@@ -135,7 +135,7 @@ class Container(object):
 
         return
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Get a string representation.
 
         :return: A string representation.
@@ -144,19 +144,24 @@ class Container(object):
         return 'Container(sum={:d}, interval_list={!r})'.format(self.sum, self.interval_list)
 
 
-def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, acgt=None, natural=None, packed=None):
+def get_interval_tiles(
+        interval_path: Optional[str] = None,
+        tile_number: Optional[int] = None,
+        tile_width: Optional[int] = None,
+        acgt: Optional[bool] = None,
+        natural: Optional[bool] = None,
+        packed: Optional[bool] = None) -> list[Container]:
     """Create tiles on the basis of a Picard-style interval list.
 
     The Picard :literal:`ScatterIntervalsByNs` interval list is a special case where only :literal:`ACGTmer`
     intervals need considering.
 
     Partition a list into sub-lists, which sums do not exceed a maximum using a :emphasis:`First Fit Decreasing`
-    algorithm.
+    algorithm. See also:
 
-    See also:
-        - `First-Fit algorithm <https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm>`_
-        - `Python implementations of packing algorithm
-          <https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm>`_
+    - `First-Fit algorithm <https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm>`_
+    - `Python implementations of packing algorithm
+      <https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm>`_
 
     :param interval_path: A Picard :literal:`ScatterIntervalsByNs` interval list file path.
     :type interval_path: str | None
@@ -176,8 +181,8 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
     if not os.path.exists(interval_path):
         raise Exception(f'The interval file {interval_path!r} does not exist.')
 
-    container_list: List[Container] = list()
-    interval_list: List[Interval] = list()
+    container_list: list[Container] = list()
+    interval_list: list[Interval] = list()
     total_length: int = 0
 
     with open(file=interval_path, mode='rt') as input_text_io:
@@ -241,10 +246,14 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
     return container_list
 
 
-def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural=None):
+def get_genome_tiles(
+        dictionary_path: str,
+        tile_number: Optional[int] = None,
+        tile_width: Optional[int] = None,
+        natural: Optional[bool] = None) -> list[Container]:
     """Create tiles on the basis of a Picard :literal:`CreateSequenceDictionary` sequence dictionary.
 
-    The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
+    The tiles are created on the basis of a Picard sequence dictionary accompanying the genome :emphasis:`FASTA` file.
     Sequence regions can serve as natural tiles, alternatively a number of tiles or a tile width can be
     requested. If neither tiles nor width are requested or both are 0, no tiling is attempted and a
     single :py:class:`bsf.intervals.Container` object with an empty :py:class:`bsf.intervals.Interval`
@@ -264,8 +273,8 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     if not os.path.exists(dictionary_path):
         raise Exception(f'The Picard sequence dictionary {dictionary_path!r} does not exist.')
 
-    sq_dict: Dict
-    container_list: List[Container] = list()
+    sq_dict: dict[str, str]
+    container_list: list[Container] = list()
     total_length: int = 0
 
     alignment_file = AlignmentFile(filename=dictionary_path, mode='r')

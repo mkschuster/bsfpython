@@ -38,13 +38,12 @@ import logging
 import os
 import re
 from argparse import ArgumentParser
-from typing import Dict, List
 
 # The LTFS dict uses IRF keys and list value data of LTFS volume names.
-ltfs_dict: Dict[str, List[str]] = dict()
+ltfs_dict: dict[str, list[str]] = dict()
 
 
-def read_ltfs_archive(archive_file_path):
+def read_ltfs_archive(archive_file_path: str) -> None:
     """Read an LTFS archive file in tab-separated value (TSV) format.
 
     :param archive_file_path: A file path.
@@ -64,7 +63,7 @@ def read_ltfs_archive(archive_file_path):
     return
 
 
-def write_ltfs_archive(archive_file_path):
+def write_ltfs_archive(archive_file_path: str) -> None:
     """Write an LTFS archive file in tab-separated value (TSV) format.
 
     :param archive_file_path: A file path.
@@ -77,7 +76,7 @@ def write_ltfs_archive(archive_file_path):
     return
 
 
-def process_json_files(top_directory_path):
+def process_json_files(top_directory_path: str) -> None:
     """Process JSON files with LTFS virtual extended attributes (VEA).
 
     :param top_directory_path: A directory path.
@@ -118,7 +117,7 @@ def process_json_files(top_directory_path):
     return
 
 
-def process_ltfscp_files(top_directory_path):
+def process_ltfscp_files(top_directory_path: str) -> None:
     """Process LTFSCP log files, particularly the 'ILT30505I' informational entry.
 
     :param top_directory_path: A directory path.

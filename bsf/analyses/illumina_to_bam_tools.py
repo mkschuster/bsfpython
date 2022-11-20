@@ -28,11 +28,12 @@
 import os
 import warnings
 from subprocess import Popen
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Optional
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
+from bsf.argument import Argument
 from bsf.connector import Connector
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.ngs import Collection, Sample, SampleAnnotationSheet
@@ -44,7 +45,7 @@ from bsf.standards import Configuration, StandardFilePath, JavaArchive, JavaClas
 
 class BamIndexDecoderSheet(AnnotationSheet):
     """The :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoderSheet` class represents a
-    Tab-Separated Value (TSV) table of library information for the
+    :emphasis:`Tab-Separated Value` (TSV) table of library information for the
     :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` class.
     """
 
@@ -63,12 +64,12 @@ class BamIndexDecoderSheet(AnnotationSheet):
         'description',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
 
 class LibraryAnnotationSheet(AnnotationSheet):
     """The :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet` class represents a
-    Comma-Separated Value (CSV) table for de-multiplexing.
+    :emphasis:`Comma-Separated Value` (CSV) table for de-multiplexing.
     """
 
     _file_type = 'excel'
@@ -87,7 +88,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         'read_structure',  # Picard tools Read Structure
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = {
         'lane': [
             AnnotationSheet.check_alphanumeric_value,
         ],
@@ -120,7 +121,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         ],
     }
 
-    def get_annotation_dict(self):
+    def get_annotation_dict(self) -> dict[int, list[dict[str, str]]]:
         """Get a Python :py:class:`dict` object of Python :py:class:`int` (lane) key and
         Python :py:class`list` objects of Python :py:class:`dict` (row dict) value objects.
 
@@ -128,7 +129,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
             Python :py:class:`list` objects of Python :py:class:`dict` (row dict) value objects.
         :rtype: dict[int, list[dict[str, str]]]
         """
-        flow_cell_dict: Dict[int, List[Dict[str, str]]] = dict()
+        flow_cell_dict: dict[int, list[dict[str, str]]] = dict()
 
         for row_dict in self.row_dicts:
             lane_int = int(row_dict['lane'])
@@ -138,15 +139,15 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
         return flow_cell_dict
 
-    def get_barcode_length_dict(self):
+    def get_barcode_length_dict(self) -> dict[int, tuple[int, int]]:
         """Get a Python :py:class:`dict` object of :literal:`i7` and :literal:`i5` barcode sequence lengths by lane.
 
         :return: A Python :py:class:`dict` object of Python :py:class:`int` (lane) key and
-            Python :py:class:`tuple` objects of Python :py:class:`int` (:literal:`i7`) and
-            Python :py:class:`int` (:literal:`i5`) barcode sequence length value objects.
+            Python :py:class:`tuple` objects of Python :py:class:`int` (:emphasis:`i7`) and
+            Python :py:class:`int` (:emphasis:`i5`) barcode sequence length value objects.
         :rtype: dict[int, (int, int)]
         """
-        flow_cell_dict: Dict[int, Tuple[int, int]] = dict()
+        flow_cell_dict: dict[int, tuple[int, int]] = dict()
 
         for row_dict in self.row_dicts:
             lane_int = int(row_dict['lane'])
@@ -160,14 +161,14 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
         return flow_cell_dict
 
-    def validate(self, lanes=None):
+    def validate(self, lanes: Optional[int] = None) -> str:
         """
         Validate a :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet` object.
 
         If the number of lanes is provided, all lanes in the range are validated or else,
         the validation is just based on annotation for the lane variable.
 
-        :param lanes: Number of lanes to validate.
+        :param lanes: A number of lanes to validate.
         :type lanes: int | None
         :return: Warning messages.
         :rtype: str
@@ -330,26 +331,26 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            java_temporary_path=None,
-            java_heap_maximum=None,
-            java_jar_path=None,
-            itb_classpath=None,
-            itb_command=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            java_temporary_path: Optional[str] = None,
+            java_heap_maximum: Optional[str] = None,
+            java_jar_path: Optional[str] = None,
+            itb_classpath: Optional[str] = None,
+            itb_command: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepIlluminaToBam` object.
 
         :param name: A name.
@@ -392,7 +393,7 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         :type java_temporary_path: str | None
         :param java_heap_maximum: A Java heap maximum size (-Xmx option).
         :type java_heap_maximum: str | None
-        :param java_jar_path: A Java Archive (JAR) file path.
+        :param java_jar_path: A :emphasis:`Java Archive` (JAR) file path.
         :type java_jar_path: str | None
         :param itb_classpath: An `Illumina2bam <https://github.com/wtsi-npg/illumina2bam>`_ Java Class Path directory.
         :type itb_classpath: str | None
@@ -429,7 +430,7 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
         return
 
-    def add_itb_option(self, key, value, override=False):
+    def add_itb_option(self, key: str, value: str, override: bool = False) -> None:
         """Add a :py:class:`bsf.argument.OptionPair` object to a
         :py:class:`bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam` object.
 
@@ -448,19 +449,19 @@ class FilePathIlluminaToBamLane(FilePath):
 
     :ivar unsorted_bam: An :emphasis:`unsorted` BAM file path.
     :type unsorted_bam: str
-    :ivar unsorted_md5: An :emphasis:`unsorted` BAM file MD5 check sum file path.
+    :ivar unsorted_md5: An :emphasis:`unsorted` BAM file MD5 checksum file path.
     :type unsorted_md5: str
     :ivar sorted_bam: A :emphasis:`sorted` BAM file path.
     :type sorted_bam: str
-    :ivar sorted_md5: A :emphasis:`sorted` BAM file MD5 check sum fil epath.
+    :ivar sorted_md5: A :emphasis:`sorted` BAM file MD5 checksum file path.
     :type sorted_md5: str
     :ivar archive_bam: An :emphasis:`archive` BAM file path.
     :type archive_bam: str
-    :ivar archive_md5: An :emphasis:`archive` BAM file MD5 check sum file path.
+    :ivar archive_md5: An :emphasis:`archive` BAM file MD5 checksum file path.
     :type archive_md5: str
     """
 
-    def __init__(self, prefix, project_name, lane, experiment_directory):
+    def __init__(self, prefix: str, project_name: str, lane: str, experiment_directory: str) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathIlluminaToBamLane` object.
         
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -478,7 +479,7 @@ class FilePathIlluminaToBamLane(FilePath):
         self.unsorted_md5 = prefix + '_unsorted.bam.md5'
         self.sorted_bam = prefix + '_sorted.bam'
         self.sorted_md5 = prefix + '_sorted.bam.md5'
-        # The final BAM and MD5 files are non-standard in that they do not contain a prefix and
+        # The final BAM and MD5 checksum files are non-standard in that they do not contain a prefix and
         # reside in the experiment_directory.
         self.archive_bam = os.path.join(experiment_directory, '_'.join((project_name, lane)) + '.bam')
         self.archive_md5 = os.path.join(experiment_directory, '_'.join((project_name, lane)) + '.bam.md5')
@@ -490,16 +491,16 @@ class IlluminaToBam(Analysis):
     """The :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` class represents the logic to
     convert Illumina BCL to a BAM or SAM files.
 
-    :ivar run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+    :ivar run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
     :type run_directory: str | None
-    :ivar intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+    :ivar intensity_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
         defaults to :literal:`IRF/Data/Intensities`.
     :type intensity_directory: str | None
-    :ivar basecalls_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
+    :ivar basecalls_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
         defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
     :type basecalls_directory: str | None
     :ivar experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
-        Illumina Run Folder parameters.
+        :emphasis:`Illumina Run Folder` parameters.
     :type experiment_name: str | None
     :ivar sequencing_centre: A sequencing centre code.
     :type sequencing_centre: str | None
@@ -515,11 +516,11 @@ class IlluminaToBam(Analysis):
     :type mode_file: str | None
     :ivar java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
     :type java_classpath_illumina2bam: str | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
     :ivar vendor_quality_filter: Request vendor quality filtering.
     :type vendor_quality_filter: bool
-    :ivar force: Request processing of incomplete Illumina Run Folder entities.
+    :ivar force: Request processing of incomplete :emphasis:`Illumina Run Folder` entities.
     :type force: bool | None
     """
 
@@ -527,7 +528,7 @@ class IlluminaToBam(Analysis):
     prefix = 'illumina_to_bam'
 
     @classmethod
-    def get_stage_name_cell(cls):
+    def get_stage_name_cell(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -536,7 +537,7 @@ class IlluminaToBam(Analysis):
         return '_'.join((cls.prefix, 'cell'))
 
     @classmethod
-    def get_stage_name_lane(cls):
+    def get_stage_name_lane(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -545,7 +546,7 @@ class IlluminaToBam(Analysis):
         return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
-    def get_prefix_cell(cls, project_name):
+    def get_prefix_cell(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -556,7 +557,7 @@ class IlluminaToBam(Analysis):
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
-    def get_prefix_lane(cls, project_name, lane):
+    def get_prefix_lane(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -569,7 +570,7 @@ class IlluminaToBam(Analysis):
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
-    def get_file_path_lane(cls, project_name, lane, experiment_directory):
+    def get_file_path_lane(cls, project_name: str, lane: str, experiment_directory: str) -> FilePathIlluminaToBamLane:
         """Get a :py:class:`bsf.analyses.illumina_to_bam.FilePathIlluminaToBamLane` object.
 
         :param project_name: A project name.
@@ -589,33 +590,33 @@ class IlluminaToBam(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            run_directory=None,
-            intensity_directory=None,
-            basecalls_directory=None,
-            experiment_name=None,
-            sequencing_centre=None,
-            sort_output=None,
-            sequences_directory=None,
-            mode_directory=None,
-            mode_file=None,
-            java_classpath_illumina2bam=None,
-            java_archive_picard=None,
-            vendor_quality_filter=None,
-            force=False):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            run_directory: Optional[str] = None,
+            intensity_directory: Optional[str] = None,
+            basecalls_directory: Optional[str] = None,
+            experiment_name: Optional[str] = None,
+            sequencing_centre: Optional[str] = None,
+            sort_output: Optional[bool] = None,
+            sequences_directory: Optional[str] = None,
+            mode_directory: Optional[str] = None,
+            mode_file: Optional[str] = None,
+            java_classpath_illumina2bam: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            vendor_quality_filter: Optional[bool] = None,
+            force: Optional[bool] = False) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -632,13 +633,13 @@ class IlluminaToBam(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -646,16 +647,16 @@ class IlluminaToBam(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
-        :param intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+        :param intensity_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
             defaults to :literal:`IRF/Data/Intensities`.
         :type intensity_directory: str | None
         :param basecalls_directory: File path to the :literal:`BaseCalls` directory,
             defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
         :type basecalls_directory: str | None
         :param experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters.
+            :emphasis:`Illumina Run Folder` parameters.
         :type experiment_name: str | None
         :param sequencing_centre: A sequencing centre code.
         :type sequencing_centre: str | None
@@ -671,11 +672,11 @@ class IlluminaToBam(Analysis):
         :type mode_file: str | None
         :param java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
         :type java_classpath_illumina2bam: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         :param vendor_quality_filter: Request vendor quality filtering.
         :type vendor_quality_filter: bool | None
-        :param force: Request processing of incomplete Illumina Run Folder entities.
+        :param force: Request processing of incomplete :emphasis:`Illumina Run Folder` entities.
         :type force: bool | None
         """
         super(IlluminaToBam, self).__init__(
@@ -713,7 +714,7 @@ class IlluminaToBam(Analysis):
         return
 
     @property
-    def get_experiment_directory(self):
+    def get_experiment_directory(self) -> Optional[str]:
         """Get the experiment directory.
 
         The experiment directory is a concatenation of the sequences directory and the project name.
@@ -724,7 +725,7 @@ class IlluminaToBam(Analysis):
         if self.sequences_directory and self.project_name:
             return os.path.join(self.sequences_directory, self.project_name)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -793,7 +794,7 @@ class IlluminaToBam(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` object.
 
         Convert an Illumina flow cell into lane-specific archive BAM files.
@@ -930,7 +931,7 @@ class IlluminaToBam(Analysis):
 
         lane_dependency_str: Optional[str] = None
 
-        cell_dependency_list: List[str] = list()
+        cell_dependency_list: list[str] = list()
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
@@ -944,7 +945,7 @@ class IlluminaToBam(Analysis):
                 experiment_directory=experiment_directory)
 
             # NOTE: The bsf.procedure.Runnable.name has to match the Executable.name that gets submitted via the Stage.
-            runnable_lane = self.add_runnable_consecutive(
+            runnable_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
@@ -1137,7 +1138,7 @@ class IlluminaToBam(Analysis):
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
-        runnable_cell = self.add_runnable_consecutive(
+        runnable_cell = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -1170,7 +1171,7 @@ class FilePathBamIndexDecoderCell(FilePath):
     :type sample_annotation_sheet_csv: str
     """
 
-    def __init__(self, prefix, project_name):
+    def __init__(self, prefix: str, project_name: str) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -1218,11 +1219,11 @@ class FilePathBamIndexDecoderLane(FilePath):
     :type samples_directory: str
     :ivar archive_bam: An :emphasis:`archive` BAM file path.
     :type archive_bam: str
-    :ivar archive_md5: An :emphasis:`archive` BAM MD5 check sum file path.
+    :ivar archive_md5: An :emphasis:`archive` BAM MD5 checksum file path.
     :type archive_md5: str
     """
 
-    def __init__(self, prefix, project_name, lane, sequences_directory):
+    def __init__(self, prefix: str, project_name: str, lane: str, sequences_directory: str) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane` object.
         
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -1277,7 +1278,7 @@ class BamIndexDecoder(Analysis):
     :type mode_file: str | None
     :ivar java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
     :type java_classpath_illumina2bam: str | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
     :ivar lanes: A number of lanes on the flow cell.
     :type lanes: int | None
@@ -1289,7 +1290,7 @@ class BamIndexDecoder(Analysis):
     prefix = 'bam_index_decoder'
 
     @classmethod
-    def get_stage_name_cell(cls):
+    def get_stage_name_cell(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1298,7 +1299,7 @@ class BamIndexDecoder(Analysis):
         return '_'.join((cls.prefix, 'cell'))
 
     @classmethod
-    def get_stage_name_lane(cls):
+    def get_stage_name_lane(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1307,7 +1308,7 @@ class BamIndexDecoder(Analysis):
         return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
-    def get_prefix_cell(cls, project_name):
+    def get_prefix_cell(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -1318,7 +1319,7 @@ class BamIndexDecoder(Analysis):
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
-    def get_prefix_lane(cls, project_name, lane):
+    def get_prefix_lane(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -1331,7 +1332,7 @@ class BamIndexDecoder(Analysis):
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
-    def get_file_path_cell(cls, project_name):
+    def get_file_path_cell(cls, project_name: str) -> FilePathBamIndexDecoderCell:
         """Get a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` object.
 
         :param project_name: A project name
@@ -1344,7 +1345,7 @@ class BamIndexDecoder(Analysis):
             project_name=project_name)
 
     @classmethod
-    def get_file_path_lane(cls, project_name, lane, sequences_directory):
+    def get_file_path_lane(cls, project_name: str, lane: str, sequences_directory: str) -> FilePathBamIndexDecoderLane:
         """Get a :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane` object.
 
         :param project_name: A project name.
@@ -1363,7 +1364,7 @@ class BamIndexDecoder(Analysis):
             sequences_directory=sequences_directory)
 
     @classmethod
-    def get_sample_annotation_sheet(cls, file_path):
+    def get_sample_annotation_sheet(cls, file_path: str) -> SampleAnnotationSheet:
         """Get a :py:class:`bsf.ngs.SampleAnnotationSheet` object to annotate :py:class:`bsf.ngs.Sample` objects in a
         flow cell-specific :literal:`BSF samples` directory.
 
@@ -1397,30 +1398,30 @@ class BamIndexDecoder(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            hash_algorithm=None,
-            library_path=None,
-            sequences_directory=None,
-            samples_directory=None,
-            mode_directory=None,
-            mode_file=None,
-            java_classpath_illumina2bam=None,
-            java_archive_picard=None,
-            lanes=8,
-            force=False):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            hash_algorithm: Optional[bool] = None,
+            library_path: Optional[str] = None,
+            sequences_directory: Optional[str] = None,
+            samples_directory: Optional[str] = None,
+            mode_directory: Optional[str] = None,
+            mode_file: Optional[str] = None,
+            java_classpath_illumina2bam: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            lanes: Optional[int] = 8,
+            force: Optional[bool] = False) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -1437,13 +1438,13 @@ class BamIndexDecoder(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -1467,7 +1468,7 @@ class BamIndexDecoder(Analysis):
         :type mode_file: str | None
         :param java_classpath_illumina2bam: An Illumina2Bam tools Java Class Path directory path.
         :type java_classpath_illumina2bam: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         :param lanes: A number of lanes on the flow cell.
         :type lanes: int | None
@@ -1506,7 +1507,7 @@ class BamIndexDecoder(Analysis):
         return
 
     @property
-    def get_experiment_directory(self):
+    def get_experiment_directory(self) -> Optional[str]:
         """Get the experiment directory.
 
         The experiment directory is a concatenation of the samples directory and the project name.
@@ -1517,7 +1518,7 @@ class BamIndexDecoder(Analysis):
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -1574,12 +1575,12 @@ class BamIndexDecoder(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object to
         decode an archive BAM file produced with Illumina2Bam tools into sample-specific BAM files.
         """
 
-        def run_get_sample_file_name(sample_name):
+        def run_get_sample_file_name(sample_name: str) -> str:
             """Private function to format sample-specific BAM file names (i.e., :literal:`project_lane#sample.bam`).
 
             :param sample_name: A sample name.
@@ -1677,7 +1678,7 @@ class BamIndexDecoder(Analysis):
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
 
-        cell_dependency_list: List[str] = list()
+        cell_dependency_list: list[str] = list()
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
@@ -1740,7 +1741,7 @@ class BamIndexDecoder(Analysis):
                 })
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
-            runnable_lane = self.add_runnable_consecutive(
+            runnable_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
@@ -1973,7 +1974,7 @@ class BamIndexDecoder(Analysis):
 
         # Create a flow-cell specific Runnable.
 
-        runnable_cell = self.add_runnable_consecutive(
+        runnable_cell = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))

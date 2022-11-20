@@ -33,14 +33,14 @@ from bsf.procedure import ConcurrentRunnable
 from bsf.process import Executable, RunnableStep
 
 
-def run(runnable):
+def run(runnable: ConcurrentRunnable) -> None:
     """Run the :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
     :param runnable: A :py:class:`bsf.procedure.ConcurrentRunnable` object.
     :type runnable: ConcurrentRunnable
     """
 
-    def _run_consecutively(runnable_step_list):
+    def _run_consecutively(runnable_step_list: list[RunnableStep]) -> None:
         """Run a Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects consecutively.
 
         :param runnable_step_list: A Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects.

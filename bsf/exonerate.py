@@ -25,7 +25,9 @@
 """The :py:mod:`bsf.exonerate` module provides classes supporting Guy Slater's Exonerate alignment tool.
 """
 import re
-from typing import List
+from typing import Optional, TypeVar
+
+VULGARType = TypeVar(name='VULGARType', bound='VULGAR')
 
 
 class VULGAR(object):
@@ -57,7 +59,7 @@ class VULGAR(object):
     """
 
     @classmethod
-    def from_vulgar_str(cls, vulgar_str=None):
+    def from_vulgar_str(cls, vulgar_str: str) -> VULGARType:
         """Create a new Verbose Useful Labelled Gapped Alignment Report (:py:class:`bsf.exonerate.VULGAR`) object
         from a Python :py:class:`str` (VULGAR) object.
 
@@ -66,25 +68,32 @@ class VULGAR(object):
         :return: A :py:class:`bsf.exonerate.VULGAR` object.
         :rtype: VULGAR
         """
-        self = cls()
+        vulgar = cls()
 
         (
-            self.q_name, self.q_start, self.q_end, self.q_strand,
-            self.t_name, self.t_start, self.t_end, self.t_strand,
-            self.score, triplet_str
+            vulgar.q_name, vulgar.q_start, vulgar.q_end, vulgar.q_strand,
+            vulgar.t_name, vulgar.t_start, vulgar.t_end, vulgar.t_strand,
+            vulgar.score, triplet_str
         ) = vulgar_str.split(' ', 9)
 
         triplet_list = triplet_str.split(' ')
         # Further, split into triplets by means of a list comprehension.
-        self.triplet_list = [triplet_list[i: i + 3] for i in range(0, len(triplet_list), 3)]
+        vulgar.triplet_list = [triplet_list[i: i + 3] for i in range(0, len(triplet_list), 3)]
 
-        return self
+        return vulgar
 
     def __init__(
             self,
-            q_name=None, q_start=None, q_end=None, q_strand=None,
-            t_name=None, t_start=None, t_end=None, t_strand=None,
-            score=None, triplet_list=None):
+            q_name: Optional[str] = None,
+            q_start: Optional[str] = None,
+            q_end: Optional[str] = None,
+            q_strand: Optional[str] = None,
+            t_name: Optional[str] = None,
+            t_start: Optional[str] = None,
+            t_end: Optional[str] = None,
+            t_strand: Optional[str] = None,
+            score: Optional[str] = None,
+            triplet_list: Optional[list[tuple[str, str, str]]] = None) -> None:
         """Initialise a new :py:class:`bsf.exonerate.VULGAR` object.
 
         :param q_name: A :literal:`query` name.
@@ -125,7 +134,7 @@ class VULGAR(object):
 
         return
 
-    def t_start_natural(self):
+    def t_start_natural(self) -> int:
         """Return a natural target start coordinate.
 
         :return: A natural start coordinate.
@@ -139,7 +148,7 @@ class VULGAR(object):
             # If not defined return target start
             return int(self.t_start)
 
-    def t_end_natural(self):
+    def t_end_natural(self) -> int:
         """Return a natural end coordinate.
 
         :return: A natural end coordinate.
@@ -154,7 +163,7 @@ class VULGAR(object):
             return int(self.t_end)
 
 
-def parse_alignment_file(file_path):
+def parse_alignment_file(file_path: str) -> list[VULGAR]:
     """Parse an alignment file.
 
     :param file_path: Alignment file path.
@@ -164,7 +173,7 @@ def parse_alignment_file(file_path):
     """
     vulgar_pattern = re.compile(pattern=r'^vulgar: (.*)')
 
-    vulgar_list: List[VULGAR] = list()
+    vulgar_list: list[VULGAR] = list()
 
     with open(file=file_path, mode='rt') as input_text_io:
         for line_str in input_text_io:

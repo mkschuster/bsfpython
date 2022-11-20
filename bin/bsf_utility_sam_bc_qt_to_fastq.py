@@ -35,7 +35,6 @@ import warnings
 from argparse import ArgumentParser
 from gzip import GzipFile
 from queue import Queue
-from typing import Dict, List
 
 import pysam
 from pysam import AlignmentFile
@@ -105,11 +104,11 @@ if 'SO' in hd_dict:
 else:
     warnings.warn("Could not find an 'SO' tag in the '@HD' line.", UserWarning)
 
-gzip_file_dict: Dict[str, List[GzipFile]] = dict()
+gzip_file_dict: dict[str, list[GzipFile]] = dict()
 
-fifo_queue_dict: Dict[str, List[Queue]] = dict()
+fifo_queue_dict: dict[str, list[Queue]] = dict()
 
-rg_dict: Dict[str, str]
+rg_dict: dict[str, str]
 for rg_dict in alignment_header_dict['RG']:
     platform_unit = SafeFileName.get_safe_file_name(file_name=rg_dict['PU'])
 

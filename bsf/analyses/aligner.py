@@ -26,7 +26,7 @@
 """
 import logging
 import os
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from bsf.analysis import Analysis, Stage
 from bsf.annotation import AnnotationSheet
@@ -56,7 +56,7 @@ class FilePathAlign(FilePath):
     :type aligned_bam: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.aligner.FilePathAlign` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -98,7 +98,7 @@ class FilePathReadGroup(FilePath):
     :type read_group_md5: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.aligner.FilePathReadGroup` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -154,7 +154,7 @@ class FilePathSample(FilePath):
     :type prefix_prefix: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.aligner.FilePathSample` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -246,7 +246,7 @@ class FilePathSummary(FilePath):
     :type pdsm_table_sample_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.aligner.FilePathSummary` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -306,23 +306,23 @@ class Aligner(Analysis):
     :type name: str
     :cvar prefix: :py:attr:`bsf.analysis.Analysis.prefix` that should be overridden by subclasses.
     :type prefix: str
-    :ivar genome_fasta: A genome FASTA file path.
+    :ivar genome_fasta: A genome :emphasis:`FASTA` file path.
     :type genome_fasta: str | None
     :ivar genome_index: A genome index file path.
     :type genome_index: str | None
     :ivar skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
     :type skip_mark_duplicates: bool | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
     """
 
     name = 'Aligner Analysis'
     prefix = 'aligner'
 
-    sam_attributes_to_retain_list = []
+    sam_attributes_to_retain_list: list[str] = []
 
     @classmethod
-    def get_stage_name_align(cls):
+    def get_stage_name_align(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -331,7 +331,7 @@ class Aligner(Analysis):
         return '_'.join((cls.prefix, 'align'))
 
     @classmethod
-    def get_stage_name_read_group(cls):
+    def get_stage_name_read_group(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -340,7 +340,7 @@ class Aligner(Analysis):
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
-    def get_stage_name_sample(cls):
+    def get_stage_name_sample(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -349,7 +349,7 @@ class Aligner(Analysis):
         return '_'.join((cls.prefix, 'sample'))
 
     @classmethod
-    def get_stage_name_summary(cls):
+    def get_stage_name_summary(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -358,7 +358,7 @@ class Aligner(Analysis):
         return '_'.join((cls.prefix, 'summary'))
 
     @classmethod
-    def get_prefix_align(cls, paired_reads_name):
+    def get_prefix_align(cls, paired_reads_name) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -369,10 +369,10 @@ class Aligner(Analysis):
         return '_'.join((cls.get_stage_name_align(), paired_reads_name))
 
     @classmethod
-    def get_prefix_read_group(cls, read_group_name):
+    def get_prefix_read_group(cls, read_group_name) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        :param read_group_name: Read group name
+        :param read_group_name: A read group name.
         :type read_group_name: str
         :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
         :rtype: str
@@ -380,7 +380,7 @@ class Aligner(Analysis):
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
-    def get_prefix_sample(cls, sample_name):
+    def get_prefix_sample(cls, sample_name) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -391,7 +391,7 @@ class Aligner(Analysis):
         return '_'.join((cls.get_stage_name_sample(), sample_name))
 
     @classmethod
-    def get_prefix_summary(cls):
+    def get_prefix_summary(cls) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
@@ -400,7 +400,7 @@ class Aligner(Analysis):
         return cls.get_stage_name_summary()
 
     @classmethod
-    def get_file_path_align(cls, paired_reads_name):
+    def get_file_path_align(cls, paired_reads_name) -> FilePathAlign:
         """Get a :py:class:`bsf.analyses.aligner.FilePathAlign` object from this or a subclass.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -411,10 +411,10 @@ class Aligner(Analysis):
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
-    def get_file_path_read_group(cls, read_group_name):
+    def get_file_path_read_group(cls, read_group_name) -> FilePathReadGroup:
         """Get a :py:class:`bsf.analyses.aligner.FilePathReadGroup` object from this or a subclass.
 
-        :param read_group_name: Read group name.
+        :param read_group_name: A read group name.
         :type read_group_name: str
         :return: A :py:class:`bsf.analyses.aligner.FilePathReadGroup` object or subclass thereof.
         :rtype: FilePathReadGroup
@@ -422,7 +422,7 @@ class Aligner(Analysis):
         return FilePathReadGroup(prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     @classmethod
-    def get_file_path_sample(cls, sample_name):
+    def get_file_path_sample(cls, sample_name) -> FilePathSample:
         """Get a :py:class:`bsf.analyses.aligner.FilePathSample` object from this or a subclass.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -433,7 +433,7 @@ class Aligner(Analysis):
         return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_summary(cls):
+    def get_file_path_summary(cls) -> FilePathSummary:
         """Get a :py:class:`bsf.analyses.aligner.FilePathSummary` object from this or a subclass.
 
         :return: A :py:class:`bsf.analyses.aligner.FilePathSummary` object or subclass thereof.
@@ -443,24 +443,24 @@ class Aligner(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            genome_fasta=None,
-            genome_index=None,
-            skip_mark_duplicates=None,
-            java_archive_picard=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            genome_fasta: Optional[str] = None,
+            genome_index: Optional[str] = None,
+            skip_mark_duplicates: Optional[bool] = None,
+            java_archive_picard: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.aligner.Aligner` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -477,13 +477,13 @@ class Aligner(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -491,13 +491,13 @@ class Aligner(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param genome_fasta: A genome FASTA file path.
+        :param genome_fasta: A genome :emphasis:`FASTA` file path.
         :type genome_fasta: str | None
         :param genome_index: A genome index file path.
         :type genome_index: str | None
         :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
         :type skip_mark_duplicates: bool | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         """
         super(Aligner, self).__init__(
@@ -525,7 +525,7 @@ class Aligner(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.aligner.Aligner` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -560,7 +560,12 @@ class Aligner(Analysis):
 
         return
 
-    def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
+    def add_runnable_step_aligner(
+            self,
+            runnable_align: ConcurrentRunnable,
+            stage_align: Stage,
+            file_path_1: Optional[str],
+            file_path_2: Optional[str]) -> None:
         """Add one or more Aligner-specific :py:class:`bsf.process.RunnableStep` objects to the
         :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
@@ -568,14 +573,14 @@ class Aligner(Analysis):
         :type runnable_align: ConcurrentRunnable
         :param stage_align: A :py:class:`bsf.analysis.Stage` object.
         :type stage_align: Stage
-        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :param file_path_1: A :emphasis:`FASTQ` file path 1.
         :type file_path_1: str | None
-        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :param file_path_2: A :emphasis:`FASTQ` file path 2.
         :type file_path_2: str | None
         """
         return
 
-    def add_runnable_step_sample(self, runnable_sample, stage_sample):
+    def add_runnable_step_sample(self, runnable_sample: ConsecutiveRunnable, stage_sample: Stage) -> None:
         """Add one or more Aligner-specific :py:class:`bsf.process.RunnableStep` objects
         to the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
@@ -586,7 +591,7 @@ class Aligner(Analysis):
         """
         return
 
-    def add_runnable_step_summary(self, runnable_summary, stage_summary):
+    def add_runnable_step_summary(self, runnable_summary: ConsecutiveRunnable, stage_summary: Stage) -> None:
         """Add one or more Aligner-specific :py:class:`bsf.process.RunnableStep` objects
         to the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
@@ -597,11 +602,11 @@ class Aligner(Analysis):
         """
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.aligner.Aligner` object.
         """
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
@@ -614,7 +619,7 @@ class Aligner(Analysis):
 
             return
 
-        def run_get_unmapped_bam(_paired_reads):
+        def run_get_unmapped_bam(_paired_reads: PairedReads) -> tuple[str, Optional[str]]:
             """Get the unmapped BAM file annotation of a :py:class:`bsf.ngs.PairedReads` object.
 
             :param _paired_reads: A :py:class:`bsf.ngs.PairedReads` object.
@@ -690,7 +695,7 @@ class Aligner(Analysis):
             name='star_read_group',
             field_names=['sample', 'read_group'])
 
-        runnable_sample_list: List[ConsecutiveRunnable] = list()
+        runnable_sample_list: list[ConsecutiveRunnable] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -702,9 +707,9 @@ class Aligner(Analysis):
 
             # To run Picard MergeBamAlignment, all alignments from a BAM file need merging into one.
 
-            unmapped_bam_file_dict: Dict[str, Tuple[Optional[str], List[ConcurrentRunnable]]] = dict()
+            unmapped_bam_file_dict: dict[str, tuple[Optional[str], list[ConcurrentRunnable]]] = dict()
 
-            runnable_read_group_list: List[ConsecutiveRunnable] = list()
+            runnable_read_group_list: list[ConsecutiveRunnable] = list()
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 
@@ -754,7 +759,7 @@ class Aligner(Analysis):
 
                 # Create a new ConcurrentRunnable to run the aligner and Picard CleanSam, concurrently.
 
-                runnable_align = self.add_runnable_concurrent(
+                runnable_align = self.add_runnable(
                     runnable=ConcurrentRunnable(
                         name=self.get_prefix_align(paired_reads_name=paired_reads_name),
                         working_directory=self.genome_directory,
@@ -887,7 +892,7 @@ class Aligner(Analysis):
 
                 file_path_read_group = self.get_file_path_read_group(read_group_name=bam_file_name)
 
-                runnable_read_group = self.add_runnable_consecutive(
+                runnable_read_group = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_read_group(read_group_name=bam_file_name),
                         working_directory=self.genome_directory,
@@ -1049,7 +1054,7 @@ class Aligner(Analysis):
 
             file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
-            runnable_sample = self.add_runnable_consecutive(
+            runnable_sample = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_sample(sample_name=sample.name),
                     working_directory=self.genome_directory,
@@ -1301,7 +1306,7 @@ class Aligner(Analysis):
 
         # Create a Runnable and Executable for the summary.
 
-        runnable_summary = self.add_runnable_consecutive(
+        runnable_summary = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_summary(),
                 working_directory=self.genome_directory,
@@ -1329,13 +1334,13 @@ class Aligner(Analysis):
 
         return
 
-    def report_html_sample(self):
+    def report_html_sample(self) -> list[str]:
         """Create a :literal:`XHTML 1.0` sample table.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
         :rtype: list[str]
         """
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('<h2 id="sample_section">Sample Table</h2>\n')
         str_list.append('\n')
@@ -1388,13 +1393,13 @@ class Aligner(Analysis):
 
         return str_list
 
-    def report_hub_alignment(self):
+    def report_hub_alignment(self) -> list[str]:
         """Create an :literal:`Alignment` UCSC Composite Track.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
         :rtype: list[str]
         """
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         # Common track settings
         str_list.append('track alignment\n')
@@ -1440,13 +1445,13 @@ class Aligner(Analysis):
 
         return str_list
 
-    def report_hub_coverage(self):
+    def report_hub_coverage(self) -> list[str]:
         """Create a :literal:`Coverage` UCSC Composite Track.
 
         :return: A Python :py:class:`list` of Python :py:class:`str` objects.
         :rtype: list[str]
         """
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         # Common track settings
         str_list.append('track coverage\n')
@@ -1505,14 +1510,14 @@ class Aligner(Analysis):
 
         return str_list
 
-    def report(self):
-        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
+    def report(self) -> None:
+        """Create a :literal:`XHTML 1.0` report and a :emphasis:`UCSC Genome Browser Track Hub`.
         """
         # Create a symbolic link containing the project name and a UUID.
         # This code only needs the public URL.
         link_path = self.create_public_project_link()
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         str_list.append('\n')

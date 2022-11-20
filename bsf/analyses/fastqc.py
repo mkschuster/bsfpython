@@ -27,7 +27,7 @@
 import logging
 import os
 import urllib.parse
-from typing import List
+from typing import Optional
 
 from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
@@ -47,7 +47,7 @@ class FilePathFastQCReadGroup(FilePath):
     :type report: str
     """
 
-    def __init__(self, prefix, file_prefix):
+    def __init__(self, prefix: str, file_prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.fastqc.FilePathFastQCReadGroup` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -73,7 +73,7 @@ class FastQC(Analysis):
     prefix = 'fastqc'
 
     @classmethod
-    def get_stage_name_read_group(cls):
+    def get_stage_name_read_group(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -82,7 +82,7 @@ class FastQC(Analysis):
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
-    def get_prefix_read_group(cls, read_group_name):
+    def get_prefix_read_group(cls, read_group_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param read_group_name: A read group name.
@@ -93,7 +93,7 @@ class FastQC(Analysis):
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
-    def get_file_path_read_group(cls, read_group_name, file_path):
+    def get_file_path_read_group(cls, read_group_name: str, file_path: str) -> FilePathFastQCReadGroup:
         """Get a :py:class:`bsf.analyses.fastqc.FilePathFastQCReadGroup` object.
 
         :param read_group_name: A read group name.
@@ -104,7 +104,7 @@ class FastQC(Analysis):
         :rtype: FilePathFastQCReadGroup
         """
 
-        def get_file_prefix(_file_path):
+        def get_file_prefix(_file_path: str) -> str:
             """Private function to isolate a file prefix from '*.bam', '*.fastq', '*.fastq.gz', ... file paths.
 
             :param _file_path: A file path.
@@ -125,20 +125,20 @@ class FastQC(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.fastqc.FastQC` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -155,13 +155,13 @@ class FastQC(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -191,7 +191,7 @@ class FastQC(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.fastqc.FastQC` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -209,14 +209,13 @@ class FastQC(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.fastqc.FastQC` object.
         """
-
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
@@ -262,7 +261,7 @@ class FastQC(Analysis):
 
                     # Create a Runnable and an Executable for running the FastQC analysis.
 
-                    runnable_read_group = self.add_runnable_consecutive(
+                    runnable_read_group = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=prefix_read_group,
                             working_directory=self.project_directory))
@@ -297,7 +296,7 @@ class FastQC(Analysis):
 
         return
 
-    def report(self):
+    def report(self) -> None:
         """Create a :literal:`XHTML 1.0` report.
         """
         # Always check each BSF PairedReads object separately.
@@ -308,7 +307,7 @@ class FastQC(Analysis):
 
         # Write a HTML document.
 
-        report_list: List[str] = list()
+        report_list: list[str] = list()
 
         report_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         report_list.append('\n')

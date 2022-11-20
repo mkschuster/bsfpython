@@ -30,8 +30,9 @@ import logging
 import os
 import re
 from threading import Lock
-from typing import List
+from typing import Optional, TextIO
 
+from bsf.analysis import Stage
 from bsf.connector import StandardOutputStream
 from bsf.database import DatabaseAdaptor, DatabaseConnection
 from bsf.process import Executable
@@ -114,34 +115,34 @@ class ProcessSGE(object):
 
     def __init__(
             self,
-            process_sge_id=None,
-            qname=None,
-            hostname=None,
-            sge_group=None,
-            owner=None,
-            job_name=None,
-            job_number=None,
-            account=None,
-            priority=None,
-            submission_time=None,
-            start_date=None,
-            end_time=None,
-            failed=None,
-            exit_status=None,
-            ru_wallclock=None,
-            project=None,
-            department=None,
-            granted_pe=None,
-            slots=None,
-            task_number=None,
-            cpu=None,
-            mem=None,
-            io=None,
-            category=None,
-            iow=None,
-            pe_taskid=None,
-            maxvmem=None,
-            arid=None):
+            process_sge_id: Optional[int] = None,
+            qname: Optional[str] = None,
+            hostname: Optional[str] = None,
+            sge_group: Optional[str] = None,
+            owner: Optional[str] = None,
+            job_name: Optional[str] = None,
+            job_number: Optional[str] = None,
+            account: Optional[str] = None,
+            priority: Optional[str] = None,
+            submission_time: Optional[str] = None,
+            start_date: Optional[str] = None,
+            end_time: Optional[str] = None,
+            failed: Optional[str] = None,
+            exit_status: Optional[str] = None,
+            ru_wallclock: Optional[str] = None,
+            project: Optional[str] = None,
+            department: Optional[str] = None,
+            granted_pe: Optional[str] = None,
+            slots: Optional[str] = None,
+            task_number: Optional[str] = None,
+            cpu: Optional[str] = None,
+            mem: Optional[str] = None,
+            io: Optional[str] = None,
+            category: Optional[str] = None,
+            iow: Optional[str] = None,
+            pe_taskid: Optional[str] = None,
+            maxvmem: Optional[str] = None,
+            arid: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.drms.sge.ProcessSGE` object.
 
         :param process_sge_id: A primary key.
@@ -250,7 +251,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
     The SQL column names result from the SGE accounting file. See :manpage:`accounting(5)`.
     """
 
-    def __init__(self, database_connection):
+    def __init__(self, database_connection: DatabaseConnection) -> None:
         """Initialise a :py:class:`bsf.drms.sge.ProcessSGEAdaptor` object.
 
         :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
@@ -424,7 +425,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
         return
 
 
-def submit(stage, drms_submit=None, write_script=None):
+def submit(stage: Stage, drms_submit: Optional[bool] = None, write_script: Optional[bool] = None) -> None:
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object into the
@@ -432,14 +433,14 @@ def submit(stage, drms_submit=None, write_script=None):
     :emphasis:`Distributed Resource Management System` (DRMS).
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
-    :type stage: bsf.analysis.Stage
+    :type stage: Stage
     :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
     :type drms_submit: bool | None
     :param write_script: Write a :py:class:`bsf.analysis.Stage`-specific GNU Bash script.
     :type write_script: bool | None
     """
 
-    def submit_qsub_stdout(_file_handle, _thread_lock, _executable):
+    def submit_qsub_stdout(_file_handle: TextIO, _thread_lock: Lock, _executable: Executable) -> None:
         """Thread callable to process the SGE :manpage:`qsub(1)` :literal:`STDOUT` stream.
 
         Parses the process identifier returned by SGE :literal:`qsub` and sets it as
@@ -449,7 +450,7 @@ def submit(stage, drms_submit=None, write_script=None):
         :literal:`Your job 137657 ("ls") has been submitted`
 
         :param _file_handle: A file handle (i.e., pipe).
-        :type _file_handle: io.TextIOWrapper
+        :type _file_handle: TextIO
         :param _thread_lock: A Python :py:class:`threading.Lock` object.
         :type _thread_lock: Lock
         :param _executable: A :py:class:`bsf.process.Executable` object.
@@ -469,7 +470,7 @@ def submit(stage, drms_submit=None, write_script=None):
 
         return
 
-    output_list: List[str] = list()
+    output_list: list[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -510,7 +511,7 @@ def submit(stage, drms_submit=None, write_script=None):
         if stage.memory_limit_hard and not stage.memory_free_virtual:
             stage.memory_free_virtual = stage.memory_limit_hard
 
-        resource_list: List[str] = list()
+        resource_list: list[str] = list()
 
         # Require physical memory to be free ...
         if stage.memory_free_mem:
@@ -616,11 +617,11 @@ def submit(stage, drms_submit=None, write_script=None):
     return
 
 
-def check_state(stage):
+def check_state(stage: Stage) -> None:
     """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
-    :type stage: bsf.analysis.Stage
+    :type stage: Stage
     """
     if stage:
         pass

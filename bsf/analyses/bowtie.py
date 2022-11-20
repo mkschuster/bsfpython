@@ -25,6 +25,7 @@
 """The :py:mod:`bsf.analyses.bowtie` module provides classes and methods supporting the Bowtie aligners.
 """
 import os
+from typing import Optional
 
 from bsf.analyses.aligner import Aligner, FilePathAlign
 from bsf.analysis import Stage
@@ -41,7 +42,12 @@ class Bowtie1(Aligner):
     name = 'Bowtie1 Analysis'
     prefix = 'bowtie1'
 
-    def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
+    def add_runnable_step_aligner(
+            self,
+            runnable_align: ConcurrentRunnable,
+            stage_align: Stage,
+            file_path_1: Optional[str],
+            file_path_2: Optional[str]) -> None:
         """Add a Bowtie1-specific :py:class:`bsf.process.RunnableStep` object to the
         :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
@@ -49,9 +55,9 @@ class Bowtie1(Aligner):
         :type runnable_align: ConcurrentRunnable
         :param stage_align: A :py:class:`bsf.analysis.Stage` object.
         :type stage_align: Stage
-        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :param file_path_1: A :emphasis:`FASTQ` file path 1.
         :type file_path_1: str | None
-        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :param file_path_2: A :emphasis:`FASTQ` file path 2.
         :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
@@ -76,7 +82,7 @@ class Bowtie1(Aligner):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.bowtie.Bowtie1` object.
         """
         # Check for the project name already here,
@@ -137,7 +143,12 @@ class Bowtie2(Aligner):
         'YT',
     ]
 
-    def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
+    def add_runnable_step_aligner(
+            self,
+            runnable_align: ConcurrentRunnable,
+            stage_align: Stage,
+            file_path_1: Optional[str],
+            file_path_2: Optional[str]) -> None:
         """Add a Bowtie2-specific :py:class:`bsf.process.RunnableStep` object to the
         :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
@@ -145,9 +156,9 @@ class Bowtie2(Aligner):
         :type runnable_align: ConcurrentRunnable
         :param stage_align: A :py:class:`bsf.analysis.Stage` object.
         :type stage_align: Stage
-        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :param file_path_1: A :emphasis:`FASTQ` file path 1.
         :type file_path_1: str | None
-        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :param file_path_2: A :emphasis:`FASTQ` file path 2.
         :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
@@ -176,7 +187,7 @@ class Bowtie2(Aligner):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.bowtie.Bowtie2` object.
         """
         # Check for the project name already here,

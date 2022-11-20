@@ -28,10 +28,12 @@ import errno
 import os
 import pickle
 import shutil
-from typing import List
+from typing import Optional, TypeVar
 
 from bsf.process import RunnableStep
 from bsf.standards import Configuration
+
+RunnableType = TypeVar(name='RunnableType', bound='Runnable')
 
 
 class FilePath(object):
@@ -45,7 +47,7 @@ class FilePath(object):
     :type prefix: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.procedure.FilePath` object.
 
         :param prefix: A file path prefix.
@@ -88,11 +90,11 @@ class Runnable(object):
 
     def __init__(
             self,
-            name,
-            working_directory,
-            code_module,
-            cache_directory=None,
-            cache_path_dict=None):
+            name: str,
+            working_directory: str,
+            code_module: str,
+            cache_directory: Optional[str] = None,
+            cache_path_dict: Optional[dict[str, str]] = None) -> None:
         """Initialise a :py:class:`bsf.procedure.Runnable` object.
 
         :param name: A name.
@@ -126,7 +128,7 @@ class Runnable(object):
 
         return
 
-    def trace(self, level=1):
+    def trace(self, level: int = 1) -> list[str]:
         """Trace a :py:class:`bsf.procedure.Runnable` object.
 
         :param level: Indentation level
@@ -136,7 +138,7 @@ class Runnable(object):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -152,7 +154,7 @@ class Runnable(object):
         return str_list
 
     @property
-    def pickler_path(self):
+    def pickler_path(self) -> str:
         """Get the Python :py:class:`pickle.Pickler` file path.
 
         :return: A Python :py:class:`pickle.Pickler` file path.
@@ -160,7 +162,7 @@ class Runnable(object):
         """
         return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
-    def to_pickler_path(self):
+    def to_pickler_path(self) -> None:
         """Write this :py:class:`bsf.procedure.Runnable` as a Python :py:class:`pickle.Pickler` file into the
         working directory.
         """
@@ -171,7 +173,7 @@ class Runnable(object):
         return
 
     @classmethod
-    def from_pickler_path(cls, file_path):
+    def from_pickler_path(cls, file_path: str) -> RunnableType:
         """Create a :py:class:`bsf.procedure.Runnable` from a Python :py:class:`pickle.Pickler` file via
         Python :py:class:`pickle.Unpickler`.
 
@@ -188,7 +190,7 @@ class Runnable(object):
 
         return runnable
 
-    def cache_directory_path(self, absolute=False):
+    def cache_directory_path(self, absolute: bool = False) -> str:
         """Get the absolute or relative cache directory path of a :py:class:`bsf.procedure.Runnable` object.
 
         If the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute is not defined,
@@ -216,7 +218,7 @@ class Runnable(object):
         else:
             return directory_name
 
-    def cache_directory_create(self):
+    def cache_directory_create(self) -> None:
         """Create a cache directory, if it does not exist and populate it from the cache dictionary.
 
         In case of an error during the copy, the entire cache directory is removed before an Exception is re-raised.
@@ -246,7 +248,7 @@ class Runnable(object):
 
         return
 
-    def cache_directory_remove(self):
+    def cache_directory_remove(self) -> None:
         """Remove the cache directory and its contents, if it exists.
         """
         cache_directory_path = self.cache_directory_path(absolute=True)
@@ -258,7 +260,7 @@ class Runnable(object):
 
         return
 
-    def get_cache_file_path(self, file_path, absolute=False):
+    def get_cache_file_path(self, file_path: str, absolute: bool = False) -> str:
         """Get the absolute or relative cache file path for a file path.
 
         :param file_path: A default file path.
@@ -273,7 +275,7 @@ class Runnable(object):
 
         return os.path.join(self.cache_directory_path(absolute=absolute), file_name)
 
-    def temporary_directory_path(self, absolute=False):
+    def temporary_directory_path(self, absolute: bool = False) -> str:
         """Get the absolute or relative temporary directory path of a :py:class:`bsf.procedure.Runnable` object.
 
         The absolute path prepends the :py:attr:`bsf.procedure.Runnable.working_directory`,
@@ -291,7 +293,7 @@ class Runnable(object):
         else:
             return directory_name
 
-    def temporary_directory_create(self):
+    def temporary_directory_create(self) -> None:
         """Create a temporary directory, if it does not exist.
         """
         temporary_directory_path = self.temporary_directory_path(absolute=False)
@@ -305,7 +307,7 @@ class Runnable(object):
 
         return
 
-    def temporary_directory_remove(self):
+    def temporary_directory_remove(self) -> None:
         """Remove the temporary directory and its contents, if it exists.
         """
         temporary_directory_path = self.temporary_directory_path(absolute=False)
@@ -315,7 +317,7 @@ class Runnable(object):
 
         return
 
-    def runnable_status_file_path(self, success=True, absolute=False):
+    def runnable_status_file_path(self, success: bool = True, absolute: bool = False) -> str:
         """Get the status file path for a :py:class:`bsf.procedure.Runnable` object.
 
         :param success: Get a status file for :emphasis:`successful` or :emphasis:`failed` completion.
@@ -335,7 +337,7 @@ class Runnable(object):
         else:
             return file_name
 
-    def runnable_status_file_create(self, success=True):
+    def runnable_status_file_create(self, success: bool = True) -> None:
         """Create an empty status file for a :py:class:`bsf.procedure.Runnable` object.
 
         This method is mainly used by the :py:mod:`bsf.runnable.consecutive` module and related ones.
@@ -348,7 +350,7 @@ class Runnable(object):
 
         return
 
-    def runnable_status_file_remove(self):
+    def runnable_status_file_remove(self) -> None:
         """Remove the status file for a :py:class:`bsf.procedure.Runnable` object.
 
         This method is mainly used by the :py:mod:`bsf.runnable.consecutive` module and related ones.
@@ -371,7 +373,10 @@ class Runnable(object):
 
         return
 
-    def runnable_step_status_file_path(self, runnable_step=None, success=True):
+    def runnable_step_status_file_path(
+            self,
+            runnable_step: Optional[RunnableStep] = None,
+            success: bool = True) -> Optional[str]:
         """Get the status file path for a :py:class:`bsf.process.RunnableStep` object of a
         :py:class:`bsf.procedure.Runnable` object.
 
@@ -390,7 +395,10 @@ class Runnable(object):
         else:
             return '_'.join((self.name, runnable_step.name, 'failed.txt'))
 
-    def runnable_step_status_file_create(self, runnable_step=None, success=True):
+    def runnable_step_status_file_create(
+            self,
+            runnable_step: Optional[RunnableStep] = None,
+            success: bool = True) -> None:
         """Create an empty status file for a :py:class:`bsf.process.RunnableStep` object of a
         :py:class:`bsf.procedure.Runnable` object.
 
@@ -409,7 +417,7 @@ class Runnable(object):
 
         return
 
-    def runnable_step_status_file_remove(self, runnable_step):
+    def runnable_step_status_file_remove(self, runnable_step: Optional[RunnableStep]) -> None:
         """Remove the status file for a :py:class:`bsf.process.RunnableStep` object of a
         :py:class:`bsf.procedure.Runnable` object.
 
@@ -439,7 +447,7 @@ class Runnable(object):
 
         return
 
-    def run_consecutively(self, runnable_step_list):
+    def run_consecutively(self, runnable_step_list: list[RunnableStep]) -> Optional[Exception]:
         """Run a Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects through a
          :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
@@ -452,7 +460,7 @@ class Runnable(object):
         # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
         # previous bsf.process.RunnableStep.
 
-        new_runnable_step_list: List[RunnableStep] = list()
+        new_runnable_step_list: list[RunnableStep] = list()
         for runnable_step in reversed(runnable_step_list):
             new_runnable_step_list.append(runnable_step)
             if os.path.exists(self.runnable_step_status_file_path(
@@ -531,12 +539,12 @@ class ConsecutiveRunnable(Runnable):
 
     def __init__(
             self,
-            name,
-            working_directory,
-            code_module='bsf.runnables.consecutive',
-            cache_directory=None,
-            cache_path_dict=None,
-            runnable_step_list=None):
+            name: str,
+            working_directory: str,
+            code_module: str = 'bsf.runnables.consecutive',
+            cache_directory: Optional[str] = None,
+            cache_path_dict: Optional[dict[str, str]] = None,
+            runnable_step_list: Optional[list[RunnableStep]] = None) -> None:
         """Initialise a :py:class:`bsf.ConsecutiveRunnable` object.
 
         :param name: A name.
@@ -571,7 +579,7 @@ class ConsecutiveRunnable(Runnable):
 
         return
 
-    def trace(self, level=1):
+    def trace(self, level: int = 1) -> list[str]:
         """Trace a :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
         :param level: Indentation level
@@ -581,7 +589,7 @@ class ConsecutiveRunnable(Runnable):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -601,7 +609,7 @@ class ConsecutiveRunnable(Runnable):
 
         return str_list
 
-    def add_runnable_step(self, runnable_step):
+    def add_runnable_step(self, runnable_step: Optional[RunnableStep]) -> None:
         """Convenience method to facilitate initialising, adding and returning a
         :py:class:`bsf.process.RunnableStep` object.
 
@@ -615,7 +623,7 @@ class ConsecutiveRunnable(Runnable):
 
         return
 
-    def run(self):
+    def run(self) -> Optional[Exception]:
         """Convenience method to run a :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
         :return: A Python :py:class:`Exception` in case of a :py:class:`bsf.process.RunnableStep` failure.
@@ -641,14 +649,14 @@ class ConcurrentRunnable(Runnable):
 
     def __init__(
             self,
-            name,
-            working_directory,
-            code_module='bsf.runnables.concurrent',
-            cache_directory=None,
-            cache_path_dict=None,
-            runnable_step_list_prologue=None,
-            runnable_step_list_concurrent=None,
-            runnable_step_list_epilogue=None):
+            name: str,
+            working_directory: str,
+            code_module: str = 'bsf.runnables.concurrent',
+            cache_directory: Optional[str] = None,
+            cache_path_dict: Optional[dict[str, str]] = None,
+            runnable_step_list_prologue: Optional[list[RunnableStep]] = None,
+            runnable_step_list_concurrent: Optional[list[RunnableStep]] = None,
+            runnable_step_list_epilogue: Optional[list[RunnableStep]] = None) -> None:
         """Initialise a :py:class:`bsf.ConcurrentRunnable` object.
 
         :param name: A name.
@@ -700,7 +708,7 @@ class ConcurrentRunnable(Runnable):
 
         return
 
-    def trace(self, level=1):
+    def trace(self, level: int = 1) -> list[str]:
         """Trace a :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
         :param level: Indentation level
@@ -710,7 +718,7 @@ class ConcurrentRunnable(Runnable):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name: {!r}\n'.format(indent, self.name))
@@ -740,7 +748,7 @@ class ConcurrentRunnable(Runnable):
 
         return str_list
 
-    def add_runnable_step_prologue(self, runnable_step):
+    def add_runnable_step_prologue(self, runnable_step: Optional[RunnableStep]) -> None:
         """Convenience method to add a :py:class:`bsf.process.RunnableStep` object to the prologue list.
 
         :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
@@ -753,7 +761,7 @@ class ConcurrentRunnable(Runnable):
 
         return
 
-    def add_runnable_step_epilogue(self, runnable_step):
+    def add_runnable_step_epilogue(self, runnable_step: Optional[RunnableStep]) -> None:
         """Convenience method to add a :py:class:`bsf.process.RunnableStep` object to the epilogue list.
 
         :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.
@@ -766,7 +774,7 @@ class ConcurrentRunnable(Runnable):
 
         return
 
-    def add_runnable_step(self, runnable_step):
+    def add_runnable_step(self, runnable_step: Optional[RunnableStep]) -> None:
         """Convenience method to add a :py:class:`bsf.process.RunnableStep` object to the concurrent list.
 
         :param runnable_step: A :py:class:`bsf.process.RunnableStep` object.

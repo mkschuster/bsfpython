@@ -22,16 +22,20 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""The :py:mod:`bsf.md5sum` module supports GNU md5sum functionality.
+"""The :py:mod:`bsf.md5sum` module supports the :emphasis:`GNU md5sum` utility.
 """
 import logging
 import os
+from typing import Optional, TypeVar
+
+MD5SumType = TypeVar(name='MD5SumType', bound='MD5Sum')
+MD5SumArchiveType = TypeVar(name='MD5SumArchiveType', bound='MD5SumArchive')
 
 module_logger = logging.getLogger(name=__name__)
 
 
 class MD5Sum(object):
-    """The :py:class:`bsf.md5sum.MD5Sum` object represents one GNU md5sum entry.
+    """The :py:class:`bsf.md5sum.MD5Sum` object represents one :emphasis:`GNU md5sum` entry.
 
     :ivar file_path: A file path.
     :type file_path: str
@@ -41,7 +45,7 @@ class MD5Sum(object):
     :type check_mode: str
     """
 
-    def __init__(self, file_path, check_sum, check_mode):
+    def __init__(self, file_path: str, check_sum: str, check_mode: str) -> None:
         """Initialise a :py:class:`bsf.md5sum.MD5Sum` object.
 
         :param file_path: A file path.
@@ -58,10 +62,10 @@ class MD5Sum(object):
         return
 
     @classmethod
-    def from_line(cls, md5sum_str):
-        """Create a :py:class:`bsf.md5sum.MD5Sum` object from a GNU md5sum line.
+    def from_line(cls, md5sum_str: str) -> MD5SumType:
+        """Create a :py:class:`bsf.md5sum.MD5Sum` object from a :emphasis:`GNU md5sum` line.
 
-        :param md5sum_str: A GNU md5sum line.
+        :param md5sum_str: A :emphasis:`GNU md5sum` line.
         :type md5sum_str: str
         :return: A :py:class:`bsf.md5sum.MD5Sum` object.
         :rtype: MD5Sum
@@ -71,7 +75,7 @@ class MD5Sum(object):
         if ' ' in md5sum_str:
             index_int = md5sum_str.index(' ')
 
-            # The MD5 check sum lies up until the index location.
+            # The MD5 checksum lies up until the index location.
             check_sum = md5sum_str[:index_int]
 
             # The check mode marker for text (' ') or binary ('*') lies after the index location.
@@ -86,19 +90,19 @@ class MD5Sum(object):
 
         return cls(file_path=file_path, check_sum=check_sum, check_mode=check_mode)
 
-    def to_line(self):
-        """Convert a :py:class:`bsf.md5sum.MD5Sum` object to a GNU md5sum line.
+    def to_line(self) -> str:
+        """Convert a :py:class:`bsf.md5sum.MD5Sum` object to a :emphasis:`GNU md5sum` line.
 
-        :return: A GNU md5sum line.
+        :return: A :emphasis:`GNU md5sum` line.
         :rtype: str
         """
         return ' '.join((self.check_sum, self.check_mode + self.file_path))
 
 
 class MD5SumArchive(object):
-    """The :py:class:`bsf.md5sum.MD5SumArchive` models a file of GNU md5sum entries.
+    """The :py:class:`bsf.md5sum.MD5SumArchive` models a file of :emphasis:`GNU md5sum` entries.
 
-    :ivar file_path: A file path.
+    :ivar file_path: A MD5 checksum archive file path.
     :type file_path: str
     :ivar md5sum_dict: A Python :py:class:`dict` object of
         Python :py:class:`str` (file name) key and
@@ -106,10 +110,10 @@ class MD5SumArchive(object):
     :type md5sum_dict: dict[str, MD5Sum]
     """
 
-    def __init__(self, file_path=None, md5sum_dict=None):
+    def __init__(self, file_path: Optional[str] = None, md5sum_dict: Optional[dict[str, MD5Sum]] = None) -> None:
         """Initialise a :py:class:`bsf.md5sum.MD5SumArchive` object.
 
-        :param file_path: A file path of a MD5 sum repository.
+        :param file_path: A MD5 checksum archive file path.
         :type file_path: str | None
         :param md5sum_dict: A Python :py:class:`dict` object of
             Python :py:class:`str` (file name) key and
@@ -125,7 +129,7 @@ class MD5SumArchive(object):
 
         return
 
-    def add_md5sum(self, md5sum):
+    def add_md5sum(self, md5sum: MD5Sum) -> bool:
         """Add a :py:class:`bsf.md5sum.MD5Sum` object to the :py:class:`bsf.md5sum.MD5SumArchive` object.
 
         :param md5sum: A :py:class:`bsf.md5sum.MD5Sum` object.
@@ -152,19 +156,19 @@ class MD5SumArchive(object):
 
         return True
 
-    def add_md5sum_line(self, md5sum_str):
+    def add_md5sum_line(self, md5sum_str: str) -> bool:
         """Split a GNU :literal:`md5sum` line into its components and add it to the
         :py:class:`bsf.md5sum.MD5SumArchive` object.
 
-        :param md5sum_str: A GNU :literal:`md5sum` line.
+        :param md5sum_str: A :emphasis:`GNU md5sum` line.
         :type md5sum_str: str
         :return: :py:const:`True` upon success, :py:const:`False` otherwise.
         :rtype: bool
         """
         return self.add_md5sum(md5sum=MD5Sum.from_line(md5sum_str=md5sum_str))
 
-    def read_md5sum_archive(self, file_path=None):
-        """Read a MD5 sum archive file.
+    def read_md5sum_archive(self, file_path: Optional[str] = None) -> None:
+        """Read an MD5 checksum archive file.
 
         :param file_path: File path
         :type file_path: str | None
@@ -184,14 +188,14 @@ class MD5SumArchive(object):
                     if not self.add_md5sum(md5sum=md5sum):
                         raise Exception(
                             f"The MD5SumArchive file {file_path!r} "
-                            "does not obey the standard 'MD5SUM *file_path' format.")
+                            "does not obey the standard '<MD5_SUM> *<file_path>' format.")
         else:
             module_logger.warning('The MD5SumArchive.file_path %r does not exist.', file_path)
 
         return
 
     @classmethod
-    def from_file_path(cls, file_path):
+    def from_file_path(cls, file_path: str) -> MD5SumArchiveType:
         """Create a :py:class:`bsf.md5sum.MD5SumArchive` from a file path.
 
         :param file_path: A file path.
@@ -209,7 +213,7 @@ class MD5SumArchive(object):
 
         return md5sum_archive
 
-    def to_file_path(self, file_path=None):
+    def to_file_path(self, file_path: Optional[str] = None) -> None:
         """Write a :py:class:`bsf.md5sum.MD5SumArchive` object to a file path.
 
         :param file_path: A file path.

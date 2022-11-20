@@ -29,7 +29,6 @@ convert a BED file into a Picard interval list file.
 
 import os
 from argparse import ArgumentParser
-from typing import Dict, List
 
 # Set the environment consistently.
 
@@ -86,8 +85,8 @@ else:
 # build a Python list of sequence region names and a Python dict of Python str (sequence region name) key
 # and Python list of Python list (interval) objects.
 
-sequence_name_dict: Dict[str, List[List[str]]] = dict()
-sequence_name_list: List[str] = list()
+sequence_name_dict: dict[str, list[list[str]]] = dict()
+sequence_name_list: list[str] = list()
 
 with open(file=output_path, mode='wt') as output_text_io:
     # Read the SAM header dictionary and copy it to the output file.

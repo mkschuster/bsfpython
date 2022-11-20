@@ -27,18 +27,26 @@
 import logging
 import os
 import re
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional, TypeVar
 from weakref import ReferenceType
 
 from bsf.annotation import AnnotationSheet
 from bsf.standards import Configuration
 
+NextGenerationBaseType = TypeVar(name='NextGenerationBaseType', bound='NextGenerationBase')
+ReadsType = TypeVar(name='ReadsType', bound='Reads')
+PairedReadsType = TypeVar(name='PairedReadsType', bound='PairedReads')
+SampleType = TypeVar(name='SampleType', bound='Sample')
+ProjectType = TypeVar(name='ProjectType', bound='Project')
+ProcessedRunFolderType = TypeVar(name='ProcessedRunFolderType', bound='ProcessedRunFolder')
+CollectionType = TypeVar(name='CollectionType', bound='Collection')
+
 module_logger = logging.getLogger(name=__name__)
 
 
 class SampleAnnotationSheet(AnnotationSheet):
-    """The :py:class:`bsf.ngs.SampleAnnotationSheet` class represents a Comma-Separated Value (CSV) table of
-    sample information after running the
+    """The :py:class:`bsf.ngs.SampleAnnotationSheet` class represents a :emphasis:`Comma-Separated Value` (CSV)
+    table of sample information after running the
     :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object.
     """
 
@@ -62,7 +70,7 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Reads2 File',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = {
         # File Type
         'ProcessedRunFolder Name': [
             AnnotationSheet.check_alphanumeric,
@@ -115,10 +123,10 @@ class NextGenerationBase(object):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.Reads` object.
 
         :param name: A name.
@@ -144,7 +152,7 @@ class NextGenerationBase(object):
 
         return
 
-    def __eq__(self, other):
+    def __eq__(self, other: NextGenerationBaseType) -> bool:
         """Test :py:class:`bsf.ngs.NextGenerationBase` objects for equality.
 
         :param other: A :py:class:`bsf.ngs.NextGenerationBase` object.
@@ -163,7 +171,7 @@ class NextGenerationBase(object):
             and self.file_type == other.file_type \
             and self.annotation_dict == other.annotation_dict
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.NextGenerationBase` object.
 
         :return: A printable representation.
@@ -176,7 +184,7 @@ class NextGenerationBase(object):
             f'file_type={self.file_type!r}, ' \
             f'annotation_dict={self.annotation_dict!r})'
 
-    def add_annotation(self, key, value):
+    def add_annotation(self, key: str, value: str) -> None:
         """Add an annotation value under a key.
 
         :param key: An annotation key.
@@ -197,7 +205,7 @@ class NextGenerationBase(object):
 
         return
 
-    def process_annotation(self, row_dict, key_list, prefix=None):
+    def process_annotation(self, row_dict: dict[str, str], key_list: list[str], prefix: Optional[str] = None) -> None:
         """Process annotation from a Python :py:class:`dict` object of row entries of a
         Python :py:mod:`csv` module object.
 
@@ -247,7 +255,7 @@ class Reads(NextGenerationBase):
     """
 
     @classmethod
-    def from_file_path(cls, file_path, file_type):
+    def from_file_path(cls, file_path: str, file_type: str) -> ReadsType:
         """Construct a :py:class:`bsf.ngs.Reads` object from a file path.
 
         For a :literal:`file_type` :literal:`CASAVA`, :py:attr:`bsf.ngs.Reads.file_path` obeys a
@@ -297,15 +305,15 @@ class Reads(NextGenerationBase):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None,
-            barcode=None,
-            lane=None,
-            read=None,
-            chunk=None,
-            weak_reference_paired_reads=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None,
+            barcode: Optional[str] = None,
+            lane: Optional[str] = None,
+            read: Optional[str] = None,
+            chunk: Optional[str] = None,
+            weak_reference_paired_reads: Optional[ReferenceType] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.Reads` object.
 
         :param name: A name.
@@ -333,8 +341,7 @@ class Reads(NextGenerationBase):
             name=name,
             file_path=file_path,
             file_type=file_type,
-            annotation_dict=annotation_dict
-        )
+            annotation_dict=annotation_dict)
 
         self.barcode = barcode
         self.lane = lane
@@ -344,7 +351,7 @@ class Reads(NextGenerationBase):
 
         return
 
-    def __eq__(self, other):
+    def __eq__(self, other: ReadsType) -> bool:
         """Test :py:class:`bsf.ngs.Reads` objects for equality.
 
         :param other: A :py:class:`bsf.ngs.Reads` object.
@@ -364,7 +371,7 @@ class Reads(NextGenerationBase):
             and self.read == other.read \
             and self.chunk == other.chunk
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         """Test a :py:class:`bsf.ngs.Reads` object for non-zero.
 
         :return: :py:const:`True` if non-zero (i.e., file_path or name are meaningfully defined),
@@ -373,7 +380,7 @@ class Reads(NextGenerationBase):
         """
         return bool(self.file_path and self.name)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.Reads` object.
 
         :return: A printable representation.
@@ -386,7 +393,7 @@ class Reads(NextGenerationBase):
             f'read={self.read!r}, ' \
             f'chunk={self.chunk!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.ngs.Reads` object.
 
         :param level: Indentation level.
@@ -396,7 +403,7 @@ class Reads(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append(f'{indent}{self.__class__!r}\n')
         str_list.append(f'{indent}  weak_reference_paired_reads: {self.weak_reference_paired_reads!r}\n')
@@ -413,7 +420,7 @@ class Reads(NextGenerationBase):
 
         return str_list
 
-    def match(self, reads):
+    def match(self, reads: ReadsType) -> bool:
         """Match :py:class:`bsf.ngs.Reads` objects.
 
         Two :py:class:`bsf.ngs.Reads` objects are identical, if all their instance variables match.
@@ -456,7 +463,7 @@ class Reads(NextGenerationBase):
 
         return True
 
-    def match_paired(self, reads):
+    def match_paired(self, reads: ReadsType) -> bool:
         """Test that two :py:class:`bsf.ngs.Reads` objects are compatible to form a
         :py:class:`bsf.ngs.PairedReads` object.
 
@@ -529,17 +536,17 @@ class PairedReads(NextGenerationBase):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None,
-            reads_1=None,
-            reads_2=None,
-            exclude=None,
-            index_1=None,
-            index_2=None,
-            read_group=None,
-            weak_reference_sample=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None,
+            reads_1: Optional[Reads] = None,
+            reads_2: Optional[Reads] = None,
+            exclude: Optional[bool] = None,
+            index_1: Optional[str] = None,
+            index_2: Optional[str] = None,
+            read_group: Optional[str] = None,
+            weak_reference_sample: Optional[ReferenceType] = None):
         """Initialise a :py:class:`bsf.ngs.PairedReads` object.
 
         For the :py:attr:`bsf.ngs.Reads.file_type` :literal:`CASAVA`, the reads object will be
@@ -627,7 +634,7 @@ class PairedReads(NextGenerationBase):
 
         return
 
-    def __eq__(self, other):
+    def __eq__(self, other: PairedReadsType) -> bool:
         """Test :py:class:`bsf.ngs.PairedReads` objects for equality.
 
         :param other: A :py:class:`bsf.ngs.PairedReads` object.
@@ -649,7 +656,7 @@ class PairedReads(NextGenerationBase):
             and self.index_2 == other.index_2 \
             and self.read_group == other.read_group
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.PairedReads` object.
 
         :return: A printable representation.
@@ -664,7 +671,7 @@ class PairedReads(NextGenerationBase):
             f'index_2={self.index_2!r}, ' \
             f'read_group={self.read_group!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.ngs.PairedReads` object.
 
         :param level: Indentation level
@@ -674,7 +681,7 @@ class PairedReads(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append(f'{indent}{self.__class__!r}\n')
         str_list.append(f'{indent}  weak_reference_sample: {self.weak_reference_sample!r}\n')
@@ -698,7 +705,7 @@ class PairedReads(NextGenerationBase):
 
         return str_list
 
-    def add_reads(self, reads):
+    def add_reads(self, reads: PairedReadsType) -> bool:
         """Add a :py:class:`bsf.ngs.Reads` object.
 
         For a :py:attr:`bsf.ngs.Reads.file_type` :literal:`CASAVA` the :py:class:`bsf.ngs.Reads` object can be
@@ -756,7 +763,7 @@ class PairedReads(NextGenerationBase):
 
         return False
 
-    def match(self, paired_reads):
+    def match(self, paired_reads: PairedReadsType) -> bool:
         """Match :py:class:`bsf.ngs.PairedReads` objects.
 
         :param paired_reads: A :py:class:`bsf.ngs.PairedReads` object.
@@ -785,7 +792,7 @@ class PairedReads(NextGenerationBase):
 
         return True
 
-    def get_name(self, full=False):
+    def get_name(self, full: bool = False) -> Optional[str]:
         """Get the name of a :py:class:`bsf.ngs.PairedReads` object.
 
         For the :py:attr:`bsf.ngs.Reads.file_type` :literal:`CASAVA` the name is a concatenation of the
@@ -837,7 +844,7 @@ class Sample(NextGenerationBase):
     default_name = 'Default'
 
     @classmethod
-    def from_file_path(cls, file_path, file_type):
+    def from_file_path(cls, file_path: str, file_type: str) -> SampleType:
         """Construct a :py:class:`bsf.ngs.Sample` object from a file path.
 
         For a :literal:`file_type` :literal:`CASAVA` the name is automatically populated,
@@ -881,12 +888,12 @@ class Sample(NextGenerationBase):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None,
-            paired_reads_list=None,
-            weak_reference_project=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None,
+            paired_reads_list: Optional[list[PairedReads]] = None,
+            weak_reference_project: Optional[ReferenceType] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.Sample` object.
 
         :param name: A name.
@@ -923,7 +930,7 @@ class Sample(NextGenerationBase):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.Sample` object.
 
         :return: A printable representation.
@@ -933,7 +940,7 @@ class Sample(NextGenerationBase):
             f'{super(Sample, self).__repr__()[:-1]}, ' \
             f'paired_reads_list={self.paired_reads_list!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.ngs.Sample` object.
 
         :param level: Indentation level
@@ -943,7 +950,7 @@ class Sample(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append(f'{indent}{self.__class__!r}\n')
         str_list.append(f'{indent}  weak_reference_project: {self.weak_reference_project!r}\n')
@@ -959,7 +966,7 @@ class Sample(NextGenerationBase):
 
         return str_list
 
-    def match(self, sample):
+    def match(self, sample: SampleType) -> bool:
         """Match :py:class:`bsf.ngs.Sample` objects.
 
         :param sample: A :py:class:`bsf.ngs.Sample` object.
@@ -997,7 +1004,7 @@ class Sample(NextGenerationBase):
 
         return True
 
-    def add_paired_reads(self, paired_reads):
+    def add_paired_reads(self, paired_reads: PairedReads) -> None:
         """Add a :py:class:`bsf.ngs.PairedReads` object.
 
         This method checks, whether a matching :py:class:`bsf.ngs.PairedReads` object is already present in this
@@ -1022,7 +1029,7 @@ class Sample(NextGenerationBase):
 
         return
 
-    def add_reads(self, reads):
+    def add_reads(self, reads: Reads) -> None:
         """Add a :py:class:`bsf.ngs.Reads` object.
 
         See also the :py:meth:`bsf.ngs.Sample.from_file_path` method for CASAVA.
@@ -1048,7 +1055,11 @@ class Sample(NextGenerationBase):
 
         return
 
-    def get_all_paired_reads(self, replicate_grouping, exclude=False, full=False):
+    def get_all_paired_reads(
+            self,
+            replicate_grouping: bool,
+            exclude: bool = False,
+            full: bool = False) -> dict[str, list[PairedReads]]:
         """Get all :py:class:`bsf.ngs.PairedReads` objects of a :py:class:`bsf.ngs.Sample` grouped or un-grouped.
 
         A :py:class:`bsf.ngs.Sample` object can hold several :py:class:`bsf.ngs.PairedReads` objects
@@ -1067,7 +1078,7 @@ class Sample(NextGenerationBase):
         :py:attr:`bsf.ngs.Reads.lane`,
         but only differ in their :py:attr:`bsf.ngs.Reads.chunk` number are always grouped together.
 
-        :param replicate_grouping: Group all :py:class:`bsf.ngs.PairedReads` objects of a
+        :param replicate_grouping: Request grouping all :py:class:`bsf.ngs.PairedReads` objects of a
             :py:class:`bsf.ngs.Sample` object or list them individually.
         :type replicate_grouping: bool
         :param exclude: Exclude on the basis of the :py:attr:`bsf.ngs.PairedReads.exclude` attribute.
@@ -1078,7 +1089,7 @@ class Sample(NextGenerationBase):
             Python :py:class:`list` object of :py:class:`bsf.ngs.PairedReads` objects value data.
         :rtype: dict[str, list[PairedReads]]
         """
-        paired_reads_dict: Dict[str, List[PairedReads]] = dict()
+        paired_reads_dict: dict[str, list[PairedReads]] = dict()
 
         for paired_reads in self.paired_reads_list:
             if exclude and paired_reads.exclude:
@@ -1104,7 +1115,7 @@ class Sample(NextGenerationBase):
 
         return paired_reads_dict
 
-    def is_excluded(self):
+    def is_excluded(self) -> bool:
         """Is this :py:class:`bsf.ngs.Sample` object excluded,
         because all its :py:class:`bsf.ngs.PairedReads` objects are?
 
@@ -1137,7 +1148,7 @@ class Project(NextGenerationBase):
     default_name = 'Default'
 
     @classmethod
-    def from_file_path(cls, file_path, file_type):
+    def from_file_path(cls, file_path: str, file_type: str) -> ProjectType:
         """Construct a :py:class:`bsf.ngs.Project` object from a file path.
 
         See also the :py:meth:`bsf.ngs.ProcessedRunFolder.from_file_path` method for CASAVA.
@@ -1180,12 +1191,12 @@ class Project(NextGenerationBase):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None,
-            sample_dict=None,
-            weak_reference_prf=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None,
+            sample_dict: Optional[dict[str, Sample]] = None,
+            weak_reference_prf: Optional[ReferenceType] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.Project` object.
 
         For a :literal:`file_type` :literal:`CASAVA` the name is automatically populated,
@@ -1229,7 +1240,7 @@ class Project(NextGenerationBase):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.Project` object.
 
         :return: A printable representation.
@@ -1239,7 +1250,7 @@ class Project(NextGenerationBase):
             f'{super(Project, self).__repr__()[:-1]}, ' \
             f'sample_dict={self.sample_dict!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.ngs.Project` object.
 
         :param level: Indentation level
@@ -1249,7 +1260,7 @@ class Project(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append(f'{indent}{self.__class__!r}\n')
         str_list.append(f'{indent}  weak_reference_prf: {self.weak_reference_prf!r}\n')
@@ -1265,7 +1276,7 @@ class Project(NextGenerationBase):
 
         return str_list
 
-    def add_sample(self, sample):
+    def add_sample(self, sample: Sample) -> Sample:
         """Add a :py:class:`bsf.ngs.Sample` object to a :py:class:`bsf.ngs.Project` object and set
         a weak reference in to :py:class:`bsf.ngs.Sample` object back to the :py:class:`bsf.ngs.Project` object.
 
@@ -1282,7 +1293,7 @@ class Project(NextGenerationBase):
 
         return sample
 
-    def del_sample(self, name):
+    def del_sample(self, name: str) -> Optional[Sample]:
         """Delete a :py:class:`bsf.ngs.Sample` object from a :py:class:`bsf.ngs.Project` object and
         clear the weak reference, if it points back at the :py:class:`bsf.ngs.Project` object.
 
@@ -1300,7 +1311,7 @@ class Project(NextGenerationBase):
         else:
             return
 
-    def get_all_samples(self, exclude=False):
+    def get_all_samples(self, exclude: bool = False) -> list[Sample]:
         """Get an ordered Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
 
         :param exclude: Exclude :py:class:`bsf.ngs.Sample` objects on the basis of the
@@ -1309,7 +1320,7 @@ class Project(NextGenerationBase):
         :return: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :rtype: list[Sample]
         """
-        sample_list: List[Sample] = list()
+        sample_list: list[Sample] = list()
 
         for sample_name in sorted(self.sample_dict):
             sample = self.sample_dict[sample_name]
@@ -1320,7 +1331,8 @@ class Project(NextGenerationBase):
 
 
 class ProcessedRunFolder(NextGenerationBase):
-    """The :py:class:`bsf.ngs.ProcessedRunFolder` class represents an Illumina Run Folder after processing with CASAVA.
+    """The :py:class:`bsf.ngs.ProcessedRunFolder` class represents an :emphasis:`Illumina Run Folder` after
+    processing with CASAVA.
 
     :cvar default_name: A default name.
     :type default_name: str
@@ -1342,7 +1354,7 @@ class ProcessedRunFolder(NextGenerationBase):
     default_name = 'Default'
 
     @staticmethod
-    def guess_file_type(file_path):
+    def guess_file_type(file_path: str) -> str:
         """Guess the :literal:`file_type` of a :py:class:`bsf.ngs.ProcessedRunFolder` object on the basis of the
         :literal:`file_path`.
 
@@ -1374,7 +1386,7 @@ class ProcessedRunFolder(NextGenerationBase):
             return 'External'
 
     @classmethod
-    def from_file_path(cls, file_path, file_type=None):
+    def from_file_path(cls, file_path: str, file_type: Optional[str] = None) -> ProcessedRunFolderType:
         """Construct a :py:class:`bsf.ngs.ProcessedRunFolder` object from a file path.
 
         For the :literal:`file_type` :literal:`CASAVA`, the :py:attr:`bsf.ngs.ProcessedRunFolder.name`,
@@ -1399,12 +1411,7 @@ class ProcessedRunFolder(NextGenerationBase):
         file_name = os.path.basename(file_path)
 
         if file_type == 'CASAVA':
-            # CASAVA Processed Run Folders obey a "Prefix_FCID_CASAVA182"
-            # schema. The following prefixes are currently in use:
-            # -- BSF_ Biomedical Sequencing Facility
-            # -- NGS_ Kaan Boztug group
-            # -- MUW_ Medical University Vienna
-            # -- SET_ Robert Kralovics group
+            # CASAVA Processed Run Folders obey a "Prefix_FCID_CASAVA182" schema.
 
             if isinstance(file_name, bytes):
                 file_name = file_name.decode()
@@ -1440,15 +1447,15 @@ class ProcessedRunFolder(NextGenerationBase):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None,
-            prefix=None,
-            flow_cell=None,
-            version=None,
-            project_dict=None,
-            weak_reference_collection=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None,
+            prefix: Optional[str] = None,
+            flow_cell: Optional[str] = None,
+            version: Optional[str] = None,
+            project_dict: Optional[dict[str, Project]] = None,
+            weak_reference_collection: Optional[ReferenceType] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.ProcessedRunFolder` object.
 
         :param name: A name.
@@ -1480,8 +1487,7 @@ class ProcessedRunFolder(NextGenerationBase):
             name=name,
             file_path=file_path,
             file_type=file_type,
-            annotation_dict=annotation_dict
-        )
+            annotation_dict=annotation_dict)
 
         self.prefix = prefix
         self.flow_cell = flow_cell
@@ -1499,7 +1505,7 @@ class ProcessedRunFolder(NextGenerationBase):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.ProcessedRunFolder` object.
 
         :return: A printable representation.
@@ -1512,7 +1518,7 @@ class ProcessedRunFolder(NextGenerationBase):
             f'version={self.version!r}, ' \
             f'project_dict={self.project_dict!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.ngs.ProcessedRunFolder` object.
 
         :param level: Indentation level
@@ -1522,7 +1528,7 @@ class ProcessedRunFolder(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append(f'{indent}{self.__class__!r}\n')
         str_list.append(f'{indent}  weak_reference_collection: {self.weak_reference_collection!r}\n')
@@ -1541,7 +1547,7 @@ class ProcessedRunFolder(NextGenerationBase):
 
         return str_list
 
-    def add_project(self, project):
+    def add_project(self, project: Project) -> Project:
         """Add a :py:class:`bsf.ngs.Project` object to the :py:class:`bsf.ngs.ProcessedRunFolder` object and set
         a weak reference in the :py:class:`bsf.ngs.Project` object to the
         :py:class:`bsf.ngs.ProcessedRunFolder` object.
@@ -1559,7 +1565,7 @@ class ProcessedRunFolder(NextGenerationBase):
 
         return project
 
-    def del_project(self, name):
+    def del_project(self, name: str) -> Optional[Project]:
         """Delete a :py:class:`bsf.ngs.Project` object from am :py:class:`bsf.ngs.ProcessedRunFolder` object and
         clear the weak reference, if it points back at the :py:class:`bsf.ngs.ProcessedRunFolder` object.
 
@@ -1577,13 +1583,13 @@ class ProcessedRunFolder(NextGenerationBase):
         else:
             return
 
-    def get_all_projects(self):
+    def get_all_projects(self) -> list[Project]:
         """Get an ordered Python :py:class:`list` object of :py:class:`bsf.ngs.Project` objects.
 
         :return: A Python :py:class:`list` object of :py:class:`bsf.ngs.Project` objects.
         :rtype: list[Project]
         """
-        project_list: List[Project] = list()
+        project_list: list[Project] = list()
 
         for project_name in sorted(self.project_dict):
             project_list.append(self.project_dict[project_name])
@@ -1616,7 +1622,13 @@ class Collection(NextGenerationBase):
     _paired_reads_function_dict = None
 
     @classmethod
-    def from_sas_path(cls, file_path, file_type, name, sas_path, sas_prefix=None):
+    def from_sas_path(
+            cls,
+            file_path: str,
+            file_type: str,
+            name: str,
+            sas_path: str,
+            sas_prefix: Optional[str] = None) -> CollectionType:
         """Construct a :py:class:`bsf.ngs.Collection` from a
         :py:class:`bsf.ngs.SampleAnnotationSheet` object file path.
 
@@ -1643,7 +1655,13 @@ class Collection(NextGenerationBase):
             sas_prefix=sas_prefix)
 
     @classmethod
-    def from_sas(cls, file_path, file_type, name, sas, sas_prefix=None):
+    def from_sas(
+            cls,
+            file_path: str,
+            file_type: str,
+            name: str,
+            sas,
+            sas_prefix: Optional[str] = None) -> CollectionType:
         """Construct a :py:class:`bsf.ngs.Collection` object from a :py:class:`bsf.ngs.SampleAnnotationSheet` object.
 
         This method creates :py:class:`bsf.ngs.Reads`, :py:class:`bsf.ngs.PairedReads`, :py:class:`bsf.ngs.Sample`,
@@ -1655,23 +1673,24 @@ class Collection(NextGenerationBase):
         with a default key.
 
         Sample Annotation Sheet format:
-            - FileType: Data object :literal:`file_type` (i.e., :literal:`CASAVA` or :literal:`External`),
-                defaults to :literal:`External`.
-                The FileType :literal:`CASAVA` allows for auto-discovery of
-                :py:class:`bsf.ngs.ProcessedRunFolder` objects.
-            - ProcessedRunFolder Name: A :py:attr:`bsf.ngs.ProcessedRunFolder.file_path`,
-                can be automatically registered.
-            - Project Name: A :py:attr:`bsf.ngs.Project.name` attribute.
-            - Sample Name: A :py:attr:`bsf.ngs.Sample.name` attribute.
-            - Reads1 File: A :py:attr:`bsf.ngs.Reads.file_name` attribute.
-                Subjected to :py:func:`os.path.expanduser` (i.e., on UNIX ~ or ~user) and
-                :py:func:`os.path.expandvars` (i.e., on UNIX ${NAME} or $NAME).
-                If still relative, the :py:attr:`bsf.ngs.Collection.file_path` is prepended.
-            - Reads1 Name: A :py:attr:`bsf.ngs.Reads.name` attribute
-            - Reads2 File: Same as Reads1 File
-            - Reads2 Name: Same as Reads1 Name
-            - Group: :py:class:`bsf.ngs.Sample` objects can be grouped for further analysis
-                (e.g., RNA-Seq or ChIP-Seq experiments).
+
+        - :literal:`FileType`: Data object :literal:`file_type` (i.e., :literal:`CASAVA` or :literal:`External`),
+          defaults to :literal:`External`.
+          The FileType :literal:`CASAVA` allows for auto-discovery of
+          :py:class:`bsf.ngs.ProcessedRunFolder` objects.
+        - :literal:`ProcessedRunFolder Name`: A :py:attr:`bsf.ngs.ProcessedRunFolder.file_path`,
+          can be automatically registered.
+        - :literal:`Project Name`: A :py:attr:`bsf.ngs.Project.name` attribute.
+        - :literal:`Sample Name`: A :py:attr:`bsf.ngs.Sample.name` attribute.
+        - :literal:`Reads1 File`: A :py:attr:`bsf.ngs.Reads.file_name` attribute.
+          Subjected to :py:func:`os.path.expanduser` (i.e., on UNIX ~ or ~user) and
+          :py:func:`os.path.expandvars` (i.e., on UNIX ${NAME} or $NAME).
+          If still relative, the :py:attr:`bsf.ngs.Collection.file_path` is prepended.
+        - :literal:`Reads1 Name`: A :py:attr:`bsf.ngs.Reads.name` attribute.
+        - :literal:`Reads2 File`: Same as :literal:`Reads1 File`.
+        - :literal:`Reads2 Name`: Same as :literal:`Reads1 Name`.
+        - :literal:`Group`: :py:class:`bsf.ngs.Sample` objects can be grouped for further analysis
+          (e.g., RNA-Seq or ChIP-Seq experiments).
 
         :param file_path: A file path as prefix for relative file paths in the
             :py:class:`bsf.ngs.SampleAnnotationSheet` object.
@@ -1693,7 +1712,7 @@ class Collection(NextGenerationBase):
         current_sample: Optional[Sample] = None
         current_paired_reads: Optional[PairedReads] = None
 
-        def process_file_type():
+        def process_file_type() -> str:
             """Private function to get file type information.
 
             A :literal:`[Prefix] FileType` key is optional, its value defaults to :literal:`Automatic`.
@@ -1721,7 +1740,7 @@ class Collection(NextGenerationBase):
 
             return file_type_new
 
-        def process_processed_run_folder(collection, prf):
+        def process_processed_run_folder(collection: CollectionType, prf: ProcessedRunFolder) -> ProcessedRunFolder:
             """Private function to get or create a :py:class:`bsf.ngs.ProcessedRunFolder` object.
 
             A :literal:`[Prefix] ProcessedRunFolder Name` key is optional, its value defaults to :literal:`Default`.
@@ -1762,7 +1781,7 @@ class Collection(NextGenerationBase):
 
             return prf
 
-        def process_project(prf, project):
+        def process_project(prf: ProcessedRunFolder, project: Project) -> Project:
             """Private function to get or create a :py:class:`bsf.ngs.Project` object.
 
             A :literal:`[Prefix] Project Name` key is optional, its value defaults to :literal:`Default`.
@@ -1802,7 +1821,7 @@ class Collection(NextGenerationBase):
 
             return project
 
-        def process_sample(project, sample):
+        def process_sample(project: Project, sample: Sample) -> Sample:
             """Private function to get or create a :py:class:`bsf.ngs.Sample` object.
 
             A :literal:`[Prefix] Sample Name` key is optional, its value defaults to :literal:`Default`.
@@ -1847,7 +1866,7 @@ class Collection(NextGenerationBase):
 
             return sample
 
-        def process_reads(reads, suffix, default_path):
+        def process_reads(reads: Optional[Reads], suffix: str, default_path: str) -> Reads:
             """Get or create a first or second :py:class:`bsf.ngs.Reads` object.
 
             A :literal:`[Prefix] Reads{suffix} Name` key and :literal:`[Prefix] Reads{suffix} File` key are optional,
@@ -1864,7 +1883,7 @@ class Collection(NextGenerationBase):
             :rtype: Reads
             """
 
-            def process_reads_status(new, old):
+            def process_reads_status(new: str, old: Optional[str] = None) -> int:
                 """Calculate a comparison status.
                     - 1 << 0 (1): new defined
                     - 1 << 1 (2): old defined
@@ -1891,7 +1910,11 @@ class Collection(NextGenerationBase):
 
                 return status
 
-            def process_reads_new(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_new(
+                    _reads: Reads,
+                    _reads_file: str,
+                    _reads_name: str,
+                    _file_type: str) -> Reads:
                 """Private function to process (i.e., initialise) a new :py:class:`bsf.ngs.Reads` object.
 
                 :param _reads: A current :py:class:`bsf.ngs.Reads` object.
@@ -1911,7 +1934,11 @@ class Collection(NextGenerationBase):
 
                 return Reads(name=_reads_name, file_path=_reads_file, file_type=_file_type)
 
-            def process_reads_new_file(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_new_file(
+                    _reads: Reads,
+                    _reads_file: str,
+                    _reads_name: str,
+                    _file_type: str) -> Reads:
                 """Private function to process (i.e., initialise) a new
                 :py:class:`bsf.ngs.Reads` object with file_path only.
 
@@ -1932,7 +1959,11 @@ class Collection(NextGenerationBase):
 
                 return Reads(name=None, file_path=_reads_file, file_type=_file_type)
 
-            def process_reads_new_name(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_new_name(
+                    _reads: Reads,
+                    _reads_file: str,
+                    _reads_name: str,
+                    _file_type: str) -> Reads:
                 """Private function to process (i.e., initialise) a new
                 :py:class:`bsf.ngs.Reads` object with :py:attr:`bsf.ngs.Reads.name` only.
 
@@ -1953,7 +1984,11 @@ class Collection(NextGenerationBase):
 
                 return Reads(name=_reads_name, file_path=None, file_type=_file_type)
 
-            def process_reads_old(_reads, _reads_file, _reads_name, _file_type):
+            def process_reads_old(
+                    _reads: Reads,
+                    _reads_file: str,
+                    _reads_name: str,
+                    _file_type: str) -> Optional[Reads]:
                 """Private function to process (i.e. complete) an old :py:class:`bsf.ngs.Reads` object.
 
                 :param _reads: A current :py:class:`bsf.ngs.Reads` object.
@@ -2120,7 +2155,10 @@ class Collection(NextGenerationBase):
 
             return reads_new
 
-        def process_paired_reads(sample, paired_reads, default_path):
+        def process_paired_reads(
+                sample: Sample,
+                paired_reads: Optional[PairedReads],
+                default_path: str) -> Optional[PairedReads]:
             """Get or create a :py:class:`bsf.ngs.PairedReads` object.
 
             The :literal:`[Prefix] PairedReads Exclude` key is optional,
@@ -2139,7 +2177,7 @@ class Collection(NextGenerationBase):
             :rtype: PairedReads | None
             """
 
-            def process_paired_reads_status(new, old):
+            def process_paired_reads_status(new: Reads, old: Optional[Reads] = None) -> int:
                 """Calculate a comparison status.
                     - 2**0 1: new defined
                     - 2**1 2: old defined
@@ -2165,7 +2203,12 @@ class Collection(NextGenerationBase):
 
                 return status
 
-            def process_paired_reads_new(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_new(
+                    _sample: Sample,
+                    _paired_reads: Optional[PairedReads],
+                    _file_type: str,
+                    _reads_1: Optional[Reads],
+                    _reads_2: Optional[Reads]) -> PairedReads:
                 """Private function to process (i.e. initialise) a new :py:class:`bsf.ngs.PairedReads` object.
 
                 :param _sample: A :py:class:`bsf.ngs.Sample` object.
@@ -2191,7 +2234,12 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
-            def process_paired_reads_new_1(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_new_1(
+                    _sample: Sample,
+                    _paired_reads: Optional[PairedReads],
+                    _file_type: str,
+                    _reads_1: Optional[Reads],
+                    _reads_2: Optional[Reads]) -> PairedReads:
                 """Private function to process (i.e. initialise) a new :py:class:`bsf.ngs.PairedReads` object
                 with only :py:attr:`bsf.ngs.PairedReads.reads_1`.
 
@@ -2218,7 +2266,12 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
-            def process_paired_reads_new_2(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_new_2(
+                    _sample: Sample,
+                    _paired_reads: Optional[PairedReads],
+                    _file_type: str,
+                    _reads_1: Optional[Reads],
+                    _reads_2: Optional[Reads]) -> PairedReads:
                 """Private function to process (i.e. initialise) a new :py:class:`bsf.ngs.PairedReads` object
                 with only :py:attr:`bsf.ngs.PairedReads.reads_2`.
 
@@ -2245,7 +2298,12 @@ class Collection(NextGenerationBase):
 
                 return _paired_reads
 
-            def process_paired_reads_old(_sample, _paired_reads, _file_type, _reads_1, _reads_2):
+            def process_paired_reads_old(
+                    _sample: Sample,
+                    _paired_reads: Optional[PairedReads],
+                    _file_type: str,
+                    _reads_1: Optional[Reads],
+                    _reads_2: Optional[Reads]) -> Optional[PairedReads]:
                 """Private function to process (i.e. complete) an old :py:class:`bsf.ngs.PairedReads` object.
 
                 :param _sample: A :py:class:`bsf.ngs.Sample` object.
@@ -2503,12 +2561,12 @@ class Collection(NextGenerationBase):
 
     def __init__(
             self,
-            name=None,
-            file_path=None,
-            file_type=None,
-            annotation_dict=None,
-            processed_run_folder_dict=None,
-            sample_group_dict=None):
+            name: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            annotation_dict: Optional[dict[str, list[str]]] = None,
+            processed_run_folder_dict: Optional[dict[str, ProcessedRunFolder]] = None,
+            sample_group_dict: Optional[dict[str, list[Sample]]] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.Collection` object.
 
         :param name: A name.
@@ -2553,7 +2611,7 @@ class Collection(NextGenerationBase):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.Collection` object.
 
         :return: A printable representation.
@@ -2564,7 +2622,7 @@ class Collection(NextGenerationBase):
             f'processed_run_folder_dict={self.processed_run_folder_dict!r}, ' \
             f'sample_group_dict={self.sample_group_dict!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.ngs.Collection` object.
 
         :param level: Indentation level
@@ -2574,7 +2632,7 @@ class Collection(NextGenerationBase):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append(f'{indent}{self.__class__!r}\n')
         str_list.append(f'{indent}  name:      {self.name!r}\n')
@@ -2595,7 +2653,7 @@ class Collection(NextGenerationBase):
 
         return str_list
 
-    def add_processed_run_folder(self, prf):
+    def add_processed_run_folder(self, prf: ProcessedRunFolder) -> ProcessedRunFolder:
         """Add a :py:class:`bsf.ngs.ProcessedRunFolder` object to the :py:class:`bsf.ngs.Collection` object and
         set a weak reference in the :py:class:`bsf.ngs.ProcessedRunFolder` object back to the
         :py:class:`bsf.ngs.Collection` object.
@@ -2613,7 +2671,7 @@ class Collection(NextGenerationBase):
 
         return prf
 
-    def del_processed_run_folder(self, name):
+    def del_processed_run_folder(self, name: str) -> Optional[ProcessedRunFolder]:
         """Delete a :py:class:`bsf.ngs.ProcessedRunFolder` object from a :py:class:`bsf.ngs.Collection` object and
         clear the weak reference, if it points back at the :py:class:`bsf.ngs.Collection` object.
 
@@ -2631,7 +2689,7 @@ class Collection(NextGenerationBase):
         else:
             return
 
-    def get_processed_run_folder(self, file_path, file_type=None):
+    def get_processed_run_folder(self, file_path: str, file_type: str = None) -> ProcessedRunFolder:
         """Get a :py:class:`bsf.ngs.ProcessedRunFolder` object by file path.
 
         If the :py:class:`bsf.ngs.ProcessedRunFolder` object does not exist in the
@@ -2657,33 +2715,33 @@ class Collection(NextGenerationBase):
                         default_path=self.file_path),
                     file_type=file_type))
 
-    def get_all_processed_run_folders(self):
+    def get_all_processed_run_folders(self) -> list[ProcessedRunFolder]:
         """Get an ordered Python :py:class:`list` object of :py:class:`bsf.ngs.ProcessedRunFolder` objects.
 
         :return: A Python :py:class:`list` object of :py:class:`bsf.ngs.ProcessedRunFolder` objects.
         :rtype: list[ProcessedRunFolder]
         """
-        processed_run_folder_list: List[ProcessedRunFolder] = list()
+        processed_run_folder_list: list[ProcessedRunFolder] = list()
 
         for processed_run_folder_name in sorted(self.processed_run_folder_dict):
             processed_run_folder_list.append(self.processed_run_folder_dict[processed_run_folder_name])
 
         return processed_run_folder_list
 
-    def get_all_projects(self):
+    def get_all_projects(self) -> list[Project]:
         """Get an ordered Python :py:class:`list` object of :py:class:`bsf.ngs.Project` objects.
 
         :return: A Python :py:class:`list` object of :py:class:`bsf.ngs.Project` objects.
         :rtype: list[Project]
         """
-        project_list: List[Project] = list()
+        project_list: list[Project] = list()
 
         for processed_run_folder in self.get_all_processed_run_folders():
             project_list.extend(processed_run_folder.get_all_projects())
 
         return project_list
 
-    def get_all_samples(self, exclude=False):
+    def get_all_samples(self, exclude: bool = False) -> list[Sample]:
         """Get an ordered Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
 
         :param exclude: Exclude :py:class:`bsf.ngs.Sample` objects on the basis of
@@ -2692,14 +2750,14 @@ class Collection(NextGenerationBase):
         :return: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :rtype: list[Sample]
         """
-        sample_list: List[Sample] = list()
+        sample_list: list[Sample] = list()
 
         for project in self.get_all_projects():
             sample_list.extend(project.get_all_samples(exclude=exclude))
 
         return sample_list
 
-    def get_sample_from_row_dict(self, row_dict, prefix=None):
+    def get_sample_from_row_dict(self, row_dict: dict[str, str], prefix: Optional[str] = None) -> Sample:
         """Get a :py:class:`bsf.ngs.Sample` object from a :py:class:`bsf.ngs.SampleAnnotationSheet` row
         Python :py:class:`dict` object.
 
@@ -2762,7 +2820,10 @@ class Collection(NextGenerationBase):
 
         return sample
 
-    def get_samples_from_row_dict(self, row_dict, prefix=None):
+    def get_samples_from_row_dict(
+            self,
+            row_dict: dict[str, str],
+            prefix: Optional[str] = None) -> tuple[str, list[Sample]]:
         """Get a Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects and a
         Python :py:class:`str` object of the Group column value
         as a Python :py:class:`tuple` object from a :py:class:`bsf.ngs.SampleAnnotationSheet` row
@@ -2778,7 +2839,7 @@ class Collection(NextGenerationBase):
             a Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :rtype: (str, list[Sample])
         """
-        sample_list: List[Sample] = list()
+        sample_list: list[Sample] = list()
 
         value = str()
 
@@ -2810,7 +2871,7 @@ class Collection(NextGenerationBase):
 
         return value, sample_list
 
-    def to_sas(self, file_path=None, name=None):
+    def to_sas(self, file_path: Optional[str] = None, name: Optional[str] = None) -> SampleAnnotationSheet:
         """Convert a :py:class:`bsf.ngs.Collection` object into a :py:class:`bsf.ngs.SampleAnnotationSheet` object.
 
         :param file_path: A file path.
@@ -2873,7 +2934,7 @@ class Collection(NextGenerationBase):
 
         # Finally, construct the SampleAnnotationSheet.
 
-        def row_dict_add(_row_dict, key, value):
+        def row_dict_add(_row_dict: dict[str, str], key: str, value: str) -> dict[str, str]:
             """Private function to add a :literal:`key` and :literal:`value` pair to a
             Python :py:class:`dict` object representing a row.
 
@@ -2903,7 +2964,7 @@ class Collection(NextGenerationBase):
 
             return _row_dict
 
-        def row_dict_complete(_row_dict):
+        def row_dict_complete(_row_dict: dict[str, str]) -> dict[str, str]:
             """Private function to complete a Python :py:class:`dict` object representing a row.
 
             :param _row_dict: A row Python :py:class:`dict` object.
@@ -2914,7 +2975,7 @@ class Collection(NextGenerationBase):
 
             return dict()
 
-        row_dict: Optional[Dict[str, str]] = None
+        row_dict: Optional[dict[str, str]] = None
 
         for prf_name in sorted(self.processed_run_folder_dict):
             prf = self.processed_run_folder_dict[prf_name]
@@ -3002,7 +3063,7 @@ class Collection(NextGenerationBase):
 
         return sas
 
-    def to_sas_path(self, file_path=None, name=None):
+    def to_sas_path(self, file_path: Optional[str] = None, name: Optional[str] = None) -> None:
         """Write as a :py:class:`bsf.ngs.SampleAnnotationSheet` to a file path.
 
         :param file_path: A file path.
@@ -3034,8 +3095,8 @@ class SampleGroup(object):
 
     def __init__(
             self,
-            name=None,
-            sample_list=None):
+            name: Optional[str] = None,
+            sample_list: Optional[list[Sample]] = None) -> None:
         """Initialise a :py:class:`bsf.ngs.SampleGroup` object.
 
         :param name: A name.
@@ -3054,7 +3115,7 @@ class SampleGroup(object):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return a printable representation of a :py:class:`bsf.ngs.SampleGroup` object.
 
         :return: A printable representation.
@@ -3065,7 +3126,7 @@ class SampleGroup(object):
             f'name={self.name!r}, ' \
             f'sample_list={self.sample_list!r})'
 
-    def add_sample(self, sample):
+    def add_sample(self, sample: Sample) -> None:
         """Add a :py:class:`bsf.ngs.Sample` object.
 
         :param sample: A :py:class:`bsf.ngs.Sample` object.
@@ -3077,7 +3138,7 @@ class SampleGroup(object):
 
         return
 
-    def is_excluded(self):
+    def is_excluded(self) -> bool:
         """Is this :py:class:`bsf.ngs.SampleGroup` object excluded,
         because all its :py:class:`ngs.bsf.Sample` objects are?
 
@@ -3091,13 +3152,13 @@ class SampleGroup(object):
         else:
             return True
 
-    def get_all_paired_reads(self, replicate_grouping):
+    def get_all_paired_reads(self, replicate_grouping: bool) -> dict[str, list[PairedReads]]:
         """Get all :py:class:`bsf.ngs.PairedReads` objects of a :`py:class:`bsf.ngs.SampleGroup`.
 
         For the moment, replicates are :py:class:`bsf.ngs.PairedReads` objects that do not share
         anything but the chunk number.
 
-        :param replicate_grouping: Group all :py:class:`bsf.ngs.PairedReads` objects of a
+        :param replicate_grouping: Request grouping all :py:class:`bsf.ngs.PairedReads` objects of a
             :py:class:`bsf.ngs.Sample` object or list them individually.
         :type replicate_grouping: bool
         :return: A Python :py:class:`dict` object  of
@@ -3105,7 +3166,7 @@ class SampleGroup(object):
             Python :py:class:`list` value objects of :py:class:`bsf.ngs.PairedReads` objects value data.
         :rtype: dict[str, list[PairedReads]]
         """
-        group_dict: Dict[str, List[PairedReads]] = dict()
+        group_dict: dict[str, list[PairedReads]] = dict()
 
         for sample in self.sample_list:
             for paired_reads_name, paired_reads_list in \

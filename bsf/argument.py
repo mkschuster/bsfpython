@@ -34,7 +34,7 @@
 """
 import sys
 
-from typing import List, Type
+from typing import TypeVar
 
 __all__ = \
     'Argument', \
@@ -43,6 +43,8 @@ __all__ = \
     'OptionPair', 'OptionPairLong', 'OptionPairShort', \
     'OptionMulti', 'OptionMultiLong', 'OptionMultiShort', \
     'OptionMultiPair', 'OptionMultiPairLong', 'OptionMultiPairShort'
+
+ArgumentType = TypeVar(name='ArgumentType', bound='Argument')
 
 
 class Argument(object):
@@ -56,7 +58,7 @@ class Argument(object):
     """
 
     @classmethod
-    def from_key_value(cls, key, value):
+    def from_key_value(cls, key: str, value: str) -> ArgumentType:
         """Create a :py:class:`bsf.argument.Argument` object from a key and value argument pair.
 
         If the key starts with a valid :literal:`bsf.argument` class name, the corresponding object is initialised from
@@ -87,7 +89,7 @@ class Argument(object):
         if '.' in key:
             key_list = key.split(sep='.')
             if key_list[0] in __all__:
-                argument_class: Type = getattr(sys.modules[__name__], key_list[0])
+                argument_class: type = getattr(sys.modules[__name__], key_list[0])
 
                 if argument_class.__name__ in ('Argument', 'Switch', 'SwitchLong', 'SwitchShort'):
                     return argument_class(key=key_list[1])
@@ -120,7 +122,7 @@ class Argument(object):
 
         return argument
 
-    def __init__(self, key):
+    def __init__(self, key: str) -> None:
         """Initialise a :py:class:`bsf.argument.Argument` object.
 
         :param key: A key.
@@ -136,10 +138,10 @@ class Argument(object):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}(key={self.key!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.argument.Argument` object.
 
         :param level: Indentation level
@@ -149,14 +151,14 @@ class Argument(object):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  key: {!r}\n'.format(indent, self.key))
 
         return str_list
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         :return: A Python :py:class:`str` representation.
@@ -164,7 +166,7 @@ class Argument(object):
         """
         return self.key
 
-    def get_list(self):
+    def get_list(self) -> list[str]:
         """Get the list representation as Python :py:class:`list`.
 
         :return: A Python :py:class:`list` representation.
@@ -185,7 +187,7 @@ class SwitchLong(Switch):
     :literal:`--key` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`bsf.argument.Switch.get_str` to prepend two dashes
@@ -202,7 +204,7 @@ class SwitchShort(Switch):
     :literal:`-k` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`bsf.argument.Switch.get_str` to prepend one dash
@@ -222,7 +224,7 @@ class Option(Switch):
     :type value: str
     """
 
-    def __init__(self, key, value):
+    def __init__(self, key: str, value: str) -> None:
         """Initialise a :py:class:`bsf.argument.Option` object.
 
         :param key: A key.
@@ -239,10 +241,10 @@ class Option(Switch):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}(key={self.key!r}, value={self.value!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.argument.Option` object.
 
         :param level: Indentation level
@@ -252,7 +254,7 @@ class Option(Switch):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  key: {!r}\n'.format(indent, self.key))
@@ -263,7 +265,7 @@ class Option(Switch):
 
         return str_list
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`bsf.argument.Switch.get_str` to join key and value with space
@@ -274,7 +276,7 @@ class Option(Switch):
         """
         return ' '.join((self.key, self.value))
 
-    def get_list(self):
+    def get_list(self) -> list[str]:
         """Get the list representation as Python :py:class:`list`.
 
         Overrides method :py:meth:`bsf.argument.Switch.get_list` to split the Python :py:class:`str` representation on
@@ -291,7 +293,7 @@ class OptionLong(Option):
     :literal:`--key value` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`bsf.argument.Option.get_str` to prepend two dashes
@@ -308,7 +310,7 @@ class OptionShort(Option):
     :literal:`-k value` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`baf.argument.Option.get_str` to prepend one dash
@@ -325,7 +327,7 @@ class OptionPair(Option):
     :literal:`key=value` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`baf.argument.Option.get_str` to combine key and value with an equal sign.
@@ -336,7 +338,7 @@ class OptionPair(Option):
         """
         return '='.join((self.key, self.value))
 
-    def get_list(self):
+    def get_list(self) -> list[str]:
         """Get the list representation as Python :py:class:`list`.
 
         Overrides method :py:meth:`bsf.argument.Option.get_list` to avoid splitting by white space
@@ -353,7 +355,7 @@ class OptionPairLong(OptionPair):
     :literal:`--key=value` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`bsf.argument.OptionPair.get_str` to prepend two dashes
@@ -370,7 +372,7 @@ class OptionPairShort(OptionPair):
     :literal:`-key=value` schema.
     """
 
-    def get_str(self):
+    def get_str(self) -> str:
         """Get the string representation as Python :py:class:`str`.
 
         Overrides method :py:meth:`bsf.argument.OptionPair.get_str` to prepend one dash
@@ -387,7 +389,7 @@ class OptionMulti(Option):
     :literal:`--key value1 value2` or :literal:`-k value1 value2` schema.
     """
 
-    def get_list(self):
+    def get_list(self) -> list[str]:
         """Get the list representation as Python :py:class:`list` object.
 
         Overrides method :py:meth:`bsf.argument.Option.get_list` to split on white space

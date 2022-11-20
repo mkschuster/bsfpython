@@ -34,9 +34,10 @@ import errno
 import os
 import stat
 from argparse import ArgumentParser
+from typing import Optional
 
 
-def scan_directory(directory_path, commit=None):
+def scan_directory(directory_path: str, commit: Optional[bool] = None) -> None:
     """Scan a directory for symbolic links or directories recursively.
 
     :param directory_path: A directory path.

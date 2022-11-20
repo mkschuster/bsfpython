@@ -26,6 +26,7 @@
 """
 import logging
 import os
+from typing import Optional
 
 from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
@@ -40,7 +41,7 @@ class FilePathEGACryptorReadGroup(FilePath):
     """The :py:class:`bsf.analyses.ega.FilePathEGACryptorReadGroup` models read group-specific EGA Cryptor file paths.
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.ega.FilePathEGACryptorReadGroup` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -56,7 +57,7 @@ class FilePathEGACryptorReadGroup(FilePath):
 class EGACryptor(Analysis):
     """The :py:class:`bsf.analyses.ega.EGACryptor` class models an EGA Cryptor.
 
-    :ivar java_archive_ega_cryptor: An EGA Cryptor tool Java Archive (JAR) file path.
+    :ivar java_archive_ega_cryptor: An EGA Cryptor tool :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_ega_cryptor: str | None
     """
 
@@ -64,7 +65,7 @@ class EGACryptor(Analysis):
     prefix = 'ega_cryptor'
 
     @classmethod
-    def get_stage_name_read_group(cls):
+    def get_stage_name_read_group(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -73,7 +74,7 @@ class EGACryptor(Analysis):
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
-    def get_prefix_read_group(cls, read_group_name):
+    def get_prefix_read_group(cls, read_group_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param read_group_name: A read group name.
@@ -84,7 +85,7 @@ class EGACryptor(Analysis):
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
-    def get_file_path_read_group(cls, read_group_name):
+    def get_file_path_read_group(cls, read_group_name: str) -> FilePathEGACryptorReadGroup:
         """Get a :py:class:`bsf.analyses.ega.FilePathEGACryptorReadGroup` object.
 
         :param read_group_name: A read group name.
@@ -96,21 +97,21 @@ class EGACryptor(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            java_archive_ega_cryptor=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            java_archive_ega_cryptor: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.ega.EGACryptor` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -127,13 +128,13 @@ class EGACryptor(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style  :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -141,7 +142,7 @@ class EGACryptor(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param java_archive_ega_cryptor: An EGA Cryptor tool Java Archive (JAR) file path.
+        :param java_archive_ega_cryptor: An EGA Cryptor tool :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_ega_cryptor: str | None
         """
         super(EGACryptor, self).__init__(
@@ -166,7 +167,7 @@ class EGACryptor(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.ega.EGACryptor` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -189,13 +190,13 @@ class EGACryptor(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.ega.EGACryptor` object.
         """
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
@@ -239,7 +240,7 @@ class EGACryptor(Analysis):
 
                     # Create a Runnable and an Executable for running the EGA Cryptor analysis.
 
-                    runnable_read_group = self.add_runnable_consecutive(
+                    runnable_read_group = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=self.get_prefix_read_group(read_group_name=paired_reads_name),
                             working_directory=self.project_directory))

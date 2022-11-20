@@ -26,7 +26,7 @@
 the archiving and restoring of :emphasis:`Illumina Run Folder` (IRF) objects.
 """
 import os
-from typing import List
+from typing import Optional
 
 from bsf.analysis import Analysis, Stage
 from bsf.connector import ConnectorFile, ConnectorPipe, ConcurrentProcess
@@ -42,16 +42,17 @@ from bsf.standards import Configuration, StandardFilePath
 class IlluminaRunFolderArchive(Analysis):
     """The :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` class represents the logic to convert
     an :emphasis:`Illumina Run Folder` (IRF) into one or more
-`   GNU Tar <https://www.gnu.org/software/tar/>`_ archives.
+    `GNU Tar <https://www.gnu.org/software/tar/>`_ archives.
 
-    :cvar compress_archive_files: Compress archive files with `GNU Zip <https://www.gnu.org/software/gzip/>`_.
+    :cvar compress_archive_files: Request compressing archive files via
+        `GNU Zip <https://www.gnu.org/software/gzip/>`_.
     :type compress_archive_files: bool
-    :ivar archive_directory: An archive directory.
+    :ivar archive_directory: An archive directory path.
     :type archive_directory: str | None
     :ivar run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
     :type run_directory: str | None
-    :ivar experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
-        Illumina Run Folder parameters.
+    :ivar experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
+        :emphasis:`Illumina Run Folder` parameters.
     :type experiment_name: str | None
     :ivar irf_mode_directory: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each directory of the
@@ -77,7 +78,7 @@ class IlluminaRunFolderArchive(Analysis):
     :type cloud_path_prefix: str | None
     :ivar cloud_concurrency: A maximum number of concurrent network connections.
     :type cloud_concurrency: int | None
-    :ivar force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
+    :ivar force: Request processing of incomplete :emphasis:`Illumina Run Folder` objects.
     :type force: bool | None
     """
 
@@ -87,7 +88,7 @@ class IlluminaRunFolderArchive(Analysis):
     compress_archive_files = True
 
     @classmethod
-    def get_stage_name_pre_process(cls):
+    def get_stage_name_pre_process(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -96,7 +97,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'pre_process'))
 
     @classmethod
-    def get_stage_name_base_calls(cls):
+    def get_stage_name_base_calls(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -105,7 +106,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'base_calls'))
 
     @classmethod
-    def get_stage_name_intensities(cls):
+    def get_stage_name_intensities(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -114,7 +115,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'intensities'))
 
     @classmethod
-    def get_stage_name_archive_folder(cls):
+    def get_stage_name_archive_folder(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -123,7 +124,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'folder'))
 
     @classmethod
-    def get_stage_name_post_process(cls):
+    def get_stage_name_post_process(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -132,7 +133,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'post_process'))
 
     @classmethod
-    def get_stage_name_sav(cls):
+    def get_stage_name_sav(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -141,7 +142,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'sav'))
 
     @classmethod
-    def get_stage_name_cloud(cls):
+    def get_stage_name_cloud(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -150,7 +151,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.prefix, 'cloud'))
 
     @classmethod
-    def get_prefix_pre_process(cls, project_name):
+    def get_prefix_pre_process(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -161,7 +162,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.get_stage_name_pre_process(), project_name))
 
     @classmethod
-    def get_prefix_base_calls(cls, project_name, lane):
+    def get_prefix_base_calls(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -174,7 +175,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.get_stage_name_base_calls(), project_name, lane))
 
     @classmethod
-    def get_prefix_intensities(cls, project_name, lane):
+    def get_prefix_intensities(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -187,7 +188,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.get_stage_name_intensities(), project_name, lane))
 
     @classmethod
-    def get_prefix_archive_folder(cls, project_name):
+    def get_prefix_archive_folder(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -198,7 +199,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.get_stage_name_archive_folder(), project_name))
 
     @classmethod
-    def get_prefix_post_process(cls, project_name):
+    def get_prefix_post_process(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -209,7 +210,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.get_stage_name_post_process(), project_name))
 
     @classmethod
-    def get_prefix_sav(cls, project_name):
+    def get_prefix_sav(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -220,7 +221,7 @@ class IlluminaRunFolderArchive(Analysis):
         return '_'.join((cls.get_stage_name_sav(), project_name))
 
     @classmethod
-    def get_prefix_cloud(cls, project_name):
+    def get_prefix_cloud(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -232,32 +233,32 @@ class IlluminaRunFolderArchive(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            archive_directory=None,
-            run_directory=None,
-            experiment_name=None,
-            irf_mode_directory=None,
-            sav_mode_directory=None,
-            irf_mode_file=None,
-            sav_mode_file=None,
-            cloud_account=None,
-            cloud_container=None,
-            cloud_path_prefix=None,
-            cloud_concurrency=None,
-            force=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            archive_directory: Optional[str] = None,
+            run_directory: Optional[str] = None,
+            experiment_name: Optional[str] = None,
+            irf_mode_directory: Optional[str] = None,
+            sav_mode_directory: Optional[str] = None,
+            irf_mode_file: Optional[str] = None,
+            sav_mode_file: Optional[str] = None,
+            cloud_account: Optional[str] = None,
+            cloud_container: Optional[str] = None,
+            cloud_path_prefix: Optional[str] = None,
+            cloud_concurrency: Optional[int] = None,
+            force: Optional[bool] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -274,13 +275,13 @@ class IlluminaRunFolderArchive(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -288,12 +289,12 @@ class IlluminaRunFolderArchive(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param archive_directory: An archive directory.
+        :param archive_directory: An archive directory path.
         :type archive_directory: str | None
         :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
-        :param experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters.
+        :param experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
+            :emphasis:`Illumina Run Folder` parameters.
         :type experiment_name: str | None
         :param irf_mode_directory: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each directory of the
@@ -319,7 +320,7 @@ class IlluminaRunFolderArchive(Analysis):
         :type cloud_path_prefix: str | None
         :param cloud_concurrency: A maximum number of concurrent network connections.
         :type cloud_concurrency: int | None
-        :param force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
+        :param force: Request processing of incomplete :emphasis:`Illumina Run Folder` objects.
         :type force: bool | None
         """
         super(IlluminaRunFolderArchive, self).__init__(
@@ -355,7 +356,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -424,38 +425,43 @@ class IlluminaRunFolderArchive(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object.
 
         Archive an :emphasis:`Illumina Run Folder` in a format suitable for magnetic tape libraries.
 
-        Pre-Process Illumina Run Folder:
-            1. Check if the Illumina Run has finished by testing for an
-                :literal:`RTAComplete.txt` file.
-            2. Check if an archive process is already running by testing for an
-                archive directory.
-            3. Reset the file permissions for all directories via the find utility.
-                :literal:`find . -type d -execdir chmod u=rwx,g=rx,o= {} +`
-            4. Reset the file permissions for all regular files via the find utility.
-                :literal:`find . -type f -execdir chmod u=rw,g=r,o= {} +`
-            5. Compress all files in the :literal:`IRF/Logs/` directory.
-                :literal:`gzip --best --recursive Logs/`
-            6. Compress all files in the :literal:`IRF/Data/RTALogs/` directory if it exists.
-                :literal:`gzip --best --recursive IRF/Data/RTALogs/`
-            7. Compress all files in the :literal:`IRF/RTALogs/` directory if it exists.
-                :literal:`gzip --best --recursive IRF/RTALogs/`
-            8. Create the archive directory.
-        Lane specific:
-            1. Compress all :literal:`IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl` files.
-                :literal:`find IRF/Data/Intensities/BaseCalls/L00[1-8]
-                -name '*.bcl' -execdir gzip --best --verbose {} +`
-            2. Run the GNU Tar utility over each :literal:`IRF/Data/Intensities/L00[1-8]/` directory,
-               but exclude compressed cluster locations (:literal:`*.clocs`) files.
-            3. Calculate a MD5 checksum.
-        Illumina Run Folder-specific:
-            1. Run the GNU Tar utility over the remaining Illumina Run folder,
-               but exclude directories with cluster intensity (:literal:`*.cif`) files.
-            2. Calculate a MD5 checksum.
+        - Pre-Process an :emphasis:`Illumina Run Folder`:
+
+          1. Check if the :emphasis:`Illumina Run Folder` is complete by testing for an
+             :literal:`RTAComplete.txt` file.
+          2. Check if an archive process is already running by testing for an
+             archive directory.
+          3. Reset the file permissions for all directories via the find utility.
+             :literal:`find . -type d -execdir chmod u=rwx,g=rx,o= {} +`
+          4. Reset the file permissions for all regular files via the find utility.
+             :literal:`find . -type f -execdir chmod u=rw,g=r,o= {} +`
+          5. Compress all files in the :literal:`IRF/Logs/` directory.
+             :literal:`gzip --best --recursive Logs/`
+          6. Compress all files in the :literal:`IRF/Data/RTALogs/` directory if it exists.
+             :literal:`gzip --best --recursive IRF/Data/RTALogs/`
+          7. Compress all files in the :literal:`IRF/RTALogs/` directory if it exists.
+             :literal:`gzip --best --recursive IRF/RTALogs/`
+          8. Create the archive directory.
+
+        - Lane specific:
+
+          1. Compress all :literal:`IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl` files.
+             :literal:`find IRF/Data/Intensities/BaseCalls/L00[1-8]
+             -name '*.bcl' -execdir gzip --best --verbose {} +`
+          2. Run the GNU Tar utility over each :literal:`IRF/Data/Intensities/L00[1-8]/` directory,
+             but exclude compressed cluster locations (:literal:`*.clocs`) files.
+          3. Calculate a MD5 checksum.
+
+        - :emphasis:`Illumina Run Folder`-specific:
+
+          1. Run the GNU Tar utility over the remaining :emphasis:`Illumina Run Folder`,
+             but exclude directories with cluster intensity (:literal:`*.cif`) files.
+          2. Calculate a MD5 checksum.
         """
         # Define an Illumina Run Folder directory.
         # Expand an eventual user part (i.e., on UNIX ~ or ~user) and
@@ -542,7 +548,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Pre-process on folder level.
 
-        runnable_pre_process_folder = self.add_runnable_consecutive(
+        runnable_pre_process_folder = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_pre_process(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -617,8 +623,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Cluster intensity file (*.cif) directories, if present, need excluding from archiving at a later stage.
 
-        exclude_intensities_patterns: List[str] = list()
-        archive_folder_dependencies: List[str] = list()
+        exclude_intensities_patterns: list[str] = list()
+        archive_folder_dependencies: list[str] = list()
 
         archive_folder_dependencies.append(runnable_pre_process_folder.name)
 
@@ -626,7 +632,7 @@ class IlluminaRunFolderArchive(Analysis):
             if not irf.has_compressed_base_calls():
                 # Process the IRF/Data/Intensities/BaseCalls/ directory.
 
-                runnable_base_calls = self.add_runnable_consecutive(
+                runnable_base_calls = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane_int)),
                         working_directory=self.project_directory))
@@ -669,7 +675,7 @@ class IlluminaRunFolderArchive(Analysis):
 
                 # Process IRF/Data/Intensities/L00[1-8]/ directories if they exist.
 
-                runnable_intensities = self.add_runnable_concurrent(
+                runnable_intensities = self.add_runnable(
                     runnable=ConcurrentRunnable(
                         name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane_int)),
                         working_directory=self.project_directory))
@@ -753,7 +759,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Process the whole run folder.
 
-        runnable_archive_folder = self.add_runnable_concurrent(
+        runnable_archive_folder = self.add_runnable(
             runnable=ConcurrentRunnable(
                 name=self.get_prefix_archive_folder(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -798,7 +804,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Post-process the archive folder.
 
-        runnable_post_process_folder = self.add_runnable_consecutive(
+        runnable_post_process_folder = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_post_process(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -821,7 +827,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Extract files relevant for the Illumina Sequence Analysis Viewer (SAV).
 
-        runnable_sav = self.add_runnable_consecutive(
+        runnable_sav = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_sav(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -867,7 +873,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Upload the archive run folder into the block blob storage.
 
         if self.cloud_account and self.cloud_container:
-            runnable_cloud = self.add_runnable_consecutive(
+            runnable_cloud = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_cloud(project_name=self.project_name),
                     working_directory=self.project_directory))
@@ -917,7 +923,7 @@ class FilePathIlluminaRunFolderRestore(FilePath):
     :type intensities: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -934,17 +940,17 @@ class FilePathIlluminaRunFolderRestore(FilePath):
 
 class IlluminaRunFolderRestore(Analysis):
     """The :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` class represents the logic to
-    restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
+    restore an :emphasis:`Illumina Run Folder` from a format suitable for magnetic tape libraries.
 
     :cvar maximum_lane_number: A maximum number of lanes.
     :type maximum_lane_number: int
-    :ivar archive_directory: A file path to an archive directory.
+    :ivar archive_directory: An archive directory path.
     :type archive_directory: str | None
-    :ivar illumina_directory: A file path to the directory of :emphasis:`Illumina Run Folder` directories.
+    :ivar illumina_directory: A directory of :emphasis:`Illumina Run Folder` directories path.
     :type illumina_directory: str | None
-    :ivar extract_intensities: Extract cluster intensity file (:literal:`*.cif`) directories.
+    :ivar extract_intensities: Request extracting cluster intensity file (:literal:`*.cif`) directories.
     :type extract_intensities: bool | None
-    :ivar force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
+    :ivar force: Request processing of incomplete :emphasis:`Illumina Run Folder` objects.
     :type force: bool | None
     """
 
@@ -954,7 +960,7 @@ class IlluminaRunFolderRestore(Analysis):
     maximum_lane_number = 8
 
     @classmethod
-    def get_stage_name_extract_archive(cls):
+    def get_stage_name_extract_archive(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -963,7 +969,7 @@ class IlluminaRunFolderRestore(Analysis):
         return '_'.join((cls.prefix, 'extract_archive'))
 
     @classmethod
-    def get_stage_name_compress_base_calls(cls):
+    def get_stage_name_compress_base_calls(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -972,7 +978,7 @@ class IlluminaRunFolderRestore(Analysis):
         return '_'.join((cls.prefix, 'compress_base_calls'))
 
     @classmethod
-    def get_stage_name_compress_logs(cls):
+    def get_stage_name_compress_logs(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -981,7 +987,7 @@ class IlluminaRunFolderRestore(Analysis):
         return '_'.join((cls.prefix, 'compress_logs'))
 
     @classmethod
-    def get_prefix_extract_archive(cls, project_name, lane):
+    def get_prefix_extract_archive(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -994,7 +1000,7 @@ class IlluminaRunFolderRestore(Analysis):
         return '_'.join((cls.get_stage_name_extract_archive(), project_name, lane))
 
     @classmethod
-    def get_prefix_compress_base_calls(cls, project_name, lane):
+    def get_prefix_compress_base_calls(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -1007,7 +1013,7 @@ class IlluminaRunFolderRestore(Analysis):
         return '_'.join((cls.get_stage_name_compress_base_calls(), project_name, lane))
 
     @classmethod
-    def get_prefix_compress_logs(cls, project_name):
+    def get_prefix_compress_logs(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -1019,24 +1025,24 @@ class IlluminaRunFolderRestore(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            archive_directory=None,
-            illumina_directory=None,
-            extract_intensities=False,
-            force=False):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            archive_directory: Optional[str] = None,
+            illumina_directory: Optional[str] = None,
+            extract_intensities: Optional[bool] = False,
+            force: Optional[bool] = False):
         """Initialise a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -1053,13 +1059,13 @@ class IlluminaRunFolderRestore(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -1067,13 +1073,13 @@ class IlluminaRunFolderRestore(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param archive_directory: A file path to an archive directory.
+        :param archive_directory: An archive directory path.
         :type archive_directory: str | None
-        :param illumina_directory: A file path to the directory of :emphasis:`Illumina Run Folder` directories.
+        :param illumina_directory: A directory of :emphasis:`Illumina Run Folder` directories path.
         :type illumina_directory: str | None
-        :param extract_intensities: Extract cluster intensity file (:literal:`*.cif`) directories.
+        :param extract_intensities: Request extracting cluster intensity file (:literal:`*.cif`) directories.
         :type extract_intensities: bool | None
-        :param force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
+        :param force: Request processing of incomplete :emphasis:`Illumina Run Folder` objects.
         :type force: bool | None
         """
         super(IlluminaRunFolderRestore, self).__init__(
@@ -1101,7 +1107,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -1138,7 +1144,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` object.
 
         Restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
@@ -1200,7 +1206,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Extract the IRF_Folder.tar file.
 
-        runnable_extract_folder = self.add_runnable_consecutive(
+        runnable_extract_folder = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='folder'),
                 working_directory=self.project_directory))
@@ -1221,7 +1227,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Compress all files in the IRF/Logs and IRF/Data/RTALogs directories.
 
-        runnable_compress_logs = self.add_runnable_consecutive(
+        runnable_compress_logs = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_compress_logs(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -1250,7 +1256,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Extract the IRF_intensities.tar file.
 
-        runnable_extract_intensities = self.add_runnable_consecutive(
+        runnable_extract_intensities = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
                 working_directory=self.project_directory))
@@ -1283,7 +1289,7 @@ class IlluminaRunFolderRestore(Analysis):
             if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['L{:03d}'.format(lane_int)])):
                 continue
 
-            runnable_extract_lane = self.add_runnable_consecutive(
+            runnable_extract_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
                     working_directory=self.project_directory))
@@ -1313,7 +1319,7 @@ class IlluminaRunFolderRestore(Analysis):
 
             # Create one process per lane to compress the base call (*.bcl) files.
 
-            runnable_compress_base_calls = self.add_runnable_consecutive(
+            runnable_compress_base_calls = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
                     working_directory=self.project_directory))

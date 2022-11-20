@@ -27,6 +27,7 @@
 """
 import logging
 import os
+from typing import Optional
 
 from bsf.analysis import Analysis, Stage
 from bsf.ngs import Collection, Sample
@@ -45,7 +46,7 @@ class FilePathSample(FilePath):
     :type output_directory: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.kallisto.FilePathSample` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -82,7 +83,7 @@ class Kallisto(Analysis):
     prefix = 'kallisto'
 
     @classmethod
-    def get_stage_name_sample(cls):
+    def get_stage_name_sample(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -91,7 +92,7 @@ class Kallisto(Analysis):
         return '_'.join((cls.prefix, 'sample'))
 
     @classmethod
-    def get_prefix_sample(cls, sample_name):
+    def get_prefix_sample(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -102,7 +103,7 @@ class Kallisto(Analysis):
         return '_'.join((cls.get_stage_name_sample(), sample_name))
 
     @classmethod
-    def get_file_path_sample(cls, sample_name):
+    def get_file_path_sample(cls, sample_name: str) -> FilePathSample:
         """Get a :py:class:`bsf.analyses.kallisto.FilePathSample` object from this or a subclass.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -114,26 +115,26 @@ class Kallisto(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            transcriptome_version=None,
-            transcriptome_index_path=None,
-            fragment_length_value=None,
-            fragment_length_standard_deviation=None,
-            bias_correction=None,
-            bootstrap_samples=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            transcriptome_version: Optional[str] = None,
+            transcriptome_index_path: Optional[str] = None,
+            fragment_length_value: Optional[str] = None,
+            fragment_length_standard_deviation: Optional[str] = None,
+            bias_correction: Optional[bool] = None,
+            bootstrap_samples: Optional[str] = None):
         """Initialise a :py:class:`bsf.analyses.kallisto.Kallisto` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -150,13 +151,13 @@ class Kallisto(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -204,7 +205,7 @@ class Kallisto(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.kallisto.Kallisto` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -245,11 +246,11 @@ class Kallisto(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.kallisto.Kallisto` object.
         """
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
@@ -328,7 +329,7 @@ class Kallisto(Analysis):
 
             file_path_sample = FilePathSample(prefix=prefix_sample)
 
-            runnable_sample = self.add_runnable_consecutive(
+            runnable_sample = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=prefix_sample,
                     working_directory=self.genome_directory))

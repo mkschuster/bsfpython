@@ -39,7 +39,7 @@ from argparse import ArgumentParser
 from bsf.md5sum import MD5Sum, MD5SumArchive
 
 
-def process_md5_files(md5sum_archive, directory_path, file_pattern):
+def process_md5_files(md5sum_archive: MD5SumArchive, directory_path: str, file_pattern: str) -> None:
     """Process individual MD5 sum files.
 
     :param md5sum_archive: A :py:class:`bsf.md5sum.MD5SumArchive` object.

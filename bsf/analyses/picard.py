@@ -28,7 +28,7 @@ import logging
 import os
 import warnings
 import weakref
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional
 
 from pysam import AlignmentFile
 
@@ -50,22 +50,22 @@ module_logger = logging.getLogger(name=__name__)
 
 class PicardIlluminaRunFolder(Analysis):
     """The :py:class:`bsf.analyses.picard.PicardIlluminaRunFolder` class models
-    Picard Analyses acting on Illumina Run Folders.
+    Picard Analyses acting on :emphasis:`Illumina Run Folder` entities.
 
-    :ivar run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+    :ivar run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
     :type run_directory: str | None
-    :ivar intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+    :ivar intensity_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
         defaults to :literal:`IRF/Data/Intensities`.
     :type intensity_directory: str | None
-    :ivar basecalls_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
+    :ivar basecalls_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
         defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
     :type basecalls_directory: str | None
     :ivar experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
-        Illumina Run Folder parameters.
+        :emphasis:`Illumina Run Folder` parameters.
     :type experiment_name: str | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
-    :ivar force: Request processing of incomplete Illumina Run Folder instances.
+    :ivar force: Request processing of incomplete :emphasis:`Illumina Run Folder` instances.
     :type force: bool | None
     """
 
@@ -73,7 +73,7 @@ class PicardIlluminaRunFolder(Analysis):
     prefix = 'picard_illumina_run_folder'
 
     @classmethod
-    def get_stage_name_cell(cls):
+    def get_stage_name_cell(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -82,7 +82,7 @@ class PicardIlluminaRunFolder(Analysis):
         return '_'.join((cls.prefix, 'cell'))
 
     @classmethod
-    def get_stage_name_lane(cls):
+    def get_stage_name_lane(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -91,7 +91,7 @@ class PicardIlluminaRunFolder(Analysis):
         return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
-    def get_prefix_cell(cls, project_name):
+    def get_prefix_cell(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -102,7 +102,7 @@ class PicardIlluminaRunFolder(Analysis):
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
-    def get_prefix_lane(cls, project_name, lane):
+    def get_prefix_lane(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -116,26 +116,26 @@ class PicardIlluminaRunFolder(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            run_directory=None,
-            intensity_directory=None,
-            basecalls_directory=None,
-            experiment_name=None,
-            java_archive_picard=None,
-            force=False):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            run_directory: Optional[str] = None,
+            intensity_directory: Optional[str] = None,
+            basecalls_directory: Optional[str] = None,
+            experiment_name: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            force: Optional[bool] = None):
         """Initialise a :py:class:`bsf.analyses.picard.PicardIlluminaRunFolder` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -152,13 +152,13 @@ class PicardIlluminaRunFolder(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -166,20 +166,20 @@ class PicardIlluminaRunFolder(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
-        :param intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
-            defaults to :literal`IRF/Data/Intensities`.
+        :param intensity_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+            defaults to :literal:`IRF/Data/Intensities`.
         :type intensity_directory: str | None
-        :param basecalls_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
+        :param basecalls_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
             defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
         :type basecalls_directory: str | None
         :param experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters.
+            :emphasis:`Illumina Run Folder` parameters.
         :type experiment_name: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
-        :param force: Request processing of incomplete Illumina Run Folder instances.
+        :param force: Request processing of incomplete :emphasis:`Illumina Run Folder` instances.
         :type force: bool | None
         """
         super(PicardIlluminaRunFolder, self).__init__(
@@ -209,7 +209,7 @@ class PicardIlluminaRunFolder(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.picard.PicardIlluminaRunFolder` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -250,7 +250,7 @@ class PicardIlluminaRunFolder(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.PicardIlluminaRunFolder` object.
         """
         # Define an Illumina Run Folder directory.
@@ -347,7 +347,7 @@ class PicardIlluminaRunFolder(Analysis):
 
 class ExtractIlluminaBarcodesSheet(AnnotationSheet):
     """The :py:class:`bsf.analyses.picard.ExtractIlluminaBarcodesSheet` class represents a
-    Tab-Separated Value (TSV) table of library information for the
+    :emphasis:`Tab-Separated Value` (TSV) table of library information for the
     :py:class:`bsf.analyses.picard.ExtractIlluminaBarcodes` class.
     """
 
@@ -362,12 +362,12 @@ class ExtractIlluminaBarcodesSheet(AnnotationSheet):
         'library_name',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
 
 class IlluminaBasecallsToSamSheet(AnnotationSheet):
     """The :py:class:`bsf.analyses.picard.IlluminaBasecallsToSamSheet` class represents a
-    Tab-Separated Value (TSV) table of library information for the
+    :emphasis:`Tab-Separated Value` (TSV) table of library information for the
     :py:class:`bsf.analyses.picard.ExtractIlluminaBarcodes` class.
     """
 
@@ -383,9 +383,9 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
         'BARCODE_2',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
-    def adjust(self, barcode_length_tuple, unassigned_file_path):
+    def adjust(self, barcode_length_tuple: tuple[int, int], unassigned_file_path: str) -> None:
         """Adjust a :py:class:`bsf.analyses.picard.IlluminaBasecallsToSamSheet` object.
 
             - Insert the file path for unassigned reads.
@@ -440,7 +440,7 @@ class FilePathExtractIlluminaCell(FilePath):
     :type sample_annotation_sheet_csv: str
     """
 
-    def __init__(self, prefix, project_name):
+    def __init__(self, prefix: str, project_name: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathExtractIlluminaCell` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -493,7 +493,7 @@ class FilePathExtractIlluminaLane(FilePath):
     :type metrics_number_png: str
     """
 
-    def __init__(self, prefix, project_name, lane):
+    def __init__(self, prefix: str, project_name: str, lane: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathExtractIlluminaLane` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -522,7 +522,8 @@ class FilePathExtractIlluminaLane(FilePath):
 
 
 class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
-    """The :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` class extracts data from an Illumina Run Folder.
+    """The :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` class extracts data from an
+    :emphasis:`Illumina Run Folder`.
 
     The analysis is based on Picard :literal:`ExtractIlluminaBarcodes` and Picard :literal:`IlluminaBasecallsToSam`.
 
@@ -552,7 +553,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     prefix = 'extract_illumina_run_folder'
 
     @classmethod
-    def get_file_path_cell(cls, project_name):
+    def get_file_path_cell(cls, project_name: str) -> FilePathExtractIlluminaCell:
         """Get a :py:class:`bsf.analyses.picard.FilePathExtractIlluminaCell` object.
 
         :param project_name: A project name.
@@ -565,7 +566,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             project_name=project_name)
 
     @classmethod
-    def get_file_path_lane(cls, project_name, lane):
+    def get_file_path_lane(cls, project_name: str, lane: str) -> FilePathExtractIlluminaLane:
         """Get a :py:class:`bsf.analyses.picard.FilePathExtractIlluminaLane` object.
 
         :param project_name: A project name.
@@ -582,35 +583,35 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            run_directory=None,
-            intensity_directory=None,
-            basecalls_directory=None,
-            experiment_name=None,
-            java_archive_picard=None,
-            force=False,
-            library_path=None,
-            samples_directory=None,
-            mode_directory=None,
-            mode_file=None,
-            max_mismatches=None,
-            min_base_quality=None,
-            sequencing_centre=None,
-            lanes=None,
-            vendor_quality_filter=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            run_directory: Optional[str] = None,
+            intensity_directory: Optional[str] = None,
+            basecalls_directory: Optional[str] = None,
+            experiment_name: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            force: Optional[bool] = None,
+            library_path: Optional[str] = None,
+            samples_directory: Optional[str] = None,
+            mode_directory: Optional[str] = None,
+            mode_file: Optional[str] = None,
+            max_mismatches: Optional[int] = None,
+            min_base_quality: Optional[int] = None,
+            sequencing_centre: Optional[str] = None,
+            lanes: Optional[int] = None,
+            vendor_quality_filter: Optional[bool] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -627,13 +628,13 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -641,20 +642,20 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
-        :param intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+        :param intensity_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
             defaults to :literal:`IRF/Data/Intensities`.
         :type intensity_directory: str | None
-        :param basecalls_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
+        :param basecalls_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
             defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
         :type basecalls_directory: str | None
         :param experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters.
+            :emphasis:`Illumina Run Folder` parameters.
         :type experiment_name: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
-        :param force: Request processing of incomplete Illumina Run Folder instances.
+        :param force: Request processing of incomplete :emphasis:`Illumina Run Folder` instances.
         :type force: bool | None
         :param samples_directory: A directory storing sample-specific unaligned BAM files.
         :type samples_directory: str | None
@@ -712,7 +713,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         return
 
     @property
-    def get_experiment_directory(self):
+    def get_experiment_directory(self) -> Optional[str]:
         """Get an experiment directory.
 
         Experiment directory names are a concatenation of the sequences directory and the project name.
@@ -723,7 +724,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -776,11 +777,11 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` object.
         """
 
-        def run_get_sample_file_name(sample_name):
+        def run_get_sample_file_name(sample_name: str) -> str:
             """Private function to format sample-specific BAM file names (i.e., project_lane#sample.bam).
 
             :param sample_name: A sample name.
@@ -874,7 +875,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # TODO: For NextSeq instruments, it would be sufficient to require annotation for only lane one and
         # copy information to lanes two to four internally.
 
-        cell_dependency_list: List[str] = list()
+        cell_dependency_list: list[str] = list()
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
@@ -964,7 +965,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create a Runnable and Executable for the lane stage.
 
-            runnable_lane = self.add_runnable_consecutive(
+            runnable_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
@@ -1201,7 +1202,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         # Create a flow-cell specific Runnable.
 
-        runnable_cell = self.add_runnable_consecutive(
+        runnable_cell = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -1236,19 +1237,19 @@ class FilePathIlluminaMultiplexSamLane(FilePath):
 
     :ivar unsorted_bam: An :literal:`unsorted` BAM file path.
     :type unsorted_bam: str
-    :ivar unsorted_md5: An :literal:`unsorted` BAM file MD5 check sum file path.
+    :ivar unsorted_md5: An :literal:`unsorted` BAM file MD5 checksum file path.
     :type unsorted_md5: str
     :ivar sorted_bam: A :literal:`sorted` BAM file path.
     :type sorted_bam: str
-    :ivar sorted_md5: A :literal:`sorted` BAM file MD5 check sum file path.
+    :ivar sorted_md5: A :literal:`sorted` BAM file MD5 checksum file path.
     :type sorted_md5: str
     :ivar archive_bam: An :literal:`archive` BAM file path.
     :type archive_bam: str
-    :ivar archive_md5: An :literal:`archive` BAM file MD5 check sum file path.
+    :ivar archive_md5: An :literal:`archive` BAM file MD5 checksum file path.
     :type archive_md5: str
     """
 
-    def __init__(self, prefix, project_name, lane, experiment_directory):
+    def __init__(self, prefix: str, project_name: str, lane: str, experiment_directory: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathIlluminaMultiplexSamLane` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -1266,7 +1267,7 @@ class FilePathIlluminaMultiplexSamLane(FilePath):
         self.unsorted_md5 = prefix + '_unsorted.bam.md5'
         self.sorted_bam = prefix + '_sorted.bam'
         self.sorted_md5 = prefix + '_sorted.bam.md5'
-        # The final BAM and MD5 files are non-standard in that they do not contain a prefix and
+        # The final BAM and MD5 checksum files are non-standard in that they do not contain a prefix and
         # reside in the experiment_directory.
         self.final_bam = '_'.join((project_name, lane)) + '.bam'
         self.final_md5 = '_'.join((project_name, lane)) + '.bam.md5'
@@ -1311,7 +1312,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     prefix = 'illumina_multiplex_sam'
 
     @classmethod
-    def get_stage_name_cloud(cls):
+    def get_stage_name_cloud(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -1320,7 +1321,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         return '_'.join((cls.prefix, 'cloud'))
 
     @classmethod
-    def get_prefix_cloud(cls, project_name, lane):
+    def get_prefix_cloud(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` (prefix) object representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -1333,7 +1334,11 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         return '_'.join((cls.get_stage_name_cloud(), project_name, lane))
 
     @classmethod
-    def get_file_path_lane(cls, project_name, lane, experiment_directory):
+    def get_file_path_lane(
+            cls,
+            project_name: str,
+            lane: str,
+            experiment_directory: str) -> FilePathIlluminaMultiplexSamLane:
         """Get a :py:class:`bsf.analyses.picard.FilePathIlluminaMultiplexSamLane` object.
 
         :param project_name: A project name.
@@ -1353,36 +1358,36 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            run_directory=None,
-            intensity_directory=None,
-            basecalls_directory=None,
-            experiment_name=None,
-            java_archive_picard=None,
-            force=False,
-            sequencing_centre=None,
-            sequences_directory=None,
-            mode_directory=None,
-            mode_file=None,
-            eamss_filter=None,
-            vendor_quality_filter=None,
-            compression_level=None,
-            cloud_account=None,
-            cloud_container=None,
-            cloud_concurrency=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            run_directory: Optional[str] = None,
+            intensity_directory: Optional[str] = None,
+            basecalls_directory: Optional[str] = None,
+            experiment_name: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            force: Optional[bool] = None,
+            sequencing_centre: Optional[str] = None,
+            sequences_directory: Optional[str] = None,
+            mode_directory: Optional[str] = None,
+            mode_file: Optional[str] = None,
+            eamss_filter: Optional[bool] = None,
+            vendor_quality_filter: Optional[bool] = None,
+            compression_level: Optional[int] = None,
+            cloud_account: Optional[str] = None,
+            cloud_container: Optional[str] = None,
+            cloud_concurrency: Optional[int] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.IlluminaMultiplexSam` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -1399,13 +1404,13 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -1413,20 +1418,20 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
-        :param intensity_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
+        :param intensity_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`Intensities` directory path,
             defaults to :literal:`IRF/Data/Intensities`.
         :type intensity_directory: str | None
-        :param basecalls_directory: An :literal:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
+        :param basecalls_directory: An :emphasis:`Illumina Run Folder` (IRF) :literal:`BaseCalls` directory path,
             defaults to :literal:`IRF/Data/Intensities/BaseCalls`.
         :type basecalls_directory: str | None
         :param experiment_name: An experiment name (i.e., flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters.
+            :emphasis:`Illumina Run Folder` parameters.
         :type experiment_name: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
-        :param force: Request processing of incomplete Illumina Run Folder instances.
+        :param force: Request processing of incomplete :emphasis:`Illumina Run Folder` instances.
         :type force: bool | None
         :param sequencing_centre: A sequencing centre code.
         :type sequencing_centre: str | None
@@ -1487,7 +1492,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         return
 
     @property
-    def get_experiment_directory(self):
+    def get_experiment_directory(self) -> Optional[str]:
         """Get the experiment directory.
 
         The experiment directory is a concatenation of the sequences directory and the project name.
@@ -1498,7 +1503,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         if self.sequences_directory and self.project_name:
             return os.path.join(self.sequences_directory, self.project_name)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.picard.IlluminaMultiplexSam` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -1555,7 +1560,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.IlluminaMultiplexSam` object.
         """
         # Define an Illumina Run Folder directory.
@@ -1660,7 +1665,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 lane=lane_str,
                 experiment_directory=experiment_directory)
 
-            runnable_lane = self.add_runnable_consecutive(
+            runnable_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
@@ -1764,7 +1769,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             # Upload the archive BAM file into the block blob storage.
 
             if self.cloud_account and self.cloud_container:
-                runnable_cloud = self.add_runnable_consecutive(
+                runnable_cloud = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_cloud(project_name=self.project_name, lane=lane_str),
                         working_directory=self.project_directory))
@@ -1793,7 +1798,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
-        runnable_cell = self.add_runnable_consecutive(
+        runnable_cell = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -1826,7 +1831,7 @@ class FilePathIlluminaDemultiplexSamCell(FilePath):
     :type sample_annotation_sheet_csv: str
     """
 
-    def __init__(self, prefix, project_name):
+    def __init__(self, prefix: str, project_name: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -1873,11 +1878,11 @@ class FilePathIlluminaDemultiplexSamLane(FilePath):
     :type samples_directory: str
     :ivar archive_bam: An archive BAM file path.
     :type archive_bam: str
-    :ivar archive_md5: An archive BAM MD5 check sum file path.
+    :ivar archive_md5: An archive BAM MD5 checksum file path.
     :type archive_md5: str
     """
 
-    def __init__(self, prefix, project_name, lane, sequences_directory):
+    def __init__(self, prefix: str, project_name: str, lane: str, sequences_directory: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -1915,7 +1920,7 @@ class FilePathIlluminaDemultiplexSamLane(FilePath):
 
 class IlluminaDemultiplexSamSheet(AnnotationSheet):
     """The :py:class:`bsf.analyses.picard.IlluminaDemultiplexSamSheet` class represents a
-    Tab-Separated Value (TSV) table of library information for the
+    :emphasis:`Tab-Separated Value` (TSV) table of library information for the
     :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` object.
     """
 
@@ -1933,9 +1938,9 @@ class IlluminaDemultiplexSamSheet(AnnotationSheet):
         'BARCODE_2',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
-    def adjust(self, barcode_length_tuple):
+    def adjust(self, barcode_length_tuple: tuple[int, int]) -> None:
         """Adjust a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSamSheet` object.
 
         Remove :literal:`BARCODE_N` index columns, which annotation is all empty.
@@ -1965,7 +1970,7 @@ class IlluminaDemultiplexSam(Analysis):
 
     :ivar library_path: A library annotation file path.
     :type library_path: str | None
-    :ivar run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+    :ivar run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
     :type run_directory: str | None
     :ivar sequences_directory: A directory storing lane-specific unaligned BAM files.
     :type sequences_directory: str | None
@@ -1977,7 +1982,7 @@ class IlluminaDemultiplexSam(Analysis):
     :ivar mode_file: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each file.
     :type mode_file: str | None
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
     :ivar compression_level: A Zlib compression level.
     :type compression_level: int | None
@@ -1997,7 +2002,7 @@ class IlluminaDemultiplexSam(Analysis):
     prefix = 'illumina_demultiplex_sam'
 
     @classmethod
-    def get_stage_name_cell(cls):
+    def get_stage_name_cell(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -2006,7 +2011,7 @@ class IlluminaDemultiplexSam(Analysis):
         return '_'.join((cls.prefix, 'cell'))
 
     @classmethod
-    def get_stage_name_lane(cls):
+    def get_stage_name_lane(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -2015,7 +2020,7 @@ class IlluminaDemultiplexSam(Analysis):
         return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
-    def get_prefix_cell(cls, project_name):
+    def get_prefix_cell(cls, project_name) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -2026,7 +2031,7 @@ class IlluminaDemultiplexSam(Analysis):
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
-    def get_prefix_lane(cls, project_name, lane):
+    def get_prefix_lane(cls, project_name: str, lane: str) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -2039,7 +2044,7 @@ class IlluminaDemultiplexSam(Analysis):
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
-    def get_file_path_cell(cls, project_name):
+    def get_file_path_cell(cls, project_name: str) -> FilePathIlluminaDemultiplexSamCell:
         """Get a :py:class:`bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell` object.
 
         :param project_name: A project name.
@@ -2052,7 +2057,11 @@ class IlluminaDemultiplexSam(Analysis):
             project_name=project_name)
 
     @classmethod
-    def get_file_path_lane(cls, project_name, lane, sequences_directory):
+    def get_file_path_lane(
+            cls,
+            project_name: str,
+            lane: str,
+            sequences_directory: str) -> FilePathIlluminaDemultiplexSamLane:
         """Get a :py:class:`bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane` object.
 
         :param project_name: A project name.
@@ -2072,33 +2081,33 @@ class IlluminaDemultiplexSam(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            library_path=None,
-            run_directory=None,
-            sequences_directory=None,
-            samples_directory=None,
-            mode_directory=None,
-            mode_file=None,
-            java_archive_picard=None,
-            compression_level=None,
-            deflater_threads=None,
-            matching_threads=None,
-            lanes=None,
-            lane_list=None,
-            force=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            library_path: Optional[str] = None,
+            run_directory: Optional[str] = None,
+            sequences_directory: Optional[str] = None,
+            samples_directory: Optional[str] = None,
+            mode_directory: Optional[str] = None,
+            mode_file: Optional[str] = None,
+            java_archive_picard: Optional[str] = None,
+            compression_level: Optional[int] = None,
+            deflater_threads: Optional[int] = None,
+            matching_threads: Optional[int] = None,
+            lanes: Optional[int] = None,
+            lane_list: Optional[list[str]] = None,
+            force: Optional[bool] = None):
         """Initialise a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -2115,13 +2124,13 @@ class IlluminaDemultiplexSam(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -2131,7 +2140,7 @@ class IlluminaDemultiplexSam(Analysis):
         :type sample_list: list[Sample] | None
         :param library_path: A library annotation file path.
         :type library_path: str | None
-        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
         :param sequences_directory: A directory storing lane-specific unaligned BAM files.
         :type sequences_directory: str | None
@@ -2143,7 +2152,7 @@ class IlluminaDemultiplexSam(Analysis):
         :param mode_file: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each file.
         :type mode_file: str | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         :param compression_level: A Zlib compression level.
         :type compression_level: int | None
@@ -2195,7 +2204,7 @@ class IlluminaDemultiplexSam(Analysis):
         return
 
     @property
-    def get_experiment_directory(self):
+    def get_experiment_directory(self) -> Optional[str]:
         """Get an experiment directory.
 
         An experiment directory is a concatenation of the samples directory and the project name.
@@ -2206,7 +2215,7 @@ class IlluminaDemultiplexSam(Analysis):
         if self.samples_directory and self.project_name:
             return os.path.join(self.samples_directory, self.project_name)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -2275,7 +2284,7 @@ class IlluminaDemultiplexSam(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` object to
         decode an archive BAM file produced with IlluminaMultiplexSam into sample-specific BAM files.
 
@@ -2283,19 +2292,20 @@ class IlluminaDemultiplexSam(Analysis):
         a Picard tools :literal:`tab-separated` value (TSV) sample sheet.
 
         Columns:
-            - lane
-            - barcode_sequence_1
-            - barcode_sequence_2
-            - sample_name
-            - library_name
-            - barcode_sequence
-            - barcode_name
-            - library_name
-            - sample_name
-            - description
+
+        - lane
+        - barcode_sequence_1
+        - barcode_sequence_2
+        - sample_name
+        - library_name
+        - barcode_sequence
+        - barcode_name
+        - library_name
+        - sample_name
+        - description
         """
 
-        def run_get_sample_file_name(sample_name):
+        def run_get_sample_file_name(sample_name: str) -> str:
             """Private function to format sample-specific BAM file names (i.e., project_lane#sample.bam).
 
             :param sample_name: A sample name.
@@ -2433,7 +2443,7 @@ class IlluminaDemultiplexSam(Analysis):
         prf = ProcessedRunFolder(name=ProcessedRunFolder.default_name)
         collection.add_processed_run_folder(prf=prf)
 
-        cell_dependency_list: List[str] = list()
+        cell_dependency_list: list[str] = list()
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
@@ -2534,7 +2544,7 @@ class IlluminaDemultiplexSam(Analysis):
 
             # Create a Runnable and Executable for the lane stage.
 
-            runnable_lane = self.add_runnable_consecutive(
+            runnable_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     working_directory=self.project_directory))
@@ -2726,7 +2736,7 @@ class IlluminaDemultiplexSam(Analysis):
 
         # Create a flow-cell specific Runnable.
 
-        runnable_cell = self.add_runnable_consecutive(
+        runnable_cell = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 working_directory=self.project_directory))
@@ -2765,7 +2775,7 @@ class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
     :type detailed_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -2788,7 +2798,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
     prefix = 'picard_hiseq_x_pf_fail'
 
     @classmethod
-    def get_file_path_lane(cls, project_name, lane):
+    def get_file_path_lane(cls, project_name: str, lane: str) -> FilePathCollectHiSeqXPfFailMetricsLane:
         """Get a :py:class:`bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane` object.
 
         :param project_name: A project name.
@@ -2801,7 +2811,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         return FilePathCollectHiSeqXPfFailMetricsLane(
             prefix=cls.get_prefix_lane(project_name=project_name, lane=lane))
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.CollectHiSeqXPfFailMetrics` object.
         """
         super(CollectHiSeqXPfFailMetrics, self).run()
@@ -2817,7 +2827,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
             file_path_lane = self.get_file_path_lane(project_name=self.project_name, lane=lane_str)
 
-            runnable_lane = self.add_runnable_consecutive(
+            runnable_lane = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_lane(
                         project_name=self.project_name,
@@ -2865,7 +2875,7 @@ class FilePathDownsampleSamReadGroup(FilePath):
     :type downsampled_bam: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathDownsampleSamReadGroup` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -2883,7 +2893,7 @@ class DownsampleSam(Analysis):
     """The :py:class:`bsf.analyses.picard.DownsampleSam` class represents the logic to run the
     Picard :literal:`DownsampleSam` tool.
 
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
     """
 
@@ -2891,7 +2901,7 @@ class DownsampleSam(Analysis):
     prefix = 'picard_downsample_sam'
 
     @classmethod
-    def get_stage_name_read_group(cls):
+    def get_stage_name_read_group(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -2900,7 +2910,7 @@ class DownsampleSam(Analysis):
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
-    def get_prefix_read_group(cls, read_group_name):
+    def get_prefix_read_group(cls, read_group_name: str) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param read_group_name: A read group name.
@@ -2911,7 +2921,7 @@ class DownsampleSam(Analysis):
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
-    def get_file_path_read_group(cls, read_group_name):
+    def get_file_path_read_group(cls, read_group_name: str) -> FilePathDownsampleSamReadGroup:
         """Get a :py:class:`bsf.analyses.picard.FilePathDownsampleSamReadGroup` object.
 
         :param read_group_name: A read group name.
@@ -2924,21 +2934,21 @@ class DownsampleSam(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            java_archive_picard=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            java_archive_picard: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.DownsampleSam` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -2955,13 +2965,13 @@ class DownsampleSam(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -2969,7 +2979,7 @@ class DownsampleSam(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         """
         super(DownsampleSam, self).__init__(
@@ -2992,7 +3002,7 @@ class DownsampleSam(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.picard.DownsampleSam` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -3013,14 +3023,14 @@ class DownsampleSam(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.DownsampleSam` object.
 
         This method changes the :py:class:`bsf.analyses.picard.DownsampleSam.collection` attribute
         (:py:class:`bsf.ngs.Collection`) to update with FASTQ file paths.
         """
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
@@ -3085,7 +3095,7 @@ class DownsampleSam(Analysis):
 
                     # Create a Runnable for running the Picard DownsampleSam analysis.
 
-                    runnable_picard_dss = self.add_runnable_consecutive(
+                    runnable_picard_dss = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=prefix_read_group,
                             working_directory=self.project_directory))
@@ -3164,7 +3174,7 @@ class FilePathSamToFastqReadGroup(FilePath):
     :type output_directory: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathSamToFastqReadGroup` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -3189,7 +3199,7 @@ class FilePathSamToFastqProject(FilePath):
     :type sas_path_new: str
     """
 
-    def __init__(self, prefix, prefix_analysis, project_name):
+    def __init__(self, prefix: str, prefix_analysis: str, project_name: str) -> None:
         """Initialise a :py:class:`bsf.analyses.picard.FilePathSamToFastqProject` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -3218,7 +3228,7 @@ class SamToFastq(Analysis):
     :cvar stage_name_project: A :py:attr:`bsf.analysis.Stage.name` for project-specific
         :py:class:`bsf.procedure.Runnable` objects.
     :type stage_name_project: str
-    :ivar java_archive_picard: A Picard tools Java Archive (JAR) file path.
+    :ivar java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
     :type java_archive_picard: str | None
     :ivar include_non_pass_filter_reads: Request including non-pass filter reads.
     :type include_non_pass_filter_reads: bool | None
@@ -3235,7 +3245,7 @@ class SamToFastq(Analysis):
     stage_name_project = '_'.join((prefix, 'project'))
 
     @classmethod
-    def get_stage_name_read_group(cls):
+    def get_stage_name_read_group(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -3244,7 +3254,7 @@ class SamToFastq(Analysis):
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
-    def get_stage_name_project(cls):
+    def get_stage_name_project(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -3253,7 +3263,7 @@ class SamToFastq(Analysis):
         return '_'.join((cls.prefix, 'project'))
 
     @classmethod
-    def get_prefix_read_group(cls, read_group_name):
+    def get_prefix_read_group(cls, read_group_name: str) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param read_group_name: A read group name.
@@ -3264,7 +3274,7 @@ class SamToFastq(Analysis):
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
-    def get_prefix_project(cls, project_name):
+    def get_prefix_project(cls, project_name: str) -> str:
         """Get a Python :py:class:`str` (prefix) object  representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param project_name: A project name.
@@ -3275,7 +3285,7 @@ class SamToFastq(Analysis):
         return '_'.join((cls.get_stage_name_project(), project_name))
 
     @classmethod
-    def get_file_path_read_group(cls, read_group_name):
+    def get_file_path_read_group(cls, read_group_name: str) -> FilePathSamToFastqReadGroup:
         """Get a :py:class:`bsf.analyses.picard.FilePathSamToFastqReadGroup` object.
 
         :param read_group_name: A read group name.
@@ -3287,7 +3297,7 @@ class SamToFastq(Analysis):
             prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     @classmethod
-    def get_file_path_project(cls, project_name, prefix_analysis):
+    def get_file_path_project(cls, project_name: str, prefix_analysis: str) -> FilePathSamToFastqProject:
         """Get a :py:class:`bsf.analyses.picard.FilePathSamToFastqProject` object.
 
         :param project_name: A project name.
@@ -3304,24 +3314,24 @@ class SamToFastq(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            java_archive_picard=None,
-            include_non_pf_reads=None,
-            drop_read_1=None,
-            drop_read_2=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            java_archive_picard: Optional[str] = None,
+            include_non_pf_reads: Optional[bool] = None,
+            drop_read_1: Optional[bool] = None,
+            drop_read_2: Optional[bool] = None):
         """Initialise a :py:class:`bsf.analyses.picard.SamToFastq` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -3338,13 +3348,13 @@ class SamToFastq(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A eport style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -3352,7 +3362,7 @@ class SamToFastq(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         :param include_non_pf_reads: Request including non-pass filter reads.
         :type include_non_pf_reads: bool | None
@@ -3384,7 +3394,7 @@ class SamToFastq(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.picard.SamToFastq` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -3418,7 +3428,7 @@ class SamToFastq(Analysis):
 
         return
 
-    def _read_comparisons(self):
+    def _read_comparisons(self) -> None:
         """Private method to read a :py:class:`bsf.annotation.AnnotationSheet` object specifying comparisons from a
         CSV file path.
 
@@ -3431,7 +3441,7 @@ class SamToFastq(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.picard.SamToFastq` object.
 
         This method changes the :py:class:`bsf.analyses.picard.DownsampleSam.collection` attribute
@@ -3456,7 +3466,7 @@ class SamToFastq(Analysis):
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
         stage_project = self.get_stage(name=self.get_stage_name_project())
 
-        project_dependency_list: List[str] = list()
+        project_dependency_list: list[str] = list()
 
         for sample in self.sample_list:
             module_logger.debug('Sample name: %r', sample.name)
@@ -3491,7 +3501,7 @@ class SamToFastq(Analysis):
 
                         alignment_header_dict = alignment_file.header.to_dict()
 
-                        rg_dict: Dict[str, str]
+                        rg_dict: dict[str, str]
                         for rg_index, rg_dict in enumerate(alignment_header_dict['RG']):
                             platform_unit = SafeFileName.get_safe_file_name(file_name=rg_dict['PU'])
 
@@ -3560,7 +3570,7 @@ class SamToFastq(Analysis):
 
                         # Create a Runnable for running the Picard SamToFastq analysis.
 
-                        runnable_read_group = self.add_runnable_consecutive(
+                        runnable_read_group = self.add_runnable(
                             runnable=ConsecutiveRunnable(
                                 name=prefix_read_group,
                                 working_directory=self.project_directory))
@@ -3652,7 +3662,7 @@ class SamToFastq(Analysis):
             name=prefix_project)
         annotation_sheet.to_file_path()
 
-        runnable_project = self.add_runnable_consecutive(
+        runnable_project = self.add_runnable(
             runnable=ConsecutiveRunnable(
                 name=prefix_project,
                 working_directory=self.project_directory))
@@ -3677,7 +3687,7 @@ class SamToFastq(Analysis):
 
         return
 
-    def prune(self):
+    def prune(self) -> None:
         """Prune the project directory by replacing FASTQ files with (empty) status files (:literal:`*.truncated`).
 
         The status files are recognised by the
@@ -3704,7 +3714,7 @@ class SamToFastq(Analysis):
 
                     file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 
-                    def prune_file_path(reads):
+                    def prune_file_path(reads: Reads) -> None:
                         """Private function to prune files of a Reads object.
 
                         :param reads: A :py:class:`bsf.ngs.Reads` object.
@@ -3722,7 +3732,7 @@ class SamToFastq(Analysis):
                             open(file=file_path + '.truncated', mode='wt').close()
                             os.remove(file_path)
 
-                        # Also remove an eventual MD5 sum file.
+                        # Also remove an eventual MD5 checksum file.
                         file_path += '.md5'
                         if os.path.exists(file_path):
                             os.remove(file_path)

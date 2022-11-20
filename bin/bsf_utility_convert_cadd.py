@@ -37,7 +37,7 @@ from bsf.connector import StandardOutputStream
 from bsf.process import Executable
 
 
-def process_stdout(input_file_handle, thread_lock, output_file_path):
+def process_stdout(input_file_handle: IO, thread_lock: Lock, output_file_path: str) -> None:
     """Process :emphasis:`standard output` via a separate :py:class:`threading.Thread` object.
 
     :param input_file_handle: Standard input stream

@@ -31,7 +31,6 @@ import os
 import pickle
 import shutil
 from argparse import ArgumentParser
-from typing import List
 
 from bsf.connector import ConnectorFile
 from bsf.process import Command, Executable, RunnableStep
@@ -98,8 +97,8 @@ path_temporary_sam = "{}{}_temporary.sam".format(prefix, replicate_key)
 path_sorted_bam = "{}{}.bam".format(prefix, replicate_key)
 
 # SAM header lines that need propagating around FASTQ files. Sigh!
-sam_header_pg: List[str] = list()
-sam_header_rg: List[str] = list()
+sam_header_pg: list[str] = list()
+sam_header_rg: list[str] = list()
 
 # Run BWA to produce an aligned SAM file.
 
@@ -311,14 +310,14 @@ if len(sam_header_pg) or len(sam_header_rg):
                     # then clear the list so that no further insertion is possible.
                     for line_pg in sam_header_pg:
                         output_file.write(line_pg + "\n")
-                    sam_header_pg: List[str] = list()
+                    sam_header_pg = list()
                 output_file.write(line_str)
 
             # Add remaining @PG lines it they were not present in the cleaned SAM file.
 
             for line_pg in sam_header_pg:
                 output_file.write(line_pg + "\n")
-            sam_header_pg: List[str] = list()
+            sam_header_pg = list()
 
     os.remove(path_temporary_sam)
 

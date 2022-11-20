@@ -26,7 +26,7 @@
 `Spliced Transcripts Alignment to a Reference (STAR) <https://github.com/alexdobin/STAR>`_ by Alexander Dobin.
 """
 import os
-from typing import List
+from typing import Optional
 
 from bsf.analyses.aligner import Aligner, \
     FilePathAlign as AlignerFilePathAlign, \
@@ -45,13 +45,13 @@ class FilePathAlign(AlignerFilePathAlign):
 
     :ivar aligned_sam: Aligned sequence alignment map (SAM) file path.
     :type aligned_sam: str
-    :ivar splice_junctions_tsv: Splice junctions tab-separated value (TSV) file path.
+    :ivar splice_junctions_tsv: Splice junctions :emphasis:`Tab-Separated Value` (TSV) file path.
     :type splice_junctions_tsv: str
     :ivar star_prefix: STAR :literal:`outFileNamePrefix` file path.
     :type star_prefix: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.star.FilePathAlign` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -73,7 +73,7 @@ class FilePathSummary(AlignerFilePathSummary):
     """The :py:class:`bsf.analyses.star.FilePathSummary` class models file paths at the summary stage.
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.star.FilePathSummary` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -132,7 +132,7 @@ class Star(Aligner):
     ]
 
     @classmethod
-    def get_file_path_align(cls, paired_reads_name):
+    def get_file_path_align(cls, paired_reads_name: str) -> FilePathAlign:
         """Get a :py:class:`bsf.analyses.star.FilePathAlign` object from this or a subclass.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -143,7 +143,7 @@ class Star(Aligner):
         return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
-    def get_file_path_summary(cls):
+    def get_file_path_summary(cls) -> FilePathSummary:
         """Get a bsf.analyses.star.FilePathSummary` object from this or a subclass.
 
         :return: A bsf.analyses.star.FilePathSummary` object or subclass thereof.
@@ -153,26 +153,26 @@ class Star(Aligner):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            transcriptome_version=None,
-            transcriptome_gtf=None,
-            transcriptome_index=None,
-            two_pass_mapping=None,
-            skip_mark_duplicates=None,
-            java_archive_picard=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            transcriptome_version: Optional[str] = None,
+            transcriptome_gtf: Optional[str] = None,
+            transcriptome_index: Optional[str] = None,
+            two_pass_mapping: Optional[str] = None,
+            skip_mark_duplicates: Optional[bool] = None,
+            java_archive_picard: Optional[str] = None):
         """Initialise a :py:class:`bsf.analyses.star.Star` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -189,13 +189,13 @@ class Star(Aligner):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -213,7 +213,7 @@ class Star(Aligner):
         :type two_pass_mapping: str | None
         :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
         :type skip_mark_duplicates: bool | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         """
         super(Star, self).__init__(
@@ -245,7 +245,7 @@ class Star(Aligner):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.star.Star` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -278,7 +278,12 @@ class Star(Aligner):
 
         return
 
-    def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
+    def add_runnable_step_aligner(
+            self,
+            runnable_align: ConcurrentRunnable,
+            stage_align: Stage,
+            file_path_1: Optional[str],
+            file_path_2: Optional[str]) -> None:
         """Add one or more STAR-specific :py:class:`bsf.process.RunnableStep` objects to the
         :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
@@ -336,7 +341,7 @@ class Star(Aligner):
 
         return
 
-    def add_runnable_step_sample(self, runnable_sample, stage_sample):
+    def add_runnable_step_sample(self, runnable_sample: ConsecutiveRunnable, stage_sample: Stage) -> None:
         """Add one or more STAR-specific :py:class:`bsf.process.RunnableStep` objects
         to the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
@@ -371,7 +376,7 @@ class Star(Aligner):
 
         return
 
-    def add_runnable_step_summary(self, runnable_summary, stage_summary):
+    def add_runnable_step_summary(self, runnable_summary: ConsecutiveRunnable, stage_summary: Stage) -> None:
         """Add one or more STAR-specific :py:class:`bsf.process.RunnableStep` objects
         to the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
@@ -387,7 +392,7 @@ class Star(Aligner):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.star.Star` object.
 
         Although STAR can directly count reads according to its splice junction database,
@@ -437,14 +442,14 @@ class Star(Aligner):
 
         return
 
-    def report(self):
-        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
+    def report(self) -> None:
+        """Create a :literal:`XHTML 1.0` report and a :emphasis:`UCSC Genome Browser Track Hub`.
         """
         # Create a symbolic link containing the project name and a UUID.
         # This code only needs the public URL.
         link_path = self.create_public_project_link()
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
         str_list.append('\n')

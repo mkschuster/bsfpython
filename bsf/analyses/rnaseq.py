@@ -36,7 +36,7 @@ import logging
 import os
 import pickle
 import re
-from typing import Callable, Dict, List
+from typing import Callable, Optional
 
 from bsf.analyses.hisat import Hisat2
 from bsf.analyses.kallisto import Kallisto
@@ -97,7 +97,7 @@ class FilePathTophat(FilePath):
     :type unmapped_bam_link_target: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -134,9 +134,9 @@ class FilePathCufflinks(FilePath):
 
     :ivar output_directory: An output directory path.
     :type output_directory: str
-    :ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes tab-separated value (TSV) file
+    :ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes :emphasis:`Tab-Separated Value` (TSV) file
     :type fpkm_tracking_genes_tsv: str
-    :ivar fpkm_tracking_isoforms_tsv: Cufflinks FPKM tracking isoforms tab-separated value (TSV) file
+    :ivar fpkm_tracking_isoforms_tsv: Cufflinks FPKM tracking isoforms :emphasis:`Tab-Separated Value` (TSV) file
     :type fpkm_tracking_isoforms_tsv: str
     :ivar skipped_gtf: Cufflinks skipped regions GTF file
     :type skipped_gtf: str
@@ -148,11 +148,11 @@ class FilePathCufflinks(FilePath):
     :type temporary_big_gene_prediction: str
     :ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
     :type temporary_gene_prediction: str
-    :ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
+    :ivar temporary_sorted_tsv: Temporary sorted :emphasis:`Tab-Separated Value` (TSV) file
     :type temporary_sorted_tsv: str
-    :ivar temporary_slopped_tsv: Temporary slopped (bedtools slop) tab-separated value (TSV) file
+    :ivar temporary_slopped_tsv: Temporary slopped (bedtools slop) :emphasis:`Tab-Separated Value` (TSV) file
     :type temporary_slopped_tsv: str
-    :ivar temporary_fixed_tsv: Temporary slopped and fixed (tab at end) tab-separated value (TSV) file
+    :ivar temporary_fixed_tsv: Temporary slopped and fixed (tab at end) :emphasis:`Tab-Separated Value` (TSV) file
     :type temporary_fixed_tsv: str
     :ivar transcripts_bb: Cufflinks transcript assembly bigBed file
     :type transcripts_bb: str
@@ -168,7 +168,7 @@ class FilePathCufflinks(FilePath):
     :type transcripts_gtf_link_target: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -221,7 +221,7 @@ class FilePathCuffmerge(FilePath):
     :type temporary_gene_prediction: str
     :ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
     :type temporary_big_gene_prediction: str
-    :ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
+    :ivar temporary_sorted_tsv: Temporary sorted :emphasis:`Tab-Separated Value` (TSV) file
     :type temporary_sorted_tsv: str
     :ivar cuffcompare_prefix: Cuffcompare output prefix, including the cuffmerge directory path
     :type cuffcompare_prefix: str
@@ -239,7 +239,7 @@ class FilePathCuffmerge(FilePath):
     :type cuffcompare_tmap: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffmerge` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -279,7 +279,7 @@ class FilePathCuffquant(FilePath):
     :type abundances: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffquant` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -303,7 +303,7 @@ class FilePathCuffnorm(FilePath):
     :type abundances_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffnorm` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -325,7 +325,7 @@ class FilePathCuffdiff(FilePath):
     :type output_directory: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathCuffdiff` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -358,7 +358,7 @@ class FilePathMonocle(FilePath):
     :type annotation_tsv: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathMonocle` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -386,18 +386,18 @@ class TuxedoSamplePairSheet(AnnotationSheet):
         'V2',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
 
 class Tuxedo(Analysis):
     """The :py:class:`bsf.analyses.rnaseq.Tuxedo` class models an RNA-seq analysis based on the
     `Cufflinks <http://cole-trapnell-lab.github.io/cufflinks/>`_ package as part of the Tuxedo suite.
 
-    :ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+    :ivar replicate_grouping: Request grouping all replicates into a single Tophat and Cufflinks process
     :type replicate_grouping: bool | None
     :ivar comparison_path: Comparison file path
     :type comparison_path: str | None
-    :ivar genome_fasta_path: Reference genome sequence FASTA file path
+    :ivar genome_fasta_path: Reference genome sequence :emphasis:`FASTA` file path
     :type genome_fasta_path: str | None
     :ivar genome_index_path: Bowtie genome index path
     :type genome_index_path: str | None
@@ -436,7 +436,7 @@ class Tuxedo(Analysis):
     prefix = 'rnaseq'
 
     @classmethod
-    def get_stage_name_run_tophat(cls):
+    def get_stage_name_run_tophat(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -445,7 +445,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'run_tophat'))
 
     @classmethod
-    def get_stage_name_process_tophat(cls):
+    def get_stage_name_process_tophat(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -454,7 +454,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'process_tophat'))
 
     @classmethod
-    def get_stage_name_run_cufflinks(cls):
+    def get_stage_name_run_cufflinks(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -463,7 +463,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'run_cufflinks'))
 
     @classmethod
-    def get_stage_name_process_cufflinks(cls):
+    def get_stage_name_process_cufflinks(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -474,7 +474,7 @@ class Tuxedo(Analysis):
     # Comparison stage
 
     @classmethod
-    def get_stage_name_run_cuffmerge(cls):
+    def get_stage_name_run_cuffmerge(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -483,7 +483,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'cuffmerge'))
 
     @classmethod
-    def get_stage_name_run_cuffquant(cls):
+    def get_stage_name_run_cuffquant(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -492,7 +492,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'cuffquant'))
 
     @classmethod
-    def get_stage_name_run_cuffnorm(cls):
+    def get_stage_name_run_cuffnorm(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -501,7 +501,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'cuffnorm'))
 
     @classmethod
-    def get_stage_name_run_cuffdiff(cls):
+    def get_stage_name_run_cuffdiff(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -510,7 +510,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'cuffdiff'))
 
     @classmethod
-    def get_stage_name_process_cuffdiff(cls):
+    def get_stage_name_process_cuffdiff(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -519,7 +519,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'process_cuffdiff'))
 
     @classmethod
-    def get_stage_name_monocle(cls):
+    def get_stage_name_monocle(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -528,7 +528,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.prefix, 'monocle'))
 
     @classmethod
-    def get_prefix_run_tophat(cls, sample_name):
+    def get_prefix_run_tophat(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -539,7 +539,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_run_tophat(), sample_name))
 
     @classmethod
-    def get_prefix_process_tophat(cls, sample_name):
+    def get_prefix_process_tophat(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -550,7 +550,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_process_tophat(), sample_name))
 
     @classmethod
-    def get_prefix_run_cufflinks(cls, sample_name):
+    def get_prefix_run_cufflinks(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -561,7 +561,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_run_cufflinks(), sample_name))
 
     @classmethod
-    def get_prefix_process_cufflinks(cls):
+    def get_prefix_process_cufflinks(cls) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
@@ -570,7 +570,7 @@ class Tuxedo(Analysis):
         return cls.get_stage_name_process_cufflinks()
 
     @classmethod
-    def get_prefix_run_cuffmerge(cls, comparison_name):
+    def get_prefix_run_cuffmerge(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -581,7 +581,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_run_cuffmerge(), comparison_name))
 
     @classmethod
-    def get_prefix_run_cuffquant(cls, comparison_name, sample_name):
+    def get_prefix_run_cuffquant(cls, comparison_name: str, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -594,7 +594,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_run_cuffquant(), comparison_name, sample_name))
 
     @classmethod
-    def get_prefix_run_cuffnorm(cls, comparison_name):
+    def get_prefix_run_cuffnorm(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -605,7 +605,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_run_cuffnorm(), comparison_name))
 
     @classmethod
-    def get_prefix_run_cuffdiff(cls, comparison_name):
+    def get_prefix_run_cuffdiff(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -616,7 +616,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_run_cuffdiff(), comparison_name))
 
     @classmethod
-    def get_prefix_process_cuffdiff(cls, comparison_name):
+    def get_prefix_process_cuffdiff(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -627,7 +627,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_process_cuffdiff(), comparison_name))
 
     @classmethod
-    def get_prefix_monocle(cls, comparison_name):
+    def get_prefix_monocle(cls, comparison_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -638,7 +638,7 @@ class Tuxedo(Analysis):
         return '_'.join((cls.get_stage_name_monocle(), comparison_name))
 
     @classmethod
-    def get_file_path_run_tophat(cls, sample_name):
+    def get_file_path_run_tophat(cls, sample_name: str) -> FilePathTophat:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
 
         The prefix is non-standard, as :literal:`rnaseq_run_tophat` and :literal:`rnaseq_process_tophat`
@@ -653,7 +653,7 @@ class Tuxedo(Analysis):
             prefix='_'.join(('rnaseq_tophat', sample_name)))
 
     @classmethod
-    def get_file_path_process_tophat(cls, sample_name):
+    def get_file_path_process_tophat(cls, sample_name: str) -> FilePathTophat:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathTophat` object.
 
         The prefix is non-standard, as :literal:`rnaseq_run_tophat` and :literal:`rnaseq_process_tophat`
@@ -668,7 +668,7 @@ class Tuxedo(Analysis):
             prefix='_'.join(('rnaseq_tophat', sample_name)))
 
     @classmethod
-    def get_file_path_run_cufflinks(cls, sample_name):
+    def get_file_path_run_cufflinks(cls, sample_name: str) -> FilePathCufflinks:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
 
         The prefix is non-standard, as :literal:`rnaseq_run_cufflinks` and :literal:`rnaseq_process_cufflinks`
@@ -683,7 +683,7 @@ class Tuxedo(Analysis):
             prefix='_'.join(('rnaseq_cufflinks', sample_name)))
 
     @classmethod
-    def get_file_path_process_cufflinks(cls, sample_name):
+    def get_file_path_process_cufflinks(cls, sample_name: str) -> FilePathCufflinks:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathCufflinks` object.
 
         The prefix is non-standard, as :literal:`rnaseq_run_cufflinks` and :literal:`rnaseq_process_cufflinks`
@@ -698,7 +698,7 @@ class Tuxedo(Analysis):
             prefix='_'.join(('rnaseq_cufflinks', sample_name)))
 
     @classmethod
-    def get_file_path_cuffmerge(cls, comparison_name):
+    def get_file_path_cuffmerge(cls, comparison_name: str) -> FilePathCuffmerge:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffmerge` object.
 
         :param comparison_name: A comparison name.
@@ -710,7 +710,7 @@ class Tuxedo(Analysis):
             prefix=cls.get_prefix_run_cuffmerge(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_cuffquant(cls, comparison_name, sample_name):
+    def get_file_path_cuffquant(cls, comparison_name: str, sample_name: str) -> FilePathCuffquant:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffquant` object.
 
         :param comparison_name: A comparison name.
@@ -724,7 +724,7 @@ class Tuxedo(Analysis):
             prefix=cls.get_prefix_run_cuffquant(comparison_name=comparison_name, sample_name=sample_name))
 
     @classmethod
-    def get_file_path_cuffnorm(cls, comparison_name):
+    def get_file_path_cuffnorm(cls, comparison_name: str) -> FilePathCuffnorm:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffnorm` object.
 
         :param comparison_name: A comparison name.
@@ -736,7 +736,7 @@ class Tuxedo(Analysis):
             prefix=cls.get_prefix_run_cuffnorm(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_run_cuffdiff(cls, comparison_name):
+    def get_file_path_run_cuffdiff(cls, comparison_name: str) -> FilePathCuffdiff:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathCuffdiff` object.
 
         :param comparison_name: A comparison name.
@@ -748,7 +748,7 @@ class Tuxedo(Analysis):
             prefix=cls.get_prefix_run_cuffdiff(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_process_cuffdiff(cls, comparison_name):
+    def get_file_path_process_cuffdiff(cls, comparison_name: str) -> FilePathProcessCuffdiff:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathProcessCuffdiff` object.
 
         :param comparison_name: A comparison name.
@@ -760,7 +760,7 @@ class Tuxedo(Analysis):
             prefix=cls.get_prefix_process_cuffdiff(comparison_name=comparison_name))
 
     @classmethod
-    def get_file_path_monocle(cls, comparison_name):
+    def get_file_path_monocle(cls, comparison_name: str) -> FilePathMonocle:
         """Get a :py:class:`bsf.analyses.rnaseq.FilePathMonocle` object.
 
         :param comparison_name: A comparison name.
@@ -773,38 +773,38 @@ class Tuxedo(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            replicate_grouping=None,
-            comparison_path=None,
-            genome_fasta_path=None,
-            genome_index_path=None,
-            genome_sizes_path=None,
-            transcriptome_version=None,
-            transcriptome_gtf=None,
-            transcriptome_index=None,
-            insert_size=None,
-            insert_size_sd=None,
-            read_length=None,
-            mask_gtf_path=None,
-            multi_read_correction=None,
-            library_type=None,
-            novel_transcripts=None,
-            false_discovery_rate=None,
-            no_length_correction=None,
-            aligner=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            replicate_grouping: Optional[bool] = None,
+            comparison_path: Optional[str] = None,
+            genome_fasta_path: Optional[str] = None,
+            genome_index_path: Optional[str] = None,
+            genome_sizes_path: Optional[str] = None,
+            transcriptome_version: Optional[str] = None,
+            transcriptome_gtf: Optional[str] = None,
+            transcriptome_index: Optional[str] = None,
+            insert_size: Optional[int] = None,
+            insert_size_sd: Optional[int] = None,
+            read_length: Optional[int] = None,
+            mask_gtf_path: Optional[str] = None,
+            multi_read_correction: Optional[bool] = None,
+            library_type: Optional[str] = None,
+            novel_transcripts: Optional[bool] = None,
+            false_discovery_rate: Optional[float] = None,
+            no_length_correction: Optional[bool] = None,
+            aligner: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.Tuxedo` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -821,13 +821,13 @@ class Tuxedo(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -835,11 +835,11 @@ class Tuxedo(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+        :param replicate_grouping: Request grouping all replicates into a single Tophat and Cufflinks process.
         :type replicate_grouping: bool | None
         :param comparison_path: Comparison file path
         :type comparison_path: str | None
-        :param genome_fasta_path: Reference genome sequence FASTA file path
+        :param genome_fasta_path: Reference genome sequence :emphasis:`FASTA` file path
         :type genome_fasta_path: str | None
         :param genome_index_path: Bowtie genome index path
         :type genome_index_path: str | None
@@ -910,11 +910,11 @@ class Tuxedo(Analysis):
         self.no_length_correction = no_length_correction
         self.aligner = aligner
 
-        self._comparison_dict: Dict[str, List[SampleGroup]] = dict()
+        self._comparison_dict: dict[str, list[SampleGroup]] = dict()
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.rnaseq.Tuxedo` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -1003,11 +1003,11 @@ class Tuxedo(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.rnaseq.Tuxedo` object.
         """
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
@@ -1016,19 +1016,27 @@ class Tuxedo(Analysis):
             (i.e., :py:class:`bsf.ngs.Collection` object) to the
             :py:attr:`bsf.analysis.Analysis.sample_list` instance variable.
 
-                - Column headers for CASAVA folders
-                    - Treatment/Control/Point N ProcessedRunFolder
-                        - CASAVA processed run folder name or
-                        - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
-                    - Treatment/Control/Point N Project
-                        - CASAVA Project name or
-                        - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
-                    - Treatment/Control/Point N Sample
-                        - CASAVA Sample name, no default
-                - Column headers for independent samples
-                    - Treatment/Control/Point N Sample
-                    - Treatment/Control/Point N Reads
-                    - Treatment/Control/Point N File
+            - Column headers for CASAVA folders
+
+              - Treatment/Control/Point N ProcessedRunFolder
+
+                - CASAVA processed run folder name or
+                - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
+
+              - Treatment/Control/Point N Project
+
+                - CASAVA Project name or
+                - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
+
+              - Treatment/Control/Point N Sample
+
+                - CASAVA Sample name, no default
+
+            - Column headers for independent samples
+
+              - Treatment/Control/Point N Sample
+              - Treatment/Control/Point N Reads
+              - Treatment/Control/Point N File
             """
             if self.comparison_path:
                 # A comparison file path was provided.
@@ -1039,7 +1047,7 @@ class Tuxedo(Analysis):
                     self.sample_list.extend(self.collection.get_all_samples(exclude=True))
 
                     # Create a global comparison by adding all sample groups.
-                    _sample_group_list: List[SampleGroup] = list()
+                    _sample_group_list: list[SampleGroup] = list()
 
                     for _group_name, _sample_list in self.collection.sample_group_dict.items():
                         _sample_group = SampleGroup(name=_group_name, sample_list=_sample_list)
@@ -1058,7 +1066,7 @@ class Tuxedo(Analysis):
                     self.sample_list.extend(self.collection.get_all_samples(exclude=True))
 
                     # Create a global comparison by adding all samples under their sample name as group name.
-                    _sample_group_list: List[SampleGroup] = list()
+                    _sample_group_list: list[SampleGroup] = list()
 
                     for _sample in self.sample_list:
                         # Sample objects are only useful, if at least one PairedReads object is not excluded.
@@ -1078,8 +1086,8 @@ class Tuxedo(Analysis):
                     re_pattern = re.compile(pattern=r'\W')
 
                     for row_dict in annotation_sheet.row_dicts:
-                        _sample_group_list: List[SampleGroup] = list()
-                        _comparison_name_list: List[str] = list()
+                        _sample_group_list: list[SampleGroup] = list()
+                        _comparison_name_list: list[str] = list()
                         # In addition to defining samples, allow also the definition of groups in comparison files.
                         # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to
                         # the group. So,
@@ -1106,7 +1114,7 @@ class Tuxedo(Analysis):
                             _group_name, _sample_list_old = self.collection.get_samples_from_row_dict(
                                 row_dict=row_dict,
                                 prefix=prefix)
-                            _sample_list_new: List[Sample] = list()
+                            _sample_list_new: list[Sample] = list()
                             if _group_name and len(_sample_list_old):
                                 # Sample objects are only useful, if at least one PairedReads object is not excluded.
                                 for _sample in _sample_list_old:
@@ -1176,7 +1184,7 @@ class Tuxedo(Analysis):
 
             return
 
-        def run_write_annotation(annotation_path, annotation_dict):
+        def run_write_annotation(annotation_path: str, annotation_dict: dict[str, list[str]]) -> None:
             """Private function to write a sample annotation file for Cuffdiff or Cuffnorm to disk.
 
             :param annotation_path: Annotation file path.
@@ -1370,7 +1378,7 @@ class Tuxedo(Analysis):
         stage_process_cuffdiff = self.get_stage(name=self.get_stage_name_process_cuffdiff())
         # stage_monocle = self.get_stage(name=self.get_stage_name_monocle())
 
-        runnable_run_cufflinks_list: List[ConsecutiveRunnable] = list()
+        runnable_run_cufflinks_list: list[ConsecutiveRunnable] = list()
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -1397,7 +1405,7 @@ class Tuxedo(Analysis):
 
                 file_path_run_tophat = self.get_file_path_run_tophat(sample_name=sample.name)
 
-                runnable_run_tophat = self.add_runnable_consecutive(
+                runnable_run_tophat = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_run_tophat(sample_name=sample.name),
                         working_directory=self.genome_directory))
@@ -1451,8 +1459,8 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_tophat arguments for reads1 and reads2.
 
-                reads_1_file_path_list: List[str] = list()
-                reads_2_file_path_list: List[str] = list()
+                reads_1_file_path_list: list[str] = list()
+                reads_2_file_path_list: list[str] = list()
 
                 for paired_reads_name in sorted(paired_reads_dict):
                     for paired_reads in paired_reads_dict[paired_reads_name]:
@@ -1494,7 +1502,7 @@ class Tuxedo(Analysis):
 
                 # Create a process_tophat Runnable per sample.name.
 
-                runnable_process_tophat = self.add_runnable_consecutive(
+                runnable_process_tophat = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_process_tophat(sample_name=sample.name),
                         working_directory=self.genome_directory))
@@ -1536,7 +1544,7 @@ class Tuxedo(Analysis):
 
             file_path_cufflinks = self.get_file_path_run_cufflinks(sample_name=sample.name)
 
-            runnable_run_cufflinks = self.add_runnable_consecutive(
+            runnable_run_cufflinks = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_run_cufflinks(sample_name=sample.name),
                     working_directory=self.genome_directory))
@@ -1751,7 +1759,7 @@ class Tuxedo(Analysis):
         # Create one process_cufflinks bsf.process.Executable to process all subdirectories.
 
         if len(runnable_run_cufflinks_list):
-            runnable_process_cufflinks = self.add_runnable_consecutive(
+            runnable_process_cufflinks = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_process_cufflinks(),
                     working_directory=self.genome_directory))
@@ -1788,7 +1796,7 @@ class Tuxedo(Analysis):
         # expected to exist by another process.
         # Circumvent such a situation by introducing dependencies on previous Cuffmerge processes. Sigh.
         # TODO: Report this to the Cufflinks author.
-        executable_cuffmerge_dict: Dict[str, Executable] = dict()
+        executable_cuffmerge_dict: dict[str, Executable] = dict()
 
         for comparison_name in sorted(self._comparison_dict):
             module_logger.debug('Comparison name: %r', comparison_name)
@@ -1801,18 +1809,18 @@ class Tuxedo(Analysis):
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
             # Check that the comparison contains at least one sample group.
 
-            cuffdiff_cuffnorm_abundances_dict: Dict[str, List[str]] = dict()
-            cuffdiff_cuffnorm_alignments_dict: Dict[str, List[str]] = dict()
-            cuffdiff_cuffnorm_dependencies: List[str] = list()
+            cuffdiff_cuffnorm_abundances_dict: dict[str, list[str]] = dict()
+            cuffdiff_cuffnorm_alignments_dict: dict[str, list[str]] = dict()
+            cuffdiff_cuffnorm_dependencies: list[str] = list()
             cuffmerge_cuffnorm_submit: bool = len(sample_group_list) >= 1
-            cuffmerge_transcript_gtf_list: List[str] = list()
+            cuffmerge_transcript_gtf_list: list[str] = list()
 
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_run_cuffmerge = self.get_prefix_run_cuffmerge(comparison_name=comparison_name)
 
             file_path_cuffmerge = self.get_file_path_cuffmerge(comparison_name=comparison_name)
 
-            runnable_run_cuffmerge = self.add_runnable_consecutive(
+            runnable_run_cuffmerge = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=prefix_run_cuffmerge,
                     working_directory=self.genome_directory))
@@ -1983,8 +1991,8 @@ class Tuxedo(Analysis):
             for sample_group in sample_group_list:
                 module_logger.debug('SampleGroup.name: %r', sample_group.name)
 
-                per_group_abundances_list: List[str] = list()
-                per_group_alignments_list: List[str] = list()
+                per_group_abundances_list: list[str] = list()
+                per_group_alignments_list: list[str] = list()
 
                 for sample in sample_group.sample_list:
                     module_logger.debug('Sample.name: %r', sample.name)
@@ -2013,7 +2021,7 @@ class Tuxedo(Analysis):
                         comparison_name=comparison_name,
                         sample_name=sample.name)
 
-                    runnable_run_cuffquant = self.add_runnable_consecutive(
+                    runnable_run_cuffquant = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=self.get_prefix_run_cuffquant(
                                 comparison_name=comparison_name,
@@ -2120,7 +2128,7 @@ class Tuxedo(Analysis):
                     # FIXME: ReadGroup versus Sample level
                     #  Depending on the replicate_grouping instance variable, the abundance file can be on
                     #  the read_group or sample level, while Monocle annotation will always be on the sample level.
-                    monocle_row_dict: Dict[str, str] = {
+                    monocle_row_dict: dict[str, str] = {
                         'file': file_path_run_cuffquant.abundances,
                         # 'sample_name' is used by Monocle in the plot_cell_clusters() function internally.
                         'original_name': sample.name
@@ -2149,7 +2157,7 @@ class Tuxedo(Analysis):
 
                 file_path_run_cuffnorm = self.get_file_path_cuffnorm(comparison_name=comparison_name)
 
-                runnable_run_cuffnorm = self.add_runnable_consecutive(
+                runnable_run_cuffnorm = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_run_cuffnorm(comparison_name=comparison_name),
                         working_directory=self.genome_directory))
@@ -2220,7 +2228,7 @@ class Tuxedo(Analysis):
 
                 file_path_run_cuffdiff = self.get_file_path_run_cuffdiff(comparison_name=comparison_name)
 
-                runnable_run_cuffdiff = self.add_runnable_consecutive(
+                runnable_run_cuffdiff = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_run_cuffdiff(comparison_name=comparison_name),
                         working_directory=self.genome_directory))
@@ -2342,7 +2350,7 @@ class Tuxedo(Analysis):
                         annotation_dict=cuffdiff_cuffnorm_alignments_dict)
                     runnable_step_run_cuffdiff.arguments.append(file_path_run_cuffdiff.alignments_tsv)
 
-                runnable_process_cuffdiff = self.add_runnable_consecutive(
+                runnable_process_cuffdiff = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_process_cuffdiff(comparison_name=comparison_name),
                         working_directory=self.genome_directory))
@@ -2381,11 +2389,11 @@ class Tuxedo(Analysis):
 
         return
 
-    def report(self):
-        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
+    def report(self) -> None:
+        """Create a :literal:`XHTML 1.0` report and a :emphasis:`UCSC Genome Browser Track Hub`.
         """
 
-        def report_html():
+        def report_html() -> None:
             """Private function to create an :literal:`XHTML 1.0` report.
             """
             # Create a symbolic link containing the project name and a UUID.
@@ -2395,7 +2403,7 @@ class Tuxedo(Analysis):
 
             # Write a HTML document.
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">')
             str_list.append(self.project_name + ' ' + self.name)
@@ -3354,11 +3362,11 @@ class Tuxedo(Analysis):
 
             return
 
-        def report_hub():
-            """Private function to create a :literal:`UCSC Genome Browser Track Hub`.
+        def report_hub() -> None:
+            """Private function to create a :emphasis:`UCSC Genome Browser Track Hub`.
             """
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             # Group via UCSC super tracks.
 
@@ -3578,7 +3586,7 @@ class FilePathDESeq(FilePath):
     """The :py:class:`bsf.analyses.rnaseq.FilePathDESeq` class models files in a comparison-specific DESeq directory.
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.FilePathDESeq` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -3616,7 +3624,7 @@ class DESeq(Analysis):
     prefix = '_'.join(('rnaseq', 'deseq'))
 
     @classmethod
-    def get_stage_name_analysis(cls):
+    def get_stage_name_analysis(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -3625,7 +3633,7 @@ class DESeq(Analysis):
         return '_'.join((cls.prefix, 'analysis'))
 
     @classmethod
-    def get_stage_name_results(cls):
+    def get_stage_name_results(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -3634,7 +3642,7 @@ class DESeq(Analysis):
         return '_'.join((cls.prefix, 'results'))
 
     @classmethod
-    def get_prefix_analysis(cls, design_name):
+    def get_prefix_analysis(cls, design_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param design_name: A design name.
@@ -3645,7 +3653,7 @@ class DESeq(Analysis):
         return '_'.join((cls.get_stage_name_analysis(), design_name))
 
     @classmethod
-    def get_prefix_results(cls, design_name):
+    def get_prefix_results(cls, design_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param design_name: A design name.
@@ -3657,27 +3665,27 @@ class DESeq(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            transcriptome_version=None,
-            transcriptome_gtf=None,
-            comparison_path=None,
-            contrast_path=None,
-            only_counting=None,
-            threshold_padj=None,
-            threshold_log2fc=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            transcriptome_version: Optional[str] = None,
+            transcriptome_gtf: Optional[str] = None,
+            comparison_path: Optional[str] = None,
+            contrast_path: Optional[str] = None,
+            only_counting: Optional[bool] = None,
+            threshold_padj: Optional[float] = None,
+            threshold_log2fc: Optional[float] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.DESeq` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -3694,13 +3702,13 @@ class DESeq(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -3752,7 +3760,7 @@ class DESeq(Analysis):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.rnaseq.DESeq` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -3798,7 +3806,7 @@ class DESeq(Analysis):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.rnaseq.DESeq` object.
         """
 
@@ -3933,7 +3941,7 @@ class DESeq(Analysis):
                     sample_name=sample.name)
                 file_path_kallisto_sample = Kallisto.get_file_path_sample(
                     sample_name=sample.name)
-                row_dict: Dict[str, str] = {
+                row_dict: dict[str, str] = {
                     'bam_path': file_path_star_sample.sample_bam,
                     'bai_path': file_path_star_sample.sample_bai,
                     'ah5_path': file_path_kallisto_sample.abundance_h5,
@@ -3975,7 +3983,7 @@ class DESeq(Analysis):
                         has_contrasts = True
                         break
 
-            runnable_analysis = self.add_runnable_consecutive(
+            runnable_analysis = self.add_runnable(
                 runnable=ConsecutiveRunnable(
                     name=self.get_prefix_analysis(design_name=design_name),
                     working_directory=self.genome_directory,
@@ -4004,7 +4012,7 @@ class DESeq(Analysis):
 
             # Run the results stage, if a contrast annotation sheet is already available and has design-specific rows.
             if has_contrasts:
-                runnable_results = self.add_runnable_consecutive(
+                runnable_results = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_results(design_name=design_name),
                         working_directory=self.genome_directory,
@@ -4053,11 +4061,11 @@ class DESeq(Analysis):
 
         return
 
-    def report(self):
+    def report(self) -> None:
         """Create a :literal:`XHTML 1.0` report.
         """
 
-        def image_source_exists(prefix, suffix):
+        def image_source_exists(prefix: str, suffix: str) -> bool:
             """Test whether an image source (i.e., path) exists.
 
             :param prefix: A prefix.
@@ -4073,7 +4081,7 @@ class DESeq(Analysis):
                     prefix,
                     prefix + '_' + suffix))
 
-        def report_html():
+        def report_html() -> None:
             """Private function to create a :literal:`XHTML 1.0` report.
             """
             # Read the design table as a backup, in case the design-specific LRT summary table is not available.
@@ -4084,7 +4092,7 @@ class DESeq(Analysis):
                 file_type='excel',
                 name='DESeq Design Table')
 
-            design_dict: Dict[str, Dict[str, str]] = {
+            design_dict: dict[str, dict[str, str]] = {
                 value['design']: value for value in design_sheet.row_dicts if
                 not design_sheet.get_boolean(row_dict=value, key='exclude')
             }
@@ -4096,7 +4104,7 @@ class DESeq(Analysis):
 
             # Write a HTML document.
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -4449,7 +4457,7 @@ class DESeq(Analysis):
                 name='DESeq Contrasts Table')
 
             # For compatibility with design-specific summary files, re-index the contrast sheet on design names.
-            contrast_dict: Dict[str, List[Dict[str, str]]] = dict()
+            contrast_dict: dict[str, list[dict[str, str]]] = dict()
 
             for contrast_row_dict in contrast_sheet.row_dicts:
                 if contrast_row_dict['Design'] not in contrast_dict:

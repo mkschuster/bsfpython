@@ -23,20 +23,21 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 """The :py:mod:`bsf.annotation` module provides classes modelling
-Comma-Separated Value (CSV) and
-Tab-Separated Value (TSV) annotation files.
+:emphasis:`Comma-Separated Value` (CSV) and
+:emphasis:`Tab-Separated Value` (TSV) annotation files.
 """
 import logging
 import re
 from csv import DictReader, DictWriter
-from io import TextIOWrapper
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Optional, TextIO, TypeVar, Union
+
+AnnotationSheetType = TypeVar(name='AnnotationSheetType', bound='AnnotationSheet')
 
 module_logger = logging.getLogger(name=__name__)
 
 
 class AnnotationSheet(object):
-    """The :py:class:`bsf.annotation.AnnotationSheet` class represents comma-separated value (CSV) files.
+    """The :py:class:`bsf.annotation.AnnotationSheet` class represents :emphasis:`Comma-Separated Value` (CSV) files.
 
     This class is a bit unusual in that values of instance variables around the
     :py:class:`csv.DictReader` and :py:class:`csv.DictWriter` classes can be initialised from a corresponding set
@@ -56,7 +57,7 @@ class AnnotationSheet(object):
     :type field_names: list[str]
     :ivar test_methods: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
         Python :py:class:`list` of Python :py:class:`Callable` value objects.
-    :type test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]]
+    :type test_methods: dict[str, list[(int, dict[str, str], str) -> str]]
     :ivar row_dicts: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
     :type row_dicts: list[dict[str, str]]
     """
@@ -83,20 +84,26 @@ class AnnotationSheet(object):
     _header_line = True
 
     # Python list of Python str (field name) objects
-    _field_names: List[str] = list()
+    _field_names: list[str] = list()
 
     # Python dict of Python str (field name) key data and
     # Python list of Python typing.Callable value data
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = dict()
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
     # Python dict of (boolean state) Python str objects and Python bool value objects.
-    _boolean_states = {
+    _boolean_states: dict[str, bool] = {
         '1': True, 'yes': True, 'true': True, 'on': True,
         '0': False, 'no': False, 'false': False, 'off': False
     }
 
     @classmethod
-    def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+    def check_column_value(
+            cls,
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str,
+            require_column: bool = False,
+            require_value: bool = False) -> Union[tuple[str, None], tuple[str, str]]:
         """Check for a column name and return its associated value, if any.
 
         :param row_number: A current row number for warning messages.
@@ -128,7 +135,13 @@ class AnnotationSheet(object):
             return message, None
 
     @classmethod
-    def _check_alphanumeric(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+    def _check_alphanumeric(
+            cls,
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str,
+            require_column: bool = False,
+            require_value: bool = False) -> str:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         If the particular column name key exists in the row dictionary and if it has
@@ -163,7 +176,7 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_alphanumeric(cls, row_number, row_dict, column_name):
+    def check_alphanumeric(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         Neither the column nor the value needs existing.
@@ -183,7 +196,7 @@ class AnnotationSheet(object):
             column_name=column_name)
 
     @classmethod
-    def check_alphanumeric_column(cls, row_number, row_dict, column_name):
+    def check_alphanumeric_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         The column, but not the value need existing.
@@ -205,7 +218,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_alphanumeric_value(cls, row_number, row_dict, column_name):
+    def check_alphanumeric_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         Both, the column and value need existing.
@@ -227,7 +240,13 @@ class AnnotationSheet(object):
             require_value=True)
 
     @classmethod
-    def _check_numeric(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+    def _check_numeric(
+            cls,
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str,
+            require_column: bool = False,
+            require_value: bool = False) -> str:
         """Validate a particular column value as :literal:`numeric`.
 
         If the particular column name key exists in the row dictionary and if it has
@@ -262,7 +281,7 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_numeric(cls, row_number, row_dict, column_name):
+    def check_numeric(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`numeric`.
 
         Neither the column nor the value needs existing.
@@ -284,7 +303,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_numeric_column(cls, row_number, row_dict, column_name):
+    def check_numeric_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`numeric`.
 
         The column, but not the value need existing.
@@ -306,7 +325,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_numeric_value(cls, row_number, row_dict, column_name):
+    def check_numeric_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`numeric`.
 
         Both, the column and value need existing.
@@ -328,7 +347,13 @@ class AnnotationSheet(object):
             require_value=True)
 
     @classmethod
-    def _check_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+    def _check_sequence(
+            cls,
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str,
+            require_column: bool = False,
+            require_value: bool = False) -> str:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         If the particular column name key exists in the row dictionary and if it has
@@ -364,7 +389,7 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_sequence(cls, row_number, row_dict, column_name):
+    def check_sequence(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         Neither the column nor the value needs existing.
@@ -386,7 +411,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_sequence_column(cls, row_number, row_dict, column_name):
+    def check_sequence_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         The column, but not the value need existing.
@@ -408,7 +433,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_sequence_value(cls, row_number, row_dict, column_name):
+    def check_sequence_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         Both, the column and value need existing.
@@ -430,7 +455,13 @@ class AnnotationSheet(object):
             require_value=True)
 
     @classmethod
-    def _check_ambiguous_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+    def _check_ambiguous_sequence(
+            cls,
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str,
+            require_column: bool = False,
+            require_value: bool = False) -> str:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         If the particular column name key exists in the row dictionary and if it has
@@ -466,7 +497,7 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_ambiguous_sequence(cls, row_number, row_dict, column_name):
+    def check_ambiguous_sequence(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         Neither the column nor the value needs existing.
@@ -488,7 +519,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_ambiguous_sequence_column(cls, row_number, row_dict, column_name):
+    def check_ambiguous_sequence_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         The column, but not the value need existing.
@@ -510,7 +541,7 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_ambiguous_sequence_value(cls, row_number, row_dict, column_name):
+    def check_ambiguous_sequence_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         Both, the column and value need existing.
@@ -532,7 +563,7 @@ class AnnotationSheet(object):
             require_value=True)
 
     @classmethod
-    def check_underscore_leading(cls, row_number, row_dict, column_name):
+    def check_underscore_leading(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value for :literal:`leading underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
@@ -560,7 +591,7 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_underscore_trailing(cls, row_number, row_dict, column_name):
+    def check_underscore_trailing(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value for :literal:`trailing underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
@@ -588,7 +619,7 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_underscore_multiple(cls, row_number, row_dict, column_name):
+    def check_underscore_multiple(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
         """Validate a particular column value for :literal:`multiple underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
@@ -617,8 +648,12 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def from_file_path(cls, file_path=None, file_type=None, name=None):
-        """Construct a :py:class:`bsf.annotation.AnnotationSheet` from a comma-separated value (CSV) file.
+    def from_file_path(
+            cls,
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            name: Optional[str] = None) -> AnnotationSheetType:
+        """Construct a :py:class:`bsf.annotation.AnnotationSheet` from a :emphasis:`Comma-Separated Value` (CSV) file.
 
         This method reads the whole CSV file at once and stores a Python :py:class:`list` of
         Python :py:class:`dict` objects representing each row.
@@ -649,13 +684,13 @@ class AnnotationSheet(object):
 
     def __init__(
             self,
-            file_path=None,
-            file_type=None,
-            name=None,
-            header=None,
-            field_names=None,
-            test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]] = None,
-            row_dicts=None):
+            file_path: Optional[str] = None,
+            file_type: Optional[str] = None,
+            name: Optional[str] = None,
+            header: Optional[bool] = None,
+            field_names: Optional[list[str]] = None,
+            test_methods: Optional[dict[str, list[Callable[[int, dict[str, str], str], str]]]] = None,
+            row_dicts: Optional[list[dict[str, str]]] = None) -> None:
         """Initialise a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         :param file_path: A file path.
@@ -671,7 +706,7 @@ class AnnotationSheet(object):
         :type field_names: list[str] | None
         :param test_methods: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
         Python :py:class:`list` of Python :py:class:`Callable` value objects.
-        :type test_methods: Optional[Dict[str, List[Callable[[int, Dict[str, str], str], str]]]]
+        :type test_methods: dict[str, list[(int, dict[str, str], str) -> str]] | None
         :param row_dicts: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
         :type row_dicts: list[dict[str, str]] | None
         """
@@ -710,14 +745,14 @@ class AnnotationSheet(object):
         else:
             self.row_dicts = row_dicts
 
-        self._csv_reader_text_io: Optional[TextIOWrapper] = None
-        self._csv_reader_object: Optional[DictReader] = None
-        self._csv_writer_text_io: Optional[TextIOWrapper] = None
-        self._csv_writer_object: Optional[DictWriter] = None
+        self._csv_reader_text_io: Optional[TextIO] = None
+        self._csv_reader_object: Optional[DictReader[str]] = None
+        self._csv_writer_text_io: Optional[TextIO] = None
+        self._csv_writer_object: Optional[DictWriter[str]] = None
 
         return
 
-    def trace(self, level=1):
+    def trace(self, level: int = 1) -> list[str]:
         """Trace a :py:class:`bsf.annotation.SampleAnnotationSheet` object.
 
         :param level: Indentation level
@@ -727,7 +762,7 @@ class AnnotationSheet(object):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  file_path:    {!r}\n'.format(indent, self.file_path))
@@ -744,9 +779,10 @@ class AnnotationSheet(object):
 
         return str_list
 
-    def csv_reader_open(self):
-        """Open a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
-        for reading and initialise a Python :py:class:`csv.DictReader` object.
+    def csv_reader_open(self) -> None:
+        """Open a :emphasis:`Comma-Separated Value` (CSV) file linked to a
+        :py:class:`bsf.annotation.AnnotationSheet` object for reading and initialise a
+        Python :py:class:`csv.DictReader` object.
         """
         if not self.file_path:
             raise Exception("Cannot read an AnnotationSheet without a valid 'file_name'.")
@@ -782,9 +818,9 @@ class AnnotationSheet(object):
 
         return
 
-    def csv_reader_close(self):
-        """Close a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
-        for reading.
+    def csv_reader_close(self) -> None:
+        """Close a :emphasis:`Comma-Separated Value` (CSV) file linked to a
+        :py:class:`bsf.annotation.AnnotationSheet` object for reading.
         """
         self._csv_reader_object = None
         self._csv_reader_text_io.close()
@@ -792,10 +828,10 @@ class AnnotationSheet(object):
 
         return
 
-    def csv_writer_open(self):
-        """Open a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
-        for writing, initialise a Python :py:class:`csv.DictWriter` object and write the header line
-        if one has been defined.
+    def csv_writer_open(self) -> None:
+        """Open a :emphasis:`Comma-Separated Value` (CSV) file linked to a
+        :py:class:`bsf.annotation.AnnotationSheet` object for writing,
+        initialise a Python :py:class:`csv.DictWriter` object and write the header line if one has been defined.
         """
         if not self.file_path:
             raise Exception("Cannot write an AnnotationSheet without a valid 'file_name'.")
@@ -821,7 +857,7 @@ class AnnotationSheet(object):
 
         return
 
-    def csv_writer_write_row(self, row_dict):
+    def csv_writer_write_row(self, row_dict: dict[str, str]) -> None:
         """Write the next row of a CSV file linked to a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictWriter` object.
@@ -831,9 +867,9 @@ class AnnotationSheet(object):
 
         return
 
-    def csv_writer_close(self):
-        """Close a Comma-Separated Value (CSV) file linked to a :py:class:`bsf.annotation.AnnotationSheet` object
-        for writing.
+    def csv_writer_close(self) -> None:
+        """Close a :emphasis:`Comma-Separated Value` (CSV) file linked to a
+        :py:class:`bsf.annotation.AnnotationSheet` object for writing.
         """
         self._csv_writer_object = None
         self._csv_writer_text_io.close()
@@ -841,7 +877,7 @@ class AnnotationSheet(object):
 
         return
 
-    def get_boolean(self, row_dict, key):
+    def get_boolean(self, row_dict: dict[str, str], key: str) -> bool:
         """Get the Boolean state of a cell of an :py:class:`AnnotationSheet` object.
 
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -859,7 +895,7 @@ class AnnotationSheet(object):
                 raise ValueError(
                     f'Value {row_dict[key]!r} in field {key!r} of AnnotationSheet {self.name!r} is not a boolean.')
 
-    def sort(self):
+    def sort(self) -> None:
         """Sort a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         This method has to implemented in the subclass,
@@ -871,7 +907,7 @@ class AnnotationSheet(object):
 
         return
 
-    def validate(self):
+    def validate(self) -> str:
         """Validate a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         :return: Warning messages.
@@ -890,7 +926,7 @@ class AnnotationSheet(object):
 
         return messages
 
-    def adjust_field_names(self):
+    def adjust_field_names(self) -> None:
         """Adjust the Python :py:class:`list` object of Python :py:class:`str` (field name) objects to the keys used in
         Python :py:class:`dict` (row) objects.
         """
@@ -907,7 +943,7 @@ class AnnotationSheet(object):
 
         return
 
-    def to_file_path(self, adjust_field_names=None):
+    def to_file_path(self, adjust_field_names: Optional[bool] = None) -> None:
         """Write a :py:class:`bsf.annotation.AnnotationSheet` object to a file path.
 
         :param adjust_field_names: Clear and adjust the Python :py:class:`list` of

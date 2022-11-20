@@ -26,7 +26,7 @@
 """
 import json
 import os
-from typing import Dict, IO, Union
+from typing import IO, Union
 
 from azure.storage.blob import BlobServiceClient, \
     ContainerClient, ContainerProperties, \
@@ -36,7 +36,7 @@ from azure.storage.blob import BlobServiceClient, \
 from bsf.standards import Secrets
 
 
-def get_azure_secrets_dict(account_name: str) -> Dict[str, str]:
+def get_azure_secrets_dict(account_name: str) -> dict[str, str]:
     """Get Microsoft Azure secrets from a JSON configuration file.
 
     :param account_name: A :literal:`Microsoft Azure Storage Account` name.
@@ -48,7 +48,7 @@ def get_azure_secrets_dict(account_name: str) -> Dict[str, str]:
 
     if file_path and os.path.exists(file_path):
         with open(file=file_path, mode='rt') as input_text_io:
-            secrets_dict: Dict[str, Dict[str, str]] = json.load(fp=input_text_io)
+            secrets_dict: dict[str, dict[str, str]] = json.load(fp=input_text_io)
 
         if account_name not in secrets_dict:
             raise Exception(

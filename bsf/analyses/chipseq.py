@@ -26,7 +26,7 @@
 """
 import logging
 import os
-from typing import Callable, Dict, List
+from typing import Callable, Optional
 
 from bsf.analyses.bowtie import Bowtie2
 from bsf.analysis import Analysis, Stage
@@ -52,7 +52,7 @@ class FilePathAlignment(FilePath):
     :ivar sample_md5: A sample-specific MD5 checksum file path.
     :type sample_md5: str
     :ivar filter_metrics_tsv: A `deepTools <https://deeptools.readthedocs.io/en/stable/>`_
-        `alignmentSieve <https://deeptools.readthedocs.io/en/stable/content/tools/alignmentSieve.html>`
+        `alignmentSieve <https://deeptools.readthedocs.io/en/stable/content/tools/alignmentSieve.html>`_
         metrics file path.
     :type filter_metrics_tsv: str
     :ivar coverage_bw: A coverage bigWig file path.
@@ -61,7 +61,7 @@ class FilePathAlignment(FilePath):
     :type coverage_bwi_txt: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.chipseq.FilePathAlignment` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -151,9 +151,9 @@ class FilePathPeakCalling(FilePath):
     :type peaks_gapped: str
     :ivar peaks_narrow: A MACS :emphasis:`narrowPeak` file path.
     :type peaks_narrow: str
-    :ivar peaks_tsv: A peaks tab-separated value (TSV) file path.
+    :ivar peaks_tsv: A peaks :emphasis:`Tab-Separated Value` (TSV) file path.
     :type peaks_tsv: str
-    :ivar peaks_xls: A MACS :emphasis:`xls` peaks tab-separated value (TSV) file path.
+    :ivar peaks_xls: A MACS :emphasis:`xls` peaks :emphasis:`Tab-Separated Value` (TSV) file path.
     :type peaks_xls: str
     :ivar model_r: A peak model :literal:`Rscript` file path.
     :type model_r: str
@@ -165,7 +165,7 @@ class FilePathPeakCalling(FilePath):
     :type model_1_png: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -231,7 +231,7 @@ class FilePathPeakCalling(FilePath):
 
 class FilePathChIPQC(FilePath):
     """The :py:class:`bsf.analyses.chipseq.FilePathChIPQC` class models files of a
-    Bioconductor <https://bioconductor.org>`_
+    `Bioconductor <https://bioconductor.org>`_
     `ChIPQC <https://bioconductor.org/packages/release/bioc/html/ChIPQC.html>`_ analysis.
 
     :ivar output_directory: An output directory path.
@@ -240,7 +240,7 @@ class FilePathChIPQC(FilePath):
     :type report_html: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.chipseq.FilePathChIPQC` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -257,7 +257,7 @@ class FilePathChIPQC(FilePath):
 
 class FilePathDiffBind(FilePath):
     """The :py:class:`bsf.analyses.chipseq.FilePathDiffBind` class models files of a
-    Bioconductor <https://bioconductor.org>`_
+    `Bioconductor <https://bioconductor.org>`_
     `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
 
     :ivar output_directory: An output directory path.
@@ -296,7 +296,7 @@ class FilePathDiffBind(FilePath):
     :type peak_set_bb: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.chipseq.FilePathDiffBind` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -327,7 +327,7 @@ class FilePathDiffBind(FilePath):
 
 class FilePathDiffBindContrast(FilePath):
     """The :py:class:`bsf.analyses.chipseq.FilePathDiffBindContrast` class models files of a
-    Bioconductor <https://bioconductor.org>`_
+    `Bioconductor <https://bioconductor.org>`_
     `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
 
     :ivar ma_plot_pdf: An :emphasis:`MA` plot PDF file path.
@@ -360,7 +360,7 @@ class FilePathDiffBindContrast(FilePath):
     :type regions_tsv: str
     """
 
-    def __init__(self, prefix, group_1, group_2):
+    def __init__(self, prefix: str, group_1: str, group_2: str) -> None:
         """Initialise a :py:class:`bsf.analyses.ega.bsf.analyses.chipseq.FilePathDiffBind` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -393,8 +393,8 @@ class FilePathDiffBindContrast(FilePath):
 
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
-    """The :py:class:`bsf.analyses.chipseq.ChIPSeqDiffBindSheet` class models a
-    ChIP-Seq `Bioconductor <https://bioconductor.org>`_
+    """The :py:class:`bsf.analyses.chipseq.ChIPSeqDiffBindSheet` class models a ChIP-Seq
+    `Bioconductor <https://bioconductor.org>`_
     `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ annotation sheet.
     """
 
@@ -420,7 +420,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         # 'Counts',
     ]
 
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
+    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = {
         'SampleID': [
             AnnotationSheet.check_alphanumeric,
         ],
@@ -459,9 +459,10 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         ],
     }
 
-    def sort(self):
+    def sort(self) -> None:
         """Sort by the following column order.
 
+        Order:
             1. :literal:`Tissue`
             2. :literal:`Factor`
             3. :literal:`Condition`
@@ -478,10 +479,10 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
         return
 
-    def to_file_path(self, adjust_field_names=None):
+    def to_file_path(self, adjust_field_names: bool = None) -> None:
         """Write a :py:class:`bsf.analyses.chipseq.ChIPSeqDiffBindSheet` object to a file path.
 
-        :param adjust_field_names: Clear and adjust the Python :py:class:`list` object of
+        :param adjust_field_names: Request clearing and adjusting of the Python :py:class:`list` object of
             Python :py:class:`str` (field name) objects.
         :type adjust_field_names: bool
         """
@@ -518,25 +519,26 @@ class ChIPSeqComparison(object):
     :type treatment: str
     :ivar replicate: A replicate number.
     :type replicate: int
-    :ivar diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
-        `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
+    :ivar diff_bind: Request a
+        `Bioconductor <https://bioconductor.org>`_
+        `DiffBind <https://bioc onductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
     :type diff_bind: bool
     """
 
     def __init__(
             self,
-            name,
-            group,
-            c_name,
-            t_name,
-            c_samples,
-            t_samples,
-            factor,
-            tissue=None,
-            condition=None,
-            treatment=None,
-            replicate=None,
-            diff_bind=None):
+            name: str,
+            group: str,
+            c_name: Optional[str],
+            t_name: Optional[str],
+            c_samples: Optional[list[Sample]],
+            t_samples: Optional[list[Sample]],
+            factor: Optional[str],
+            tissue: Optional[str] = None,
+            condition: Optional[str] = None,
+            treatment: Optional[str] = None,
+            replicate: Optional[int] = None,
+            diff_bind: Optional[bool] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` object.
 
         :param name: A comparison name.
@@ -561,7 +563,8 @@ class ChIPSeqComparison(object):
         :type treatment: str | None
         :param replicate: A replicate number.
         :type replicate: int | None
-        :param diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
+        :param diff_bind: Request a
+            `Bioconductor <https://bioconductor.org>`_
             `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
         :type diff_bind: bool | None
         """
@@ -617,7 +620,7 @@ class ChIPSeqComparison(object):
 
         return
 
-    def get_key(self):
+    def get_key(self) -> str:
         """Get a :py:class:`str` (comparison key) object based on the
         :literal:`control` and :literal:`treatment` pair name, or just the treatment name.
 
@@ -631,15 +634,15 @@ class ChIPSeqComparison(object):
         else:
             return self.t_name
 
-    def get_prefix_peak_calling(self):
+    def get_prefix_peak_calling(self) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
-        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :return: A Python :py:class:`str` (prefix) object representing a :py:class:`bsf.procedure.Runnable` object.
         :rtype: str
         """
         return ChIPSeq.get_prefix_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
-    def get_file_path_peak_calling(self):
+    def get_file_path_peak_calling(self) -> FilePathPeakCalling:
         """Get a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object from this or a subclass.
 
         :return: A :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object or subclass thereof.
@@ -651,16 +654,17 @@ class ChIPSeqComparison(object):
 class ChIPSeq(Analysis):
     """The :py:class:`bsf.analyses.chipseq.ChIPSeq` class represents the logic to run a ChIP-Seq-specific Analysis.
 
-    :cvar skip_alignment_sieve: Request skipping the `deepTools <https://deeptools.readthedocs.io/en/stable/>`
+    :cvar skip_alignment_sieve: Request skipping the
+        `deepTools <https://deeptools.readthedocs.io/en/stable/>`_
         `alignmentSieve <https://deeptools.readthedocs.io/en/stable/content/tools/alignmentSieve.html>`_ tool.
     :type skip_alignment_sieve: bool
-    :ivar replicate_grouping: Group all replicates into a single process.
+    :ivar replicate_grouping: Request grouping all replicates into a single process.
     :type replicate_grouping: bool | None
     :ivar comparison_path: A comparison file path.
     :type comparison_path: str | None
     :ivar genome_black_list: A genome black list file path.
     :type genome_black_list: str | None
-    :ivar genome_fasta_path: A reference genome sequence FASTA file path.
+    :ivar genome_fasta_path: A reference genome sequence :emphasis:`FASTA` file path.
     :type genome_fasta_path: str | None
     :ivar genome_sizes_path: A reference genome (chromosome) sizes file path.
     :type genome_sizes_path: str | None
@@ -672,7 +676,7 @@ class ChIPSeq(Analysis):
     :type transcriptome_gtf_path: str | None
     :ivar transcriptome_txdb_path: A transcriptome TxDb file path.
     :type transcriptome_txdb_path: str | None
-    :ivar colour_default: A default UCSC Genome Browser Track Hub RGB colour.
+    :ivar colour_default: A default :emphasis:`UCSC Genome Browser Track Hub` RGB colour.
     :type colour_default: str | None
     :ivar colour_dict: A Python :py:class:`dict` object of
         Python :py:class:`str` factor name key and
@@ -687,7 +691,7 @@ class ChIPSeq(Analysis):
     skip_alignment_sieve = True
 
     @classmethod
-    def get_stage_name_alignment(cls):
+    def get_stage_name_alignment(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -696,7 +700,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.prefix, 'alignment'))
 
     @classmethod
-    def get_stage_name_peak_calling(cls):
+    def get_stage_name_peak_calling(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -705,7 +709,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.prefix, 'peak_calling'))
 
     @classmethod
-    def get_stage_name_chipqc(cls):
+    def get_stage_name_chipqc(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -714,7 +718,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.prefix, 'chipqc'))
 
     @classmethod
-    def get_stage_name_diff_bind(cls):
+    def get_stage_name_diff_bind(cls) -> str:
         """Get a particular :py:attr:`bsf.analysis.Stage.name` attribute.
 
         :return: A :py:attr:`bsf.analysis.Stage.name` attribute.
@@ -723,7 +727,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.prefix, 'diff_bind'))
 
     @classmethod
-    def get_prefix_alignment(cls, sample_name):
+    def get_prefix_alignment(cls, sample_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -734,7 +738,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.get_stage_name_alignment(), sample_name))
 
     @classmethod
-    def get_prefix_peak_calling(cls, t_name, c_name):
+    def get_prefix_peak_calling(cls, t_name: str, c_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param t_name: A :py:attr:`bsf.ngs.Sample.name` attribute for the treatment.
@@ -750,7 +754,7 @@ class ChIPSeq(Analysis):
             return cls.get_stage_name_peak_calling() + '_' + t_name
 
     @classmethod
-    def get_prefix_chipqc(cls, comparison_name, factor_name):
+    def get_prefix_chipqc(cls, comparison_name: str, factor_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -763,7 +767,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.get_stage_name_chipqc(), comparison_name, factor_name))
 
     @classmethod
-    def get_prefix_diff_bind(cls, comparison_name, factor_name):
+    def get_prefix_diff_bind(cls, comparison_name: str, factor_name: str) -> str:
         """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
 
         :param comparison_name: A comparison name.
@@ -776,7 +780,7 @@ class ChIPSeq(Analysis):
         return '_'.join((cls.get_stage_name_diff_bind(), comparison_name, factor_name))
 
     @classmethod
-    def get_file_path_alignment(cls, sample_name):
+    def get_file_path_alignment(cls, sample_name: str) -> FilePathAlignment:
         """Get a :py:class:`bsf.analyses.chipseq.FilePathAlignment` object.
 
         :param sample_name: A :py:attr:`bsf.ngs.Sample.name` attribute.
@@ -787,7 +791,7 @@ class ChIPSeq(Analysis):
         return FilePathAlignment(prefix=cls.get_prefix_alignment(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_peak_calling(cls, t_name, c_name):
+    def get_file_path_peak_calling(cls, t_name: str, c_name: str) -> FilePathPeakCalling:
         """Get a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object from this or subclass thereof.
 
         :param t_name: A :py:attr:`bsf.ngs.Sample.name` attribute for the treatment.
@@ -803,7 +807,7 @@ class ChIPSeq(Analysis):
                 c_name=c_name))
 
     @classmethod
-    def get_file_path_chipqc(cls, comparison_name, factor_name):
+    def get_file_path_chipqc(cls, comparison_name: str, factor_name: str) -> FilePathChIPQC:
         """Get a :py:class:`bsf.analyses.chipseq.FilePathChIPQC` object from this or a subclass.
 
         :param comparison_name: A comparison name.
@@ -819,7 +823,7 @@ class ChIPSeq(Analysis):
                 factor_name=factor_name))
 
     @classmethod
-    def get_file_path_diff_bind(cls, comparison_name, factor_name):
+    def get_file_path_diff_bind(cls, comparison_name: str, factor_name: str) -> FilePathDiffBind:
         """Get a :py:class:`bsf.analyses.chipseq.FilePathDiffBind` object from this or a subclass.
 
         :param comparison_name: A comparison name.
@@ -836,32 +840,32 @@ class ChIPSeq(Analysis):
 
     def __init__(
             self,
-            configuration=None,
-            project_name=None,
-            genome_version=None,
-            input_directory=None,
-            output_directory=None,
-            project_directory=None,
-            genome_directory=None,
-            report_style_path=None,
-            report_header_path=None,
-            report_footer_path=None,
-            e_mail=None,
-            stage_list=None,
-            collection=None,
-            sample_list=None,
-            replicate_grouping=None,
-            comparison_path=None,
-            genome_black_list=None,
-            genome_fasta_path=None,
-            genome_sizes_path=None,
-            genome_effective_size=None,
-            transcriptome_version=None,
-            transcriptome_gtf_path=None,
-            transcriptome_txdb_path=None,
-            colour_default=None,
-            colour_dict=None,
-            factor_default=None):
+            configuration: Optional[Configuration] = None,
+            project_name: Optional[str] = None,
+            genome_version: Optional[str] = None,
+            input_directory: Optional[str] = None,
+            output_directory: Optional[str] = None,
+            project_directory: Optional[str] = None,
+            genome_directory: Optional[str] = None,
+            report_style_path: Optional[str] = None,
+            report_header_path: Optional[str] = None,
+            report_footer_path: Optional[str] = None,
+            e_mail: Optional[str] = None,
+            stage_list: Optional[list[Stage]] = None,
+            collection: Optional[Collection] = None,
+            sample_list: Optional[list[Sample]] = None,
+            replicate_grouping: Optional[bool] = None,
+            comparison_path: Optional[str] = None,
+            genome_black_list: Optional[str] = None,
+            genome_fasta_path: Optional[str] = None,
+            genome_sizes_path: Optional[str] = None,
+            genome_effective_size: Optional[str] = None,
+            transcriptome_version: Optional[str] = None,
+            transcriptome_gtf_path: Optional[str] = None,
+            transcriptome_txdb_path: Optional[str] = None,
+            colour_default: Optional[str] = None,
+            colour_dict: Optional[dict[str, str]] = None,
+            factor_default: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.chipseq.ChIPSeq` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -878,13 +882,13 @@ class ChIPSeq(Analysis):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -892,13 +896,13 @@ class ChIPSeq(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param replicate_grouping: Group all replicates into a single process.
+        :param replicate_grouping: Request grouping all replicates into a single process.
         :type replicate_grouping: bool | None
         :param comparison_path: A comparison file path.
         :type comparison_path: str | None
         :param genome_black_list: A genome black list file path.
         :type genome_black_list: str | None
-        :param genome_fasta_path: A reference genome sequence FASTA file path.
+        :param genome_fasta_path: A reference genome sequence :emphasis:`FASTA` file path.
         :type genome_fasta_path: str | None
         :param genome_sizes_path: A reference genome (chromosome) sizes file path.
         :type genome_sizes_path: str | None
@@ -910,7 +914,7 @@ class ChIPSeq(Analysis):
         :type transcriptome_gtf_path: str | None
         :param transcriptome_txdb_path: A transcriptome TxDb file path.
         :type transcriptome_txdb_path: str | None
-        :param colour_default: A default UCSC Genome Browser Track Hub RGB colour.
+        :param colour_default: A default :emphasis:`UCSC Genome Browser Track Hub` RGB colour.
         :type colour_default: str | None
         :param colour_dict: A Python :py:class:`dict` object of
             Python :py:class:`str` factor name key and
@@ -954,15 +958,15 @@ class ChIPSeq(Analysis):
         self.transcriptome_gtf_path = transcriptome_gtf_path
         self.transcriptome_txdb_path = transcriptome_txdb_path
 
-        self._comparison_dict: Dict[str, Dict[str, ChIPSeqComparison]] = dict()
+        self._comparison_dict: dict[str, dict[str, ChIPSeqComparison]] = dict()
 
-        self._factor_dict: Dict[str, Dict[str, List[ChIPSeqComparison]]] = dict()
+        self._factor_dict: dict[str, dict[str, list[ChIPSeqComparison]]] = dict()
 
         self._macs_version: int = 2
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.chipseq.ChIPSeq` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -1031,12 +1035,12 @@ class ChIPSeq(Analysis):
 
         return
 
-    def get_colour(self, factor):
-        """Get a UCSC Genome Browser Track Hub RGB colour by a factor name.
+    def get_colour(self, factor: str) -> str:
+        """Get a :emphasis:`UCSC Genome Browser Track Hub` RGB colour by a factor name.
 
         :param factor: A ChIP-seq factor name.
         :type factor: str
-        :return: A UCSC Track Hub RGB colour.
+        :return: A :emphasis:`UCSC Genome Browser Track Hub` RGB colour.
         :rtype: str
         """
         if factor in self.colour_dict:
@@ -1044,28 +1048,36 @@ class ChIPSeq(Analysis):
         else:
             return self.colour_default
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.chipseq.ChIPSeq` object.
         """
 
-        def run_read_comparisons():
+        def run_read_comparisons() -> None:
             """Private function to read a :py:class:`bsf.annotation.AnnotationSheet` specifying comparisons
             from a CSV file path.
 
-                - Column headers for CASAVA folders
-                    - Treatment/Control ProcessedRunFolder
-                        - CASAVA processed run folder name or
-                        - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
-                    - Treatment/Control Project
-                        - CASAVA Project name or
-                        - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
-                    - Treatment/Control Sample
-                        - CASAVA Sample name, no default
-                - Column headers for independent samples
-                    - Treatment/Control Group
-                    - Treatment/Control Sample
-                    - Treatment/Control Reads
-                    - Treatment/Control File
+            - Column headers for CASAVA folders
+
+              - Treatment/Control ProcessedRunFolder
+
+                - CASAVA processed run folder name or
+                - :py:attr:`bsf.analysis.Analysis.input_directory` attribute by default
+
+              - Treatment/Control Project
+
+                - CASAVA Project name or
+                - :py:attr:`bsf.analysis.Analysis.project_name` attribute by default
+
+              - Treatment/Control Sample
+
+                - CASAVA Sample name, no default
+
+            - Column headers for independent samples
+
+              - Treatment/Control Group
+              - Treatment/Control Sample
+              - Treatment/Control Reads
+              - Treatment/Control File
             """
             annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
 
@@ -1180,7 +1192,7 @@ class ChIPSeq(Analysis):
 
             for comparison_dict in self._comparison_dict.values():
                 # Rearrange by comparison group and comparison key.
-                comparison_group_dict: Dict[str, List[ChIPSeqComparison]] = dict()
+                comparison_group_dict: dict[str, list[ChIPSeqComparison]] = dict()
                 for comparison in comparison_dict.values():
                     if not comparison.diff_bind:
                         continue
@@ -1195,13 +1207,13 @@ class ChIPSeq(Analysis):
 
             return
 
-        def run_create_alignment_jobs():
+        def run_create_alignment_jobs() -> None:
             """Create alignment jobs.
             """
             for sample in self.sample_list:
                 file_path_alignment = self.get_file_path_alignment(sample_name=sample.name)
 
-                runnable_alignment = self.add_runnable_consecutive(
+                runnable_alignment = self.add_runnable(
                     runnable=ConsecutiveRunnable(
                         name=self.get_prefix_alignment(sample_name=sample.name),
                         working_directory=self.genome_directory))
@@ -1288,10 +1300,10 @@ class ChIPSeq(Analysis):
 
             return
 
-        def run_create_macs1_jobs():
+        def run_create_macs1_jobs() -> None:
             """Create MACS1 peak caller jobs.
             """
-            chipseq_comparison_key_list: List[str] = list()
+            chipseq_comparison_key_list: list[str] = list()
 
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
@@ -1315,7 +1327,7 @@ class ChIPSeq(Analysis):
 
                     file_path_peak_calling = FilePathPeakCalling(prefix=prefix_peak_calling)
 
-                    runnable_peak_calling = self.add_runnable_consecutive(
+                    runnable_peak_calling = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=prefix_peak_calling,
                             working_directory=self.genome_directory))
@@ -1386,10 +1398,10 @@ class ChIPSeq(Analysis):
 
             return
 
-        def run_create_macs2_jobs():
+        def run_create_macs2_jobs() -> None:
             """Create MACS2 peak caller jobs.
             """
-            chipseq_comparison_key_list: List[str] = list()
+            chipseq_comparison_key_list: list[str] = list()
 
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
@@ -1405,7 +1417,7 @@ class ChIPSeq(Analysis):
 
                     file_path_peak_calling = chipseq_comparison.get_file_path_peak_calling()
 
-                    runnable_peak_calling = self.add_runnable_consecutive(
+                    runnable_peak_calling = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=prefix_peak_calling,
                             working_directory=self.genome_directory))
@@ -1570,7 +1582,7 @@ class ChIPSeq(Analysis):
 
             return
 
-        def run_create_diff_bind_jobs():
+        def run_create_diff_bind_jobs() -> None:
             """Create `Bioconductor <https://bioconductor.org>`_
             `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ jobs.
             """
@@ -1655,7 +1667,7 @@ class ChIPSeq(Analysis):
 
                     dbs.to_file_path()
 
-                    runnable_diff_bind = self.add_runnable_consecutive(
+                    runnable_diff_bind = self.add_runnable(
                         runnable=ConsecutiveRunnable(
                             name=prefix_diff_bind,
                             working_directory=self.genome_directory))
@@ -1841,13 +1853,13 @@ class ChIPSeq(Analysis):
 
         return
 
-    def report(self):
-        """Create a :literal:`XHTML 1.0` report and a :literal:`UCSC Genome Browser Track Hub`.
+    def report(self) -> None:
+        """Create a :literal:`XHTML 1.0` report and a :emphasis:`UCSC Genome Browser Track Hub`.
         """
 
         # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
-        def report_html_1():
+        def report_html_1() -> None:
             """Private function to create a :literal:`XHTML 1.0` report for MACS1.
             """
             # Create a symbolic link containing the project name and a UUID.
@@ -1855,7 +1867,7 @@ class ChIPSeq(Analysis):
 
             # Write a HTML document.
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -1969,7 +1981,7 @@ class ChIPSeq(Analysis):
 
             return
 
-        def report_html_2():
+        def report_html_2() -> None:
             """Private function to create a :literal:`XHTML 1.0` report for MACS2.
             """
             # Create a symbolic link containing the project name and a UUID.
@@ -1977,7 +1989,7 @@ class ChIPSeq(Analysis):
 
             # Write a HTML document.
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
@@ -2402,13 +2414,13 @@ class ChIPSeq(Analysis):
 
             return
 
-        def report_hub_1():
-            """Private function to create a :literal:`UCSC Genome Browser Track Hub` for MACS1.
+        def report_hub_1() -> None:
+            """Private function to create a :emphasis:`UCSC Genome Browser Track Hub` for MACS1.
             """
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
-            chipseq_comparison_key_list: List[str] = list()
+            chipseq_comparison_key_list: list[str] = list()
 
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
@@ -2507,8 +2519,8 @@ class ChIPSeq(Analysis):
 
             return
 
-        def report_hub_2():
-            """Private function to create a :literal:`UCSC Genome Browser Track` Hub for MACS2.
+        def report_hub_2() -> None:
+            """Private function to create a :emphasis:`UCSC Genome Browser Track` Hub for MACS2.
             """
             # Composite tracks need tags and labels for all subGroupN entries that are defined.
 
@@ -2526,34 +2538,34 @@ class ChIPSeq(Analysis):
                 factor_str += ' ' + factor + '=' + factor
 
             # 1. Composite track "alignment" (BAM)
-            str_list_1: List[str] = list()
+            str_list_1: list[str] = list()
 
             # 2. Composite track "coverage" (bigWig)
-            str_list_2: List[str] = list()
+            str_list_2: list[str] = list()
 
             # 3. Composite track "background" (bigWig)
-            str_list_3: List[str] = list()
+            str_list_3: list[str] = list()
 
             # 4. Composite track "enrichment" (bigWig)
-            str_list_4: List[str] = list()
+            str_list_4: list[str] = list()
 
             # 5. Composite track "intensity" (bigWig)
-            str_list_5: List[str] = list()
+            str_list_5: list[str] = list()
 
             # 6. Composite track "narrow_peaks" (bigBed)
-            str_list_6: List[str] = list()
+            str_list_6: list[str] = list()
 
             # 7. Composite track "summits" (bigBed)
-            str_list_7: List[str] = list()
+            str_list_7: list[str] = list()
 
             # 8. Composite track "broad_peaks" (bigBed)
-            str_list_8: List[str] = list()
+            str_list_8: list[str] = list()
 
             # 9. Composite track "broad_peaks" (bigBed)
-            str_list_9: List[str] = list()
+            str_list_9: list[str] = list()
 
             # 10. Composite track "consensus_peaks" (bigBed)
-            str_list_10: List[str] = list()
+            str_list_10: list[str] = list()
 
             # Add UCSC trackDB entries for each comparison.
 
@@ -2896,7 +2908,7 @@ class ChIPSeq(Analysis):
                                            ' factor=' + factor_name + '\n')
                         str_list_10.append('  \n')
 
-            str_list: List[str] = list()
+            str_list: list[str] = list()
 
             # 1. Composite track "alignment" (BAM)
             if str_list_1:

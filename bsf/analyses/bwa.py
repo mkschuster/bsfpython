@@ -26,6 +26,7 @@
 `Burrows-Wheeler Aligner (BWA) <https://github.com/lh3/bwa>`_.
 """
 import os
+from typing import Optional
 
 from bsf.analyses.aligner import Aligner, FilePathAlign
 from bsf.analysis import Stage
@@ -67,7 +68,12 @@ class MaximalExactMatches(Aligner):
         'XE',
     ]
 
-    def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
+    def add_runnable_step_aligner(
+            self,
+            runnable_align: ConcurrentRunnable,
+            stage_align: Stage,
+            file_path_1: Optional[str],
+            file_path_2: Optional[str]) -> None:
         """Add a BWA MEM-specific :py:class:`bsf.process.RunnableStep` object to the
         :py:class:`bsf.procedure.ConcurrentRunnable` object.
 
@@ -75,9 +81,9 @@ class MaximalExactMatches(Aligner):
         :type runnable_align: ConcurrentRunnable
         :param stage_align: A :py:class:`bsf.analysis.Stage` object.
         :type stage_align: Stage
-        :param file_path_1: A :literal:`FASTQ` file path 1.
+        :param file_path_1: A :emphasis:`FASTQ` file path 1.
         :type file_path_1: str | None
-        :param file_path_2: A :literal:`FASTQ` file path 2.
+        :param file_path_2: A :emphasis:`FASTQ` file path 2.
         :type file_path_2: str | None
         """
         file_path_align = FilePathAlign(prefix=runnable_align.name)
@@ -110,7 +116,7 @@ class MaximalExactMatches(Aligner):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.analyses.bwa.MaximalExactMatches` object.
         """
         # Check for the project name already here,

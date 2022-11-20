@@ -31,14 +31,13 @@ import os
 import pickle
 import shutil
 from argparse import ArgumentParser
-from typing import List
 
 from bsf.connector import ConnectorFile
 from bsf.process import Command, Executable, RunnableStep
 from bsf.standards import SafeFileName, JavaArchive
 
 
-def run_picard_sam_to_fastq(input_path, temporary_path):
+def run_picard_sam_to_fastq(input_path: str, temporary_path: str) -> list[tuple[str, str]]:
     """Convert a BAM file into a pair of FASTQ files for each read group (@RG).
 
     :param input_path: A BAM file path.
@@ -74,8 +73,8 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
         raise Exception('\n'.join(local_exception_str_list))
 
     # SAM header lines that need propagating around FASTQ files. Sigh!
-    sam_header_pg: List[str] = list()
-    sam_header_rg: List[str] = list()
+    sam_header_pg: list[str] = list()
+    sam_header_rg: list[str] = list()
 
     with open(file=path_temporary_sam, mode='rt') as _input_file:
         for line_str in _input_file:

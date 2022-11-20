@@ -23,5 +23,5 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 """The :py:mod:`bsf` module provides classes specific to the
-`Biomedical Sequencing Facility (BSF) <http://biomedical-sequencing.at/>`_.
+`Biomedical Sequencing Facility (BSF) <https://biomedical-sequencing.at/>`_.
 """

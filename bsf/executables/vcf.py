@@ -31,10 +31,11 @@ import logging
 from argparse import ArgumentParser
 from csv import DictReader
 from subprocess import Popen
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 from pysam import VariantFile
 
+from bsf.argument import Argument
 from bsf.connector import Connector
 from bsf.process import Command, RunnableStep
 
@@ -57,25 +58,25 @@ class RunnableStepCsqToVep(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            soc_path=None,
-            ofc_path=None,
-            vcf_path_old=None,
-            vcf_path_new=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            soc_path: Optional[str] = None,
+            ofc_path: Optional[str] = None,
+            vcf_path_old: Optional[str] = None,
+            vcf_path_new: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.executables.vcf.RunnableStepCsqToVep` object.
 
         :param name: A name.
@@ -147,14 +148,14 @@ class RunnableStepCsqToVep(RunnableStep):
 
         return
 
-    def run(self):
+    def run(self) -> None:
         """Run a :py:class:`bsf.executables.vcf.RunnableStepCsqToVep` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
 
-        def initialise_allele_list(length):
+        def initialise_allele_list(length: int) -> list[list[str]]:
             """Initialise an empty Python :py:class:`list` object of Python :py:class:`list` object of
             Python :py:class:`str` objects.
 
@@ -175,7 +176,7 @@ class RunnableStepCsqToVep(RunnableStep):
 
             return allele_list
 
-        def collate_allele_values(allele_list):
+        def collate_allele_values(allele_list: list[str]) -> Optional[str]:
             """Collate the list of allele-specific values by selecting only the first list component.
 
             :param allele_list: A Python :py:class:`list` object of
@@ -189,7 +190,7 @@ class RunnableStepCsqToVep(RunnableStep):
             else:
                 return None
 
-        def get_consequence_index(consequence):
+        def get_consequence_index(consequence: str) -> int:
             """Get the SO index.
 
             :param consequence: A consequence.
@@ -206,14 +207,14 @@ class RunnableStepCsqToVep(RunnableStep):
 
         # Read the Sequence Ontology (TSV) configuration file.
         # This file provides consequence prioritisation.
-        sequence_ontology_list: List[str] = list()
+        sequence_ontology_list: list[str] = list()
 
         with open(file=self.soc_path, mode='rt') as input_text_io:
             for row_dict in DictReader(f=input_text_io, dialect='excel-tab'):
                 sequence_ontology_list.append(row_dict['SO term'])
 
         # Load the VEP output field (TSV) configuration file.
-        vep_header_dict: Dict[str, Dict[str, str]] = dict()
+        vep_header_dict: dict[str, dict[str, str]] = dict()
 
         with open(file=self.ofc_path, mode='rt') as input_text_io:
             for row_dict in DictReader(f=input_text_io, dialect='excel-tab'):
@@ -245,7 +246,7 @@ class RunnableStepCsqToVep(RunnableStep):
         # Split the description on white space first, the pipe-separated list of VEP field declarations
         # is then in the last block.
 
-        csq_key_list: List[str] = csq_vmd.description.split()[-1].split('|')
+        csq_key_list: list[str] = csq_vmd.description.split()[-1].split('|')
         csq_index_allele_num: Optional[int] = None
 
         for csq_index, csq_key in enumerate(csq_key_list):
@@ -320,7 +321,7 @@ class RunnableStepCsqToVep(RunnableStep):
             #     ],
             #     ...,
             # }
-            vep_dict: Dict[str, List[List[str]]] = dict()
+            vep_dict: dict[str, list[list[str]]] = dict()
 
             # Total number of alleles including REF and ALT.
             allele_length = len(variant_record.alleles)
@@ -394,17 +395,17 @@ class RunnableStepCsqToVep(RunnableStep):
             # For each allele, select exactly one index from the list of possible consequences.
             # Thereby, the most severe sequence ontology term that has also the PICK flag gets prioritised.
             # Failing a PICK flag, in case the filter script has removed all, the most severe consequence gets picked.
-            priority_list: List[Optional[int]] = list()
+            priority_list: list[Optional[int]] = list()
             for i in range(0, allele_length):
                 # VEP consequences can be '&' separated values (e.g., splice_region_variant&synonymous_variant).
-                consequence_tuple_list: List[Tuple[int, str]] = list()
+                consequence_tuple_list: list[tuple[int, str]] = list()
                 for vep_consequence_index, vep_consequence in enumerate(vep_dict['VEP_Consequence'][i]):
                     for value in vep_consequence.split('&'):
                         consequence_tuple_list.append((vep_consequence_index, value))
 
                 module_logger.log(logging.DEBUG - 1, 'Consequence list old: %r', consequence_tuple_list)
 
-                consequence_tuple_list.sort(key=lambda item: get_consequence_index(item[1]))
+                consequence_tuple_list.sort(key=lambda item: get_consequence_index(consequence=item[1]))
 
                 module_logger.log(logging.DEBUG - 1, 'Consequence list new: %r', consequence_tuple_list)
                 if consequence_tuple_list:

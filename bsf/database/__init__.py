@@ -26,7 +26,7 @@
 """
 import logging
 from sqlite3 import Connection, Cursor, IntegrityError, OperationalError, connect
-from typing import Dict, List
+from typing import Any, Optional, Union
 
 module_logger = logging.getLogger(name=__name__)
 
@@ -42,7 +42,7 @@ class DatabaseConnection(object):
 
     def __init__(
             self,
-            file_path=None):
+            file_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.database.DatabaseConnection` object.
 
         The underlying :py:class:`sqlite3.Connection` object is instantiated only upon calling
@@ -62,7 +62,7 @@ class DatabaseConnection(object):
 
         return
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Delete a :py:class:`bsf.database.DatabaseConnection` object,
         which implies closing its :py:class:`sqlite3.Connection` object first.
         """
@@ -71,7 +71,7 @@ class DatabaseConnection(object):
         else:
             return self._connection.close()
 
-    def connect(self):
+    def connect(self) -> None:
         """Connect a :py:class:`bsf.database.DatabaseConnection` object by
         instantiating the underlying :py:class:`sqlite3.Connection` object.
 
@@ -82,7 +82,7 @@ class DatabaseConnection(object):
 
         return
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect a :py:class:`bsf.database.DatabaseConnection` object by
         closing the underlying :py:class:`sqlite3.Connection` object.
 
@@ -95,7 +95,7 @@ class DatabaseConnection(object):
 
         return
 
-    def commit(self):
+    def commit(self) -> None:
         """Commit changes to the underlying :py:class:`sqlite3.Connection` object.
         """
         if self._connection is not None:
@@ -103,7 +103,7 @@ class DatabaseConnection(object):
         else:
             return
 
-    def get_cursor(self):
+    def get_cursor(self) -> Cursor:
         """Get a :py:class:`sqlite3.Cursor` object of the underlying :py:class:`sqlite3.Connection` object.
 
         Creates (connects) the underlying :py:class:`sqlite3.Connection` object if it does not exist already.
@@ -134,11 +134,11 @@ class SQLiteMaster(object):
 
     def __init__(
             self,
-            sql_object_type=None,
-            sql_object_name=None,
-            sql_table_name=None,
-            root_page=None,
-            sql_statement=None):
+            sql_object_type: Optional[str] = None,
+            sql_object_name: Optional[str] = None,
+            sql_table_name: Optional[str] = None,
+            root_page: Optional[int] = None,
+            sql_statement: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.database.SQLiteMaster` object.
 
         :param sql_object_type: A :literal:`SQLite` object type.
@@ -175,7 +175,7 @@ class SQLiteMasterAdaptor(object):
     :type database_connection: DatabaseConnection
     """
 
-    def __init__(self, database_connection):
+    def __init__(self, database_connection: DatabaseConnection) -> None:
         """Initialise a :py:class:`bsf.database.SQLiteMasterAdaptor` object.
 
         :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
@@ -189,7 +189,7 @@ class SQLiteMasterAdaptor(object):
         return
 
     @staticmethod
-    def _build_column_result_expression():
+    def _build_column_result_expression() -> str:
         """Build a SQL expression of column names typically used in :literal:`SELECT` statements.
 
         :return: A column result expression string.
@@ -197,7 +197,7 @@ class SQLiteMasterAdaptor(object):
         """
         return ', '.join(('type', 'name', 'tbl_name', 'rootpage', 'sql'))
 
-    def statement_select(self, where_clause=None):
+    def statement_select(self, where_clause: Optional[str] = None) -> str:
         """Build a SQL :literal:`SELECT` statement.
 
         :param where_clause: A SQL :literal:`WHERE` clause.
@@ -205,7 +205,7 @@ class SQLiteMasterAdaptor(object):
         :return: A SQL :literal:`SELECT` statement.
         :rtype: str
         """
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('SELECT')
         statement_list.append(self._build_column_result_expression())
@@ -218,7 +218,10 @@ class SQLiteMasterAdaptor(object):
 
         return ' '.join(statement_list)
 
-    def select(self, statement, parameters=None):
+    def select(
+            self,
+            statement: str,
+            parameters: Optional[list[Union[int, float, str, None]]] = None) -> list[SQLiteMaster]:
         """Execute a SQL :literal:`SELECT` statement and return canonical Python :py:class:`object` instances.
 
         :param statement: A complete SQL :literal:`SELECT` statement.
@@ -229,7 +232,7 @@ class SQLiteMasterAdaptor(object):
         :return: A Python :py:class:`list` object of :py:class:`bsf.database.SQLiteMaster` objects.
         :rtype: list[SQLiteMaster]
         """
-        object_list: List[SQLiteMaster] = list()
+        object_list: list[SQLiteMaster] = list()
 
         cursor = self.database_connection.get_cursor()
 
@@ -243,7 +246,7 @@ class SQLiteMasterAdaptor(object):
 
         return object_list
 
-    def select_all_by_type(self, sql_object_type):
+    def select_all_by_type(self, sql_object_type: str) -> list[SQLiteMaster]:
         """Select all :py:class:`bsf.database.SQLiteMaster` objects by type.
 
         :param sql_object_type: A SQL object type.
@@ -255,7 +258,7 @@ class SQLiteMasterAdaptor(object):
             statement=self.statement_select(where_clause='type = ?'),
             parameters=[sql_object_type])
 
-    def select_by_type_and_name(self, sql_object_type, sql_object_name):
+    def select_by_type_and_name(self, sql_object_type: str, sql_object_name: str) -> Optional[SQLiteMaster]:
         """Select a :py:class:`bsf.database.SQLiteMaster` object by SQL type and SQL name.
 
         :param sql_object_type: A SQL object type.
@@ -295,12 +298,12 @@ class SQLiteTableInfo(object):
 
     def __init__(
             self,
-            column_identifier=None,
-            column_name=None,
-            column_type=None,
-            column_not_null=None,
-            default_value=None,
-            primary_key=None):
+            column_identifier: Optional[int] = None,
+            column_name: Optional[str] = None,
+            column_type: Optional[str] = None,
+            column_not_null: Optional[int] = None,
+            default_value: Optional[str] = None,
+            primary_key: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.database.SQLiteTableInfo` object.
 
         :param column_identifier: A :literal:`SQLite` column identifier.
@@ -336,7 +339,7 @@ class SQLiteTableInfoAdaptor(object):
     :type database_connection: DatabaseConnection
     """
 
-    def __init__(self, database_connection):
+    def __init__(self, database_connection: DatabaseConnection) -> None:
         """Initialise a :py:class:`bsf.database.SQLiteTableInfoAdaptor` object.
 
         :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
@@ -351,7 +354,7 @@ class SQLiteTableInfoAdaptor(object):
         return
 
     @staticmethod
-    def statement_pragma_table_info(table_name):
+    def statement_pragma_table_info(table_name: str) -> str:
         """Build a :literal:`SQLite` :literal:`PRAGMA table_info` statement.
 
         :param table_name: A SQL table name.
@@ -361,7 +364,7 @@ class SQLiteTableInfoAdaptor(object):
         """
         return "PRAGMA table_info('" + table_name + "')"
 
-    def select_all_by_table_name(self, table_name):
+    def select_all_by_table_name(self, table_name: str) -> list[SQLiteTableInfo]:
         """Select all :py:class:`bsf.database.SQLiteTableInfo` objects by SQLite table name.
 
         :param table_name: A SQLite table name.
@@ -369,7 +372,7 @@ class SQLiteTableInfoAdaptor(object):
         :return: A Python :py:class:`list` object of :py:class:`bsf.database.SQLiteTableInfo` objects.
         :rtype: list[SQLiteTableInfo]
         """
-        object_list: List[SQLiteTableInfo] = list()
+        object_list: list[SQLiteTableInfo] = list()
 
         cursor = self.database_connection.get_cursor()
 
@@ -401,11 +404,11 @@ class DatabaseAdaptor(object):
 
     def __init__(
             self,
-            database_connection,
-            object_type,
-            table_name,
-            column_definition,
-            table_constraint=None):
+            database_connection: DatabaseConnection,
+            object_type: type,
+            table_name: str,
+            column_definition: list[tuple[str, str]],
+            table_constraint: Optional[list[str]] = None) -> None:
         """Initialise a :py:class:`bsf.database.DatabaseAdaptor` object.
 
         :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
@@ -443,26 +446,26 @@ class DatabaseAdaptor(object):
 
         return
 
-    def _get_column_name_list_with_primary(self):
+    def _get_column_name_list_with_primary(self) -> map:
         """Build a Python :py:class:`list` object of SQL column names including the primary key.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (SQL column name) objects.
-        :rtype: list[str]
+        :rtype: map
         """
         return map(lambda x: x[0], self.column_definition)
 
-    def _get_column_name_list_without_primary(self):
+    def _get_column_name_list_without_primary(self) -> map:
         """Build a Python :py:class:`list` object of SQL column names excluding the primary key.
 
         This method excludes :literal:`PRIMARY KEY` columns with definition :py:class:`AUTOINCREMENT`,
         which must not be assigned a value in :py:class:`INSERT` or :py:class:`UPDATE` statements.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (SQL column name) objects.
-        :rtype: list[str]
+        :rtype: map
         """
         return map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' not in x[1], self.column_definition))
 
-    def _get_column_name_for_primary(self):
+    def _get_column_name_for_primary(self) -> Optional[str]:
         """Get the SQL column name for the primary key.
 
         This method returns the :literal:`PRIMARY KEY` column with definition :literal:`AUTOINCREMENT`.
@@ -481,7 +484,7 @@ class DatabaseAdaptor(object):
 
         return primary_key
 
-    def _build_column_result_expression(self):
+    def _build_column_result_expression(self) -> str:
         """Build a SQL expression of column names typically used in :literal:`SELECT` statements.
 
         This method simply lists all column names of the column definition.
@@ -491,7 +494,7 @@ class DatabaseAdaptor(object):
         """
         return ', '.join(self._get_column_name_list_with_primary())
 
-    def _build_column_definition_expression(self):
+    def _build_column_definition_expression(self) -> str:
         """Build a SQL expression of column definitions typically used in :literal:`CREATE TABLE` statements.
 
         :return: A column definition expression string.
@@ -499,7 +502,7 @@ class DatabaseAdaptor(object):
         """
         return ', '.join(map(lambda x: ' '.join((x[0], x[1])), self.column_definition))
 
-    def _build_column_insert_expression(self):
+    def _build_column_insert_expression(self) -> str:
         """Build a SQL expression of column names typically used in :literal:`INSERT` statements.
 
         This method excludes :literal:`PRIMARY KEY` columns with definition :literal:`AUTOINCREMENT`,
@@ -510,7 +513,7 @@ class DatabaseAdaptor(object):
         """
         return ', '.join(self._get_column_name_list_without_primary())
 
-    def _build_value_insert_expression(self):
+    def _build_value_insert_expression(self) -> str:
         """Build a SQL expression of value placeholders (:literal:`?`) typically used in :literal:`INSERT` statements.
 
         :return: A column value expression string.
@@ -518,7 +521,7 @@ class DatabaseAdaptor(object):
         """
         return ', '.join(map(lambda x: '?', self._get_column_name_list_without_primary()))
 
-    def _build_column_update_expression(self):
+    def _build_column_update_expression(self) -> str:
         """Build a SQL expression of column name and value placeholder pairs typically used in
         SQL :literal:`UPDATE` statements.
 
@@ -530,7 +533,7 @@ class DatabaseAdaptor(object):
         """
         return ', '.join(map(lambda x: ' '.join((x, '=', '?')), self._get_column_name_list_without_primary()))
 
-    def connect(self):
+    def connect(self) -> None:
         """Convenience method to connect a :py:class:`bsf.database.DatabaseAdaptor` object.
 
         This method instantiates the underlying :py:class:`sqlite3.Connection` object via its
@@ -539,7 +542,7 @@ class DatabaseAdaptor(object):
         """
         return self.database_connection.connect()
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Convenience method to explicitly disconnect a :py:class:`bsf.database.DatabaseAdaptor` object.
 
         This method disconnects the underlying :py:class:`sqlite3.Connection` object via the
@@ -547,7 +550,7 @@ class DatabaseAdaptor(object):
         """
         return self.database_connection.disconnect()
 
-    def commit(self):
+    def commit(self) -> None:
         """Convenience method to commit changes to a :py:class:`bsf.database.DatabaseAdaptor` object.
 
         This method commits to the underlying :py:class:`sqlite3.Connection` object via the
@@ -555,7 +558,7 @@ class DatabaseAdaptor(object):
         """
         return self.database_connection.commit()
 
-    def get_cursor(self):
+    def get_cursor(self) -> Cursor:
         """Convenience method to get a :py:class:`sqlite3.Cursor` object of a
         :py:class:`bsf.database.DatabaseAdaptor` object.
 
@@ -568,7 +571,10 @@ class DatabaseAdaptor(object):
         """
         return self.database_connection.get_cursor()
 
-    def statement_alter_table_rename(self, table_name_old=None, table_name_new=None):
+    def statement_alter_table_rename(
+            self,
+            table_name_old: Optional[str] = None,
+            table_name_new: Optional[str] = None) -> str:
         """Build a SQL :literal:`ALTER TABLE` statement.
 
         :param table_name_old: An old table name, defaults to table_name.
@@ -584,7 +590,7 @@ class DatabaseAdaptor(object):
         if not table_name_new:
             table_name_new = '_'.join((self.table_name, 'altered'))
 
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('ALTER')
         statement_list.append('TABLE')
@@ -595,13 +601,13 @@ class DatabaseAdaptor(object):
 
         return ' '.join(statement_list)
 
-    def statement_create_table(self):
+    def statement_create_table(self) -> str:
         """Build a SQL :literal:`CREATE TABLE` statement.
 
         :return: A SQL :literal:`CREATE TABLE` statement.
         :rtype: str
         """
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('CREATE')
         statement_list.append('TABLE')
@@ -611,13 +617,13 @@ class DatabaseAdaptor(object):
         return ' '.join(statement_list)
 
     @staticmethod
-    def statement_drop_table(table_name):
+    def statement_drop_table(table_name) -> str:
         """Build a SQL :literal:`DROP TABLE` statement.
 
         :return: A SQL :literal:`DROP TABLE` statement.
         :rtype: str
         """
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('DROP')
         statement_list.append('TABLE')
@@ -627,13 +633,13 @@ class DatabaseAdaptor(object):
 
         return ' '.join(statement_list)
 
-    def statement_insert(self):
+    def statement_insert(self) -> str:
         """Build a SQL :literal:`INSERT INTO` statement.
 
         :return: A SQL :literal:`INSERT INTO` statement.
         :rtype: str
         """
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('INSERT')
         statement_list.append('INTO')
@@ -644,7 +650,11 @@ class DatabaseAdaptor(object):
 
         return ' '.join(statement_list)
 
-    def statement_select(self, where_clause=None, group_clause=None, having_clause=None):
+    def statement_select(
+            self,
+            where_clause: Optional[str] = None,
+            group_clause: Optional[str] = None,
+            having_clause: Optional[str] = None) -> str:
         """Build a SQL :literal:`SELECT` statement.
 
         :param where_clause: A SQL :literal:`WHERE` clause.
@@ -656,7 +666,7 @@ class DatabaseAdaptor(object):
         :return: A SQL :literal:`SELECT` statement.
         :rtype: str
         """
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('SELECT')
         statement_list.append(self._build_column_result_expression())
@@ -677,7 +687,7 @@ class DatabaseAdaptor(object):
 
         return ' '.join(statement_list)
 
-    def statement_update(self):
+    def statement_update(self) -> str:
         """Build a SQL :literal:`UPDATE` statement.
 
         :return: A SQL :literal:`UPDATE` statement.
@@ -689,7 +699,7 @@ class DatabaseAdaptor(object):
             raise Exception(f'Cannot create an SQL UPDATE statement for table {self.table_name} '
                             f'without a primary key.')
 
-        statement_list: List[str] = list()
+        statement_list: list[str] = list()
 
         statement_list.append('UPDATE')
         statement_list.append(self.table_name)
@@ -702,7 +712,7 @@ class DatabaseAdaptor(object):
 
         return ' '.join(statement_list)
 
-    def create_table(self):
+    def create_table(self) -> None:
         """Execute a SQL :literal:`CREATE TABLE` statement for the canonical
         :py:class:`bsf.database.DatabaseAdaptor` object table.
 
@@ -722,7 +732,7 @@ class DatabaseAdaptor(object):
 
         return
 
-    def select(self, statement, parameters=None):
+    def select(self, statement, parameters=None) -> list[Any]:
         """Execute a SQL :literal:`SELECT` statement and return canonical Python :py:class:`object` instances.
 
         :param statement: A complete SQL :literal:`SELECT` statement.
@@ -752,7 +762,7 @@ class DatabaseAdaptor(object):
 
         return object_list
 
-    def select_all(self):
+    def select_all(self) -> list[Any]:
         """Select all canonical Python :py:class:`object` instances.
 
         :return: A Python :py:class:`list` object of Python :py:class:`object` objects.
@@ -760,7 +770,7 @@ class DatabaseAdaptor(object):
         """
         return self.select(statement=self.statement_select())
 
-    def select_by_identifier(self, identifier=0):
+    def select_by_identifier(self, identifier: int = 0) -> Any:
         """Select one canonical Python :py:class:`object` instance corresponding to the primary key identifier.
 
         :param identifier: A primary key identifier.
@@ -786,7 +796,7 @@ class DatabaseAdaptor(object):
         else:
             return
 
-    def insert(self, object_instance):
+    def insert(self, object_instance: Any) -> None:
         """Execute a SQL :literal:`INSERT` statement for a canonical Python :py:class:`object` instance.
 
         :param object_instance: A Python :py:class:`object` object.
@@ -818,7 +828,7 @@ class DatabaseAdaptor(object):
 
         return
 
-    def update(self, object_instance):
+    def update(self, object_instance: Any) -> None:
         """Execute a SQL :literal:`UPDATE` statement for a canonical Python :py:class:`object` instance.
 
         :param object_instance: A Python :py:class:`object` instance.
@@ -845,7 +855,7 @@ class DatabaseAdaptor(object):
 
         return
 
-    def compare_table_definitions(self):
+    def compare_table_definitions(self) -> tuple[dict[str, None], dict[str, None]]:
         """Compare the current table definition to the :literal:`SQLite` :literal:`PRAGMA table_info()`.
 
         :return: A Python :py:class:`tuple` object of
@@ -860,10 +870,10 @@ class DatabaseAdaptor(object):
         pragma_table_info_list = pragma_table_info_adaptor.select_all_by_table_name(
             table_name=self.table_name)
 
-        column_dict_old: Dict[str, None] = dict(
+        column_dict_old: dict[str, None] = dict(
             map(lambda x: (x, None), map(lambda x: x.column_name, pragma_table_info_list)))
 
-        column_dict_new: Dict[str, None] = dict(
+        column_dict_new: dict[str, None] = dict(
             map(lambda x: (x, None), map(lambda x: x[0], self.column_definition)))
 
         # Use a list comprehension to create a list of key objects since the dict gets modified in the loop.
@@ -893,9 +903,9 @@ class JobSubmission(object):
 
     def __init__(
             self,
-            executable_id=None,
-            name=None,
-            command=None):
+            executable_id: Optional[int] = None,
+            name: Optional[str] = None,
+            command: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.database.JobSubmission` object.
 
         :param executable_id: A primary key.
@@ -921,7 +931,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
 
     def __init__(
             self,
-            database_connection):
+            database_connection: DatabaseConnection) -> None:
         """Initialise a :py:class:`bsf.database.JobSubmissionAdaptor` object.
 
         :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
@@ -942,7 +952,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
 
         return
 
-    def select_by_name(self, name):
+    def select_by_name(self, name: str) -> Optional[JobSubmission]:
         """Select one :py:class:`bsf.database.JobSubmission` object by name.
 
         :param name: A name.

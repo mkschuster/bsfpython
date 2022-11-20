@@ -33,11 +33,14 @@ import sys
 import time
 from subprocess import Popen, PIPE, DEVNULL
 from threading import Lock, Thread
-from typing import IO, List, TextIO
+from typing import IO, Optional, TypeVar, TextIO, Union
 
 from bsf.argument import *
 from bsf.connector import *
 from bsf.standards import Configuration
+
+CommandType = TypeVar(name='CommandType', bound='Command')
+ExecutableType = TypeVar(name='ExecutableType', bound='Executable')
 
 module_logger = logging.getLogger(name=__name__)
 
@@ -64,11 +67,11 @@ class Command(object):
 
     def __init__(
             self,
-            name=None,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None):
+            name: Optional[str] = None,
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[CommandType] = None) -> None:
         """Initialise a :py:class:`bsf.process.Command` object.
 
         :param name: A name.
@@ -111,7 +114,7 @@ class Command(object):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{self.__class__.__name__}(' \
             f'name={self.name!r}, ' \
@@ -120,7 +123,7 @@ class Command(object):
             f'arguments={self.arguments!r}, ' \
             f'sub_command={self.sub_command!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.process.Command` object.
 
         :param level: Indentation level
@@ -130,7 +133,7 @@ class Command(object):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  name:               {!r}\n'.format(indent, self.name))
@@ -159,7 +162,7 @@ class Command(object):
 
         return str_list
 
-    def add_argument(self, argument, override):
+    def add_argument(self, argument: Argument, override: bool) -> None:
         """Add a :py:class:`bsf.argument.Argument` object or one of its subclasses.
 
         :param argument: A :py:class:`bsf.argument.Argument` object
@@ -180,7 +183,7 @@ class Command(object):
 
         return
 
-    def add_switch_long(self, key, override=False):
+    def add_switch_long(self, key: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.SwitchLong` object.
 
         :param key: Key
@@ -190,7 +193,7 @@ class Command(object):
         """
         return self.add_argument(argument=SwitchLong(key=key), override=override)
 
-    def add_switch_short(self, key, override=False):
+    def add_switch_short(self, key: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.SwitchShort` object.
 
         :param key: Key
@@ -200,7 +203,7 @@ class Command(object):
         """
         return self.add_argument(argument=SwitchShort(key=key), override=override)
 
-    def add_option_long(self, key, value, override=False):
+    def add_option_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionLong` object.
 
         :param key: Key
@@ -212,7 +215,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionLong(key=key, value=value), override=override)
 
-    def add_option_short(self, key, value, override=False):
+    def add_option_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionShort` object.
 
         :param key: Key
@@ -224,7 +227,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionShort(key=key, value=value), override=override)
 
-    def add_option_pair(self, key, value, override=False):
+    def add_option_pair(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionPair` object.
 
         :param key: Key
@@ -236,7 +239,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionPair(key=key, value=value), override=override)
 
-    def add_option_pair_short(self, key, value, override=False):
+    def add_option_pair_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionPairShort` object.
 
         :param key: Key
@@ -248,7 +251,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionPairShort(key=key, value=value), override=override)
 
-    def add_option_pair_long(self, key, value, override=False):
+    def add_option_pair_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionPairLong` object.
 
         :param key: Key
@@ -260,7 +263,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionPairLong(key=key, value=value), override=override)
 
-    def add_option_multi(self, key, value, override=False):
+    def add_option_multi(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionMulti` object.
 
         :param key: Key
@@ -272,7 +275,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionMulti(key=key, value=value), override=override)
 
-    def add_option_multi_long(self, key, value, override=False):
+    def add_option_multi_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionMultiLong` object.
 
         :param key: Key
@@ -284,7 +287,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionMultiLong(key=key, value=value), override=override)
 
-    def add_option_multi_short(self, key, value, override=False):
+    def add_option_multi_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionMultiShort` object.
 
         :param key: Key
@@ -296,7 +299,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionMultiShort(key=key, value=value), override=override)
 
-    def add_option_multi_pair(self, key, value, override=False):
+    def add_option_multi_pair(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionMultiPair` object.
 
         :param key: Key
@@ -308,7 +311,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionMultiPair(key=key, value=value), override=override)
 
-    def add_option_multi_pair_long(self, key, value, override=False):
+    def add_option_multi_pair_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionMultiPairLong` object.
 
         :param key: Key
@@ -320,7 +323,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionMultiPairLong(key=key, value=value), override=override)
 
-    def add_option_multi_pair_short(self, key, value, override=False):
+    def add_option_multi_pair_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and add a :py:class:`bsf.argument.OptionMultiPairShort` object.
 
         :param key: Key
@@ -332,7 +335,7 @@ class Command(object):
         """
         return self.add_argument(argument=OptionMultiPairShort(key=key, value=value), override=override)
 
-    def set_argument(self, argument, override):
+    def set_argument(self, argument: Argument, override: bool) -> None:
         """Set a :py:class:`bsf.argument.Argument` objects or one of its subclasses.
 
         :param argument: A :py:class:`bsf.argument.Argument` object
@@ -350,7 +353,7 @@ class Command(object):
 
         return
 
-    def set_switch_long(self, key, override=False):
+    def set_switch_long(self, key: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.SwitchLong` object.
 
         :param key: Key
@@ -360,7 +363,7 @@ class Command(object):
         """
         return self.set_argument(argument=SwitchLong(key=key), override=override)
 
-    def set_switch_short(self, key, override=False):
+    def set_switch_short(self, key: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.SwitchShort` object.
 
         :param key: Key
@@ -370,7 +373,7 @@ class Command(object):
         """
         return self.set_argument(argument=SwitchShort(key=key), override=override)
 
-    def set_option_long(self, key, value, override=False):
+    def set_option_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionLong` object.
 
         :param key: Key
@@ -382,7 +385,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionLong(key=key, value=value), override=override)
 
-    def set_option_short(self, key, value, override=False):
+    def set_option_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionShort` object.
 
         :param key: Key
@@ -394,7 +397,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionShort(key=key, value=value), override=override)
 
-    def set_option_pair(self, key, value, override=False):
+    def set_option_pair(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionPair` object.
 
         :param key: Key
@@ -406,7 +409,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
-    def set_option_pair_short(self, key, value, override=False):
+    def set_option_pair_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionPairShort` object.
 
         :param key: Key
@@ -418,7 +421,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionPairShort(key=key, value=value), override=override)
 
-    def set_option_pair_long(self, key, value, override=False):
+    def set_option_pair_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionPairLong` object.
 
         :param key: Key
@@ -430,7 +433,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionPairLong(key=key, value=value), override=override)
 
-    def set_option_multi(self, key, value, override=False):
+    def set_option_multi(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionMulti` object.
 
         :param key: Key
@@ -442,7 +445,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionMulti(key=key, value=value), override=override)
 
-    def set_option_multi_long(self, key, value, override=False):
+    def set_option_multi_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionMultiLong` object.
 
         :param key: Key
@@ -454,7 +457,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionMultiLong(key=key, value=value), override=override)
 
-    def set_option_multi_short(self, key, value, override=False):
+    def set_option_multi_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionMultiShort` object.
 
         :param key: Key
@@ -466,7 +469,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionMultiShort(key=key, value=value), override=override)
 
-    def set_option_multi_pair(self, key, value, override=False):
+    def set_option_multi_pair(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionMultiPair` object.
 
         :param key: Key
@@ -478,7 +481,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionMultiPair(key=key, value=value), override=override)
 
-    def set_option_multi_pair_long(self, key, value, override=False):
+    def set_option_multi_pair_long(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionMultiPairLong` object.
 
         :param key: Key
@@ -490,7 +493,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionMultiPairLong(key=key, value=value), override=override)
 
-    def set_option_multi_pair_short(self, key, value, override=False):
+    def set_option_multi_pair_short(self, key: str, value: str, override: bool = False) -> None:
         """Initialise and set a :py:class:`bsf.argument.OptionMultiPairShort` object.
 
         :param key: Key
@@ -502,7 +505,7 @@ class Command(object):
         """
         return self.set_argument(argument=OptionMultiPairShort(key=key, value=value), override=override)
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.process.Command` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
@@ -534,14 +537,14 @@ class Command(object):
 
         return
 
-    def command_list(self):
+    def command_list(self) -> list[str]:
         """Assemble the command line from program, options and arguments.
 
         :return: A Python :py:class:`list` object of
             Python :py:class:`str` objects of program, options, switches and arguments.
         :rtype: list[str]
         """
-        command_line: List[str] = list()
+        command_line: list[str] = list()
 
         if self.program:
             command_line.append(self.program)
@@ -564,7 +567,7 @@ class Command(object):
 
         return command_line
 
-    def command_str(self):
+    def command_str(self) -> str:
         """Assemble the command line from program, options, switches and arguments.
 
         :return: A Python :py:class:`str` object of program, options, switches and arguments.
@@ -622,7 +625,9 @@ class Executable(Command):
     """
 
     @staticmethod
-    def map_connector(connector, executable_list):
+    def map_connector(
+            connector: Optional[Connector],
+            executable_list: list[ExecutableType]) -> Union[IO, int, None]:
         """Map a :py:class:`bsf.connector.Connector` object to a file handle.
 
         :param connector: A :py:class:`bsf.connector.Connector` object or subclass thereof.
@@ -668,7 +673,11 @@ class Executable(Command):
         return None
 
     @staticmethod
-    def process_stream(file_handle, thread_lock, file_type, file_path=None):
+    def process_stream(
+            file_handle: TextIO,
+            thread_lock: Lock,
+            file_type: str,
+            file_path: Optional[str] = None) -> None:
         """Process a :literal:`STDOUT` or :literal:`STDERR` text stream from the child process as a thread.
 
         If a file_path was provided, a corresponding Python :py:class:`io.TextIOWrapper` or
@@ -719,7 +728,10 @@ class Executable(Command):
         return
 
     @staticmethod
-    def process_stdout(stdout_handle, thread_lock, stdout_path=None):
+    def process_stdout(
+            stdout_handle: TextIO,
+            thread_lock: Lock,
+            stdout_path: Optional[str] = None) -> None:
         """Process :literal:`STDOUT` from the child process as a thread.
 
         :param stdout_handle: A :literal:`STDOUT`
@@ -738,7 +750,10 @@ class Executable(Command):
             file_path=stdout_path)
 
     @staticmethod
-    def process_stderr(stderr_handle, thread_lock, stderr_path=None):
+    def process_stderr(
+            stderr_handle: TextIO,
+            thread_lock: Lock,
+            stderr_path: Optional[str] = None) -> None:
         """Process :literal:`STDERR` from the child process as a thread.
 
         :param stderr_handle: A :literal:`STDERR`
@@ -757,7 +772,7 @@ class Executable(Command):
             file_path=stderr_path)
 
     @classmethod
-    def run_executables(cls, executable_list):
+    def run_executables(cls, executable_list: list[ExecutableType]) -> Optional[list[str]]:
         """Run a Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects concurrently.
 
         :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects
@@ -878,20 +893,20 @@ class Executable(Command):
 
     def __init__(
             self,
-            name=None,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None):
+            name: Optional[str] = None,
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None) -> None:
         """Initialise a :py:class:`bsf.process.Executable` object.
 
         :param name: A name.
@@ -964,7 +979,7 @@ class Executable(Command):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(Executable, self).__repr__()[:-1]}, ' \
             f'stdin={self.stdin!r}, ' \
@@ -977,7 +992,7 @@ class Executable(Command):
             f'process_name={self.process_name!r}, ' \
             f'sub_process={self.sub_process!r})'
 
-    def trace(self, level):
+    def trace(self, level: int) -> list[str]:
         """Trace a :py:class:`bsf.process.Executable` object.
 
         :param level: Indentation level
@@ -987,7 +1002,7 @@ class Executable(Command):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  stdin:              {!r}\n'.format(indent, self.stdin))
@@ -1013,7 +1028,7 @@ class Executable(Command):
 
         return str_list
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.Executable` object via the Python :py:class:`subprocess.Popen` class.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -1034,21 +1049,21 @@ class RunnableStep(Executable):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStep` object.
 
         :param name: A name.
@@ -1111,12 +1126,12 @@ class RunnableStep(Executable):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStep, self).__repr__()[:-1]}, ' \
             f'obsolete_file_path_list={self.obsolete_file_path_list!r})'
 
-    def trace(self, level=1):
+    def trace(self, level: int = 1) -> list[str]:
         """Trace a :py:class:`bsf.process.RunnableStep` object.
 
         :param level: Indentation level
@@ -1126,7 +1141,7 @@ class RunnableStep(Executable):
         """
         indent = '  ' * level
 
-        str_list: List[str] = list()
+        str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
         str_list.append('{}  obsolete_file_path_list: {!r}\n'.format(indent, self.obsolete_file_path_list))
@@ -1134,7 +1149,7 @@ class RunnableStep(Executable):
 
         return str_list
 
-    def remove_obsolete_file_paths(self):
+    def remove_obsolete_file_paths(self) -> None:
         """Remove file paths of the :py:attr:`bsf.process.RunnableStep.obsolete_file_path_list`
         Python :py:class:`list` object.
 
@@ -1165,24 +1180,24 @@ class RunnableStepChangeMode(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            file_path=None,
-            mode_directory=None,
-            mode_file=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            file_path: Optional[str] = None,
+            mode_directory: Optional[str] = None,
+            mode_file: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepChangeMode` object.
 
         :param name: A name.
@@ -1253,21 +1268,21 @@ class RunnableStepChangeMode(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepChangeMode, self).__repr__()[:-1]}, ' \
             f'file_path={self.file_path!r}, ' \
             f'mode_directory={self.mode_directory!r}, ' \
             f'mode_file={self.mode_file!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepChangeMode` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
 
-        def convert_mode(mode_str):
+        def convert_mode(mode_str: str) -> int:
             """Private function to convert the mode string into a mode integer.
 
             :param mode_str: Mode string
@@ -1330,23 +1345,23 @@ class RunnableStepCopy(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            source_path=None,
-            target_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            source_path: Optional[str] = None,
+            target_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepCopy` object.
 
         :param name: A name.
@@ -1413,13 +1428,13 @@ class RunnableStepCopy(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepCopy, self).__repr__()[:-1]}, ' \
             f'source_path={self.source_path!r}, ' \
             f'target_path={self.target_path!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepLink` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -1439,25 +1454,25 @@ class RunnableStepJava(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            java_temporary_path=None,
-            java_heap_minimum=None,
-            java_heap_maximum=None,
-            java_jar_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            java_temporary_path: Optional[str] = None,
+            java_heap_minimum: Optional[str] = None,
+            java_heap_maximum: Optional[str] = None,
+            java_jar_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepJava` object.
 
         :param name: A name.
@@ -1502,7 +1517,7 @@ class RunnableStepJava(RunnableStep):
         :type java_heap_minimum: str | None
         :param java_heap_maximum: A Java heap maximum size (-Xmx option).
         :type java_heap_maximum: str | None
-        :param java_jar_path: A Java Archive (JAR) file path.
+        :param java_jar_path: A :emphasis:`Java Archive` (JAR) file path.
         :type java_jar_path: str | None
         """
 
@@ -1575,26 +1590,26 @@ class RunnableStepPicard(RunnableStepJava):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            java_temporary_path=None,
-            java_heap_minimum=None,
-            java_heap_maximum=None,
-            java_jar_path=None,
-            picard_command=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            java_temporary_path: Optional[str] = None,
+            java_heap_minimum: Optional[str] = None,
+            java_heap_maximum: Optional[str] = None,
+            java_jar_path: Optional[str] = None,
+            picard_command: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepPicard` object.
 
         :param name: A name.
@@ -1639,7 +1654,7 @@ class RunnableStepPicard(RunnableStepJava):
         :type java_heap_minimum: str | None
         :param java_heap_maximum: A Java heap maximum size (-Xmx option).
         :type java_heap_maximum: str | None
-        :param java_jar_path: A Java Archive (JAR) file path.
+        :param java_jar_path: A :emphasis:`Java Archive` (JAR) file path.
         :type java_jar_path: str | None
         :param picard_command: A Picard command.
         :type picard_command: str | None
@@ -1671,7 +1686,7 @@ class RunnableStepPicard(RunnableStepJava):
 
         return
 
-    def add_picard_option(self, key, value, override=False):
+    def add_picard_option(self, key: str, value: str, override: bool = False) -> None:
         """Add a :py:class:`bsf.argument.OptionPair` object to a :py:class:`bsf.process.RunnableStepPicard` object.
 
         :param key: Option key
@@ -1695,23 +1710,23 @@ class RunnableStepLink(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            source_path=None,
-            target_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            source_path: Optional[str] = None,
+            target_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepLink` object.
 
         :param name: A name.
@@ -1777,13 +1792,13 @@ class RunnableStepLink(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepLink, self).__repr__()[:-1]}, ' \
             f'source_path={self.source_path!r}, ' \
             f'target_path={self.target_path!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepLink` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -1808,22 +1823,22 @@ class RunnableStepMakeDirectory(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            directory_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            directory_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepMakeDirectory` object.
 
         :param name: A name.
@@ -1886,12 +1901,12 @@ class RunnableStepMakeDirectory(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepMakeDirectory, self).__repr__()[:-1]}, ' \
             f'directory_path={self.directory_path!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepMakeDirectory` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -1916,22 +1931,22 @@ class RunnableStepMakeNamedPipe(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            file_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            file_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepMakeNamedPipe` object.
 
         :param name: A name.
@@ -1994,12 +2009,12 @@ class RunnableStepMakeNamedPipe(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepMakeNamedPipe, self).__repr__()[:-1]}, ' \
             f'file_path={self.file_path!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepMakeNamedPipe` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -2028,24 +2043,24 @@ class RunnableStepMove(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            source_path=None,
-            target_path=None,
-            use_shutil=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            source_path: Optional[str] = None,
+            target_path: Optional[str] = None,
+            use_shutil: Optional[bool] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepMove` object.
 
         :param name: A name.
@@ -2118,14 +2133,14 @@ class RunnableStepMove(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepMove, self).__repr__()[:-1]}, ' \
             f'source_path={self.source_path!r}, ' \
             f'target_path={self.target_path!r}, ' \
             f'use_shutil={self.use_shutil!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a:py:class:`bsf.process.RunnableStepMove` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -2148,22 +2163,22 @@ class RunnableStepRemoveDirectory(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            directory_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            directory_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepRemoveDirectory` object.
 
         :param name: A name.
@@ -2226,12 +2241,12 @@ class RunnableStepRemoveDirectory(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepRemoveDirectory, self).__repr__()[:-1]}, ' \
             f'directory_path={self.directory_path!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableRemoveDirectory` object.
 
         :py:class:`FileNotFoundError` and :py:class:`OSError` :py:const:`errno.ENOTEMPTY` Exceptions are caught.
@@ -2260,22 +2275,22 @@ class RunnableStepRemoveFile(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            file_path=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            file_path: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepRemoveFile` object.
 
         :param name: A name.
@@ -2338,12 +2353,12 @@ class RunnableStepRemoveFile(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepRemoveFile, self).__repr__()[:-1]}, ' \
             f'file_path={self.file_path!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepRemoveFile` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -2365,23 +2380,23 @@ class RunnableStepRemoveTree(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            file_path=None,
-            ignore_errors=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            file_path: Optional[str] = None,
+            ignore_errors: bool = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepRemoveTree` object.
 
         :param name: A name.
@@ -2447,13 +2462,13 @@ class RunnableStepRemoveTree(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepRemoveTree, self).__repr__()[:-1]}, ' \
             f'file_path={self.file_path!r}, ' \
             f'ignore_errors={self.ignore_errors!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableRemoveTree` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -2478,22 +2493,22 @@ class RunnableStepSleep(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            sleep_time=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            sleep_time: Optional[float] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepSleep` object.
 
         :param name: A name.
@@ -2556,12 +2571,12 @@ class RunnableStepSleep(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepSleep, self).__repr__()[:-1]}, ' \
             f'sleep_time={self.sleep_time!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepSleep` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
@@ -2584,23 +2599,23 @@ class RunnableStepSetEnvironment(RunnableStep):
 
     def __init__(
             self,
-            name,
-            program=None,
-            options=None,
-            arguments=None,
-            sub_command=None,
-            stdin=None,
-            stdout=None,
-            stderr=None,
-            dependencies=None,
-            hold=None,
-            submit=True,
-            process_identifier=None,
-            process_name=None,
-            sub_process=None,
-            obsolete_file_path_list=None,
-            key=None,
-            value=None):
+            name: Optional[str],
+            program: Optional[str] = None,
+            options: Optional[dict[str, list[Argument]]] = None,
+            arguments: Optional[list[str]] = None,
+            sub_command: Optional[Command] = None,
+            stdin: Optional[Connector] = None,
+            stdout: Optional[Connector] = None,
+            stderr: Optional[Connector] = None,
+            dependencies: Optional[list[str]] = None,
+            hold: Optional[bool] = None,
+            submit: bool = True,
+            process_identifier: Optional[str] = None,
+            process_name: Optional[str] = None,
+            sub_process: Optional[Popen] = None,
+            obsolete_file_path_list: Optional[list[str]] = None,
+            key: str = None,
+            value: str = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepSetEnvironment` object.
 
         :param name: A name.
@@ -2666,13 +2681,13 @@ class RunnableStepSetEnvironment(RunnableStep):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{super(RunnableStepSetEnvironment, self).__repr__()[:-1]}, ' \
             f'key={self.key!r}, ' \
             f'value={self.value!r})'
 
-    def run(self):
+    def run(self) -> Optional[list[str]]:
         """Run a :py:class:`bsf.process.RunnableStepSetEnvironment` object.
 
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.

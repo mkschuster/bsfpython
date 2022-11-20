@@ -32,7 +32,7 @@ import os
 from bsf.procedure import ConsecutiveRunnable
 
 
-def run(runnable):
+def run(runnable: ConsecutiveRunnable) -> None:
     """Run the :py:class:`bsf.procedure.ConsecutiveRunnable` object.
 
     :param runnable: A :py:class:`bsf.procedure.ConsecutiveRunnable` object.

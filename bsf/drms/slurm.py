@@ -32,8 +32,9 @@ import os
 import re
 from csv import DictReader
 from threading import Lock
-from typing import List
+from typing import Optional, TextIO
 
+from bsf.analysis import Stage
 from bsf.connector import StandardOutputStream
 from bsf.database import DatabaseAdaptor, DatabaseConnection, JobSubmission, JobSubmissionAdaptor, \
     SQLiteTableInfoAdaptor
@@ -172,64 +173,63 @@ class ProcessSLURM(object):
 
     def __init__(
             self,
-            process_slurm_id=None,
-            job_id=None,
-            job_id_raw=None,
-            job_name=None,
-            partition=None,
-            max_vm_size=None,
-            max_vm_size_node=None,
-            max_vm_size_task=None,
-            average_vm_size=None,
-            max_rss=None,
-            max_rss_node=None,
-            max_rss_task=None,
-            average_rss=None,
-            max_pages=None,
-            max_pages_node=None,
-            max_pages_task=None,
-            average_pages=None,
-            min_cpu=None,
-            min_cpu_node=None,
-            min_cpu_task=None,
-            average_cpu=None,
-            number_tasks=None,
-            allocated_cpus=None,
-            elapsed=None,
-            state=None,
-            exit_code=None,
-            average_cpu_frequency=None,
-            requested_cpu_frequency_min=None,
-            requested_cpu_frequency_max=None,
-            requested_cpu_frequency_gov=None,
-            requested_memory=None,
-            consumed_energy=None,
-            max_disk_read=None,
-            max_disk_read_node=None,
-            max_disk_read_task=None,
-            average_disk_read=None,
-            max_disk_write=None,
-            max_disk_write_node=None,
-            max_disk_write_task=None,
-            average_disk_write=None,
-            allocated_gres=None,
-            requested_gres=None,
-            allocated_tres=None,
-            requested_tres=None,
-            tres_usage_in_average=None,
-            tres_usage_in_maximum=None,
-            tres_usage_in_maximum_node=None,
-            tres_usage_in_maximum_task=None,
-            tres_usage_in_minimum=None,
-            tres_usage_in_minimum_node=None,
-            tres_usage_in_minimum_task=None,
-            tres_usage_in_total=None,
-            tres_usage_out_maximum=None,
-            tres_usage_out_maximum_node=None,
-            tres_usage_out_maximum_task=None,
-            tres_usage_out_average=None,
-            tres_usage_out_total=None
-    ):
+            process_slurm_id: Optional[int] = None,
+            job_id: Optional[str] = None,
+            job_id_raw: Optional[str] = None,
+            job_name: Optional[str] = None,
+            partition: Optional[str] = None,
+            max_vm_size: Optional[str] = None,
+            max_vm_size_node: Optional[str] = None,
+            max_vm_size_task: Optional[str] = None,
+            average_vm_size: Optional[str] = None,
+            max_rss: Optional[str] = None,
+            max_rss_node: Optional[str] = None,
+            max_rss_task: Optional[str] = None,
+            average_rss: Optional[str] = None,
+            max_pages: Optional[str] = None,
+            max_pages_node: Optional[str] = None,
+            max_pages_task: Optional[str] = None,
+            average_pages: Optional[str] = None,
+            min_cpu: Optional[str] = None,
+            min_cpu_node: Optional[str] = None,
+            min_cpu_task: Optional[str] = None,
+            average_cpu: Optional[str] = None,
+            number_tasks: Optional[str] = None,
+            allocated_cpus: Optional[str] = None,
+            elapsed: Optional[str] = None,
+            state: Optional[str] = None,
+            exit_code: Optional[str] = None,
+            average_cpu_frequency: Optional[str] = None,
+            requested_cpu_frequency_min: Optional[str] = None,
+            requested_cpu_frequency_max: Optional[str] = None,
+            requested_cpu_frequency_gov: Optional[str] = None,
+            requested_memory: Optional[str] = None,
+            consumed_energy: Optional[str] = None,
+            max_disk_read: Optional[str] = None,
+            max_disk_read_node: Optional[str] = None,
+            max_disk_read_task: Optional[str] = None,
+            average_disk_read: Optional[str] = None,
+            max_disk_write: Optional[str] = None,
+            max_disk_write_node: Optional[str] = None,
+            max_disk_write_task: Optional[str] = None,
+            average_disk_write: Optional[str] = None,
+            allocated_gres: Optional[str] = None,
+            requested_gres: Optional[str] = None,
+            allocated_tres: Optional[str] = None,
+            requested_tres: Optional[str] = None,
+            tres_usage_in_average: Optional[str] = None,
+            tres_usage_in_maximum: Optional[str] = None,
+            tres_usage_in_maximum_node: Optional[str] = None,
+            tres_usage_in_maximum_task: Optional[str] = None,
+            tres_usage_in_minimum: Optional[str] = None,
+            tres_usage_in_minimum_node: Optional[str] = None,
+            tres_usage_in_minimum_task: Optional[str] = None,
+            tres_usage_in_total: Optional[str] = None,
+            tres_usage_out_maximum: Optional[str] = None,
+            tres_usage_out_maximum_node: Optional[str] = None,
+            tres_usage_out_maximum_task: Optional[str] = None,
+            tres_usage_out_average: Optional[str] = None,
+            tres_usage_out_total: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.drms.slurm.ProcessSLURM` object.
 
         :param process_slurm_id:
@@ -421,7 +421,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
     def __init__(
             self,
-            database_connection):
+            database_connection: DatabaseConnection) -> None:
         """Initialise a :py:class:`bsf.drms.slurm.ProcessSLURMAdaptor` object.
 
         :param database_connection: A :py:class:`bsf.database.DatabaseConnection` object.
@@ -619,7 +619,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
         return
 
-    def patch_table_definition(self):
+    def patch_table_definition(self) -> None:
         """Patch the SQL table definition.
 
         Re-synchronise the SQLite table with the current BSF Python table definition.
@@ -677,7 +677,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
         return
 
-    def select_all_by_job_name(self, name):
+    def select_all_by_job_name(self, name: str) -> list[ProcessSLURM]:
         """Select all :py:class:`bsf.drms.slurm.ProcessSLURM` objects by :literal:`job_name`.
 
         The same :py:class:`bsf.process.Executable` object can be submitted more than once into the
@@ -690,7 +690,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """
         return self.select(statement=self.statement_select(where_clause='job_name = ?'), parameters=[name])
 
-    def select_all_by_state(self, state=None):
+    def select_all_by_state(self, state: Optional[str] = None) -> list[ProcessSLURM]:
         """Select all :py:class:`bsf.drms.slurm.ProcessSLURM` objects by :literal:`state`.
 
         :param state: State
@@ -708,7 +708,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
         return self.select(statement=statement, parameters=parameters)
 
-    def select_all_by_states(self, state_list, negation=False):
+    def select_all_by_states(self, state_list: list[str], negation: bool = False) -> list[ProcessSLURM]:
         """Select all :py:class:`bsf.drms.slurm.ProcessSLURM` objects by a list of :literal:`states`.
 
         :param state_list: A Python :class:`list` object of Python :py:class:`str` (state) objects.
@@ -725,7 +725,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
         return self.select(statement=statement, parameters=state_list)
 
-    def select_by_job_id(self, job_id):
+    def select_by_job_id(self, job_id: str) -> Optional[ProcessSLURM]:
         """Select one :py:class:`bsf.drms.slurm.ProcessSLURM` object by :literal:`job_id`.
 
         :param job_id: Job identifier
@@ -745,7 +745,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             return
 
 
-def _recalculate_memory(memory):
+def _recalculate_memory(memory: str) -> str:
     """Recalculate a memory string.
 
     Multiplier suffixes K, M, G, T, P, E, Z and Y are based on 1024, while
@@ -803,7 +803,7 @@ def _recalculate_memory(memory):
     return str(result)
 
 
-def submit(stage, drms_submit=None, write_script=None):
+def submit(stage: Stage, drms_submit: Optional[bool] = None, write_script: Optional[bool] = None) -> None:
     """Submit each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     Submits each :py:class:`bsf.process.Executable` object into the
@@ -811,14 +811,14 @@ def submit(stage, drms_submit=None, write_script=None):
     :emphasis:`Distributed Resource Management System` (DRMS).
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
-    :type stage: bsf.analysis.Stage
+    :type stage: Stage
     :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
     :type drms_submit: bool | None
     :param write_script: Write a :py:class:`bsf.analysis.Stage`-specific GNU Bash script.
     :type write_script: bool | None
     """
 
-    def submit_sbatch_stdout(_file_handle, _thread_lock, _executable):
+    def submit_sbatch_stdout(_file_handle: TextIO, _thread_lock: Lock, _executable: Executable):
         """Thread callable to process the SLURM :manpage:`sbatch(1)` :literal:`STDOUT` stream.
 
         Parses the process identifier returned by SLURM :literal:`sbatch` and sets it as
@@ -828,7 +828,7 @@ def submit(stage, drms_submit=None, write_script=None):
         :literal:`Submitted batch job 1234567`
 
         :param _file_handle: File handle (i.e. pipe)
-        :type _file_handle: io.TextIOWrapper
+        :type _file_handle: TextIO
         :param _thread_lock: A Python :py:class:`threading.Lock` object.
         :type _thread_lock: Lock
         :param _executable: A :py:class:`bsf.process.Executable` object.
@@ -862,7 +862,7 @@ def submit(stage, drms_submit=None, write_script=None):
     if not os.access(file_path, os.W_OK):
         raise Exception(f'Cannot write to SQLite database file path: {file_path!r}')
 
-    output_list: List[str] = list()
+    output_list: list[str] = list()
 
     output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
@@ -961,7 +961,7 @@ def submit(stage, drms_submit=None, write_script=None):
         # submitting the process. Isn't that exactly what we have a scheduler for? Sigh.
         # Consequently, SLURM process identifiers need to be tracked here, by means of a SQLite database.
 
-        process_identifier_list: List[str] = list()
+        process_identifier_list: list[str] = list()
 
         for executable_name in executable.dependencies:
             process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable_name)
@@ -1036,18 +1036,21 @@ def submit(stage, drms_submit=None, write_script=None):
     return
 
 
-def check_state(stage):
+def check_state(stage: Stage) -> None:
     """Check the state of each :py:class:`bsf.process.Executable` object of a :py:class:`bsf.analysis.Stage` object.
 
     :param stage: A :py:class:`bsf.analysis.Stage` object.
-    :type stage: bsf.analysis.Stage
+    :type stage: Stage
     """
 
-    def check_state_stdout(_stdout_handle, _thread_lock, _process_slurm_adaptor):
+    def check_state_stdout(
+            _stdout_handle: TextIO,
+            _thread_lock: Lock,
+            _process_slurm_adaptor: ProcessSLURMAdaptor) -> None:
         """Thread callable to process the SLURM :manpage:`sacct(1)` :literal:`STDOUT` stream.
 
         :param _stdout_handle: The :literal:`STDOUT` or :literal:`STDERR` file handle.
-        :type _stdout_handle: io.TextIOWrapper
+        :type _stdout_handle: TextIO
         :param _thread_lock: A Python :py:class:`threading.Lock` object.
         :type _thread_lock: Lock
         :param _process_slurm_adaptor: A :py:class:`bsf.drms.slurm.ProcessSLURMAdaptor` object.
@@ -1144,7 +1147,7 @@ def check_state(stage):
         file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
-    process_slurm_list: List[ProcessSLURM] = list()
+    process_slurm_list: list[ProcessSLURM] = list()
 
     # Get all Processes from the database that have no state set.
     process_slurm_list.extend(process_slurm_adaptor.select_all_by_state(state=None))

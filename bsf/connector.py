@@ -25,6 +25,7 @@
 """The :py:mod:`bsf.connector` module provides classes modelling inter-process connectors.
 """
 from threading import Thread
+from typing import Any, Callable, Optional
 
 __all__ = \
     'Connector', 'ConnectorFile', 'ConnectorPipe', 'ConnectorPipeNamed', \
@@ -36,7 +37,7 @@ class Connector(object):
     """The :py:class:`bsf.connector.Connector` class represents an abstract super-class of inter-process connections.
     """
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}()'
 
 
@@ -49,7 +50,7 @@ class ConnectorFile(Connector):
     :type file_mode: str
     """
 
-    def __init__(self, file_path, file_mode):
+    def __init__(self, file_path: str, file_mode: str) -> None:
         """Initialise a :py:class:`bsf.connector.ConnectorFile` object.
 
         :param file_path: A file path.
@@ -64,7 +65,7 @@ class ConnectorFile(Connector):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{self.__class__.__name__}(' \
             f'file_path={self.file_path!r}, ' \
@@ -96,7 +97,7 @@ class ConcurrentProcess(Connector):
     :type connection: str
     """
 
-    def __init__(self, name, connection):
+    def __init__(self, name: str, connection: str) -> None:
         """Initialise a :py:class:`bsf.connector.ConcurrentProcess` object.
 
         :param name: A name matching a :py:attr:`bsf.process.Executable.name` attribute of the
@@ -113,7 +114,7 @@ class ConcurrentProcess(Connector):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{self.__class__.__name__}(' \
             f'name={self.name!r}, ' \
@@ -140,10 +141,10 @@ class StandardStream(Connector):
     :ivar file_path: A file path.
     :type file_path: str | None
     :ivar thread_callable: A :py:class:`typing.Callable` object for the :py:attr:`threading.Thread.target` attribute.
-    :type thread_callable: object | None
+    :type thread_callable: (...) -> Any | None
     :ivar thread_kwargs: A Python :py:class:`dict` object of keyword arguments for the
         :py:attr:`threading.Thread.kwargs` attribute.
-    :type thread_kwargs: dict[str, object] | None
+    :type thread_kwargs: dict[str, Any] | None
     :ivar thread_joins: A maximum number of attempts calling the :py:meth:`threading.Thread.join` method.
     :type thread_joins: int
     :ivar thread_timeout: A timeout in seconds for calling the :py:meth:`threading.Thread.join` method.
@@ -154,21 +155,21 @@ class StandardStream(Connector):
 
     def __init__(
             self,
-            file_path=None,
-            thread_callable=None,
-            thread_kwargs=None,
-            thread_joins=10,
-            thread_timeout=10,
-            thread=None):
+            file_path: Optional[str] = None,
+            thread_callable: Optional[Callable] = None,
+            thread_kwargs: Optional[dict[str, Any]] = None,
+            thread_joins: int = 10,
+            thread_timeout: int = 10,
+            thread: Optional[Thread] = None) -> None:
         """Initialise a :py:class:`bsf.connector.StandardStream` object.
 
         :param file_path: A file path.
         :type file_path: str | None
         :param thread_callable: A :py:class:`Callable` object for :py:attr:`threading.Thread.target` attribute.
-        :type thread_callable: object | None
+        :type thread_callable: (...) -> Any | None
         :param thread_kwargs: A Python :py:class:`dict` object of keyword arguments for the
             :py:attr:`threading.Thread.kwargs` attribute.
-        :type thread_kwargs: dict[str, object] | None
+        :type thread_kwargs: dict[str, Any] | None
         :param thread_joins: A maximum number of attempts calling the :py:meth:`threading.Thread.join` method.
         :type thread_joins: int
         :param thread_timeout: A timeout in seconds for calling the :py:meth:`threading.Thread.join` method.
@@ -185,7 +186,7 @@ class StandardStream(Connector):
 
         return
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return \
             f'{self.__class__.__name__}(' \
             f'file_path={self.file_path!r}, ' \

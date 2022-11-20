@@ -67,7 +67,7 @@ class FilePathAlign(AlignerFilePathAlign):
     :type junctions_bb: str
     """
 
-    def __init__(self, prefix):
+    def __init__(self, prefix: str) -> None:
         """Initialise a :py:class:`bsf.analyses.tophat.FilePathAlign` object.
 
         :param prefix: A Python :py:class:`str` prefix representing a :py:attr:`bsf.procedure.Runnable.name` attribute.
@@ -145,7 +145,7 @@ class Tophat2(Aligner):
     ]
 
     @classmethod
-    def get_file_path_align(cls, paired_reads_name):
+    def get_file_path_align(cls, paired_reads_name: str) -> FilePathAlign:
         """Get a :py:class:`bsf.analyses.tophat.FilePathAlign` object from this or a subclass.
 
         :param paired_reads_name: A :py:attr:`bsf.ngs.PairedReads.name` attribute.
@@ -197,13 +197,13 @@ class Tophat2(Aligner):
         :type project_directory: str | None
         :param genome_directory: A genome directory path, normally under the project directory path.
         :type genome_directory: str | None
-        :param report_style_path: Report :literal:`CSS` file path.
+        :param report_style_path: A report style :literal:`CSS` file path.
         :type report_style_path: str | None
-        :param report_header_path: Report header :literal:`XHTML 1.0` file path.
+        :param report_header_path: A report header :literal:`XHTML 1.0` file path.
         :type report_header_path: str | None
-        :param report_footer_path: Report footer :literal:`XHTML 1.0` file path.
+        :param report_footer_path: A report footer :literal:`XHTML 1.0` file path.
         :type report_footer_path: str | None
-        :param e_mail: An e-mail address for a UCSC Genome Browser Track Hub.
+        :param e_mail: An e-mail address for a :emphasis:`UCSC Genome Browser Track Hub`.
         :type e_mail: str | None
         :param stage_list: A Python :py:class:`list` object of :py:class:`bsf.analysis.Stage` objects.
         :type stage_list: list[Stage] | None
@@ -213,7 +213,7 @@ class Tophat2(Aligner):
         :type sample_list: list[Sample] | None
         :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
         :type skip_mark_duplicates: bool | None
-        :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
+        :param java_archive_picard: A Picard tools :emphasis:`Java Archive` (JAR) file path.
         :type java_archive_picard: str | None
         :param insert_size: An insert size.
         :type insert_size: int | None
@@ -268,7 +268,7 @@ class Tophat2(Aligner):
 
         return
 
-    def set_configuration(self, configuration, section):
+    def set_configuration(self, configuration: Configuration, section: str) -> None:
         """Set instance variables of a :py:class:`bsf.analyses.tophat.Tophat2` object
         via a section of a :py:class:`bsf.standards.Configuration` object.
 
