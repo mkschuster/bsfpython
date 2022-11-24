@@ -3596,14 +3596,16 @@ class DESeq(Analysis):
     `Bioconductor <https://bioconductor.org/>`_
     `DESeq2 <https://bioconductor.org/packages/release/bioc/html/DESeq2.html>`_ package.
 
-    :ivar transcriptome_version: Transcriptome version
+    :ivar transcriptome_version: A transcriptome version
     :type transcriptome_version: str | None
-    :ivar transcriptome_gtf: Transcriptome annotation GTF file path
+    :ivar transcriptome_gtf: A transcriptome annotation GTF file path
     :type transcriptome_gtf: str | None
-    :ivar comparison_path: Comparison file path
+    :ivar comparison_path: A comparison file path
     :type comparison_path: str | None
-    :ivar contrast_path: Contrast file path
+    :ivar contrast_path: A contrast file path
     :type contrast_path: str | None
+    :ivar only_counting: Request creating count matrices rather than running a full analysis
+    :type only_counting: bool | None
     :ivar threshold_padj: Threshold for p-adjusted values
     :type threshold_padj: float | none
     :ivar threshold_log2fc: Threshold for log2 fold-change values
@@ -3673,6 +3675,7 @@ class DESeq(Analysis):
             transcriptome_gtf=None,
             comparison_path=None,
             contrast_path=None,
+            only_counting=None,
             threshold_padj=None,
             threshold_log2fc=None):
         """Initialise a :py:class:`bsf.analyses.rnaseq.DESeq` object.
@@ -3705,16 +3708,18 @@ class DESeq(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param transcriptome_version: Transcriptome version
+        :param transcriptome_version: A transcriptome version
         :type transcriptome_version: str | None
-        :param transcriptome_gtf: Transcriptome annotation GTF file path
+        :param transcriptome_gtf: A transcriptome annotation GTF file path
         :type transcriptome_gtf: str | None
-        :param comparison_path: Comparison file path
+        :param comparison_path: A comparison file path
         :type comparison_path: str | None
-        :param contrast_path: Contrast file path
+        :param contrast_path: A contrast file path
         :type contrast_path: str | None
+        :param only_counting: Request creating count matrices rather than running a full analysis
+        :type only_counting: bool | None
         :param threshold_padj: Threshold for p-adjusted values
-        :type threshold_padj: float | none
+        :type threshold_padj: float | None
         :param threshold_log2fc: Threshold for log2 fold-change values
         :type threshold_log2fc: float | None
         """
@@ -3741,6 +3746,7 @@ class DESeq(Analysis):
         self.transcriptome_gtf = transcriptome_gtf
         self.comparison_path = comparison_path
         self.contrast_path = contrast_path
+        self.only_counting = only_counting
         self.threshold_padj = threshold_padj
         self.threshold_log2fc = threshold_log2fc
 
@@ -3777,6 +3783,10 @@ class DESeq(Analysis):
         option = 'ctr_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.contrast_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'only_counting'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.only_counting = configuration.config_parser.getboolean(section=section, option=option)
 
         option = 'threshold_padj'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3977,9 +3987,14 @@ class DESeq(Analysis):
             if design_sheet.get_boolean(row_dict=design_row_dict, key='exclude'):
                 executable_analysis.submit = False
 
-            runnable_step = RunnableStep(
-                name='analysis',
-                program='bsf_rnaseq_deseq_analysis.R')
+            if self.only_counting:
+                runnable_step = RunnableStep(
+                    name='analysis',
+                    program='bsf_rnaseq_deseq_rse.R')
+            else:
+                runnable_step = RunnableStep(
+                    name='analysis',
+                    program='bsf_rnaseq_deseq_analysis.R')
             runnable_analysis.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_option_long(key='design-name', value=design_name)
