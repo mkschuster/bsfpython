@@ -108,7 +108,7 @@ if name_space.sas_file:
 
     analysis.sas_file = sas_file
 
-annotation_sheet = analysis.run()
+analysis.run()
 analysis.check_state()
 analysis.submit(name=name_space.stage, drms_submit=name_space.drms_submit)
 
