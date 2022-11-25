@@ -33,10 +33,12 @@
 - `IRF/Data/Intensities/BaseCalls/Phasing/` not in RTA 2.7.3
 - `IRF/Data/Intensities/BaseCalls/Phasing/s_{read}_phasing.txt`
 - `IRF/Data/Intensities/BaseCalls/Phasing/s_{lane}_{read}_phasing.txt`
-- `IRF/Data/Intensities/BaseCalls/Phasing/s_{lane}_{read}_{tile}_cycle.txt` only in RTA 1.12.4, 1.12.4.2, 1.13.48 and 1.17.21.3
+- `IRF/Data/Intensities/BaseCalls/Phasing/s_{lane}_{read}_{tile}_cycle.txt` only in RTA 1.12.4, 1.12.4.2, 1.13.48 and
+  1.17.21.3
 - `IRF/Data/Intensities/BaseCalls/Phasing/s_{lane}_{read}_{tile}_phasing.txt`
 - `IRF/Data/Intensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml` not in RTA 2.5.2
-- `IRF/Data/Intensities/BaseCalls/Phasing/EmpiricalPhasingCorrection_{lane}_{read}_{tile}.txt` not in 1.12.4, 1.12.4.2, 1.13.48 and 1.17.21.3
+- `IRF/Data/Intensities/BaseCalls/Phasing/EmpiricalPhasingCorrection_{lane}_{read}_{tile}.txt` not in 1.12.4, 1.12.4.2,
+  1.13.48 and 1.17.21.3
 - `IRF/Data/Intensities/BaseCalls/SampleSheet.csv` only in RTA 1.18.54
 - `IRF/Data/Intensities/L00{lane}/` not in RTA 2.5.2 and 2.7.3
 - `IRF/Data/Intensities/L00{lane}/s_{lane}_{tile}.locs` only in RTA 1.18.54
@@ -49,7 +51,7 @@
 - `IRF/Data/Intensities/Offsets/offsets.txt`
 - `IRF/Data/Intensities/Offsets/SubTileOffsets.txt`
 - `IRF/Data/Intensities/RTAConfiguration.xml` not in RTA 2.5.2 and 2.7.3
-- `IRF/Data/Intensities/s_{lane}_{tile}_pos.txt` only in RTA 1.12.4, 1.12.4.2 and 1.13.48 
+- `IRF/Data/Intensities/s_{lane}_{tile}_pos.txt` only in RTA 1.12.4, 1.12.4.2 and 1.13.48
 - `IRF/Data/Intensities/s.locs` only in RTA 2.5.2 and 2.7.3
 - `IRF/Data/reports/` only in RTA 1.12.4, 1.12.4.2 and 1.13.48
 - `IRF/Data/RTALogs/` not in RTA 2.5.2 and 2.7.3
@@ -86,11 +88,10 @@
 - `IRF/Thumbnail_Images/L00{lane}/`
 - `IRF/Thumbnail_Images/L00{lane}/C{cycle}.1/`
 
-
 ## Data/Intensities/BaseCalls
 
- - One *.bcl file per lane (L001 - L008), cycle (C1.1) and tile
- - One *.filter file per lane and tile
+- One *.bcl file per lane (L001 - L008), cycle (C1.1) and tile
+- One *.filter file per lane and tile
 
 ### HiSeq 3000/4000
 
@@ -99,7 +100,7 @@ On a HiSeq 3000 with 310 cycles this amounts to 310 * 112 + 112 = 34,832 files p
 
 ## Data/Intensities/BaseCalls/Matrix
 
- - One Matrix file per lane, cycle and tile
+- One Matrix file per lane, cycle and tile
 
 ### HiSeq 3000/4000
 
@@ -112,9 +113,9 @@ This directory exists only on the HiSeq 3000 and 4000 platforms.
 
 ## Data/Intensities/BaseCalls/Phasing
 
- - One file per read (s_1_phasing.txt, s_2_phasing.txt, ...)
- - One file per lane and read (s_1_1_phasing.txt, ..., s_8_3_phasing.txt)
- - One file per surface, swath and tile (s_1_1_1101_phasing.txt, ..., s_8_3_2316_phasing.txt)
+- One file per read (s_1_phasing.txt, s_2_phasing.txt, ...)
+- One file per lane and read (s_1_1_phasing.txt, ..., s_8_3_phasing.txt)
+- One file per surface, swath and tile (s_1_1_1101_phasing.txt, ..., s_8_3_2316_phasing.txt)
 
 ### HiSeq 3000/4000
 
@@ -122,8 +123,8 @@ This directory does not exist on this platform.
 
 ## Thumbnail_Images
 
- - One image file per lane, cycle, tile and channel (ACGT)
- - Two files (*.jpg and *.jpg.zprof) per surface, swath and channel
+- One image file per lane, cycle, tile and channel (ACGT)
+- Two files (*.jpg and *.jpg.zprof) per surface, swath and channel
 
 ### HiSeq 2000
 

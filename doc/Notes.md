@@ -11,38 +11,38 @@ automatically discovered.
 
 The Sample Annotation Sheet format is defined in bsf.ngs.Collection._process_row_dict
 
- - FileType: BSF Data object file_type (i.e. 'CASAVA', 'External' or 'Automatic'), defaults to 'Automatic'.
-             The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder and subsequent objects.
+- FileType: BSF Data object file_type (i.e. 'CASAVA', 'External' or 'Automatic'), defaults to 'Automatic'.
+  The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder and subsequent objects.
 
- - ProcessedRunFolder: bsf.ngs.ProcessedRunFolder.file_path, can be automatically registered.
+- ProcessedRunFolder: bsf.ngs.ProcessedRunFolder.file_path, can be automatically registered.
 
- - Project: bsf.ngs.Project.name
+- Project: bsf.ngs.Project.name
 
- - Sample: bsf.ngs.Sample.name
+- Sample: bsf.ngs.Sample.name
 
- - File1: bsf.ngs.Reads.file_name instance variable.
-          Subjected to os.path.expanduser and os.path.expandvars.
-          If still relative, the BSF Collection file_path is prepended.
+- File1: bsf.ngs.Reads.file_name instance variable.
+  Subjected to os.path.expanduser and os.path.expandvars.
+  If still relative, the BSF Collection file_path is prepended.
 
- - Reads1: bsf.ngs.Reads.name instance variable
+- Reads1: bsf.ngs.Reads.name instance variable
 
- - File2: Same as File1
+- File2: Same as File1
 
- - Reads2: Same as Reads1
+- Reads2: Same as Reads1
 
- - Groups: BSF Sample objects can be grouped for further analysis in
-           e.g., RNA-Seq or ChIP-Seq experiments.
+- Groups: BSF Sample objects can be grouped for further analysis in
+  e.g., RNA-Seq or ChIP-Seq experiments.
 
 ### Class Hierarchy
 
- - ProcessedRunFolder Name
-     - Project Name
-         - Sample Name
-             - PairedReads ReadGroup
-                 - Reads1 Name
-                 - Reads1 File
-                 - Reads2 Name
-                 - Reads2 File
+- ProcessedRunFolder Name
+    - Project Name
+        - Sample Name
+            - PairedReads ReadGroup
+                - Reads1 Name
+                - Reads1 File
+                - Reads2 Name
+                - Reads2 File
 
 ## Sample naming and Replicates
 
@@ -64,7 +64,6 @@ The bsf.analysis.Analysis.samples instance variable also needed changing from a 
 check avoiding duplicates is in place in the bsf.analysis.Analysis.add_sample method.
 
 BSF Sample objects can now have the same name and be treated as replicates via grouping.
-
 
 ## Sample Grouping
 
@@ -112,7 +111,6 @@ individually or as a pool and a subsequent comparison stage.
     Therefore, it may be desirable to make available the complete hierarchy of ProcessRunFolder,
     Project, Sample and PairedReads.
 
-
 bsf.analysis.Analysis
 
 The bsf.analysis.Analysis class represents a high-level analysis of NGS data.
@@ -146,8 +144,8 @@ all hierarchical objects underneath, automatically.
 However, for a comparison schema for a BSF Analysis, 'ProcessedRunFolder', 'Project' and 'Sample'
 columns are an absolute requirement. ProcessedRunFolder auto-discovery registers all hierarchical
 objects (i.e. BSF Project and BSF Sample objects) underneath the BSF ProcessedRunFolder.
-Since Sample names are not guaranteed to be unique between BSF Project objects – they typically are 1, 2, 3, ... – both 'Project' and 'ProcessedRunFolder' need specifying.
-
+Since Sample names are not guaranteed to be unique between BSF Project objects – they typically are 1, 2, 3, ... –
+both 'Project' and 'ProcessedRunFolder' need specifying.
 
 bsf.ngs.Pool
 
@@ -155,41 +153,33 @@ Would a new bsf.ngs.Pool object make sense for bsf.ngs.Sample objects that have 
 on more than one lane and represent sequencing replicates. For the moment, a solution to
 merge two samples is implemented in the bsf.analyses.chipseq.ChIPSeq class.
 
-
 ## RNA-Seq Pipeline:
-
-* Integrate with Doris post-processing R-code
-* Add PCA and MDS plots as in the cummeRbund manual.
-* Andreas Bergthaler:
-  * Add individual FPKM values for each replicate.
-    Implemented via bsf_process_cuffdiff.R.
-  * Rename downloadable files to include the sample or comparison name.
-    Otherwise, files with identical names may get overwritten.
-    Implemented via bsf_process_cufflinks.R and bsf_process_cuffdiff.R.
-  * Maybe create a ZIP or Gzip archive to download and archive locally.
-
 
 ## Object Hierarchy
 
 bsf
-  - `from bsf import Defaults` (no further dependency)
-  - `from bsf.ngs import Collection` (no further dependency)
-  - `from bsf.argument import *` (no further dependency)
+
+- `from bsf import Defaults` (no further dependency)
+- `from bsf.ngs import Collection` (no further dependency)
+- `from bsf.argument import *` (no further dependency)
 
 bsf.analysis.Analysis
-  - `from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable` (no further dependency)
-  - `from bsf.ngs import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet` (no further dependency)
-  - `from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC`
+
+- `from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable` (no further dependency)
+- `from bsf.ngs import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet` (no further dependency)
+- `from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC`
 
 bsf.argument
-  - no further dependency
+
+- no further dependency
 
 bsf.ngs
-  - no further dependency
+
+- no further dependency
 
 bsf.defaults
-  - no further dependency
 
+- no further dependency
 
 Configuration file template for picard.extract_illumina_barcodes
 
@@ -197,11 +187,10 @@ illumina_run_folder =
 
 barcode_file =
 
-
 # Barcode file:
 
-  - lane
-  - barcode_sequence_1
-  - barcode_sequence_2
-  - library_name
-  - sample_name
+- lane
+- barcode_sequence_1
+- barcode_sequence_2
+- library_name
+- sample_name

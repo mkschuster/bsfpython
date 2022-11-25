@@ -27,8 +27,8 @@ cluster compute node via the common `bsf_runner.py` script.
 General settings for the BSF Python library are configured via a `${HOME}/.bsfpython.ini` file
 in the user's home directory. This file is site-specific and its information allows for automatic
 discovery of raw (e.g., Illumina run folders) and pre-processed (e.g., de-multiplexed lanes and samples)
-NGS data. A template file [`template_bsfpython.ini`](doc/template_bsfpython.ini) can be found in the doc subdirectory. The template,
-which documents the configuration options and provides, as far as possible, sensible default settings,
+NGS data. A template file [`template_bsfpython.ini`](doc/template_bsfpython.ini) can be found in the doc subdirectory.
+The template, which documents the configuration options and provides, as far as possible, sensible default settings,
 needs copying to `${HOME}/.bsfpython.ini` before editing accordingly.
 
 ## Analysis
@@ -104,7 +104,6 @@ the merged assemblies on the basis of the BAM alignments produced by Tophat2.
 
 ## References
 
-
 ## Licence
 
 Copyright 2013 - 2020 Michael K. Schuster
@@ -116,7 +115,6 @@ part of the joint
 [Research Center for Molecular Medicine](http://www.cemm.oeaw.ac.at/) (CeMM) of the
 [Austrian Academy of Sciences](http://www.oeaw.ac.at/) (OeAW).
 
-
 This file is part of BSF Python.
 
 BSF Python is free software: you can redistribute it and/or modify
@@ -126,8 +124,8 @@ the Free Software Foundation, either version 3 of the License, or
 
 BSF Python is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+along with BSF Python. If not, see <http://www.gnu.org/licenses/>.
