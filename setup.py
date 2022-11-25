@@ -38,7 +38,7 @@ setuptools.setup(
     # metadata_version='2.1',
     # Additional Meta-Data
     name='bsfpython-MSchuster',
-    version='2022.11.1',
+    version='2022.11.25',
     author='Michael Schuster',
     author_email='mschuster@cemm.oeaw.ac.at',
     maintainer='Michael Schuster',
@@ -62,7 +62,7 @@ setuptools.setup(
     # license='',
 
     packages=setuptools.find_packages(),
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     install_requires=[
         'python-dateutil',
         'azure-storage-blob',
@@ -71,9 +71,6 @@ setuptools.setup(
         'SQLAlchemy',
         'mysql-connector-python',
         'openpyxl',
-        'RSeQC',
-        'MACS2',
-        'deepTools',
     ],
     scripts=[
         'bin/bsf_runner.py',
