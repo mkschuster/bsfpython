@@ -40,161 +40,6 @@ from bsf.standards import Configuration, StandardFilePath, Genome, Transcriptome
 module_logger = logging.getLogger(name=__name__)
 
 
-class ChIPSeqComparison(object):
-    """The :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` models a ChIP-Seq comparison annotation sheet.
-
-    :ivar name: A comparison name.
-    :type name: str
-    :ivar group: A group name.
-    :type group: str
-    :ivar c_name: A :literal:`control` name.
-    :type c_name: str | None
-    :ivar t_name: A :literal:`treatment` name.
-    :type t_name: str | None
-    :ivar c_samples: A Python :py:class:`list` object of :literal:`control` :py:class:`bsf.ngs.Sample` objects.
-    :type c_samples: list[Sample]
-    :ivar t_samples: A Python :py:class:`list` object of :literal:`treatment` :py:class:`bsf.ngs.Sample` objects.
-    :type t_samples: list[Sample]
-    :ivar factor: A ChIP factor variable.
-    :type factor: str
-    :ivar tissue: A ChIP tissue variable.
-    :type tissue: str
-    :ivar condition: A ChIP condition variable.
-    :type condition: str
-    :ivar treatment: A ChIP treatment variable.
-    :type treatment: str
-    :ivar replicate: A replicate number.
-    :type replicate: int
-    :ivar diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
-        `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
-    :type diff_bind: bool
-    """
-
-    def __init__(
-            self,
-            name,
-            group,
-            c_name,
-            t_name,
-            c_samples,
-            t_samples,
-            factor,
-            tissue=None,
-            condition=None,
-            treatment=None,
-            replicate=None,
-            diff_bind=None):
-        """Initialise a :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` object.
-
-        :param name: A comparison name.
-        :type name: str
-        :param group: A group name.
-        :type group: str
-        :param c_name: A :literal:`control` name.
-        :type c_name: str | None
-        :param t_name: A :literal:`treatment` name.
-        :type t_name: str | None
-        :param c_samples: A Python :py:class:`list` object of :literal:`control` :py:class:`bsf.ngs.Sample` objects.
-        :type c_samples: list[Sample] | None
-        :param t_samples: A Python :py:class:`list` object of :literal:`treatment` :py:class:`bsf.ngs.Sample` objects.
-        :type t_samples: list[Sample] | None
-        :param factor: A ChIP factor variable.
-        :type factor: str | None
-        :param tissue: A ChIP tissue variable.
-        :type tissue: str | None
-        :param condition: A ChIP condition variable.
-        :type condition: str | None
-        :param treatment: A ChIP treatment variable.
-        :type treatment: str | None
-        :param replicate: A replicate number.
-        :type replicate: int | None
-        :param diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
-            `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
-        :type diff_bind: bool | None
-        """
-        super(ChIPSeqComparison, self).__init__()
-
-        # Condition', 'Treatment', 'Replicate',
-        # 'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
-
-        self.name = name
-        self.group = group
-        self.c_name = c_name
-        self.t_name = t_name
-
-        if c_samples is None:
-            self.c_samples = list()
-        else:
-            self.c_samples = c_samples
-
-        if t_samples is None:
-            self.t_samples = list()
-        else:
-            self.t_samples = t_samples
-
-        if factor is None:
-            self.factor = str()
-        else:
-            self.factor = factor
-
-        if tissue is None:
-            self.tissue = str()
-        else:
-            self.tissue = tissue
-
-        if condition is None:
-            self.condition = str()
-        else:
-            self.condition = condition
-
-        if treatment is None:
-            self.treatment = str()
-        else:
-            self.treatment = treatment
-
-        if replicate is None:
-            self.replicate = 0
-        else:
-            self.replicate = replicate
-
-        if diff_bind is None:
-            self.diff_bind = True
-        else:
-            self.diff_bind = diff_bind
-
-        return
-
-    def get_key(self):
-        """Get a :py:class:`str` (comparison key) object based on the
-        :literal:`control` and :literal:`treatment` pair name, or just the treatment name.
-
-        ChIP-Seq experiments use the order :literal:`treatment` versus :literal:`control` in comparisons.
-
-        :return: A :py:class:`str` (comparison key) object.
-        :rtype: str
-        """
-        if self.c_name and self.t_name:
-            return '__'.join((self.t_name, self.c_name))
-        else:
-            return self.t_name
-
-    def get_prefix_peak_calling(self):
-        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
-
-        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
-        :rtype: str
-        """
-        return ChIPSeq.get_prefix_peak_calling(t_name=self.t_name, c_name=self.c_name)
-
-    def get_file_path_peak_calling(self):
-        """Get a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object from this or a subclass.
-
-        :return: A :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object or subclass thereof.
-        :rtype: FilePathPeakCalling
-        """
-        return ChIPSeq.get_file_path_peak_calling(t_name=self.t_name, c_name=self.c_name)
-
-
 class FilePathAlignment(FilePath):
     """The :py:class:`bsf.analyses.chipseq.FilePathAlignment` class models alignment file paths.
 
@@ -646,6 +491,161 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         super(ChIPSeqDiffBindSheet, self).to_file_path(adjust_field_names=adjust_field_names)
 
         return
+
+
+class ChIPSeqComparison(object):
+    """The :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` models a ChIP-Seq comparison annotation sheet.
+
+    :ivar name: A comparison name.
+    :type name: str
+    :ivar group: A group name.
+    :type group: str
+    :ivar c_name: A :literal:`control` name.
+    :type c_name: str | None
+    :ivar t_name: A :literal:`treatment` name.
+    :type t_name: str | None
+    :ivar c_samples: A Python :py:class:`list` object of :literal:`control` :py:class:`bsf.ngs.Sample` objects.
+    :type c_samples: list[Sample]
+    :ivar t_samples: A Python :py:class:`list` object of :literal:`treatment` :py:class:`bsf.ngs.Sample` objects.
+    :type t_samples: list[Sample]
+    :ivar factor: A ChIP factor variable.
+    :type factor: str
+    :ivar tissue: A ChIP tissue variable.
+    :type tissue: str
+    :ivar condition: A ChIP condition variable.
+    :type condition: str
+    :ivar treatment: A ChIP treatment variable.
+    :type treatment: str
+    :ivar replicate: A replicate number.
+    :type replicate: int
+    :ivar diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
+        `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
+    :type diff_bind: bool
+    """
+
+    def __init__(
+            self,
+            name,
+            group,
+            c_name,
+            t_name,
+            c_samples,
+            t_samples,
+            factor,
+            tissue=None,
+            condition=None,
+            treatment=None,
+            replicate=None,
+            diff_bind=None):
+        """Initialise a :py:class:`bsf.analyses.chipseq.ChIPSeqComparison` object.
+
+        :param name: A comparison name.
+        :type name: str
+        :param group: A group name.
+        :type group: str
+        :param c_name: A :literal:`control` name.
+        :type c_name: str | None
+        :param t_name: A :literal:`treatment` name.
+        :type t_name: str | None
+        :param c_samples: A Python :py:class:`list` object of :literal:`control` :py:class:`bsf.ngs.Sample` objects.
+        :type c_samples: list[Sample] | None
+        :param t_samples: A Python :py:class:`list` object of :literal:`treatment` :py:class:`bsf.ngs.Sample` objects.
+        :type t_samples: list[Sample] | None
+        :param factor: A ChIP factor variable.
+        :type factor: str | None
+        :param tissue: A ChIP tissue variable.
+        :type tissue: str | None
+        :param condition: A ChIP condition variable.
+        :type condition: str | None
+        :param treatment: A ChIP treatment variable.
+        :type treatment: str | None
+        :param replicate: A replicate number.
+        :type replicate: int | None
+        :param diff_bind: Request a `Bioconductor <https://bioconductor.org>`_
+            `DiffBind <https://bioconductor.org/packages/release/bioc/html/DiffBind.html>`_ analysis.
+        :type diff_bind: bool | None
+        """
+        super(ChIPSeqComparison, self).__init__()
+
+        # Condition', 'Treatment', 'Replicate',
+        # 'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
+
+        self.name = name
+        self.group = group
+        self.c_name = c_name
+        self.t_name = t_name
+
+        if c_samples is None:
+            self.c_samples = list()
+        else:
+            self.c_samples = c_samples
+
+        if t_samples is None:
+            self.t_samples = list()
+        else:
+            self.t_samples = t_samples
+
+        if factor is None:
+            self.factor = str()
+        else:
+            self.factor = factor
+
+        if tissue is None:
+            self.tissue = str()
+        else:
+            self.tissue = tissue
+
+        if condition is None:
+            self.condition = str()
+        else:
+            self.condition = condition
+
+        if treatment is None:
+            self.treatment = str()
+        else:
+            self.treatment = treatment
+
+        if replicate is None:
+            self.replicate = 0
+        else:
+            self.replicate = replicate
+
+        if diff_bind is None:
+            self.diff_bind = True
+        else:
+            self.diff_bind = diff_bind
+
+        return
+
+    def get_key(self):
+        """Get a :py:class:`str` (comparison key) object based on the
+        :literal:`control` and :literal:`treatment` pair name, or just the treatment name.
+
+        ChIP-Seq experiments use the order :literal:`treatment` versus :literal:`control` in comparisons.
+
+        :return: A :py:class:`str` (comparison key) object.
+        :rtype: str
+        """
+        if self.c_name and self.t_name:
+            return '__'.join((self.t_name, self.c_name))
+        else:
+            return self.t_name
+
+    def get_prefix_peak_calling(self):
+        """Get a Python :py:class:`str` prefix representing a :py:class:`bsf.procedure.Runnable` object.
+
+        :return: A Python :py:class:`str` (prefix)  object representing a :py:class:`bsf.procedure.Runnable` object.
+        :rtype: str
+        """
+        return ChIPSeq.get_prefix_peak_calling(t_name=self.t_name, c_name=self.c_name)
+
+    def get_file_path_peak_calling(self):
+        """Get a :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object from this or a subclass.
+
+        :return: A :py:class:`bsf.analyses.chipseq.FilePathPeakCalling` object or subclass thereof.
+        :rtype: FilePathPeakCalling
+        """
+        return ChIPSeq.get_file_path_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
 
 class ChIPSeq(Analysis):

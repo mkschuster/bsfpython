@@ -47,6 +47,355 @@ from bsf.standards import Configuration, StandardFilePath, Operator, Genome, Tra
 module_logger = logging.getLogger(name=__name__)
 
 
+class Stage(object):
+    """The :py:class:`bsf.analysis.Stage` class represents a stage of a :py:class:`bsf.analysis.Analysis` object.
+
+    A :py:class:`bsf.analysis.Stage` represents :py:class:`bsf.process.Executable` or
+    :py:class:`bsf.procedure.Runnable` objects that share similar resource requirements of a
+    :literal:`Distributed Resource Management System` (:literal:`DRMS`).
+
+    :ivar name: A name
+    :type name: str
+    :ivar working_directory: A working directory path.
+    :type working_directory: str
+    :ivar implementation: An implementation (e.g., :literal:`sge`, :literal:`slurm`, ...).
+    :type implementation: str
+    :ivar memory_free_mem: A memory limit (free physical).
+    :type memory_free_mem: str | None
+    :ivar memory_free_swap: A memory limit (free swap).
+    :type memory_free_swap: str | None
+    :ivar memory_free_virtual: A memory limit (free virtual).
+    :type memory_free_virtual: str | None
+    :ivar memory_limit_hard: A memory limit (hard).
+    :type memory_limit_hard: str | None
+    :ivar memory_limit_soft: A memory limit (soft).
+    :type memory_limit_soft: str | None
+    :ivar node_list_exclude: A list of nodes to exclude.
+    :type node_list_exclude: list[str] | None
+    :ivar node_list_include: A list of nodes to include.
+    :type node_list_include: list[str] | None
+    :ivar time_limit: A time limit.
+    :type time_limit: str | None
+    :ivar parallel_environment: A parallel environment.
+    :type parallel_environment: str | None
+    :ivar queue: A queue name.
+    :type queue: str | None
+    :ivar reservation: A reservation name.
+    :type reservation: str | None
+    :ivar threads: A number of threads.
+    :type threads: int
+    :ivar hold: Request a hold on job scheduling.
+    :type hold: str | None
+    :ivar is_script: The :py:class:`bsf.process.Executable` objects represent shell scripts,
+        or alternatively binary programs.
+    :type is_script: bool
+    :ivar executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
+    :type executable_list: list[Executable]
+    """
+
+    def __init__(
+            self,
+            name,
+            working_directory,
+            implementation=None,
+            memory_free_mem=None,
+            memory_free_swap=None,
+            memory_free_virtual=None,
+            memory_limit_hard=None,
+            memory_limit_soft=None,
+            node_list_exclude=None,
+            node_list_include=None,
+            time_limit=None,
+            parallel_environment=None,
+            queue=None,
+            reservation=None,
+            threads=1,
+            hold=None,
+            is_script=False,
+            template_script=None,
+            executable_list=None):
+        """Initialise a :py:class:`bsf.analysis.Stage` object.
+
+        :param name: An name.
+        :type name: str
+        :param working_directory: A working directory.
+        :type working_directory: str
+        :param implementation: An implementation (e.g., :literal:`sge`, :literal:`slurm`, ...).
+        :type implementation: str
+        :param memory_free_mem: A memory limit (free physical).
+        :type memory_free_mem: str | None
+        :param memory_free_swap: A memory limit (free swap).
+        :type memory_free_swap: str | None
+        :param memory_free_virtual: A memory limit (free virtual).
+        :type memory_free_virtual: str | None
+        :param memory_limit_hard: A memory limit (hard).
+        :type memory_limit_hard: str | None
+        :param memory_limit_soft: A memory limit (soft).
+        :type memory_limit_soft: str | None
+        :param node_list_exclude: A list of nodes to exclude.
+        :type node_list_exclude: list[str] | None
+        :param node_list_include: A list of nodes to include.
+        :type node_list_include: list[str] | None
+        :param time_limit: A time limit.
+        :type time_limit: str | None
+        :param parallel_environment: A parallel environment.
+        :type parallel_environment: str | None
+        :param queue: A queue name.
+        :type queue: str | None
+        :param reservation: A reservation name.
+        :type reservation: str | None
+        :param threads: A number of threads.
+        :type threads: int
+        :param hold: Request a hold on job scheduling.
+        :type hold: bool | None
+        :param is_script: The :py:class:`bsf.process.Executable` objects represent shell scripts,
+            or alternatively binary programs.
+        :type is_script: bool
+        :param template_script: Template script for submission.
+        :type template_script: str
+        :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
+        :type executable_list: list[Executable]
+        """
+        super(Stage, self).__init__()
+
+        if name is None:
+            self.name = str()
+        else:
+            self.name = name
+
+        if working_directory is None:
+            self.working_directory = str()
+        else:
+            self.working_directory = working_directory
+
+        if implementation is None:
+            self.implementation = str()
+        else:
+            self.implementation = implementation
+
+        self.memory_free_mem = memory_free_mem
+        self.memory_free_swap = memory_free_swap
+        self.memory_free_virtual = memory_free_virtual
+        self.memory_limit_hard = memory_limit_hard
+        self.memory_limit_soft = memory_limit_soft
+        self.node_list_exclude = node_list_exclude
+        self.node_list_include = node_list_include
+        self.time_limit = time_limit
+        self.parallel_environment = parallel_environment
+        self.queue = queue
+        self.reservation = reservation
+
+        if threads is None:
+            self.threads = 1
+        else:
+            assert isinstance(threads, int)
+            self.threads = threads
+
+        self.hold = hold
+        # FIXME: Does not seem to be used. Remove!
+
+        if is_script is None:
+            self.is_script = False
+        else:
+            assert isinstance(is_script, bool)
+            self.is_script = is_script
+
+        self.template_script = template_script
+
+        if executable_list is None:
+            self.executable_list = list()
+        else:
+            self.executable_list = executable_list
+
+        return
+
+    def __repr__(self):
+        return \
+            f'Stage(' \
+            f'name={self.name!r}, ' \
+            f'working_directory={self.working_directory!r}, ' \
+            f'implementation={self.implementation!r}, ' \
+            f'memory_free_mem={self.memory_free_mem!r}, ' \
+            f'memory_free_swap={self.memory_free_swap!r}, ' \
+            f'memory_free_virtual={self.memory_free_virtual!r}, ' \
+            f'memory_limit_hard={self.memory_limit_hard!r}, ' \
+            f'memory_limit_soft={self.memory_limit_soft!r}, ' \
+            f'node_list_exclude={self.node_list_exclude!r}, ' \
+            f'node_list_include={self.node_list_include!r}, ' \
+            f'time_limit={self.time_limit!r}, ' \
+            f'parallel_environment={self.parallel_environment!r}, ' \
+            f'queue={self.queue!r}, ' \
+            f'reservation{self.reservation!r}, ' \
+            f'threads={self.threads!r}, ' \
+            f'hold={self.hold!r}, ' \
+            f'is_script={self.is_script!r}, ' \
+            f'template_script={self.template_script!r}, ' \
+            f'executable_list={self.executable_list!r})'
+
+    def trace(self, level):
+        """Trace a :py:class:`bsf.analysis.Stage` object.
+
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information.
+        :rtype: list[str]
+        """
+        indent = '  ' * level
+
+        str_list: List[str] = list()
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  name:                 {!r}\n'.format(indent, self.name))
+        str_list.append('{}  working_directory:    {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  implementation:       {!r}\n'.format(indent, self.implementation))
+        str_list.append('{}  memory_free_mem:      {!r}\n'.format(indent, self.memory_free_mem))
+        str_list.append('{}  memory_free_swap:     {!r}\n'.format(indent, self.memory_free_swap))
+        str_list.append('{}  memory_free_virtual:  {!r}\n'.format(indent, self.memory_free_virtual))
+        str_list.append('{}  memory_limit_hard:    {!r}\n'.format(indent, self.memory_limit_hard))
+        str_list.append('{}  memory_limit_soft:    {!r}\n'.format(indent, self.memory_limit_soft))
+        str_list.append('{}  node_list_exclude:    {!r}\n'.format(indent, self.node_list_exclude))
+        str_list.append('{}  node_list_include:    {!r}\n'.format(indent, self.node_list_include))
+        str_list.append('{}  time_limit:           {!r}\n'.format(indent, self.time_limit))
+        str_list.append('{}  queue:                {!r}\n'.format(indent, self.queue))
+        str_list.append('{}  parallel_environment: {!r}\n'.format(indent, self.parallel_environment))
+        str_list.append('{}  reservation:          {!r}\n'.format(indent, self.reservation))
+        str_list.append('{}  threads:              {!r}\n'.format(indent, self.threads))
+        str_list.append('{}  hold:                 {!r}\n'.format(indent, self.hold))
+        str_list.append('{}  is_script:            {!r}\n'.format(indent, self.is_script))
+        str_list.append('{}  template_script:      {!r}\n'.format(indent, self.template_script))
+
+        str_list.append('{}  executable_list:\n'.format(indent))
+
+        for executable in self.executable_list:
+            str_list.extend(executable.trace(level=level + 2))
+
+        return str_list
+
+    def set_configuration(self, configuration, section):
+        """Set instance variables of a :py:class:`bsf.analysis.Stage` object
+        via a section of a :py:class:`bsf.standards.Configuration` object.
+
+        Instance variables without a configuration option remain unchanged.
+
+        :param configuration: A :py:class:`bsf.standards.Configuration` object.
+        :type configuration: Configuration
+        :param section: A configuration file section.
+        :type section: str
+        """
+        if not configuration.config_parser.has_section(section=section):
+            raise Exception(
+                f'A section {section!r} is not defined in Configuration files:\n'
+                f'{configuration.file_path_list!r}')
+
+        # The configuration section is available.
+
+        option = 'hold'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.hold = configuration.config_parser.get(section=section, option=option)
+
+        option = 'implementation'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.implementation = configuration.config_parser.get(section=section, option=option)
+
+        option = 'is_script'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.is_script = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'memory_free_mem'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.memory_free_mem = configuration.config_parser.get(section=section, option=option)
+
+        option = 'memory_free_swap'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.memory_free_swap = configuration.config_parser.get(section=section, option=option)
+
+        option = 'memory_free_virtual'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.memory_free_virtual = configuration.config_parser.get(section=section, option=option)
+
+        option = 'memory_hard'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.memory_limit_hard = configuration.config_parser.get(section=section, option=option)
+
+        option = 'memory_soft'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.memory_limit_soft = configuration.config_parser.get(section=section, option=option)
+
+        option = 'node_list_exclude'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.node_list_exclude = configuration.get_list_from_csv(section=section, option=option)
+
+        option = 'node_list_include'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.node_list_include = configuration.get_list_from_csv(section=section, option=option)
+
+        option = 'time_limit'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.time_limit = configuration.config_parser.get(section=section, option=option)
+
+        option = 'parallel_environment'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.parallel_environment = configuration.config_parser.get(section=section, option=option)
+
+        option = 'queue'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.queue = configuration.config_parser.get(section=section, option=option)
+
+        option = 'reservation'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.reservation = configuration.config_parser.get(section=section, option=option)
+
+        option = 'threads'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.threads = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'template_script'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.template_script = configuration.config_parser.get(section=section, option=option)
+
+        return
+
+    def add_executable(self, executable):
+        """Convenience method to facilitate initialising, adding and returning a
+        :py:class:`bsf.process.Executable` object.
+
+        :param executable: A :py:class:`bsf.process.Executable` object.
+        :type executable: Executable
+        :return: A :py:class:`bsf.process.Executable` object.
+        :rtype: Executable
+        """
+        self.executable_list.append(executable)
+
+        return executable
+
+    def check_state(self):
+        """Check the state of each :py:class:`bsf.process.Executable` object.
+        """
+        # Dynamically import the module specific for the configured DRMS implementation.
+
+        module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
+
+        check_state_function = getattr(module_type, 'check_state')
+        check_state_function(stage=self)
+
+        return
+
+    def submit(self, drms_submit=None):
+        """Submit a command line for each :py:class:`bsf.process.Executable` object.
+
+        :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
+        :type drms_submit: bool | None
+        """
+        # Dynamically import the module specific for the configured DRMS implementation.
+
+        module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
+
+        submit_function = getattr(module_type, 'submit')
+        submit_function(stage=self, drms_submit=drms_submit)
+
+        return
+
+
 class Analysis(object):
     """The :py:class:`bsf.analysis.Analysis` class represents a high-level analysis.
 
@@ -1640,354 +1989,5 @@ class Analysis(object):
                 name_list = [stage.name for stage in self.stage_list]
                 name_list.append('report')
                 module_logger.warning('Valid Analysis Stage names are: %r', name_list)
-
-        return
-
-
-class Stage(object):
-    """The :py:class:`bsf.analysis.Stage` class represents a stage of a :py:class:`bsf.analysis.Analysis` object.
-
-    A :py:class:`bsf.analysis.Stage` represents :py:class:`bsf.process.Executable` or
-    :py:class:`bsf.procedure.Runnable` objects that share similar resource requirements of a
-    :literal:`Distributed Resource Management System` (:literal:`DRMS`).
-
-    :ivar name: A name
-    :type name: str
-    :ivar working_directory: A working directory path.
-    :type working_directory: str
-    :ivar implementation: An implementation (e.g., :literal:`sge`, :literal:`slurm`, ...).
-    :type implementation: str
-    :ivar memory_free_mem: A memory limit (free physical).
-    :type memory_free_mem: str | None
-    :ivar memory_free_swap: A memory limit (free swap).
-    :type memory_free_swap: str | None
-    :ivar memory_free_virtual: A memory limit (free virtual).
-    :type memory_free_virtual: str | None
-    :ivar memory_limit_hard: A memory limit (hard).
-    :type memory_limit_hard: str | None
-    :ivar memory_limit_soft: A memory limit (soft).
-    :type memory_limit_soft: str | None
-    :ivar node_list_exclude: A list of nodes to exclude.
-    :type node_list_exclude: list[str] | None
-    :ivar node_list_include: A list of nodes to include.
-    :type node_list_include: list[str] | None
-    :ivar time_limit: A time limit.
-    :type time_limit: str | None
-    :ivar parallel_environment: A parallel environment.
-    :type parallel_environment: str | None
-    :ivar queue: A queue name.
-    :type queue: str | None
-    :ivar reservation: A reservation name.
-    :type reservation: str | None
-    :ivar threads: A number of threads.
-    :type threads: int
-    :ivar hold: Request a hold on job scheduling.
-    :type hold: str | None
-    :ivar is_script: The :py:class:`bsf.process.Executable` objects represent shell scripts,
-        or alternatively binary programs.
-    :type is_script: bool
-    :ivar executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
-    :type executable_list: list[Executable]
-    """
-
-    def __init__(
-            self,
-            name,
-            working_directory,
-            implementation=None,
-            memory_free_mem=None,
-            memory_free_swap=None,
-            memory_free_virtual=None,
-            memory_limit_hard=None,
-            memory_limit_soft=None,
-            node_list_exclude=None,
-            node_list_include=None,
-            time_limit=None,
-            parallel_environment=None,
-            queue=None,
-            reservation=None,
-            threads=1,
-            hold=None,
-            is_script=False,
-            template_script=None,
-            executable_list=None):
-        """Initialise a :py:class:`bsf.analysis.Stage` object.
-
-        :param name: An name.
-        :type name: str
-        :param working_directory: A working directory.
-        :type working_directory: str
-        :param implementation: An implementation (e.g., :literal:`sge`, :literal:`slurm`, ...).
-        :type implementation: str
-        :param memory_free_mem: A memory limit (free physical).
-        :type memory_free_mem: str | None
-        :param memory_free_swap: A memory limit (free swap).
-        :type memory_free_swap: str | None
-        :param memory_free_virtual: A memory limit (free virtual).
-        :type memory_free_virtual: str | None
-        :param memory_limit_hard: A memory limit (hard).
-        :type memory_limit_hard: str | None
-        :param memory_limit_soft: A memory limit (soft).
-        :type memory_limit_soft: str | None
-        :param node_list_exclude: A list of nodes to exclude.
-        :type node_list_exclude: list[str] | None
-        :param node_list_include: A list of nodes to include.
-        :type node_list_include: list[str] | None
-        :param time_limit: A time limit.
-        :type time_limit: str | None
-        :param parallel_environment: A parallel environment.
-        :type parallel_environment: str | None
-        :param queue: A queue name.
-        :type queue: str | None
-        :param reservation: A reservation name.
-        :type reservation: str | None
-        :param threads: A number of threads.
-        :type threads: int
-        :param hold: Request a hold on job scheduling.
-        :type hold: bool | None
-        :param is_script: The :py:class:`bsf.process.Executable` objects represent shell scripts,
-            or alternatively binary programs.
-        :type is_script: bool
-        :param template_script: Template script for submission.
-        :type template_script: str
-        :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
-        :type executable_list: list[Executable]
-        """
-        super(Stage, self).__init__()
-
-        if name is None:
-            self.name = str()
-        else:
-            self.name = name
-
-        if working_directory is None:
-            self.working_directory = str()
-        else:
-            self.working_directory = working_directory
-
-        if implementation is None:
-            self.implementation = str()
-        else:
-            self.implementation = implementation
-
-        self.memory_free_mem = memory_free_mem
-        self.memory_free_swap = memory_free_swap
-        self.memory_free_virtual = memory_free_virtual
-        self.memory_limit_hard = memory_limit_hard
-        self.memory_limit_soft = memory_limit_soft
-        self.node_list_exclude = node_list_exclude
-        self.node_list_include = node_list_include
-        self.time_limit = time_limit
-        self.parallel_environment = parallel_environment
-        self.queue = queue
-        self.reservation = reservation
-
-        if threads is None:
-            self.threads = 1
-        else:
-            assert isinstance(threads, int)
-            self.threads = threads
-
-        self.hold = hold
-        # FIXME: Does not seem to be used. Remove!
-
-        if is_script is None:
-            self.is_script = False
-        else:
-            assert isinstance(is_script, bool)
-            self.is_script = is_script
-
-        self.template_script = template_script
-
-        if executable_list is None:
-            self.executable_list = list()
-        else:
-            self.executable_list = executable_list
-
-        return
-
-    def __repr__(self):
-        return \
-            f'Stage(' \
-            f'name={self.name!r}, ' \
-            f'working_directory={self.working_directory!r}, ' \
-            f'implementation={self.implementation!r}, ' \
-            f'memory_free_mem={self.memory_free_mem!r}, ' \
-            f'memory_free_swap={self.memory_free_swap!r}, ' \
-            f'memory_free_virtual={self.memory_free_virtual!r}, ' \
-            f'memory_limit_hard={self.memory_limit_hard!r}, ' \
-            f'memory_limit_soft={self.memory_limit_soft!r}, ' \
-            f'node_list_exclude={self.node_list_exclude!r}, ' \
-            f'node_list_include={self.node_list_include!r}, ' \
-            f'time_limit={self.time_limit!r}, ' \
-            f'parallel_environment={self.parallel_environment!r}, ' \
-            f'queue={self.queue!r}, ' \
-            f'reservation{self.reservation!r}, ' \
-            f'threads={self.threads!r}, ' \
-            f'hold={self.hold!r}, ' \
-            f'is_script={self.is_script!r}, ' \
-            f'template_script={self.template_script!r}, ' \
-            f'executable_list={self.executable_list!r})'
-
-    def trace(self, level):
-        """Trace a :py:class:`bsf.analysis.Stage` object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information.
-        :rtype: list[str]
-        """
-        indent = '  ' * level
-
-        str_list: List[str] = list()
-
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  name:                 {!r}\n'.format(indent, self.name))
-        str_list.append('{}  working_directory:    {!r}\n'.format(indent, self.working_directory))
-        str_list.append('{}  implementation:       {!r}\n'.format(indent, self.implementation))
-        str_list.append('{}  memory_free_mem:      {!r}\n'.format(indent, self.memory_free_mem))
-        str_list.append('{}  memory_free_swap:     {!r}\n'.format(indent, self.memory_free_swap))
-        str_list.append('{}  memory_free_virtual:  {!r}\n'.format(indent, self.memory_free_virtual))
-        str_list.append('{}  memory_limit_hard:    {!r}\n'.format(indent, self.memory_limit_hard))
-        str_list.append('{}  memory_limit_soft:    {!r}\n'.format(indent, self.memory_limit_soft))
-        str_list.append('{}  node_list_exclude:    {!r}\n'.format(indent, self.node_list_exclude))
-        str_list.append('{}  node_list_include:    {!r}\n'.format(indent, self.node_list_include))
-        str_list.append('{}  time_limit:           {!r}\n'.format(indent, self.time_limit))
-        str_list.append('{}  queue:                {!r}\n'.format(indent, self.queue))
-        str_list.append('{}  parallel_environment: {!r}\n'.format(indent, self.parallel_environment))
-        str_list.append('{}  reservation:          {!r}\n'.format(indent, self.reservation))
-        str_list.append('{}  threads:              {!r}\n'.format(indent, self.threads))
-        str_list.append('{}  hold:                 {!r}\n'.format(indent, self.hold))
-        str_list.append('{}  is_script:            {!r}\n'.format(indent, self.is_script))
-        str_list.append('{}  template_script:      {!r}\n'.format(indent, self.template_script))
-
-        str_list.append('{}  executable_list:\n'.format(indent))
-
-        for executable in self.executable_list:
-            str_list.extend(executable.trace(level=level + 2))
-
-        return str_list
-
-    def set_configuration(self, configuration, section):
-        """Set instance variables of a :py:class:`bsf.analysis.Stage` object
-        via a section of a :py:class:`bsf.standards.Configuration` object.
-
-        Instance variables without a configuration option remain unchanged.
-
-        :param configuration: A :py:class:`bsf.standards.Configuration` object.
-        :type configuration: Configuration
-        :param section: A configuration file section.
-        :type section: str
-        """
-        if not configuration.config_parser.has_section(section=section):
-            raise Exception(
-                f'A section {section!r} is not defined in Configuration files:\n'
-                f'{configuration.file_path_list!r}')
-
-        # The configuration section is available.
-
-        option = 'hold'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.hold = configuration.config_parser.get(section=section, option=option)
-
-        option = 'implementation'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.implementation = configuration.config_parser.get(section=section, option=option)
-
-        option = 'is_script'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.is_script = configuration.config_parser.getboolean(section=section, option=option)
-
-        option = 'memory_free_mem'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.memory_free_mem = configuration.config_parser.get(section=section, option=option)
-
-        option = 'memory_free_swap'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.memory_free_swap = configuration.config_parser.get(section=section, option=option)
-
-        option = 'memory_free_virtual'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.memory_free_virtual = configuration.config_parser.get(section=section, option=option)
-
-        option = 'memory_hard'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.memory_limit_hard = configuration.config_parser.get(section=section, option=option)
-
-        option = 'memory_soft'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.memory_limit_soft = configuration.config_parser.get(section=section, option=option)
-
-        option = 'node_list_exclude'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.node_list_exclude = configuration.get_list_from_csv(section=section, option=option)
-
-        option = 'node_list_include'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.node_list_include = configuration.get_list_from_csv(section=section, option=option)
-
-        option = 'time_limit'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.time_limit = configuration.config_parser.get(section=section, option=option)
-
-        option = 'parallel_environment'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.parallel_environment = configuration.config_parser.get(section=section, option=option)
-
-        option = 'queue'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.queue = configuration.config_parser.get(section=section, option=option)
-
-        option = 'reservation'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.reservation = configuration.config_parser.get(section=section, option=option)
-
-        option = 'threads'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.threads = configuration.config_parser.getint(section=section, option=option)
-
-        option = 'template_script'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.template_script = configuration.config_parser.get(section=section, option=option)
-
-        return
-
-    def add_executable(self, executable):
-        """Convenience method to facilitate initialising, adding and returning a
-        :py:class:`bsf.process.Executable` object.
-
-        :param executable: A :py:class:`bsf.process.Executable` object.
-        :type executable: Executable
-        :return: A :py:class:`bsf.process.Executable` object.
-        :rtype: Executable
-        """
-        self.executable_list.append(executable)
-
-        return executable
-
-    def check_state(self):
-        """Check the state of each :py:class:`bsf.process.Executable` object.
-        """
-        # Dynamically import the module specific for the configured DRMS implementation.
-
-        module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
-
-        check_state_function = getattr(module_type, 'check_state')
-        check_state_function(stage=self)
-
-        return
-
-    def submit(self, drms_submit=None):
-        """Submit a command line for each :py:class:`bsf.process.Executable` object.
-
-        :param drms_submit: Submit to the :emphasis:`Distributed Resource Management System` (DRMS).
-        :type drms_submit: bool | None
-        """
-        # Dynamically import the module specific for the configured DRMS implementation.
-
-        module_type = importlib.import_module(name='.'.join(('bsf', 'drms', self.implementation)))
-
-        submit_function = getattr(module_type, 'submit')
-        submit_function(stage=self, drms_submit=drms_submit)
 
         return
