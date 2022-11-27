@@ -62,7 +62,7 @@ setuptools.setup(
     # license='',
 
     packages=setuptools.find_packages(),
-    python_requires='>=3.9',
+    python_requires='>=3.10',
     install_requires=[
         'python-dateutil',
         'azure-storage-blob',
