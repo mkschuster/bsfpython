@@ -474,7 +474,7 @@ class Analysis(object):
         """
         return cls.from_configuration(
             configuration=Configuration.from_file_path_list(
-                file_path_list=[Configuration.global_file_path, config_path]))
+                file_path_list=[Configuration.get_global_file_path(), config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):

@@ -58,8 +58,8 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
-    help='configuration (*.ini) file path',
+    default=Configuration.get_global_file_path(),
+    help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]',
     required=False)
 
 argument_parser.add_argument(
@@ -93,7 +93,7 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --project-name and --sas-file argument.
 
-if name_space.configuration == Configuration.global_file_path:
+if name_space.configuration == Configuration.get_global_file_path():
     if not name_space.project_name:
         raise Exception('The argument --project-name is required if --configuration is not set.')
     if not name_space.sas_file:

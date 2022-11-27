@@ -72,10 +72,10 @@ class SafeFileName(object):
     """The :py:class:`bsf.standards.SafeFileName` class represents a regular expression pattern
     to make file names safe.
     """
-    re_pattern: Optional[re.Pattern] = None
+    _re_pattern: Optional[re.Pattern] = None
 
-    @staticmethod
-    def get_safe_file_name(file_name):
+    @classmethod
+    def get_safe_file_name(cls, file_name):
         """Get a safe file name by replacing special characters with underscore characters.
 
         This function is modelled after the `HTSJDK <http://samtools.github.io/htsjdk/>`_
@@ -90,10 +90,10 @@ class SafeFileName(object):
         :rtype: str
         """
         # https://github.com/samtools/htsjdk/blob/master/src/main/java/htsjdk/samtools/util/IOUtil.java#L779
-        if not SafeFileName.re_pattern:
-            SafeFileName.re_pattern = re.compile(pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]")
+        if not cls._re_pattern:
+            cls._re_pattern = re.compile(pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]")
 
-        return re.sub(pattern=SafeFileName.re_pattern, repl='_', string=file_name)
+        return re.sub(pattern=cls._re_pattern, repl='_', string=file_name)
 
 
 class Configuration(object):
@@ -103,10 +103,13 @@ class Configuration(object):
     A :py:class:`bsf.standards.Configuration` object has an associated Python :py:class:`configparser.ConfigParser`
     object to parse the file(s).
 
-    :cvar global_configuration: A global :py:class:`bsf.standards.Configuration` object.
-    :type global_configuration: Configuration
-    :cvar global_file_path: A global configuration file path.
-    :type global_file_path: str
+    :cvar _global_configuration: A global :py:class:`bsf.standards.Configuration` object.
+    :type _global_configuration: Configuration | None
+    :cvar _global_environment: A global environment variable (:literal:`BSF_PYTHON_INI`)
+        defining the global configuration file path.
+    :type _global_environment: str
+    :cvar _global_file_path: A global configuration file path.
+    :type _global_file_path: str
     :ivar file_path_list: A Python :py:class:`list` object of
         Python :py:class:`str` (configuration file path) objects.
     :type file_path_list: list[str]
@@ -114,22 +117,44 @@ class Configuration(object):
     :type config_parser: ConfigParser
     """
 
-    global_configuration = None
+    _global_configuration = None
+    _global_environment = 'BSF_PYTHON_INI'
+    _global_file_path = '~/.bsfpython.ini'
 
-    global_file_path = '~/.bsfpython.ini'
+    @classmethod
+    def get_global_file_path(cls):
+        """Get the global UNIX-style initialisation (:literal:`*.ini`) file path.
 
-    @staticmethod
-    def get_global_configuration():
+        The global configuration file path is based on the value of
+        environment variable :literal:`BSF_PYTHON_INI` if defined,
+        and defaults to :literal:`~/.bsfpython.ini` otherwise.
+
+        :return: Global INI configuration file path
+        :rtype: str
+        """
+        if cls._global_environment in os.environ and os.environ[cls._global_environment]:
+            file_path = os.environ[cls._global_environment]
+        else:
+            file_path = cls._global_file_path
+
+        file_path = os.path.expanduser(file_path)
+        file_path = os.path.expandvars(file_path)
+        file_path = os.path.normpath(file_path)
+
+        return file_path
+
+    @classmethod
+    def get_global_configuration(cls):
         """Get a global :py:class:`bsf.standards.Configuration` object and initialise it, if not already done so.
 
         :return: A global :py:class:`bsf.standards.Configuration` object.
         :rtype: Configuration
         """
-        if Configuration.global_configuration is None:
-            Configuration.global_configuration = Configuration.from_file_path_list(
-                file_path_list=[Configuration.global_file_path])
+        if cls._global_configuration is None:
+            cls._global_configuration = cls.from_file_path_list(
+                file_path_list=[cls.get_global_file_path()])
 
-        return Configuration.global_configuration
+        return cls._global_configuration
 
     @staticmethod
     def get_absolute_path(file_path=None, default_path=None):
@@ -1607,7 +1632,7 @@ class VendorQualityFilter(BaseSection):
                 section=cls.section,
                 option=flow_cell_type):
             raise Exception(f'The flow cell type {flow_cell_type!r} is not defined in the {cls.section!r} '
-                            f'section of the standard configuration file {Configuration.global_file_path!r}.')
+                            f'section of the standard configuration file {Configuration.get_global_file_path()!r}.')
 
         return cls.getboolean(option=flow_cell_type)
 
@@ -1620,7 +1645,7 @@ class Secrets(BaseSection):
     """
     section = 'secrets'
 
-    user_mask = stat.S_IRWXG | stat.S_IRWXO
+    _user_mask = stat.S_IRWXG | stat.S_IRWXO
 
     @classmethod
     def get_file_path(cls, option=None):
@@ -1642,10 +1667,10 @@ class Secrets(BaseSection):
 
         path_stat_result = os.stat(path=file_path, follow_symlinks=True)
 
-        if path_stat_result.st_mode & cls.user_mask:
+        if path_stat_result.st_mode & cls._user_mask:
             raise Exception(
                 f'The secrets configuration file {file_path!r} has file mode {path_stat_result.st_mode:#0o}, '
-                f'but should obey user mask {cls.user_mask:#0o}.')
+                f'but should obey user mask {cls._user_mask:#0o}.')
 
         return file_path
 
@@ -1677,21 +1702,41 @@ class Central(BaseSection):
 
     :cvar section: A :py:class:`configparser.ConfigParser` section.
     :type section: str
-    :cvar element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
-    :type element_tree: ElementTree | None
+    :cvar _global_element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
+    :type _global_element_tree: ElementTree | None
+    :cvar _global_environment: A global environment variable (:literal:`BSF_PYTHON_XML`)
+        defining the global configuration file path.
+    :type _global_environment: str
+    :cvar _global_file_path: A global configuration file path.
+    :type _global_file_path: str
     """
 
     section = 'central'
-    element_tree = None
+
+    _global_element_tree = None
+    _global_environment = 'BSF_PYTHON_XML'
+    _global_file_path = '~/.bsfpython.xml'
 
     @classmethod
-    def get_configuration_xml(cls):
-        """Get a central XML configuration document file path.
+    def get_global_file_path(cls):
+        """Get the global XML configuration (:literal:`*.xml`) file path.
 
-        :return: A central XML configuration document file path.
+        The global configuration file path is based on the value of
+        environment variable :literal:`BSF_PYTHON_XML` if defined,
+        the :literal:`configuration_xml` option in the :literal:`[central]` section of the
+        global UNIX-style initialisation (:literal:`*.ini`) file path if defined,
+        or defaults to :literal:`~/.bsfpython.xml` otherwise.
+
+        :return: Global XML configuration file path
         :rtype: str
         """
-        file_path = cls.get(option='configuration_xml')
+        if cls._global_environment in os.environ and os.environ[cls._global_environment]:
+            file_path = os.environ[cls._global_environment]
+        elif cls.get(option='configuration_xml'):
+            file_path = cls.get(option='configuration_xml')
+        else:
+            file_path = cls._global_file_path
+
         file_path = os.path.expanduser(file_path)
         file_path = os.path.expandvars(file_path)
         file_path = os.path.normpath(file_path)
@@ -1705,10 +1750,10 @@ class Central(BaseSection):
         :return: A central :py:class:`xml.etree.ElementTree.ElementTree` object.
         :rtype: ElementTree
         """
-        if cls.element_tree is None:
-            cls.element_tree = ElementTree(file=cls.get_configuration_xml())
+        if cls._global_element_tree is None:
+            cls._global_element_tree = ElementTree(file=cls.get_global_file_path())
 
-        return cls.element_tree
+        return cls._global_element_tree
 
 
 class CentralIndexDirectories(object):
@@ -1778,10 +1823,7 @@ class CentralVendorQualityFilters(object):
         """
         self.filter_dict: Dict[str, bool] = dict()
 
-        for element in Central.get_element_tree().find(path='VendorQualityFilters').iter():
-            if element.tag == 'VendorQualityFilters':
-                continue
-
-            self.filter_dict[element.text] = self.str_to_bool(value=element.get('filter'))
+        for element in Central.get_element_tree().find(path='VendorQualityFilters'):
+            self.filter_dict[element.text] = self.str_to_bool(value=element.get(key='filter'))
 
         return

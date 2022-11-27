@@ -58,8 +58,8 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
-    help='configuration (*.ini) file path',
+    default=Configuration.get_global_file_path(),
+    help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]',
     required=False)
 
 # FIXME: For the moment, the IRF needs passing in.
@@ -103,7 +103,7 @@ name_space = argument_parser.parse_args()
 # --project-name. The --library-path argument can be worked out on the basis
 # of the --project-name.
 
-if name_space.configuration == Configuration.global_file_path:
+if name_space.configuration == Configuration.get_global_file_path():
     if not (name_space.project_name or name_space.irf):
         raise Exception('The arguments --project-name or --irf are required if --configuration is not set.')
 

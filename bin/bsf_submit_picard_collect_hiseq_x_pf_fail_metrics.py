@@ -58,8 +58,8 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
-    help='configuration (*.ini) file path',
+    default=Configuration.get_global_file_path(),
+    help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]',
     required=False)
 
 argument_parser.add_argument(
@@ -77,7 +77,7 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --irf argument.
 
-if name_space.configuration == Configuration.global_file_path:
+if name_space.configuration == Configuration.get_global_file_path():
     if not name_space.irf:
         raise Exception('The argument --irf is required if --configuration is not set.')
 

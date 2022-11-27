@@ -58,8 +58,8 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
-    help='configuration (*.ini) file path',
+    default=Configuration.get_global_file_path(),
+    help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]',
     required=False)
 
 argument_parser.add_argument(
