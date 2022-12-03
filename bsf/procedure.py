@@ -555,7 +555,7 @@ class ConsecutiveRunnable(Runnable):
           directory path in the :py:attr:`bsf.procedure.Runnable.cache_directory` attribute.
         :type cache_path_dict: dict[str, str] | None
         :param runnable_step_list: A Python :py:class:`list` object of :py:class:`bsf.process.RunnableStep` objects.
-        :type runnable_step_list: list[RunnableStep]
+        :type runnable_step_list: list[RunnableStep] | None
         """
         super(ConsecutiveRunnable, self).__init__(
             name=name,
@@ -630,13 +630,13 @@ class ConcurrentRunnable(Runnable):
 
     :ivar runnable_step_list_prologue: A Python :py:class:`list` object of
         :py:class:`bsf.process.RunnableStep` objects run as prologue.
-    :type runnable_step_list_prologue: list[RunnableStep] | None
+    :type runnable_step_list_prologue: list[RunnableStep]
     :ivar runnable_step_list_concurrent: A Python :py:class:`list` object of
         :py:class:`bsf.process.RunnableStep` objects run concurrently.
-    :type runnable_step_list_concurrent: list[RunnableStep] | None
+    :type runnable_step_list_concurrent: list[RunnableStep]
     :ivar runnable_step_list_epilogue: A Python :py:class:`list` object of
         :py:class:`bsf.process.RunnableStep` objects run as epilogue.
-    :type runnable_step_list_epilogue: list[RunnableStep] | None
+    :type runnable_step_list_epilogue: list[RunnableStep]
     """
 
     def __init__(

@@ -111,7 +111,7 @@ class AnnotationSheet(object):
         :type require_value: bool
         :return: A Python :py:class:`tuple` of Python :py:class:`str` (warning message) and
             Python :py:class:`str` (column value) objects.
-        :rtype: (str, str)
+        :rtype: (str, str) | (str, None)
         """
         message = str()
 
@@ -627,12 +627,12 @@ class AnnotationSheet(object):
         :py:meth:`bsf.annotation.AnnotationSheet.csv_reader_close` methods should be called explicitly.
 
         :param file_path: A file path.
-        :type file_path: str
+        :type file_path: str | None
         :param file_type: A file type (i.e., :literal:`excel` or :literal:`excel_tab` defined in the
             :py:class:`csv.Dialect` class).
-        :type file_type: str
+        :type file_type: str | None
         :param name: A name.
-        :type name: str
+        :type name: str | None
         :return: A :py:class:`bsf.annotation.AnnotationSheet` object.
         :rtype: AnnotationSheet
         """
@@ -849,7 +849,7 @@ class AnnotationSheet(object):
         :param key: A key.
         :param key: str
         :return: A Python :py:class:`bool` object.
-        :rtype: bool | None
+        :rtype: bool
         """
         if key in row_dict:
             value = row_dict[key].lower()
@@ -912,7 +912,7 @@ class AnnotationSheet(object):
 
         :param adjust_field_names: Clear and adjust the Python :py:class:`list` of
             Python :py:class:`str` (field name) objects.
-        :type adjust_field_names: bool
+        :type adjust_field_names: bool | None
         """
         if adjust_field_names:
             self.adjust_field_names()

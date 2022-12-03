@@ -217,7 +217,7 @@ class Command(object):
     :ivar options: A Python :py:class:`dict` object of
         Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
         Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-    :type options: dict[Argument.key, list[Argument]]
+    :type options: dict[str, list[Argument]]
     :ivar arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
     :type arguments: list[str]
     :ivar sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -240,7 +240,7 @@ class Command(object):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -770,7 +770,7 @@ class Executable(Command):
     :ivar dependencies: A Python :py:class:`list` object of
         Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
         in the context of :py:class:`bsf.analysis.Stage` dependencies.
-    :type dependencies: list[Executable.name]
+    :type dependencies: list[str]
     :ivar hold: Request a hold on job scheduling.
     :type hold: bool | None
     :ivar submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -890,7 +890,7 @@ class Executable(Command):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -904,7 +904,7 @@ class Executable(Command):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1047,7 +1047,7 @@ class RunnableStep(Executable):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1061,7 +1061,7 @@ class RunnableStep(Executable):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1181,7 +1181,7 @@ class RunnableStepChangeMode(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1195,7 +1195,7 @@ class RunnableStepChangeMode(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1345,7 +1345,7 @@ class RunnableStepCopy(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1359,7 +1359,7 @@ class RunnableStepCopy(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1456,7 +1456,7 @@ class RunnableStepJava(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1470,7 +1470,7 @@ class RunnableStepJava(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1593,7 +1593,7 @@ class RunnableStepPicard(RunnableStepJava):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1607,7 +1607,7 @@ class RunnableStepPicard(RunnableStepJava):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1710,7 +1710,7 @@ class RunnableStepLink(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1724,7 +1724,7 @@ class RunnableStepLink(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1822,7 +1822,7 @@ class RunnableStepMakeDirectory(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1836,7 +1836,7 @@ class RunnableStepMakeDirectory(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1930,7 +1930,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -1944,7 +1944,7 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2044,7 +2044,7 @@ class RunnableStepMove(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -2058,7 +2058,7 @@ class RunnableStepMove(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2162,7 +2162,7 @@ class RunnableStepRemoveDirectory(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -2176,7 +2176,7 @@ class RunnableStepRemoveDirectory(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2268,7 +2268,7 @@ class RunnableStepRemoveFile(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -2282,7 +2282,7 @@ class RunnableStepRemoveFile(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2374,7 +2374,7 @@ class RunnableStepRemoveTree(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -2388,7 +2388,7 @@ class RunnableStepRemoveTree(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2486,7 +2486,7 @@ class RunnableStepSleep(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -2500,7 +2500,7 @@ class RunnableStepSleep(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2593,7 +2593,7 @@ class RunnableStepSetEnvironment(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -2607,7 +2607,7 @@ class RunnableStepSetEnvironment(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -2624,6 +2624,8 @@ class RunnableStepSetEnvironment(RunnableStep):
         :type obsolete_file_path_list: list[str] | None
         :param key: Environment key
         :type key: str
+        :param value: Environment value
+        :type value: str
         """
         super(RunnableStepSetEnvironment, self).__init__(
             name=name,

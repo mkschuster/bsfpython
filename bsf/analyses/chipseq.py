@@ -679,7 +679,7 @@ class ChIPSeq(Analysis):
         Python :py:class:`str` RGB colour value objects.
     :type colour_dict: dict[str, str] | None
     :ivar factor_default: A default ChIP factor name.
-    :type factor_default: str
+    :type factor_default: str | None
     """
 
     name = 'ChIP-seq Analysis'
@@ -893,7 +893,7 @@ class ChIPSeq(Analysis):
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
         :param replicate_grouping: Group all replicates into a single process.
-        :type replicate_grouping: bool
+        :type replicate_grouping: bool | None
         :param comparison_path: A comparison file path.
         :type comparison_path: str | None
         :param genome_black_list: A genome black list file path.
@@ -917,7 +917,7 @@ class ChIPSeq(Analysis):
             Python :py:class:`str` RGB colour value objects.
         :type colour_dict: dict[str, str] | None
         :param factor_default: A default ChIP factor name.
-        :type factor_default: str
+        :type factor_default: str | None
         """
         super(ChIPSeq, self).__init__(
             configuration=configuration,

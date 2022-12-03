@@ -58,7 +58,7 @@ class Adaptors(object):
         :param adaptor_dict: Hierarchy of Python :py:class:`dict` objects for class,
             type (e.g., :literal:`i7`, :literal:`i5`),
             name (e.g., :literal:`D701`, :literal:`D503`) and sequence
-        :type adaptor_dict: dict[str, dict[str, dict[str, str]]]
+        :type adaptor_dict: dict[str, dict[str, dict[str, str]]] | None
         """
         super(Adaptors, self).__init__()
 
@@ -189,7 +189,7 @@ class RunInformationFlowcellLayout(object):
         :param tile_count: Number of tiles
         :type tile_count: int
         :param tile_list: Python :py:class:`list` of Python :py:class:`str` tile names
-        :type tile_list: list[str]
+        :type tile_list: list[str] | None
         """
         super(RunInformationFlowcellLayout, self).__init__()
 
@@ -294,7 +294,7 @@ class RunInformation(object):
         :param run_identifier: An Illumina Run Identifier (e.g., :literal:`130724_SN815_0089_BC26JBACXX`).
         :type run_identifier: str
         :return: A Python :py:class:`list` object of Python :py:class:`str` objects.
-        :rtype: list[str]
+        :rtype: list[str] | None
         """
         # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
         component_list = run_identifier.split('_')
@@ -481,7 +481,7 @@ class RunInformation(object):
         :type flow_cell_layout: RunInformationFlowcellLayout | None
         :param run_information_read_list: A Python :py:class:`list` object of
             :py:class:`bsf.illumina.RunInformationRead` objects.
-        :type run_information_read_list: list[RunInformationRead]
+        :type run_information_read_list: list[RunInformationRead] | None
         """
         super(RunInformation, self).__init__()
 
@@ -521,7 +521,7 @@ class RunInformation(object):
         """Get a run start date in ISO 8601 format.
 
         :return: A run start date in ISO 8601 format.
-        :rtype: str
+        :rtype: str | None
         """
         if self.date is None:
             return
@@ -655,7 +655,7 @@ class RunParameters(object):
         """Create a :py:class:`bsf.illumina.RunParameters` object from a file path.
 
         :param file_path: A file path.
-        :type file_path: str | None
+        :type file_path: str
         :return: A :py:class:`bsf.illumina.RunParameters` object.
         :rtype: RunParameters
         """
@@ -1030,7 +1030,7 @@ class RunFolder(object):
         Python :py:class:`str` (RTA description) value objects.
     :type rta_dict: dict[str, str]
     :ivar file_path: A file path.
-    :type file_path: str
+    :type file_path: str | None
     :ivar file_type: A file type.
         :literal:`CASAVA`: FASTQ file after post-processing with CASAVA
         :literal:`External`: other data files
@@ -1136,9 +1136,9 @@ class RunFolder(object):
         """Initialise a :py:class:`bsf.illumina.RunFolder` object.
 
         :param file_path: A file path.
-        :type file_path: str
+        :type file_path: str | None
         :param file_type: A file type (e.g., :literal:`CASAVA`, :literal:`External` or :literal:`Automatic`).
-        :type file_type: str
+        :type file_type: str | None
         :param date: A date in :literal:`YYMMDD` format.
         :type date: str | None
         :param instrument: An Illumina instrument serial number (e.g., :literal:`SN181`, :literal:`SN815`, ...).
@@ -1148,13 +1148,13 @@ class RunFolder(object):
         :param flow_cell: A position and flow cell identifier.
         :type flow_cell: str | None
         :param run_information: A :py:class:`bsf.illumina.RunInformation` object.
-        :type run_information: RunInformation
+        :type run_information: RunInformation | None
         :param run_parameters: A :py:class:`bsf.illumina.RunParameters` object.
-        :type run_parameters: RunParameters
+        :type run_parameters: RunParameters | None
         :param image_analysis: A :py:class:`bsf.illumina.ImageAnalysis` object.
-        :type image_analysis: ImageAnalysis
+        :type image_analysis: ImageAnalysis | None
         :param base_call_analysis: A :py:class:`bsf.illumina.BaseCallAnalysis` object.
-        :type base_call_analysis: BaseCallAnalysis
+        :type base_call_analysis: BaseCallAnalysis | None
         """
         super(RunFolder, self).__init__()
 

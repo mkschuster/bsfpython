@@ -731,7 +731,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         :param job_id: Job identifier
         :type job_id: str
         :return: A Python :py:class:`list` object of :py:class:`bsf.drms.slurm.ProcessSLURM` objects.
-        :rtype: ProcessSLURM
+        :rtype: ProcessSLURM | None
         """
         object_list = self.select(statement=self.statement_select(where_clause='job_id = ?'), parameters=[job_id])
         object_length = len(object_list)

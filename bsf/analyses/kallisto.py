@@ -73,9 +73,9 @@ class Kallisto(Analysis):
     :ivar fragment_length_standard_deviation: A fragment length standard deviation.
     :type fragment_length_standard_deviation: str | None
     :ivar bias_correction: Request sequence-specific bias correction.
-    :type bias_correction: bool
+    :type bias_correction: bool | None
     :ivar bootstrap_samples: A number of bootstrap samples.
-    :type bootstrap_samples: str
+    :type bootstrap_samples: str | None
     """
 
     name = 'Kallisto Analysis'
@@ -173,9 +173,9 @@ class Kallisto(Analysis):
         :param fragment_length_standard_deviation: A fragment length standard deviation.
         :type fragment_length_standard_deviation: str | None
         :param bias_correction: Request sequence-specific bias correction.
-        :type bias_correction: bool
+        :type bias_correction: bool | None
         :param bootstrap_samples: A number of bootstrap samples.
-        :type bootstrap_samples: str
+        :type bootstrap_samples: str | None
         """
         super(Kallisto, self).__init__(
             configuration=configuration,

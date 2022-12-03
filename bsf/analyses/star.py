@@ -208,7 +208,7 @@ class Star(Aligner):
         :param transcriptome_gtf: A transcriptome annotation GTF file path.
         :type transcriptome_gtf: str | None
         :param transcriptome_index: A transcriptome index directory path.
-        :type transcriptome_index: str
+        :type transcriptome_index: str | None
         :param two_pass_mapping: Basic two-pass mapping
         :type two_pass_mapping: str | None
         :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.

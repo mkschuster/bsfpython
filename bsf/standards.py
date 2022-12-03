@@ -103,13 +103,6 @@ class Configuration(object):
     A :py:class:`bsf.standards.Configuration` object has an associated Python :py:class:`configparser.ConfigParser`
     object to parse the file(s).
 
-    :cvar _global_configuration: A global :py:class:`bsf.standards.Configuration` object.
-    :type _global_configuration: Configuration | None
-    :cvar _global_environment: A global environment variable (:literal:`BSF_PYTHON_INI`)
-        defining the global configuration file path.
-    :type _global_environment: str
-    :cvar _global_file_path: A global configuration file path.
-    :type _global_file_path: str
     :ivar file_path_list: A Python :py:class:`list` object of
         Python :py:class:`str` (configuration file path) objects.
     :type file_path_list: list[str]
@@ -168,9 +161,9 @@ class Configuration(object):
         Finally, normalise the file path.
 
         :param file_path: A file path.
-        :type file_path: str
+        :type file_path: str | None
         :param default_path: A default absolute path.
-        :type default_path: str
+        :type default_path: str | None
         :return: An absolute file path.
         :rtype: str | None
         """
@@ -260,9 +253,9 @@ class Configuration(object):
 
         :param file_path_list: A Python :py:class:`list` object of
             Python :py:class:`str` (configuration file path) objects.
-        :type file_path_list: list[str]
+        :type file_path_list: list[str] | None
         :param config_parser: A Python :py:class:`configparser.ConfigParser` object.
-        :type config_parser: ConfigParser
+        :type config_parser: ConfigParser | None
         """
         super(Configuration, self).__init__()
 
@@ -351,7 +344,7 @@ class BaseSection(object):
     The defaults are read from the :literal:`[{section}]` section of the global configuration file.
 
     :cvar section: A :py:class:`configparser.ConfigParser` object section.
-    :type section: str
+    :type section: str | None
     """
     section = None
 
@@ -442,7 +435,7 @@ class BaseSectionVersion(object):
     The defaults are read from the :literal:`[{section}_{version}]` section of the global configuration file.
 
     :cvar section: A :py:class:`configparser.ConfigParser` section.
-    :type section: str
+    :type section: str | None
     """
     section = None
 
@@ -1506,7 +1499,7 @@ class UCSC(BaseSection):
         """Get a UCSC Genome Browser URL protocol (i.e., 'http' or 'https').
 
         :return: A UCSC Genome Browser URL protocol.
-        :rtype: str
+        :rtype: str | None
         """
         return cls.get(option='protocol')
 
@@ -1515,7 +1508,7 @@ class UCSC(BaseSection):
         """Get a UCSC Genome Browser URL host name (e.g., genome.ucsc.edu, genome-euro.ucsc.edu, ...).
 
         :return: A UCSC Genome Browser URL host name.
-        :rtype: str
+        :rtype: str | None
         """
         return cls.get(option='host_name')
 
@@ -1536,7 +1529,7 @@ class URL(BaseSection):
         """Get a web server URL protocol (i.e., 'http' or 'https').
 
         :return: A web server URL protocol.
-        :rtype: str
+        :rtype: str | None
         """
         return cls.get(option='protocol')
 
@@ -1545,7 +1538,7 @@ class URL(BaseSection):
         """Get a web server host name.
 
         :return: A web server URL host name.
-        :rtype: str
+        :rtype: str | None
         """
         return cls.get(option='host_name')
 
@@ -1554,7 +1547,7 @@ class URL(BaseSection):
         """Get a relative URL to the DNA directory.
 
         :return: A relative 'DNA' URL path.
-        :rtype: str
+        :rtype: str | None
         """
         return cls.get(option='relative_dna')
 
@@ -1563,7 +1556,7 @@ class URL(BaseSection):
         """Get a relative URL to the analysis projects directory.
 
         :return: A relative 'projects' URL path.
-        :rtype: str
+        :rtype: str | None
         """
         return cls.get(option='relative_projects')
 
@@ -1702,13 +1695,6 @@ class Central(BaseSection):
 
     :cvar section: A :py:class:`configparser.ConfigParser` section.
     :type section: str
-    :cvar _global_element_tree: A :py:class:`xml.etree.ElementTree.ElementTree` object.
-    :type _global_element_tree: ElementTree | None
-    :cvar _global_environment: A global environment variable (:literal:`BSF_PYTHON_XML`)
-        defining the global configuration file path.
-    :type _global_environment: str
-    :cvar _global_file_path: A global configuration file path.
-    :type _global_file_path: str
     """
 
     section = 'central'
@@ -1761,19 +1747,19 @@ class CentralIndexDirectories(object):
     central XML configuration document.
 
     :ivar bowtie1: A Bowtie1 index directory name.
-    :type bowtie1: str
+    :type bowtie1: str | None
     :ivar bowtie2: A Bowtie2 index directory name.
-    :type bowtie2: str
+    :type bowtie2: str | None
     :ivar bwa: A BWA index directory name.
-    :type bwa: str
+    :type bwa: str | None
     :ivar hisat2: A Hisat2 index directory name.
-    :type hisat2: str
+    :type hisat2: str | None
     :ivar kallisto: A Kallisto index directory name.
-    :type kallisto: str
+    :type kallisto: str | None
     :ivar star: A STAR index directory name.
-    :type star: str
+    :type star: str | None
     :ivar tophat2: A Tophat2 index directory name.
-    :type tophat2: str
+    :type tophat2: str | None
     """
 
     def __init__(self):

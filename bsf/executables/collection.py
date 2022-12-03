@@ -91,7 +91,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -105,7 +105,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -119,7 +119,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         :param obsolete_file_path_list: A Python :py:class:`list` object of
             Python :py:class:`str` (file path) objects
             that can be removed after successfully completing the :py:meth:`bsf.process.RunnableStep.run` method.
-        type obsolete_file_path_list: list[str] | None
+        :type obsolete_file_path_list: list[str] | None
         :param file_path_old: An old Sample Annotation Sheet file path.
         :type file_path_old: str | None
         :param file_path_new: A new Sample Annotation Sheet file path.

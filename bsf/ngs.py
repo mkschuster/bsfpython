@@ -110,7 +110,7 @@ class NextGenerationBase(object):
     :type file_type: str | None
     :ivar annotation_dict: A Python :py:class:`dict` object for annotation of Python :py:class:`str` key and
         Python :py:class:`list` value objects of Python :py:class:`str` objects.
-    :type annotation_dict: dict[str, list[str]] | None
+    :type annotation_dict: dict[str, list[str]]
     """
 
     def __init__(
@@ -561,12 +561,12 @@ class PairedReads(NextGenerationBase):
         :type reads_1: Reads | None
         :param reads_2: A second :py:class:`bsf.ngs.Reads` object.
         :type reads_2: Reads | None
+        :param exclude: Exclude from processing.
+        :type exclude: bool | None
         :param index_1: An index sequence 1.
         :type index_1: str | None
         :param index_2: An index sequence 2.
         :type index_2: str | None
-        :param exclude: Exclude from processing.
-        :type exclude: bool | None
         :param read_group: A SAM read group (:literal:`@RG`) information.
         :type read_group: str | None
         :param weak_reference_sample: A :py:class:`weakref.ReferenceType` object pointing at a
@@ -799,7 +799,7 @@ class PairedReads(NextGenerationBase):
         :param full: Return the full name including read and chunk information.
         :type full: bool
         :return: A name.
-        :rtype: str
+        :rtype: str | None
         """
         if self.reads_1 is not None:
             reads = self.reads_1
@@ -1289,7 +1289,7 @@ class Project(NextGenerationBase):
         :param name: A :py:class:`bsf.ngs.Sample.name` object.
         :type name: str
         :return: A :py:class:`bsf.ngs.Sample` object.
-        :rtype: Sample
+        :rtype: Sample | None
         """
         if name in self.sample_dict:
             sample = self.sample_dict[name]
@@ -1566,7 +1566,7 @@ class ProcessedRunFolder(NextGenerationBase):
         :param name: A :py:attr:`bsf.ngs.Project.name` attribute.
         :type name: str
         :return: A :py:class:`bsf.ngs.Project` object.
-        :rtype: Project
+        :rtype: Project | None
         """
         if name in self.project_dict:
             project = self.project_dict[name]
@@ -1861,7 +1861,7 @@ class Collection(NextGenerationBase):
             :param default_path: A default file path.
             :type default_path: str
             :return: A :py:class:`bsf.ngs.Reads` object.
-            :rtype: Reads | None
+            :rtype: Reads
             """
 
             def process_reads_status(new, old):
@@ -1871,7 +1871,7 @@ class Collection(NextGenerationBase):
                     - 1 << 2 (4): new == old
 
                 :param new: A new :py:class:`str` object.
-                :type new: str | None
+                :type new: str
                 :param old: An old :py:class:`str` object.
                 :type old: str | None
                 :return: A comparison status.
@@ -1895,7 +1895,7 @@ class Collection(NextGenerationBase):
                 """Private function to process (i.e., initialise) a new :py:class:`bsf.ngs.Reads` object.
 
                 :param _reads: A current :py:class:`bsf.ngs.Reads` object.
-                :type _reads: Reads | None
+                :type _reads: Reads
                 :param _reads_file: A file path.
                 :type _reads_file: str
                 :param _reads_name: A name.
@@ -1903,7 +1903,7 @@ class Collection(NextGenerationBase):
                 :param _file_type: A file type.
                 :type _file_type: str
                 :return: A new :py:class:`bsf.ngs.Reads` object.
-                :rtype: Reads | None
+                :rtype: Reads
                 """
                 module_logger.debug(
                     'process_reads_new(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
@@ -1916,7 +1916,7 @@ class Collection(NextGenerationBase):
                 :py:class:`bsf.ngs.Reads` object with file_path only.
 
                 :param _reads: A current :py:class:`bsf.ngs.Reads` object.
-                :type _reads: Reads | None
+                :type _reads: Reads
                 :param _reads_file: A file path.
                 :type _reads_file: str
                 :param _reads_name: A name.
@@ -1924,7 +1924,7 @@ class Collection(NextGenerationBase):
                 :param _file_type: A file type.
                 :type _file_type: str
                 :return: A new :py:class:`bsf.ngs.Reads` object.
-                :rtype: Reads | None
+                :rtype: Reads
                 """
                 module_logger.debug(
                     'process_reads_new_file(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
@@ -1937,7 +1937,7 @@ class Collection(NextGenerationBase):
                 :py:class:`bsf.ngs.Reads` object with :py:attr:`bsf.ngs.Reads.name` only.
 
                 :param _reads: A current :py:class:`bsf.ngs.Reads` object.
-                :type _reads: Reads | None
+                :type _reads: Reads
                 :param _reads_file: A file path.
                 :type _reads_file: str
                 :param _reads_name: A name.
@@ -1945,7 +1945,7 @@ class Collection(NextGenerationBase):
                 :param _file_type: A file type.
                 :type _file_type: str
                 :return: A new :py:class:`bsf.ngs.Reads` object.
-                :rtype: Reads | None
+                :rtype: Reads
                 """
                 module_logger.debug(
                     'process_reads_new_name(_reads=%r, _reads_file=%r, _reads_name=%r, _file_type=%r)',
@@ -1957,7 +1957,7 @@ class Collection(NextGenerationBase):
                 """Private function to process (i.e. complete) an old :py:class:`bsf.ngs.Reads` object.
 
                 :param _reads: A current :py:class:`bsf.ngs.Reads` object.
-                :type _reads: Reads | None
+                :type _reads: Reads
                 :param _reads_file: A file path.
                 :type _reads_file: str
                 :param _reads_name: A name.
@@ -2179,7 +2179,7 @@ class Collection(NextGenerationBase):
                 :param _reads_2: A second :py:class:`bsf.ngs.Reads` object.
                 :type _reads_2: Reads | None
                 :return: A :py:class:`bsf.ngs.PairedReads` object.
-                :rtype: PairedReads | None
+                :rtype: PairedReads
                 """
                 module_logger.debug(
                     'process_paired_reads_new(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
@@ -2206,7 +2206,7 @@ class Collection(NextGenerationBase):
                 :param _reads_2: A second :py:class:`bsf.ngs.Reads` object.
                 :type _reads_2: Reads | None
                 :return: A :py:class:`bsf.ngs.PairedReads` object.
-                :rtype: PairedReads | None
+                :rtype: PairedReads
                 """
                 module_logger.debug(
                     'process_paired_reads_new_1(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
@@ -2233,7 +2233,7 @@ class Collection(NextGenerationBase):
                 :param _reads_2: A second :py:class:`bsf.ngs.Reads` object.
                 :type _reads_2: Reads | None
                 :return: A :py:class:`bsf.ngs.PairedReads` object.
-                :rtype: PairedReads | None
+                :rtype: PairedReads
                 """
                 module_logger.debug(
                     'process_paired_reads_new_2(_sample=%r, _paired_reads=%r, _file_type=%r, _reads_1=%r, _reads_2=%r)',
@@ -2620,7 +2620,7 @@ class Collection(NextGenerationBase):
         :param name: A :py:attr:`bsf.ngs.ProcessedRunFolder.name` attribute.
         :type name: str
         :return: A :py:class:`bsf.ngs.ProcessedRunFolder` object.
-        :rtype: ProcessedRunFolder
+        :rtype: ProcessedRunFolder | None
         """
         if name in self.processed_run_folder_dict:
             prf = self.processed_run_folder_dict[name]

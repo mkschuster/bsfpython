@@ -545,7 +545,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     :ivar lanes: A number of lanes on a flow cell.
     :type lanes: int | None
     :ivar vendor_quality_filter: Request vendor quality filtering.
-    :type vendor_quality_filter: bool
+    :type vendor_quality_filter: bool | None
     """
 
     name = 'Picard Extract Illumina Run Folder Analysis'
@@ -1296,7 +1296,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     :ivar eamss_filter: Request Illumina EAMSS or Read Segment Quality Control Metric filtering.
     :type eamss_filter: bool | None
     :ivar vendor_quality_filter: Request vendor quality filtering.
-    :type vendor_quality_filter: bool
+    :type vendor_quality_filter: bool | None
     :ivar compression_level: A Zlib compression level.
     :type compression_level: int | None
     :ivar cloud_account: A :literal:`Microsoft Azure Storage Account` name.
@@ -1987,6 +1987,8 @@ class IlluminaDemultiplexSam(Analysis):
     :type matching_threads: int | None
     :ivar lanes: A number of lanes on the flow cell.
     :type lanes: int | None
+    :ivar lane_list: A Python :py:class:`list` object of Python :py:class:`str` (lane number) objects to process.
+    :type lane_list: list[str] | None
     :ivar force: Request de-multiplexing with a Library Annotation sheet failing validation.
     :type force: bool | None
     """
@@ -2152,7 +2154,7 @@ class IlluminaDemultiplexSam(Analysis):
         :param lanes: A number of lanes on the flow cell.
         :type lanes: int | None
         :param lane_list: A Python :py:class:`list` object of Python :py:class:`str` (lane number) objects to process.
-        :type lane_list: list[str]
+        :type lane_list: list[str] | None
         :param force: Request de-multiplexing with a Library Annotation sheet failing validation.
         :type force: bool | None
         """

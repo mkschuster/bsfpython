@@ -85,7 +85,7 @@ class RunnableStepCsqToVep(RunnableStep):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -99,7 +99,7 @@ class RunnableStepCsqToVep(RunnableStep):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -161,6 +161,7 @@ class RunnableStepCsqToVep(RunnableStep):
             The Python :py:class:`list` object stores one Python :py:class:`list` object per allele and picked feature.
 
             :param length: A length.
+            :type length: int
             :return: A Python :py:class:`list` object of Python :py:class:`list` objects of
                 Python :py:class:`str` objects
             :rtype: list[list[str]]

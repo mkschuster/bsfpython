@@ -82,7 +82,7 @@ class RunnableStepGATK(RunnableStepJava):
         :param options: A Python :py:class:`dict` object of
             Python :py:class:`str` (:py:attr:`bsf.argument.Argument.key`) key and
             Python :py:class:`list` value objects of :py:class:`bsf.argument.Argument` objects.
-        :type options: dict[Argument.key, list[Argument]] | None
+        :type options: dict[str, list[Argument]] | None
         :param arguments: A Python :py:class:`list` object of Python :py:class:`str` (program argument) objects.
         :type arguments: list[str] | None
         :param sub_command: A subordinate :py:class:`bsf.process.Command` object.
@@ -96,7 +96,7 @@ class RunnableStepGATK(RunnableStepJava):
         :param dependencies: A Python :py:class:`list` object of
             Python :py:class:`str` (:py:attr:`bsf.process.Executable.name`) objects
             in the context of :py:class:`bsf.analysis.Stage` dependencies.
-        :type dependencies: list[Executable.name] | None
+        :type dependencies: list[str] | None
         :param hold: Request a hold on job scheduling.
         :type hold: bool | None
         :param submit: Request the submission via the :py:meth:`bsf.analysis.Stage.submit` method.
@@ -1170,7 +1170,7 @@ class VariantCallingGATK(Analysis):
     :type genome_annotation_gtf: str | None
     :ivar vep_annotation: An Ensembl Variant Effect Predictor (VEP) annotation type
         (i.e., :literal:`ensembl`, :literal:`refseq` or :literal:`merged`).
-    :type vep_annotation: str
+    :type vep_annotation: str | None
     :ivar vep_assembly: An Ensembl Variant Effect Predictor (VEP) genome assembly version.
     :type vep_assembly: str | None
     :ivar vep_cache: An Ensembl Variant Effect Predictor (VEP) cache directory path.
@@ -1921,7 +1921,7 @@ class VariantCallingGATK(Analysis):
         :type genome_annotation_gtf: str | None
         :param vep_annotation: An Ensembl Variant Effect Predictor (VEP) annotation type
             (i.e., :literal:`ensembl`, :literal:`refseq` or :literal:`merged`).
-        :type vep_annotation: str
+        :type vep_annotation: str | None
         :param vep_assembly: An Ensembl Variant Effect Predictor (VEP) genome assembly version.
         :type vep_assembly: str | None
         :param vep_cache: An Ensembl Variant Effect Predictor (VEP) cache directory path.

@@ -65,9 +65,9 @@ class Hisat2(Aligner):
     :ivar transcriptome_gtf: A transcriptome annotation GTF file path.
     :type transcriptome_gtf: str | None
     :ivar transcriptome_index: A transcriptome index directory path.
-    :type transcriptome_index: str
+    :type transcriptome_index: str | None
     :ivar rna_strand: An mRNA strand (i.e., F, R, FR or RF).
-    :type rna_strand: str
+    :type rna_strand: str | None
     :ivar threads_number: A number of threads.
     :type threads_number: int | None
     """
@@ -186,13 +186,13 @@ class Hisat2(Aligner):
         :param transcriptome_gtf: A transcriptome annotation GTF file path.
         :type transcriptome_gtf: str | None
         :param transcriptome_index: A transcriptome index directory path.
-        :type transcriptome_index: str
+        :type transcriptome_index: str | None
         :param skip_mark_duplicates: Request skipping the Picard :literal:`MarkDuplicates` step.
         :type skip_mark_duplicates: bool | None
         :param java_archive_picard: A Picard tools Java Archive (JAR) file path.
         :type java_archive_picard: str | None
         :param rna_strand: An mRNA strand (i.e., F, R, FR or RF).
-        :type rna_strand: str
+        :type rna_strand: str | None
         :param threads_number: A number of threads.
         :type threads_number: int | None
         """
