@@ -36,6 +36,64 @@ from bsf.standards import Configuration
 module_logger = logging.getLogger(name=__name__)
 
 
+class SampleAnnotationSheet(AnnotationSheet):
+    """The :py:class:`bsf.ngs.SampleAnnotationSheet` class represents a Comma-Separated Value (CSV) table of
+    sample information after running the
+    :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder` object.
+    """
+
+    _file_type = 'excel'
+
+    _header_line = True
+
+    _field_names = [
+        'File Type',
+        'ProcessedRunFolder Name',
+        'Project Name',
+        'Project Size',
+        'Sample Name',
+        'PairedReads Exclude',
+        'PairedReads Index 1',
+        'PairedReads Index 2',
+        'PairedReads ReadGroup',
+        'Reads1 Name',
+        'Reads1 File',
+        'Reads2 Name',
+        'Reads2 File',
+    ]
+
+    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
+        # File Type
+        'ProcessedRunFolder Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Project Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Project Size': [
+            AnnotationSheet.check_numeric,
+        ],
+        'Sample Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'PairedReads Index 1': [
+            AnnotationSheet.check_sequence,
+        ],
+        'PairedReads Index 2': [
+            AnnotationSheet.check_sequence,
+        ],
+        # PairedReads ReadGroup
+        'Reads1 Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        # Reads1 File
+        'Reads2 Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        # Reads2 File
+    }
+
+
 class NextGenerationBase(object):
     """The :py:class:`bsf.ngs.NextGenerationBase` class represents a super-class for
     Next Generation Sequencing (NGS) objects.
@@ -3062,61 +3120,3 @@ class SampleGroup(object):
                         group_dict[paired_reads_name].append(paired_reads)
 
         return group_dict
-
-
-class SampleAnnotationSheet(AnnotationSheet):
-    """The :py:class:`bsf.ngs.SampleAnnotationSheet` class represents a Comma-Separated Value (CSV) table of
-    sample information after running the
-    :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder` object.
-    """
-
-    _file_type = 'excel'
-
-    _header_line = True
-
-    _field_names = [
-        'File Type',
-        'ProcessedRunFolder Name',
-        'Project Name',
-        'Project Size',
-        'Sample Name',
-        'PairedReads Exclude',
-        'PairedReads Index 1',
-        'PairedReads Index 2',
-        'PairedReads ReadGroup',
-        'Reads1 Name',
-        'Reads1 File',
-        'Reads2 Name',
-        'Reads2 File',
-    ]
-
-    _test_methods: Dict[str, List[Callable[[int, Dict[str, str], str], str]]] = {
-        # File Type
-        'ProcessedRunFolder Name': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Project Name': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Project Size': [
-            AnnotationSheet.check_numeric,
-        ],
-        'Sample Name': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'PairedReads Index 1': [
-            AnnotationSheet.check_sequence,
-        ],
-        'PairedReads Index 2': [
-            AnnotationSheet.check_sequence,
-        ],
-        # PairedReads ReadGroup
-        'Reads1 Name': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        # Reads1 File
-        'Reads2 Name': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        # Reads2 File
-    }
