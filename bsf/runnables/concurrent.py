@@ -30,7 +30,7 @@ restarting of the :py:class:`bsf.procedure.ConcurrentRunnable` object processing
 import os
 
 from bsf.procedure import ConcurrentRunnable
-from bsf.process import RunnableStep, run_executables
+from bsf.process import Executable, RunnableStep
 
 
 def run(runnable):
@@ -85,7 +85,7 @@ def run(runnable):
 
     # Run the RunnableStep objects on the concurrent list.
 
-    exception_str_list = run_executables(executable_list=runnable.runnable_step_list_concurrent)
+    exception_str_list = Executable.run_executables(executable_list=runnable.runnable_step_list_concurrent)
 
     if exception_str_list:
         # If an exception occurred, remove the ConcurrentRunnable-specific cache and temporary directories

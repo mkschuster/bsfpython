@@ -31,177 +31,15 @@ import shutil
 import stat
 import sys
 import time
-from io import IOBase, TextIOWrapper
 from subprocess import Popen, PIPE, DEVNULL
 from threading import Lock, Thread
-from typing import List
+from typing import IO, List, TextIO
 
 from bsf.argument import *
 from bsf.connector import *
 from bsf.standards import Configuration
 
 module_logger = logging.getLogger(name=__name__)
-
-
-def map_connector(connector=None, executable_list=None):
-    """Map a :py:class:`bsf.connector.Connector` object to a file handle.
-
-    :param connector: A :py:class:`bsf.connector.Connector` object or subclass thereof.
-    :type connector: Connector | None
-    :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
-    :type executable_list: list[Executable] | None
-    :return: A file handle object.
-    :rtype: IOBase | DEVNULL | PIPE | None
-    """
-    if isinstance(connector, ElectronicSink):
-        return DEVNULL
-
-    if isinstance(connector, ConnectorFile):
-        if isinstance(connector, ConnectorPipeNamed):
-            # A named pipe needs creating before it can be opened.
-            if not os.path.exists(connector.file_path):
-                os.mkfifo(connector.file_path)
-
-        return open(file=connector.file_path, mode=connector.file_mode)
-
-    if isinstance(connector, ConnectorPipe):
-        return PIPE
-
-    if isinstance(connector, StandardStream):
-        return PIPE
-
-    if isinstance(connector, ConcurrentProcess):
-        if executable_list is None:
-            raise Exception('A ConcurrentProcess Connector requires a list of Executable objects to connect to.')
-
-        for executable in executable_list:
-            if executable.name == connector.name:
-                if executable.sub_process is None:
-                    raise Exception(f'Sub-process {executable.name!r} not initialised, yet.')
-
-                return getattr(executable.sub_process, connector.connection)
-        else:
-            raise Exception(f'Could not find a suitable Executable.name for Connector.name {connector.name}.')
-
-    return None
-
-
-def run_executables(executable_list):
-    """Run a Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects concurrently.
-
-    :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects
-    :type executable_list: list[Executable]
-    :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
-    :rtype: list[str] | None
-    """
-    thread_lock = Lock()
-
-    for executable in executable_list:
-        # Per RunnableStep, up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
-        # should make sure that buffers are not filling up. If STDOUT or STDERR connectors are not defined,
-        # defaults need be set to avoid the sub-process from blocking.
-
-        if executable.stdout is None:
-            executable.stdout = StandardOutputStream()
-
-        if executable.stderr is None:
-            executable.stderr = StandardErrorStream()
-
-        # Create and assign sub-processes.
-        try:
-            executable.sub_process = Popen(
-                args=executable.command_list(),
-                bufsize=1,
-                stdin=map_connector(connector=executable.stdin, executable_list=executable_list),
-                stdout=map_connector(connector=executable.stdout, executable_list=executable_list),
-                stderr=map_connector(connector=executable.stderr, executable_list=executable_list),
-                text=True)
-        except OSError as exception:
-            if exception.errno == errno.ENOENT:
-                # Log an informative error upon ENOENT, but re-raise the Exception object in any case.
-                module_logger.error(
-                    'For Executable.name %r Executable.program %r could not be found.',
-                    executable.name,
-                    executable.program)
-
-            raise exception
-
-        for attribute in ('stdin', 'stdout', 'stderr'):
-            connector: Connector = getattr(executable, attribute)
-
-            if isinstance(connector, StandardInputStream):
-                # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
-                if connector.thread_callable is None:
-                    pass
-                else:
-                    connector.thread = Thread(
-                        target=connector.thread_callable,
-                        args=[executable.sub_process.stdin, thread_lock],
-                        kwargs=connector.thread_kwargs)
-
-            if isinstance(connector, StandardOutputStream):
-                # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
-                if connector.thread_callable is None:
-                    connector.thread = Thread(
-                        target=Executable.process_stdout,
-                        args=[executable.sub_process.stdout, thread_lock],
-                        kwargs={'stdout_path': connector.file_path})
-                else:
-                    connector.thread = Thread(
-                        target=connector.thread_callable,
-                        args=[executable.sub_process.stdout, thread_lock],
-                        kwargs=connector.thread_kwargs)
-
-            if isinstance(connector, StandardErrorStream):
-                # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
-                if connector.thread_callable is None:
-                    connector.thread = Thread(
-                        target=Executable.process_stderr,
-                        args=[executable.sub_process.stderr, thread_lock],
-                        kwargs={'stderr_path': connector.file_path})
-                else:
-                    connector.thread = Thread(
-                        target=connector.thread_callable,
-                        args=[executable.sub_process.stderr, thread_lock],
-                        kwargs=connector.thread_kwargs)
-
-            if isinstance(connector, StandardStream) and connector.thread:
-                connector.thread.daemon = True
-                connector.thread.start()
-
-    # At this stage all subprocess.Popen objects should have been created.
-    # Now, wait for all child processes to complete.
-
-    exception_str_list = list()
-    for executable in executable_list:
-        child_return_code = executable.sub_process.wait()
-
-        # First, join all standard stream processing threads.
-
-        for attribute in ('stdin', 'stdout', 'stderr'):
-            connector: Connector = getattr(executable, attribute)
-            if isinstance(connector, StandardStream) and connector.thread:
-                thread_join_counter = 0
-                while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
-                    module_logger.debug(
-                        'Waiting for Executable.name %r %r processor to finish.',
-                        executable.name,
-                        attribute)
-                    connector.thread.join(timeout=connector.thread_timeout)
-                    thread_join_counter += 1
-
-        # Second, inspect the child process' return code.
-
-        if child_return_code > 0:
-            # Child return code.
-            exception_str_list.append(
-                f'Child process Executable.name {executable.name!r} failed with return code {+child_return_code!r}.')
-        elif child_return_code < 0:
-            # Child signal.
-            exception_str_list.append(
-                f'Child process Executable.name {executable.name!r} received signal {-child_return_code!r}.')
-
-    return exception_str_list
 
 
 class Command(object):
@@ -784,14 +622,63 @@ class Executable(Command):
     """
 
     @staticmethod
+    def map_connector(connector, executable_list):
+        """Map a :py:class:`bsf.connector.Connector` object to a file handle.
+
+        :param connector: A :py:class:`bsf.connector.Connector` object or subclass thereof.
+        :type connector: Connector | None
+        :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects.
+        :type executable_list: list[Executable]
+        :return: A file handle object.
+        :rtype: IO | DEVNULL | PIPE | None
+        """
+        if connector is None:
+            return None
+
+        if isinstance(connector, ElectronicSink):
+            return DEVNULL
+
+        if isinstance(connector, ConnectorFile):
+            if isinstance(connector, ConnectorPipeNamed):
+                # A named pipe needs creating before it can be opened.
+                if not os.path.exists(connector.file_path):
+                    os.mkfifo(connector.file_path)
+
+            return open(file=connector.file_path, mode=connector.file_mode)
+
+        if isinstance(connector, ConnectorPipe):
+            return PIPE
+
+        if isinstance(connector, StandardStream):
+            return PIPE
+
+        if isinstance(connector, ConcurrentProcess):
+            if executable_list is None:
+                raise Exception('A ConcurrentProcess Connector requires a list of Executable objects to connect to.')
+
+            for executable in executable_list:
+                if executable.name == connector.name:
+                    if executable.sub_process is None:
+                        raise Exception(f'Sub-process {executable.name!r} not initialised, yet.')
+
+                    return getattr(executable.sub_process, connector.connection)
+            else:
+                raise Exception(f'Could not find a suitable Executable.name for Connector.name {connector.name}.')
+
+        return None
+
+    @staticmethod
     def process_stream(file_handle, thread_lock, file_type, file_path=None):
         """Process a :literal:`STDOUT` or :literal:`STDERR` text stream from the child process as a thread.
 
-        If a file_path was provided, a corresponding Python :py:class:`io.TextIOWrapper` will be opened in text mode,
+        If a file_path was provided, a corresponding Python :py:class:`io.TextIOWrapper` or
+        Python :py:class:`typing.TextIO` object will be opened in text mode,
         if not, :py:class:`sys.stdout` or :py:class:`sys.stderr` will be used according to the :literal:`file_type`.
 
-        :param file_handle: A :literal:`STDOUT` or :literal:`STDERR` Python :py:class:`io.TextIOWrapper` object.
-        :type file_handle: TextIOWrapper
+        :param file_handle: A :literal:`STDOUT` or :literal:`STDERR`
+            Python :py:class:`io.TextIOWrapper` or
+            Python :py:class:`typing.TextIO` object.
+        :type file_handle: TextIO
         :param thread_lock: A Python :py:class:`threading.Lock` object.
         :type thread_lock: Lock
         :param file_type: A file handle type :literal:`STDOUT` or :literal:`STDERR`.
@@ -835,8 +722,10 @@ class Executable(Command):
     def process_stdout(stdout_handle, thread_lock, stdout_path=None):
         """Process :literal:`STDOUT` from the child process as a thread.
 
-        :param stdout_handle: A :literal:`STDOUT` Python :py:class:`io.TextIOWrapper` object.
-        :type stdout_handle: TextIOWrapper
+        :param stdout_handle: A :literal:`STDOUT`
+            Python :py:class:`io.TextIOWrapper` or
+            Python :py:class:`typing.TextIO` object.
+        :type stdout_handle: TextIO
         :param thread_lock: A Python :py:class:`threading.Lock` object.
         :type thread_lock: Lock
         :param stdout_path: A :literal:`STDOUT` file path.
@@ -852,8 +741,10 @@ class Executable(Command):
     def process_stderr(stderr_handle, thread_lock, stderr_path=None):
         """Process :literal:`STDERR` from the child process as a thread.
 
-        :param stderr_handle: A :literal:`STDERR` Python :py:class:`io.TextIOWrapper` object.
-        :type stderr_handle: TextIOWrapper
+        :param stderr_handle: A :literal:`STDERR`
+            Python :py:class:`io.TextIOWrapper` or
+            Python :py:class:`typing.TextIO` object.
+        :type stderr_handle: TextIO
         :param thread_lock: A Python :py:class:`threading.Lock` object.
         :type thread_lock: Lock
         :param stderr_path: A :literal:`STDERR` file path.
@@ -864,6 +755,126 @@ class Executable(Command):
             thread_lock=thread_lock,
             file_type='STDERR',
             file_path=stderr_path)
+
+    @classmethod
+    def run_executables(cls, executable_list):
+        """Run a Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects concurrently.
+
+        :param executable_list: A Python :py:class:`list` object of :py:class:`bsf.process.Executable` objects
+        :type executable_list: list[Executable]
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
+        :rtype: list[str] | None
+        """
+        thread_lock = Lock()
+
+        for executable in executable_list:
+            # Per RunnableStep, up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
+            # should make sure that buffers are not filling up. If STDOUT or STDERR connectors are not defined,
+            # defaults need be set to avoid the sub-process from blocking.
+
+            if executable.stdout is None:
+                executable.stdout = StandardOutputStream()
+
+            if executable.stderr is None:
+                executable.stderr = StandardErrorStream()
+
+            # Create and assign sub-processes.
+            try:
+                executable.sub_process = Popen(
+                    args=executable.command_list(),
+                    bufsize=1,
+                    stdin=cls.map_connector(connector=executable.stdin, executable_list=executable_list),
+                    stdout=cls.map_connector(connector=executable.stdout, executable_list=executable_list),
+                    stderr=cls.map_connector(connector=executable.stderr, executable_list=executable_list),
+                    text=True)
+            except OSError as exception:
+                if exception.errno == errno.ENOENT:
+                    # Log an informative error upon ENOENT, but re-raise the Exception object in any case.
+                    module_logger.error(
+                        'For Executable.name %r Executable.program %r could not be found.',
+                        executable.name,
+                        executable.program)
+
+                raise exception
+
+            for attribute in ('stdin', 'stdout', 'stderr'):
+                connector: Connector = getattr(executable, attribute)
+
+                if isinstance(connector, StandardInputStream):
+                    # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
+                    if connector.thread_callable is None:
+                        pass
+                    else:
+                        connector.thread = Thread(
+                            target=connector.thread_callable,
+                            args=[executable.sub_process.stdin, thread_lock],
+                            kwargs=connector.thread_kwargs)
+
+                if isinstance(connector, StandardOutputStream):
+                    # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
+                    if connector.thread_callable is None:
+                        connector.thread = Thread(
+                            target=cls.process_stdout,
+                            args=[executable.sub_process.stdout, thread_lock],
+                            kwargs={'stdout_path': connector.file_path})
+                    else:
+                        connector.thread = Thread(
+                            target=connector.thread_callable,
+                            args=[executable.sub_process.stdout, thread_lock],
+                            kwargs=connector.thread_kwargs)
+
+                if isinstance(connector, StandardErrorStream):
+                    # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
+                    if connector.thread_callable is None:
+                        connector.thread = Thread(
+                            target=cls.process_stderr,
+                            args=[executable.sub_process.stderr, thread_lock],
+                            kwargs={'stderr_path': connector.file_path})
+                    else:
+                        connector.thread = Thread(
+                            target=connector.thread_callable,
+                            args=[executable.sub_process.stderr, thread_lock],
+                            kwargs=connector.thread_kwargs)
+
+                if isinstance(connector, StandardStream) and connector.thread:
+                    connector.thread.daemon = True
+                    connector.thread.start()
+
+        # At this stage all subprocess.Popen objects should have been created.
+        # Now, wait for all child processes to complete.
+
+        exception_str_list = list()
+        for executable in executable_list:
+            child_return_code = executable.sub_process.wait()
+
+            # First, join all standard stream processing threads.
+
+            for attribute in ('stdin', 'stdout', 'stderr'):
+                connector: Connector = getattr(executable, attribute)
+                if isinstance(connector, StandardStream) and connector.thread:
+                    thread_join_counter = 0
+                    while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
+                        module_logger.debug(
+                            'Waiting for Executable.name %r %r processor to finish.',
+                            executable.name,
+                            attribute)
+                        connector.thread.join(timeout=connector.thread_timeout)
+                        thread_join_counter += 1
+
+            # Second, inspect the child process' return code.
+
+            if child_return_code > 0:
+                # Child return code.
+                exception_str_list.append(
+                    f'Child process Executable.name {executable.name!r} '
+                    f'failed with return code {+child_return_code!r}.')
+            elif child_return_code < 0:
+                # Child signal.
+                exception_str_list.append(
+                    f'Child process Executable.name {executable.name!r} '
+                    f'received signal {-child_return_code!r}.')
+
+        return exception_str_list
 
     def __init__(
             self,
@@ -1008,7 +1019,7 @@ class Executable(Command):
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
-        return run_executables(executable_list=[self])
+        return self.run_executables(executable_list=[self])
 
 
 class RunnableStep(Executable):
