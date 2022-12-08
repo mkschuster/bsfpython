@@ -23,13 +23,14 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to collect and update MD5 sums.
-#
-#  A directory tree (directory-path) is scanned for file names matching a regular expression pattern
-#  (--file-pattern), by default \\.md5 and updated into an existing (--file-path) md5sum file.
-#  Picard-style MD5 file that only contain the MD5 digest are reformatted to obey the md5sum format.
-#
+"""The :py:mod:`bin.bsf_utility_update_md5sums` module is a script to collect and update MD5 sums.
+
+A directory tree (:literal:`directory_path`) is scanned for file names matching a regular expression pattern
+(:literal:`--file-pattern`), by default :literal:`\\.md5` and updated into an existing
+(:literal:`--file-path`) md5sum file.
+Picard-style MD5 file that only contain the MD5 digest are reformatted to obey the GNU md5sum format.
+"""
+
 import logging
 import os
 import re

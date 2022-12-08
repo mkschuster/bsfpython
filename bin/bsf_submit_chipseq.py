@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to drive the ChIPSeq analysis.
-#
+"""The :py:mod:`bin.bsf_submit_chipseq` module is a script to drive the
+:py:class:`bsf.analyses.chipseq.ChIPSeq` analysis.
+"""
+
 import logging
 from argparse import ArgumentParser
 

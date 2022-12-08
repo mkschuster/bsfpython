@@ -23,11 +23,13 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to find and fix broken symbolic links pointing from the BSF samples to the
-#  BSF sequences directory. These symbolic links are set by the bsf.analyses.illumina_to_bam_tools.BamIndexDecoder
-#  analysis in case a flow-cell lane does not need de-multiplexing.
-#
+"""The :py:mod:`bin.bsf_utility_fix_sample_links` module is a script to
+find and fix broken symbolic links pointing from the BSF samples to the
+BSF sequences directory. These symbolic links are set by the
+:py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` analysis
+in case a flow-cell lane does not need de-multiplexing.
+"""
+
 import errno
 import os
 import stat

@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to report software versions for Illumina Run Folders.
-#
+"""The :py:mod:`bin.bsf_utility_irf_cross_check` module is a script to
+report software versions for :emphasis:`Illumina Run Folder` objects.
+"""
+
 import logging
 import os
 import re

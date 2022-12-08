@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to run FastQC over an Illumina run folder.
-#
+"""The :py:mod:`bin.bsf_submit_fastqc` module is a script to drive the
+:py:class:`bsf.analyses.fastqc.FastQC` analysis over an :emphasis:`Illumina Run Folder`.
+"""
+
 import logging
 from argparse import ArgumentParser
 

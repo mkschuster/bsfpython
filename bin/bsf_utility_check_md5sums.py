@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to check files against the repository of MD5 sums.
-#
+"""The :py:mod:`bin.bsf_utility_check_md5sums` module is a script to check files against the repository of MD5 sums.
+"""
+
 import logging
 import os
 from argparse import ArgumentParser

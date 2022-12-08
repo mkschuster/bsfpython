@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to reverse barcodes in a library annotation sheet.
-#
+"""The :py:mod:`bin.bsf_utility_library_reverse_complement` module is a script to
+reverse barcodes in a library annotation sheet.
+"""
+
 from argparse import ArgumentParser
 
 from Bio.Seq import reverse_complement

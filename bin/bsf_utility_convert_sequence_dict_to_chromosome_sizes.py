@@ -23,15 +23,15 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to convert a Picard sequence dictionary based on a
-#  SAM header file into a UCSC chromosome sizes file.
-#
-#  The SAM file header specifies in sequence (@SQ) lines
-#  sequence names (SN:) and length (LN:) fields,
-#  while the UCSC chromosome sizes file just contains sequence name
-#  and length separated by tabs.
-#
+"""The :py:mod:`bin.bsf_utility_convert_sequence_dict_to_chromosome_sizes` module is a script to
+convert a Picard sequence dictionary based on a SAM header file into a UCSC chromosome sizes file.
+
+The SAM file header specifies in sequence (:literal:`@SQ`) lines
+sequence names (:literal:`SN`) and length (:literal:`LN`) fields,
+while the UCSC chromosome sizes file just contains sequence name
+and length separated by tabs.
+"""
+
 import os
 from argparse import ArgumentParser
 

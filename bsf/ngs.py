@@ -39,7 +39,7 @@ module_logger = logging.getLogger(name=__name__)
 class SampleAnnotationSheet(AnnotationSheet):
     """The :py:class:`bsf.ngs.SampleAnnotationSheet` class represents a Comma-Separated Value (CSV) table of
     sample information after running the
-    :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder` object.
+    :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` object.
     """
 
     _file_type = 'excel'

@@ -996,12 +996,12 @@ class AnalysisConfiguration(XMLConfiguration):
         :param tile: A tile number.
         :type tile: str
         :return: :py:const:`True` if the lane and tile is defined, :py:const:`False` otherwise.
-        :rtype: bool | None
+        :rtype: bool
         """
         if lane in self._lane_tile_dict:
             return tile in self._lane_tile_dict[lane]
         else:
-            return
+            return False
 
 
 class ImageAnalysis(AnalysisConfiguration):
@@ -1019,6 +1019,9 @@ class BaseCallAnalysis(AnalysisConfiguration):
 
 
 class RunFolderNotComplete(Exception):
+    """The :py:class:`bsf.illumina.RunFolderNotComplete` class models an :py:class:`Exception` if
+    an :emphasis:`Illumina Run Folder` lacks an :literal:`RTAComplete.txt` file.
+    """
     pass
 
 

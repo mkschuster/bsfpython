@@ -23,10 +23,15 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to process an Illumina Run Folder (IRF) after sequencing and
-#  drive the IlluminaToBamTools IlluminaToBam and BamIndexDecoder analyses.
-#
+"""The :py:mod:`bin.bsf_submit_irf_processor` module is a script to drive the
+`Picard <http://broadinstitute.github.io/picard/>`_
+:py:class:`bsf.analyses.picard.IlluminaMultiplexSam` and
+:py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` analyses or if the :literal:`--illumina2bam` option is set, the
+`Illumina2bam <https://github.com/wtsi-npg/illumina2bam>`_
+:py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` and
+:py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` analyses.
+"""
+
 import datetime
 import logging
 import os

@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to install BSF Python.
-#
+"""The :py:mod:`setup` module is a script to install BSF Python.
+"""
+
 import setuptools
 
 with open(file='README.md', mode='r') as text_io:
@@ -38,7 +38,7 @@ setuptools.setup(
     # metadata_version='2.1',
     # Additional Meta-Data
     name='bsfpython-MSchuster',
-    version='2022.11.27',
+    version='2022.12.9',
     author='Michael Schuster',
     author_email='mschuster@cemm.oeaw.ac.at',
     maintainer='Michael Schuster',

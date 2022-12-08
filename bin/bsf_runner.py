@@ -23,13 +23,12 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python wrapper script that runs a Runnable module.
-#  The script un-pickles the Runnable object from a file path,
-#  loads the specific processing logic from a runnables code module
-#  and finally, calls Runnable.run(). Exit codes are defined in the
-#  accessory code module.
-#
+"""The :py:mod:`bin.bsf_runner` module is a wrapper script that un-pickles
+a :py:class:`bsf.procedure.Runnable` object from a file path,
+loads the specific processing logic from a :py:mod:`bsf.runnables` module
+and finally, calls the :py:meth:`bsf.procedure.Runnable.run` method.
+"""
+
 import importlib
 from argparse import ArgumentParser
 

@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to download from the Microsoft Azure Storage Blob Service.
-#
+"""The :py:mod:`bin.bsf_utility_blob_download` module is a script to download from the
+:emphasis:`Microsoft Azure Storage Blob Service`.
+"""
+
 import logging
 import os
 from argparse import ArgumentParser

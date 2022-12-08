@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to drive the EGA Cryptor analysis pipeline.
-#
+"""The :py:mod:`bin.bsf_submit_ega_cryptor` module is a script to drive the
+:py:class:`bsf.analyses.ega.EGACryptor` analysis.
+"""
+
 import logging
 from argparse import ArgumentParser
 

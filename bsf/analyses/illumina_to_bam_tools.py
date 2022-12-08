@@ -37,7 +37,7 @@ from bsf.connector import Connector
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.ngs import Collection, Sample, SampleAnnotationSheet
 from bsf.procedure import FilePath, ConsecutiveRunnable
-from bsf.process import Command, Executable, RunnableStep, RunnableStepChangeMode, RunnableStepJava, \
+from bsf.process import Command, RunnableStep, RunnableStepChangeMode, RunnableStepJava, \
     RunnableStepMakeDirectory, RunnableStepLink, RunnableStepMove, RunnableStepPicard
 from bsf.standards import Configuration, StandardFilePath, JavaArchive, JavaClassPath, Operator, VendorQualityFilter
 
@@ -322,10 +322,10 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
 class RunnableStepIlluminaToBam(RunnableStepJava):
     """The :py:class:`bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam` class represents a
-    :py:class:`bsf.process.RunnableStepJava` class specific to IlluminaToBam tools.
-
-    IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
-    Java Archive (JAR) file.
+    :py:class:`bsf.process.RunnableStepJava` class specific to
+    `Illumina2bam <https://github.com/wtsi-npg/illumina2bam>`_ tools, which use the old
+    `Picard <http://broadinstitute.github.io/picard/>`_ interface where each algorithm is implemented as a separate
+    :emphasis:`Java Archive` (JAR) file.
     """
 
     def __init__(
@@ -394,9 +394,9 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         :type java_heap_maximum: str | None
         :param java_jar_path: A Java Archive (JAR) file path.
         :type java_jar_path: str | None
-        :param itb_classpath: An IlluminaToBam Java Class Path directory.
+        :param itb_classpath: An `Illumina2bam <https://github.com/wtsi-npg/illumina2bam>`_ Java Class Path directory.
         :type itb_classpath: str | None
-        :param itb_command: An IlluminaToBam command.
+        :param itb_command: An `Illumina2bam <https://github.com/wtsi-npg/illumina2bam>`_ command.
         :type itb_command: str | None
         """
         super(RunnableStepIlluminaToBam, self).__init__(
@@ -419,7 +419,7 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
             java_heap_maximum=java_heap_maximum,
             java_jar_path=java_jar_path)
 
-        # Set the IlluminaToBam Java Class Path and the command-specific IlluminaToBam Java Archive (JAR) file path.
+        # Set the Illumina2bam Java Class Path and the command-specific Illumina2bam Java Archive (JAR) file path.
         if 'jar' not in self.sub_command.options:
             self.sub_command.add_option_short(key='jar', value=os.path.join(itb_classpath, itb_command + '.jar'))
 
@@ -1700,7 +1700,7 @@ class BamIndexDecoder(Analysis):
                 file_path=os.path.join(self.project_directory, file_path_lane.barcode_tsv))
 
             for row_dict in library_annotation_dict[lane_int]:
-                # Add a row to the lane-specific tab-delimited IlluminaToBamTools BamIndexDecoder barcode file.
+                # Add a row to the lane-specific tab-delimited Illumina2bam tools BamIndexDecoder barcode file.
 
                 bam_index_decoder_sheet.row_dicts.append({
                     'barcode_sequence': row_dict['barcode_sequence_1'] + row_dict['barcode_sequence_2'],

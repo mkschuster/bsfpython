@@ -2252,6 +2252,12 @@ class RunnableStepRemoveDirectory(RunnableStep):
 
 
 class RunnableStepRemoveFile(RunnableStep):
+    """The :py:class:`bsf.process.RunnableStepRemoveFile` class represents a step removing a single file.
+
+    :ivar file_path: File path
+    :type file_path: str | None
+    """
+
     def __init__(
             self,
             name,

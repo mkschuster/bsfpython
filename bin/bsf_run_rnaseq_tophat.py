@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to run Tophat.
-#
+"""The :py:mod:`bin.bsf_run_rnaseq_tophat` module is a script to run Tophat2.
+"""
+
 import errno
 import os
 import pickle

@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to extract sequences from Exonerate alignments.
-#
+"""The :py:mod:` bin.bsf_utility_extract_exonerate_sequences` module is a script to
+extract sequences from :emphasis:`Exonerate` alignments.
+"""
+
 import re
 
 import Bio.SeqIO

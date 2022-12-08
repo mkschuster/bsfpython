@@ -1240,7 +1240,7 @@ class StandardFilePath(BaseSection):
         """Get a transcriptome resource directory path.
 
         :param transcriptome_version: A transcriptome version (e.g., mm10_e87, ...).
-        :type transcriptome_version: str
+        :type transcriptome_version: str | None
         :param absolute: Get an absolute file path.
         :type absolute: bool
         :return: A transcriptome resource directory path.

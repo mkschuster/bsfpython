@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to create box plots of insert sizes of given bam files.
-#
+"""The :py:mod:`bin.bsf_utility_plot_insert_size` module is a script to
+create box plots of insert sizes of given :emphasis:`BAM` files.
+"""
+
 import os
 from argparse import ArgumentParser
 

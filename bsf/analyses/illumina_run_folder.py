@@ -23,7 +23,7 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 """The :py:mod:`bsf.analyses.illumina_run_folder` module provides classes and methods supporting
-the archiving and restoring of :literal:`Illumina Run Folders`.
+the archiving and restoring of :emphasis:`Illumina Run Folder` (IRF) objects.
 """
 import os
 from typing import List
@@ -40,43 +40,44 @@ from bsf.standards import Configuration, StandardFilePath
 
 
 class IlluminaRunFolderArchive(Analysis):
-    """The :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` class represents the logic to archive
-    an Illumina Run Folder in a format suitable for magnetic tape libraries.
+    """The :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` class represents the logic to convert
+    an :emphasis:`Illumina Run Folder` (IRF) into one or more
+`   GNU Tar <https://www.gnu.org/software/tar/>`_ archives.
 
-    :cvar compress_archive_files: Compress archive files with GNU Zip.
+    :cvar compress_archive_files: Compress archive files with `GNU Zip <https://www.gnu.org/software/gzip/>`_.
     :type compress_archive_files: bool
     :ivar archive_directory: An archive directory.
     :type archive_directory: str | None
-    :ivar run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+    :ivar run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
     :type run_directory: str | None
     :ivar experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
         Illumina Run Folder parameters.
     :type experiment_name: str | None
     :ivar irf_mode_directory: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each directory of the
-            archived :literal:`Illumina Run Folder` (IRF).
+            archived :emphasis:`Illumina Run Folder` (IRF).
     :type irf_mode_directory: str | None
     :ivar sav_mode_directory: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each directory of the
-            archived :literal:`Sequence Analysis Viewer` (SAV).
+            archived :emphasis:`Sequence Analysis Viewer` (SAV).
     :type sav_mode_directory: str | None
     :ivar irf_mode_file: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each file of the
-            archived :literal:`Illumina Run Folder` (IRF).
+            archived :emphasis:`Illumina Run Folder` (IRF).
     :type irf_mode_file: str | None
     :ivar sav_mode_file: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each file of the
-            archived :literal:`Sequence Analysis Viewer` (SAV).
+            archived :emphasis:`Sequence Analysis Viewer` (SAV).
     :type sav_mode_file: str | None
-    :ivar cloud_account: A :literal:`Microsoft Azure Storage Account` name.
+    :ivar cloud_account: A :emphasis:`Microsoft Azure Storage Account` name.
     :type cloud_account: str | None
-    :ivar cloud_container: A :literal:`Microsoft Azure Blob Service` container name.
+    :ivar cloud_container: A :emphasis:`Microsoft Azure Blob Service` container name.
     :type cloud_container: str | None
     :ivar cloud_path_prefix: A blob file path prefix.
     :type cloud_path_prefix: str | None
     :ivar cloud_concurrency: A maximum number of concurrent network connections.
     :type cloud_concurrency: int | None
-    :ivar force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+    :ivar force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
     :type force: bool | None
     """
 
@@ -289,36 +290,36 @@ class IlluminaRunFolderArchive(Analysis):
         :type sample_list: list[Sample] | None
         :param archive_directory: An archive directory.
         :type archive_directory: str | None
-        :param run_directory: An :literal:`Illumina Run Folder` (IRF) directory path.
+        :param run_directory: An :emphasis:`Illumina Run Folder` (IRF) directory path.
         :type run_directory: str | None
         :param experiment_name: Experiment name (i.e., flow cell identifier) normally automatically read from
             Illumina Run Folder parameters.
         :type experiment_name: str | None
         :param irf_mode_directory: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each directory of the
-            archived :literal:`Illumina Run Folder` (IRF).
+            archived :emphasis:`Illumina Run Folder` (IRF).
         :type irf_mode_directory: str | None
         :param sav_mode_directory: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each directory of the
-            archived :literal:`Sequence Analysis Viewer` (SAV).
+            archived :emphasis:`Sequence Analysis Viewer` (SAV).
         :type sav_mode_directory: str | None
         :param irf_mode_file: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each file of the
-            archived :literal:`Illumina Run Folder` (IRF).
+            archived :emphasis:`Illumina Run Folder` (IRF).
         :type irf_mode_file: str | None
         :param sav_mode_file: A comma-separated list of file permission bit names defined in the
             Python :py:mod:`stat` module applied to each file of the
-            archived :literal:`Sequence Analysis Viewer` (SAV).
+            archived :emphasis:`Sequence Analysis Viewer` (SAV).
         :type sav_mode_file: str | None
-        :param cloud_account: A :literal:`Microsoft Azure Storage Account` name.
+        :param cloud_account: A :emphasis:`Microsoft Azure Storage Account` name.
         :type cloud_account: str | None
-        :param cloud_container: A :literal:`Microsoft Azure Blob Service` container name.
+        :param cloud_container: A :emphasis:`Microsoft Azure Blob Service` container name.
         :type cloud_container: str | None
         :param cloud_path_prefix: A blob file path prefix.
         :type cloud_path_prefix: str | None
         :param cloud_concurrency: A maximum number of concurrent network connections.
         :type cloud_concurrency: int | None
-        :param force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+        :param force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
         :type force: bool | None
         """
         super(IlluminaRunFolderArchive, self).__init__(
@@ -426,7 +427,7 @@ class IlluminaRunFolderArchive(Analysis):
     def run(self):
         """Run a :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` object.
 
-        Archive an :literal:`Illumina Run Folder` in a format suitable for magnetic tape libraries.
+        Archive an :emphasis:`Illumina Run Folder` in a format suitable for magnetic tape libraries.
 
         Pre-Process Illumina Run Folder:
             1. Check if the Illumina Run has finished by testing for an
@@ -939,11 +940,11 @@ class IlluminaRunFolderRestore(Analysis):
     :type maximum_lane_number: int
     :ivar archive_directory: A file path to an archive directory.
     :type archive_directory: str | None
-    :ivar illumina_directory: A file path to the directory of :literal:`Illumina Run Folder` directories.
+    :ivar illumina_directory: A file path to the directory of :emphasis:`Illumina Run Folder` directories.
     :type illumina_directory: str | None
     :ivar extract_intensities: Extract cluster intensity file (:literal:`*.cif`) directories.
     :type extract_intensities: bool | None
-    :ivar force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+    :ivar force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
     :type force: bool | None
     """
 
@@ -1068,11 +1069,11 @@ class IlluminaRunFolderRestore(Analysis):
         :type sample_list: list[Sample] | None
         :param archive_directory: A file path to an archive directory.
         :type archive_directory: str | None
-        :param illumina_directory: A file path to the directory of :literal:`Illumina Run Folder` directories.
+        :param illumina_directory: A file path to the directory of :emphasis:`Illumina Run Folder` directories.
         :type illumina_directory: str | None
         :param extract_intensities: Extract cluster intensity file (:literal:`*.cif`) directories.
         :type extract_intensities: bool | None
-        :param force: Force the processing of incomplete :literal:`Illumina Run Folder` objects.
+        :param force: Force the processing of incomplete :emphasis:`Illumina Run Folder` objects.
         :type force: bool | None
         """
         super(IlluminaRunFolderRestore, self).__init__(

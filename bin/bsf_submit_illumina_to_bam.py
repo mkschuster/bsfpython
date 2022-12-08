@@ -23,9 +23,11 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to drive the IlluminaToBamTools IlluminaToBam analysis.
-#
+"""The :py:mod:`bin.bsf_submit_illumina_to_bam` module is a script to drive the
+`Illumina2bam <https://github.com/wtsi-npg/illumina2bam>`_
+:py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` analysis.
+"""
+
 import logging
 from argparse import ArgumentParser
 

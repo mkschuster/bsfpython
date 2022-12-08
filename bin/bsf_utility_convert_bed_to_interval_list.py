@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to convert a BED file into a Picard interval list file.
-#
+"""The :py:mod:`bin.bsf_utility_convert_bed_to_interval_list` module is a script to
+convert a BED file into a Picard interval list file.
+"""
+
 import os
 from argparse import ArgumentParser
 from typing import Dict, List

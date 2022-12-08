@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to run the Burrows Wheeler Aligner BWA.
-#
+"""The :py:mod:` bin.bsf_run_bwa` module is a script to run the Burrows Wheeler Aligner BWA.
+"""
+
 import errno
 import os
 import pickle

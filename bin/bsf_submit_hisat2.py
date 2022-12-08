@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to drive the HISAT2 Aligner analysis.
-#
+"""The :py:mod:`bin.bsf_submit_hisat2` module is a script to drive the
+:py:class:`bsf.analyses.hisat.Hisat2` analysis.
+"""
+
 import logging
 from argparse import ArgumentParser
 

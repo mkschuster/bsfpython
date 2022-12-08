@@ -23,13 +23,16 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to prepare an XML batch file for the IBM Linear Tape File System Copy tool.
-#  This script requires an LTO barcode and reads a corresponding text file with file paths from the current directory.
-#  The file sizes are determined and summed up to report the remaining or exceeded space depending on the cartridge
-#  barcode or a mounted cartridge. An XML file, which can be used as a batch file for the
-#  Linear Tape File System Copy (ltfscp) tool gets written into the current directory.
-#
+"""The :py:mod:`bin.bsf_utility_ltfs_ltfscp` module is a script to prepare an XML batch file to copy files to or from a
+:emphasis:`Linear Tape File System` (LTFS) on a :emphasis:`Linear Tape Open` (LTO) drive via the
+:emphasis:`IBM Linear Tape File System Copy (ltfscp)` tool.
+
+This script requires an LTO barcode and reads a corresponding text file with file paths from the current directory.
+The file sizes are determined and summed up to report the remaining or exceeded space depending on the cartridge
+barcode or a mounted cartridge. An XML file, which can be used as a batch file for the
+:emphasis:`Linear Tape File System Copy (ltfscp)` tool gets written into the current directory.
+"""
+
 import logging
 import os
 from argparse import ArgumentParser
@@ -153,7 +156,7 @@ class LinearTapeFileSystemDirectory(object):
 
 
 class LinearTapeFileSystemCopy(object):
-    """The :py:class:`LinearTapeFileSystemCopy` class represents one Linear Tape File System Copy
+    """The :py:class:`LinearTapeFileSystemCopy` class represents one :emphasis:`Linear Tape File System Copy`
     (:literal:`ltfscp`) process.
 
     :ivar total_buffer_size: A total buffer size.
@@ -172,27 +175,27 @@ class LinearTapeFileSystemCopy(object):
         :py:class:`LinearTapeFileSystemDirectory` value objects.
     :type ltfs_directory_dict: dict[str, LinearTapeFileSystemDirectory]
 
-    XML batch file format
-    http://www-01.ibm.com/support/knowledgecenter/STZMZN/com.ibm.storage.hollywood.doc/ltfs_reference_lcp_cli.html
+    Definition of the `XML batch file
+    <https://www.ibm.com/docs/en/spectrum-archive-le?topic=tool-use-batch-file>`_ format::
 
-    <?xml version="1.0" encoding="UTF-8"?>
-    <ltfscpspec version="1.0">
-     <params>
-      [parameters]
-     </params>
-     <data>
-      <file>
-       <srcpath>path</srcpath>
-       <dstpath>path</dstpath>
-       <srcspec>expression</srcspec>
-       <sf>filename</sf>
-       <sf rename="newname">filename</sf>
-      </file>
-      <file>
-       ...
-      </file>
-     </data>
-    </ltfscpspec>
+        <?xml version="1.0" encoding="UTF-8"?>
+        <ltfscpspec version="1.0">
+         <params>
+          [parameters]
+         </params>
+         <data>
+          <file>
+           <srcpath>path</srcpath>
+           <dstpath>path</dstpath>
+           <srcspec>expression</srcspec>
+           <sf>filename</sf>
+           <sf rename="newname">filename</sf>
+          </file>
+          <file>
+           ...
+          </file>
+         </data>
+        </ltfscpspec>
     """
 
     def __init__(

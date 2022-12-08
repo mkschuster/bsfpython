@@ -23,11 +23,11 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python wrapper script that traces a Runnable.
-#  The script un-pickles the Runnable object from a file path
-#  and calls Runnable.trace().
-#
+"""The :py:mod:`bin.bsf_utility_trace_pickler_file` module is a script to
+un-pickle a :py:class:`bsf.procedure.Runnable` object and trace it via the
+:py:meth:`bsf.procedure.Runnable.trace` method.
+"""
+
 import logging
 import sys
 from argparse import ArgumentParser
@@ -35,7 +35,7 @@ from argparse import ArgumentParser
 from bsf.procedure import Runnable, ConcurrentRunnable, ConsecutiveRunnable
 
 argument_parser = ArgumentParser(
-    description='Trace a pickled Runnable.')
+    description='Trace a pickled Runnable object.')
 
 argument_parser.add_argument(
     '--format',

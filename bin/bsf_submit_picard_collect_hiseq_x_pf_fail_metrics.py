@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to drive the Picard CollectHiSeqXPfFailMetrics analysis.
-#
+"""The :py:mod:`bin.bsf_submit_picard_collect_hiseq_x_pf_fail_metrics` module is a script to drive the
+:py:class:`bsf.analyses.picard.CollectHiSeqXPfFailMetrics` analysis.
+"""
+
 import logging
 from argparse import ArgumentParser
 

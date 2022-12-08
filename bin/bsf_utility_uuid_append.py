@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to append a UUID to a string.
-#
+"""The :py:mod:`bin.bsf_utility_uuid_append` module is a script to append a :emphasis:`UUID` to a string.
+"""
+
 import uuid
 from argparse import ArgumentParser
 

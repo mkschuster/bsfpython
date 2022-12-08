@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to summarise an Illumina Run Folder.
-#
+"""The :py:mod:`bin.bsf_utility_irf_summary` module is a script to summarise an :emphasis:`Illumina Run Folder`.
+"""
+
 import datetime
 import logging
 import os

@@ -23,10 +23,11 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to validate a Library Annotation Sheet file
-#  used by the BamIndexDecoder Analysis.
-#
+"""The :py:mod:`bin.bsf_utility_validate_library_annotation` module is a script to
+validate a Library Annotation Sheet file used by the
+:py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` analysis.
+"""
+
 import logging
 import warnings
 from argparse import ArgumentParser

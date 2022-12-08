@@ -23,19 +23,30 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to convert a CADD file into a VCF file that can be used by the
-#  GATK VariantAnnotator.
-#
+"""The :py:mod:`bin.bsf_utility_convert_cadd` module is a script to
+convert a CADD file into a VCF file that can be used by the GATK :literal:`VariantAnnotator`.
+"""
+
 import os
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE
+from threading import Lock
+from typing import IO
 
 from bsf.connector import StandardOutputStream
 from bsf.process import Executable
 
 
 def process_stdout(input_file_handle, thread_lock, output_file_path):
+    """Process :emphasis:`standard output` via a separate :py:class:`threading.Thread` object.
+
+    :param input_file_handle: Standard input stream
+    :type input_file_handle: IO
+    :param thread_lock: A Python :py:class:`threading.Lock` object
+    :type thread_lock: Lock
+    :param output_file_path: Output file path
+    :type output_file_path: str
+    """
     thread_lock.acquire(True)
     output_binary_io = open(file=output_file_path, mode='wb')
     output_process = Popen(

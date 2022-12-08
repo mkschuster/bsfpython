@@ -23,10 +23,11 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to extract the index read sequence (BC) and quality scores (QT) of an unaligned BAM file
-#  into a separate GNU Zip-compressed FASTQ file.
-#
+"""The :py:mod:`bin.bsf_utility_sam_bc_qt_to_fastq` module is a script to
+extract the index read sequence (:literal:`BC`) and quality scores (:literal:`QT`) of an
+unaligned :emphasis:`BAM` file into a separate :emphasis:`GNU Zip`-compressed :emphasis:`FASTQ` file.
+"""
+
 import os
 import queue
 import threading

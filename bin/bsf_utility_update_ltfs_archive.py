@@ -23,14 +23,16 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to collect and update LTFS archive contents.
-#
-#  A directory tree (directory-path) is scanned for files matching a wildcard pattern
-#  (--pattern), by default *_log.txt and updated into an existing (--file-path) content file.
-#  The LTFS content file lists run folder names and a comma-separated list of LTO barcode labels
-#  in tab-separated value (TSV) format.
-#
+"""The :py:mod:`bin.bsf_utility_update_ltfs_archive` module is a script to
+collect and update :emphasis:`Linear Tape File System` (LTFS) archive contents.
+
+A directory tree (:literal:`directory_path`) is scanned for files matching a wildcard pattern
+(:literal:`--pattern`), by default :literal:`*_log.txt` and updated into an existing
+(:literal:`--file-path`) content file.
+The LTFS content file lists run folder names and a comma-separated list of LTO barcode labels
+in :emphasis:`tab-separated value` (TSV) format.
+"""
+
 import json
 import logging
 import os

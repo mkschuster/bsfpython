@@ -23,9 +23,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python utility script to report the number of samples per lane.
-#
+"""The :py:mod:`bin.bsf_utility_count_samples_per_lane` module is a script to report the number of samples per lane.
+"""
+
 import os
 from argparse import ArgumentParser
 
@@ -36,7 +36,7 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--directory',
-    help='directory of IlluminaToBam tools BamIndexDecoder library annotation files',
+    help='directory of BamIndexDecoder library annotation files',
     required=False)
 
 argument_parser.add_argument(

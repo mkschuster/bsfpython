@@ -155,7 +155,8 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, ac
 
     See also:
         - `First-Fit algorithm <https://en.wikipedia.org/wiki/Bin_packing_problem#First-fit_algorithm>`_
-        - `Python implementations of packing algorithm <https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm>`_
+        - `Python implementations of packing algorithm
+          <https://stackoverflow.com/questions/7392143/python-implementations-of-packing-algorithm>`_
 
     :param interval_path: A Picard :literal:`ScatterIntervalsByNs` interval list file path.
     :type interval_path: str | None

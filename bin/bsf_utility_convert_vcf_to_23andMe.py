@@ -23,12 +23,13 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to convert a VCF file into the simple 23andMe format.
-#
-#  The 23andMe format consists of a dbSNP reference SNP identifier (rsid),
-#  the sequence name, the position and the genotype for each allele (diploid).
-#
+"""The :py:mod:`bin.bsf_utility_convert_vcf_to_23andMe` module is a script to
+convert a VCF file into the simple 23andMe format.
+
+The :emphasis:`23andMe` format consists of an :emphasis:`NCBI dbSNP` reference SNP identifier (rsid),
+the sequence name, the position and the genotype for each allele (diploid).
+"""
+
 from argparse import ArgumentParser
 
 argument_parser = ArgumentParser(

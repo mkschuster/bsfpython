@@ -23,9 +23,12 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to restore an Illumina Run Folder (IRF) from a magnetic tape library.
-#
+"""The :py:mod:`bin.bsf_submit_irf_restore` module is a script to drive the
+:py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` analysis to restore an
+:emphasis:`Illumina Run Folder` (IRF) from one or more
+`GNU Tar <https://www.gnu.org/software/tar/>`_ archives.
+"""
+
 import logging
 from argparse import ArgumentParser
 

@@ -23,9 +23,10 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-#
-#  BSF Python script to drive the Variant Calling analysis pipeline.
-#
+"""The :py:mod:`bin.bsf_submit_variant_calling` module is a script to drive the
+:py:class:`bsf.analyses.variant_calling.VariantCallingGATK` analysis.
+"""
+
 import logging
 import os
 from argparse import ArgumentParser
