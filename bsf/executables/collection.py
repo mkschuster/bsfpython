@@ -39,7 +39,7 @@ from subprocess import Popen
 
 from bsf.connector import Connector
 from bsf.ngs import Collection
-from bsf.process import Command, Executable, RunnableStep
+from bsf.process import Command, RunnableStep
 
 module_logger = logging.getLogger(name=__name__)
 

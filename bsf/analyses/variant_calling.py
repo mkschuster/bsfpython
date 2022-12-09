@@ -40,8 +40,7 @@ from bsf.executables.vcf import RunnableStepCsqToVep
 from bsf.intervals import Container, get_genome_tiles, get_interval_tiles
 from bsf.ngs import Collection, Sample
 from bsf.procedure import FilePath, ConsecutiveRunnable
-from bsf.process import Command, Executable, \
-    RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
+from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMove, RunnableStepLink, RunnableStepPicard
 from bsf.standards import Configuration, StandardFilePath, EnsemblVEP, JavaArchive
 
 module_logger = logging.getLogger(name=__name__)

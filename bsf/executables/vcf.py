@@ -36,7 +36,7 @@ from typing import Dict, List, Optional, Tuple
 from pysam import VariantFile
 
 from bsf.connector import Connector
-from bsf.process import Command, Executable, RunnableStep
+from bsf.process import Command, RunnableStep
 
 module_logger = logging.getLogger(name=__name__)
 

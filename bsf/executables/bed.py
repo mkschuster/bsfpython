@@ -32,7 +32,7 @@ from subprocess import Popen
 from typing import Optional
 
 from bsf.connector import Connector
-from bsf.process import Command, Executable, RunnableStep
+from bsf.process import Command, RunnableStep
 
 
 class RunnableStepRescaleScore(RunnableStep):

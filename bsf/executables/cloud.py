@@ -32,7 +32,7 @@ from subprocess import Popen
 
 from bsf.cloud import get_azure_blob_service_client, azure_block_blob_download, azure_block_blob_upload
 from bsf.connector import Connector
-from bsf.process import Command, Executable, RunnableStep
+from bsf.process import Command, RunnableStep
 
 module_logger = logging.getLogger(name=__name__)
 
