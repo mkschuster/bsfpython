@@ -74,7 +74,7 @@ zgrep --extended-regexp --invert-match '^track|^browser' \
 
 # MACs seems to generate BED files that are sorted already,
 # so that the following line is not needed.
-# sort -k1,1 -k2,2n unsorted.bed > sorted.bed
+# sort -k1,1 -k2,2n unsorted.bed 1> sorted.bed
 #
 # The BED format specification requires that the fifth field
 # is an integer score between 0 and 1000.
@@ -93,7 +93,7 @@ echo "$(date) bedToBigBed: ${prefix}_peaks.bed" 1>&2 || exit 1
 
 grep --extended-regexp --invert-match '^track|^browser' "${prefix}_peaks.bed" |
   perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-    >"${prefix}_peaks.txt"
+    1>"${prefix}_peaks.txt"
 [[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
 bedToBigBed "${prefix}_peaks.txt" "${chromosome_sizes}" "${prefix}_peaks.bb" || exit 1
@@ -108,7 +108,7 @@ echo "$(date) bedToBigBed: ${prefix}_summits.bed" 1>&2 || exit 1
 grep --extended-regexp --invert-match '^track|^browser' \
   "${prefix}_summits.bed" |
   perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-    >"${prefix}_summits.txt"
+    1>"${prefix}_summits.txt"
 [[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
 bedToBigBed "${prefix}_summits.txt" "${chromosome_sizes}" "${prefix}_summits.bb" || exit 1

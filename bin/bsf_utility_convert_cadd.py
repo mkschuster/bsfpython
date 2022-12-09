@@ -28,6 +28,7 @@ convert a CADD file into a VCF file that can be used by the GATK :literal:`Varia
 """
 
 import os
+import sys
 from argparse import ArgumentParser
 from subprocess import Popen, PIPE
 from threading import Lock
@@ -37,7 +38,7 @@ from bsf.connector import StandardOutputStream
 from bsf.process import Executable
 
 
-def process_stdout(input_file_handle: IO, thread_lock: Lock, output_file_path: str) -> None:
+def process_stdout(input_file_handle: IO, thread_lock: Lock, output_file_path: str, contig_list: list[str]) -> None:
     """Process :emphasis:`standard output` via a separate :py:class:`threading.Thread` object.
 
     :param input_file_handle: Standard input stream
@@ -46,6 +47,8 @@ def process_stdout(input_file_handle: IO, thread_lock: Lock, output_file_path: s
     :type thread_lock: Lock
     :param output_file_path: Output file path
     :type output_file_path: str
+    :param contig_list: A Python :py:class:`list` object of Python :py:class:`str` (contig name) objects
+    :type contig_list: list[str]
     """
     thread_lock.acquire(True)
     output_binary_io = open(file=output_file_path, mode='wb')
@@ -117,64 +120,92 @@ def process_stdout(input_file_handle: IO, thread_lock: Lock, output_file_path: s
     return
 
 
-# Set the environment consistently.
+def run(
+        input_path: str,
+        output_path: str,
+        reference_vcf: str) -> int:
+    """Run function.
 
-os.environ['LANG'] = 'C'
+    :param input_path: A CADD format bgzip compressed input file path.
+    :type input_path: str
+    :param output_path: A :py:class:`bsf.analysis.Stage` name.
+    :type output_path: str
+    :param reference_vcf: A reference VCF file path.
+    :type reference_vcf: str
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    # Set the environment consistently.
 
-# Parse the arguments.
+    os.environ['LANG'] = 'C'
 
-argument_parser = ArgumentParser(
-    description='BSF utility to convert a Picard sequence dictionary (SAM header) '
-                'into a UCSC chromosome sizes file.')
+    # Read the contig annotation from the reference file.
 
-argument_parser.add_argument(
-    '--input-path',
-    dest='input_path',
-    help='file path to a CADD format bgzip compressed input file',
-    required=True)
+    contig_list: list[str] = list()
 
-argument_parser.add_argument(
-    '--output-path',
-    dest='output_path',
-    help='file path to a bgzip compressed VCF output file',
-    required=True)
+    with open(file=reference_vcf, mode='rt') as input_text_io:
+        for line_str in input_text_io:
+            if line_str.startswith('##contig'):
+                contig_list.append(line_str)
+            if line_str.startswith('##reference'):
+                contig_list.append(line_str)
+            if line_str.startswith('#CHROM'):
+                break
 
-argument_parser.add_argument(
-    '--reference-vcf',
-    dest='reference_vcf',
-    help="file path to a reference VCF to read 'contig' annotation",
-    required=True)
+    # Now the complicated part, the sub process for reading via bgzip.
 
-name_space = argument_parser.parse_args()
+    stdin_executable = Executable(
+        program='bgzip',
+        stdout=StandardOutputStream(
+            thread_callable=process_stdout,
+            thread_kwargs={'output_file_path': output_path, 'contig_list': contig_list}))
+    stdin_executable.add_switch_long(key='decompress')
+    stdin_executable.add_switch_long(key='stdout')
+    stdin_executable.arguments.append(input_path)
 
-# Read the contig annotation from the reference file.
+    exception_str_list = stdin_executable.run()
 
-contig_list = list()
+    if exception_str_list:
+        exception_str_list.append('Command list representation: ' + repr(stdin_executable.command_list()))
+        raise Exception('\n'.join(exception_str_list))
 
-with open(file=name_space.reference_vcf, mode='rt') as input_file:
-    for line_str in input_file:
-        if line_str.startswith('##contig'):
-            contig_list.append(line_str)
-        if line_str.startswith('##reference'):
-            contig_list.append(line_str)
-        if line_str.startswith('#CHROM'):
-            break
+    print('All done.')
 
-# Now the complicated part, the sub process for reading via bgzip.
+    return 0
 
-stdin_executable = Executable(
-    program='bgzip',
-    stdout=StandardOutputStream(
-        thread_callable=process_stdout,
-        thread_kwargs={'output_file_path': name_space.output_path}))
-stdin_executable.add_switch_long(key='decompress')
-stdin_executable.add_switch_long(key='stdout')
-stdin_executable.arguments.append(name_space.input_path)
 
-exception_str_list = stdin_executable.run()
+def main() -> int:
+    """Main function.
 
-if exception_str_list:
-    exception_str_list.append('Command list representation: ' + repr(stdin_executable.command_list()))
-    raise Exception('\n'.join(exception_str_list))
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='BSF utility to convert a Picard sequence dictionary (SAM header) '
+                    'into a UCSC chromosome sizes file.')
 
-print('All done.')
+    argument_parser.add_argument(
+        '--input-path',
+        required=True,
+        help='CADD format bgzip-compressed input file path')
+
+    argument_parser.add_argument(
+        '--output-path',
+        required=True,
+        help='bgzip-compressed VCF output file path')
+
+    argument_parser.add_argument(
+        '--reference-vcf',
+        required=True,
+        help='reference VCF file path')
+
+    name_space = argument_parser.parse_args()
+
+    return run(
+        input_path=name_space.input_path,
+        output_path=name_space.output_path,
+        reference_vcf=name_space.reference_vcf)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

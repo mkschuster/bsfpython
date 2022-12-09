@@ -37,6 +37,7 @@ import logging
 import os
 import urllib.parse
 import uuid
+from argparse import ArgumentParser
 from typing import Optional, TypeVar, overload
 
 from bsf.ngs import Collection, Sample
@@ -975,7 +976,7 @@ class Analysis(object):
             executable.arguments.append(runnable.pickler_path)
         else:
             executable = Executable(name=runnable.name, program=Runnable.runner_script)
-            executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
+            executable.arguments.append(runnable.pickler_path)
 
         # Only submit the bsf.process.Executable if the status file does not exist already.
         if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=True)):
@@ -1987,3 +1988,81 @@ class Analysis(object):
                 module_logger.warning('Valid Analysis Stage names are: %r', name_list)
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analysis.Analysis` object.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        analysis: Analysis = cls.from_config_file_path(config_path=configuration_path)
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:      ', analysis.project_name)
+        print('Genome version:    ', analysis.genome_version)
+        print('Input directory:   ', analysis.input_directory)
+        print('Project directory: ', analysis.project_directory)
+        print('Genome directory:  ', analysis.genome_directory)
+        if stage_name == 'report':
+            print('Report URL:        ', analysis.get_html_report_url())
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analysis.Analysis` object.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            'configuration',
+            help='configuration (*.ini) file path')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit)

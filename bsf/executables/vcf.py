@@ -28,6 +28,7 @@ Ensembl VEP annotation in the :literal:`CSQ` field of Variant Calling Format (VC
 `output <http://www.ensembl.org/info/docs/tools/vep/vep_formats.html#vcfout>`_ into :literal:`VEP_*` fields.
 """
 import logging
+import sys
 from argparse import ArgumentParser
 from csv import DictReader
 from subprocess import Popen
@@ -479,41 +480,40 @@ class RunnableStepCsqToVep(RunnableStep):
         return None
 
 
-if __name__ == '__main__':
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
+    """
     argument_parser = ArgumentParser(
-        description='Module driver script.')
+        description='Module console script.')
 
     argument_parser.add_argument(
         '--logging-level',
-        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
-        default='INFO',
-        dest='logging_level',
-        help='Logging level [INFO]',
-        required=False)
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='Logging level [WARNING]')
 
     argument_parser.add_argument(
         '--soc-path',
-        dest='soc_path',
-        help='Sequence Ontology terms (TSV) configuration file path',
-        required=True)
+        required=True,
+        help='Sequence Ontology terms (TSV) configuration file path')
 
     argument_parser.add_argument(
         '--ofc-path',
-        dest='ofc_path',
-        help='Output fields (TSV) configuration file path',
-        required=True)
+        required=True,
+        help='Output fields (TSV) configuration file path')
 
     argument_parser.add_argument(
         '--old-vcf-path',
-        dest='old_vcf_path',
-        help='Old (input) VCF file path',
-        required=True)
+        required=True,
+        help='Old (input) VCF file path')
 
     argument_parser.add_argument(
         '--new-vcf-path',
-        dest='new_vcf_path',
-        help='New (output) VCF file path',
-        required=True)
+        required=True,
+        help='New (output) VCF file path')
 
     name_space = argument_parser.parse_args()
 
@@ -531,3 +531,9 @@ if __name__ == '__main__':
         vcf_path_new=name_space.new_vcf_path)
 
     runnable_step.run()
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

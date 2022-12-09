@@ -34,6 +34,7 @@ Files smaller than the configured minimum file size are automatically deleted.
 """
 import logging
 import os
+import sys
 from argparse import ArgumentParser
 from subprocess import Popen
 from typing import Optional
@@ -222,51 +223,46 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         return None
 
 
-if __name__ == '__main__':
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
+    """
     argument_parser = ArgumentParser(
-        description='Module driver script.')
+        description='Module console script.')
 
     argument_parser.add_argument(
         '--logging-level',
-        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
-        default='INFO',
-        dest='logging_level',
-        help='Logging level [INFO]',
-        required=False)
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='Logging level [WARNING]')
 
     argument_parser.add_argument(
         '--old-sas-path',
-        dest='old_sas_path',
-        help='Old sample annotation sheet file path',
-        required=True)
+        required=True,
+        help='Old sample annotation sheet file path')
 
     argument_parser.add_argument(
         '--new-sas-path',
-        dest='new_sas_path',
-        help='New sample annotation sheet file path',
-        required=True)
+        required=True,
+        help='New sample annotation sheet file path')
 
     argument_parser.add_argument(
         '--minimum-size',
         default=1024,
-        dest='minimum_size',
-        help='Minimum file size',
-        required=False,
-        type=int)
+        type=int,
+        help='Minimum file size')
 
     argument_parser.add_argument(
         '--drop-read-1',
         action='store_true',
-        dest='drop_read_1',
-        help='Drop read 1',
-        required=False)
+        help='Drop read 1')
 
     argument_parser.add_argument(
         '--drop-read-2',
         action='store_true',
-        dest='drop_read_2',
-        help='Drop read 2',
-        required=False)
+        help='Drop read 2')
 
     name_space = argument_parser.parse_args()
 
@@ -285,3 +281,9 @@ if __name__ == '__main__':
         drop_read_2=name_space.drop_read_2)
 
     runnable_step.run()
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

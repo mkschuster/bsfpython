@@ -23,7 +23,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""The :py:mod:` bin.bsf_run_bwa` module is a script to run the Burrows Wheeler Aligner BWA.
+"""The :py:mod:`bin.bsf_run_bwa` module is a script to run the Burrows Wheeler Aligner BWA.
 """
 
 import errno
@@ -47,8 +47,8 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--pickler_path',
-    help='file path to a Python Pickler file',
-    required=True)
+    required=True,
+    help='file path to a Python Pickler file')
 
 name_space = argument_parser.parse_args()
 

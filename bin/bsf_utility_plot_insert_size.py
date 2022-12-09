@@ -28,6 +28,7 @@ create box plots of insert sizes of given :emphasis:`BAM` files.
 """
 
 import os
+import sys
 from argparse import ArgumentParser
 
 import matplotlib
@@ -36,72 +37,107 @@ import pandas as pd
 import pysam
 import seaborn as sns
 
-matplotlib.use('Agg')
 
-argument_parser = ArgumentParser(
-    description="Plot insert sizes from bam files")
+def run(
+        input_path_list: list[str],
+        output_path: str,
+        read_count: int) -> int:
+    """Run function.
 
-argument_parser.add_argument(
-    '--output',
-    help='Output .png file')
+    :param input_path_list: A Python :py:class:`list` object of Python :py:class:`str` (input bam file path) objects.
+    :type input_path_list: list[str]
+    :param output_path: An output PNG file path.
+    :type output_path: str
+    :param read_count: A number of reads to be used creating the plots.
+    :type read_count: bool | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    matplotlib.use(backend='Agg')
 
-argument_parser.add_argument(
-    '--input',
-    help='Input bam file(s)',
-    nargs='+')
+    plot_data_list = []
+    sample_name_list = []
+    for input_path in input_path_list:
+        print(input_path)
 
-argument_parser.add_argument(
-    '--count',
-    help='Number of reads to be used creating the plots',
-    type=int,
-    default=1000000)
+        sample_name = os.path.basename(input_path).replace('.bam', '')
+        sample_name_list.append(sample_name)
 
-name_space = argument_parser.parse_args()
+        alignment_file = pysam.AlignmentFile(filename=input_path, mode='rb')
 
-data_to_plot = []
-sample_names = []
-for input_path in name_space.input:
-    print(input_path)
+        count = 0
+        insert_size_list = []
+        for aligned_segment in alignment_file.fetch():
+            if count > read_count:
+                break
 
-    sample_name = os.path.basename(input_path).replace('.bam', '')
-    sample_names.append(sample_name)
+            if aligned_segment.is_paired and aligned_segment.is_read1 and aligned_segment.is_proper_pair and \
+                    abs(aligned_segment.template_length) < 1000:
+                count += 1
+                insert_size_list.append(abs(aligned_segment.template_length))
 
-    alignment_file = pysam.AlignmentFile(filename=input_path, mode='rb')
+        plot_data_list.append(insert_size_list)
 
-    count = 0
-    insert_sizes = []
-    for aligned_segment in alignment_file.fetch():
-        if count > name_space.count:
-            break
+        alignment_file.close()
 
-        if aligned_segment.is_paired and aligned_segment.is_read1 and aligned_segment.is_proper_pair and \
-                abs(aligned_segment.template_length) < 1000:
-            count += 1
-            insert_sizes.append(abs(aligned_segment.template_length))
+    sns.set(style="whitegrid")
 
-    data_to_plot.append(insert_sizes)
+    # Set up dataframe
+    my_data = {}
+    for i in range(len(sample_name_list)):
+        my_data[sample_name_list[i]] = plot_data_list[i]
 
-    alignment_file.close()
+    df = pd.DataFrame(data=my_data)
 
-sns.set(style="whitegrid")
+    # Set up the matplotlib figure
+    fig, ax = plt.subplots(figsize=((len(sample_name_list) * 2) / 3, 6))
 
-# Set up dataframe
-my_data = {}
-for i in range(len(sample_names)):
-    my_data[sample_names[i]] = data_to_plot[i]
+    # Draw a violin plot with a narrower bandwidth than the default
+    sns.violinplot(data=df, palette="Set3", bw=.2, cut=1, linewidth=1)
 
-df = pd.DataFrame(data=my_data)
+    # Finalize the figure
+    ax.set(ylim=(1, 1000))
 
-# Set up the matplotlib figure
-f, ax = plt.subplots(figsize=((len(sample_names) * 2) / 3, 6))
+    sns.despine(left=True, bottom=True)
+    plt.xticks(rotation=90)
+    # Save the figure
+    fig.savefig(output_path, bbox_inches='tight')
 
-# Draw a violin plot with a narrower bandwidth than the default
-sns.violinplot(data=df, palette="Set3", bw=.2, cut=1, linewidth=1)
+    return 0
 
-# Finalize the figure
-ax.set(ylim=(1, 1000))
 
-sns.despine(left=True, bottom=True)
-plt.xticks(rotation=90)
-# Save the figure
-f.savefig(name_space.output, bbox_inches='tight')
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description="Plot insert sizes from bam files")
+
+    argument_parser.add_argument(
+        '--output-path',
+        help='output PNG file path')
+
+    argument_parser.add_argument(
+        '--input-path',
+        nargs='+',
+        help='input bam file path(s)',
+        dest='input_path_list')
+
+    argument_parser.add_argument(
+        '--read-count',
+        default=1000000,
+        type=int,
+        help='number of reads to be used creating the plots')
+
+    name_space = argument_parser.parse_args()
+
+    return run(
+        input_path_list=name_space.input_path_list,
+        output_path=name_space.output_path,
+        read_count=name_space.read_count)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

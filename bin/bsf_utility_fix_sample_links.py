@@ -33,24 +33,29 @@ in case a flow-cell lane does not need de-multiplexing.
 import errno
 import os
 import stat
+import sys
 from argparse import ArgumentParser
 from typing import Optional
 
 
-def scan_directory(directory_path: str, commit: Optional[bool] = None) -> None:
+def scan_directory(samples_path: str, sequences_path: str, commit: Optional[bool] = None) -> int:
     """Scan a directory for symbolic links or directories recursively.
 
-    :param directory_path: A directory path.
-    :type directory_path: str
-    :param commit: Commit changes to the file system.
+    :param samples_path: A samples archive directory path
+    :type samples_path: str
+    :param sequences_path: A sequence archive directory path
+    :type sequences_path: str
+    :param commit: Commit changes to the file system
     :type commit: bool | None
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
     """
-    for file_name in os.listdir(directory_path):
-        file_path = os.path.join(directory_path, file_name)
+    for file_name in os.listdir(samples_path):
+        file_path = os.path.join(samples_path, file_name)
         file_mode = os.lstat(file_path).st_mode
         if stat.S_ISDIR(file_mode):
             # For a directory, recurse further down the tree.
-            scan_directory(directory_path=file_path)
+            scan_directory(samples_path=file_path, sequences_path=sequences_path, commit=commit)
         elif stat.S_ISLNK(file_mode):
             # For a link, evaluate the link.
             source_path = os.readlink(file_path)
@@ -69,12 +74,12 @@ def scan_directory(directory_path: str, commit: Optional[bool] = None) -> None:
                         break
                 source_path_list.reverse()
                 source_path = os.path.relpath(
-                    os.path.join(name_space.sequences_path, *source_path_list[-2:]),
-                    directory_path)
+                    os.path.join(sequences_path, *source_path_list[-2:]),
+                    samples_path)
                 print(f'source {source_path!r} target {file_name!r} of new symbolic link')
 
                 # Check that the directory is writable.
-                directory_mode = os.lstat(directory_path)
+                directory_mode = os.lstat(samples_path)
 
                 if directory_mode[stat.ST_MODE] & stat.S_IWUSR:
                     # The old symbolic link need deleting before a new one can be set.
@@ -93,34 +98,41 @@ def scan_directory(directory_path: str, commit: Optional[bool] = None) -> None:
                             if exception.errno != errno.EEXIST:
                                 raise exception
                 else:
-                    print('No write permission for link in directory:', repr(directory_path))
+                    print('No write permission for link in directory:', repr(samples_path))
 
-    return
+    return 0
 
 
-argument_parser = ArgumentParser(
-    description='Fix symbolic links between the BSF samples and BSF sequences directory.')
+def main() -> int:
+    """Main function.
 
-argument_parser.add_argument(
-    '--dry-run',
-    action='store_false',
-    default=True,
-    dest='commit',
-    help='dry run',
-    required=False)
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Fix symbolic links between the BSF samples and BSF sequences directory.')
 
-argument_parser.add_argument(
-    '--samples-path',
-    dest='samples_path',
-    help='BSF samples directory path',
-    required=False)
+    argument_parser.add_argument(
+        '--dry-run',
+        action='store_false',
+        help='dry run',
+        dest='commit')
 
-argument_parser.add_argument(
-    '--sequences-path',
-    dest='sequences_path',
-    help='BSF sequences directory path',
-    required=False)
+    argument_parser.add_argument(
+        '--samples-path',
+        help='samples archive directory path')
 
-name_space = argument_parser.parse_args()
+    argument_parser.add_argument(
+        '--sequences-path',
+        help='sequence archive directory path')
 
-scan_directory(directory_path=name_space.samples_path, commit=name_space.commit)
+    name_space = argument_parser.parse_args()
+
+    return scan_directory(
+        samples_path=name_space.samples_path,
+        sequences_path=name_space.sequences_path,
+        commit=name_space.commit)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

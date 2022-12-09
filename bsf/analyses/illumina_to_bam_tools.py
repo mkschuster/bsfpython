@@ -25,10 +25,14 @@
 """The :py:mod:`bsf.analyses.illumina_to_bam_tools` provides classes supporting the
 `Illumina2Bam-Tools <https://github.com/wtsi-npg/illumina2bam>`_ package.
 """
+import logging
 import os
 import warnings
+from argparse import ArgumentParser
 from subprocess import Popen
 from typing import Callable, Optional
+
+from Bio.Seq import reverse_complement
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.analysis import Analysis, Stage
@@ -306,6 +310,158 @@ class LibraryAnnotationSheet(AnnotationSheet):
                     message_list.append(f'Mismatching barcode sequence lengths in lane {lane_int!s}.')
 
         return message_list
+
+    @classmethod
+    def console_validate(
+            cls,
+            library_path: str,
+            lanes: Optional[int] = None) -> int:
+        """Console function to validate a :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet`.
+
+        :param library_path: A library annotation sheet CSV file path.
+        :type library_path: str
+        :param lanes: A number of lanes to validate.
+        :type lanes: int | None
+        :return: A :py:class:`SystemExit` status value. Returns 0 upon successful validation, 1 otherwise.
+        :rtype: int
+        """
+        library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
+            file_path=library_path)
+
+        message_list = library_annotation_sheet.validate(lanes=lanes)
+
+        return_value = 0
+
+        if message_list:
+            # warnings.warn(f'Validation of library annotation sheet {library_path!r}:\n'
+            #               '\n'.join(message_list), UserWarning)
+            print(*message_list, sep='\n')
+            return_value = 1
+
+        return return_value
+
+    @classmethod
+    def entry_point_validate(cls) -> int:
+        """Console entry point to validate a :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet`.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='BSF Python utility script to validate a Library Annotation Sheet.')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--lanes',
+            type=int,
+            help='number of lanes to validate')
+
+        argument_parser.add_argument(
+            'library_path',
+            help='library annotation sheet CSV file path')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_validate(library_path=name_space.library_path, lanes=name_space.lanes)
+
+    @classmethod
+    def console_reverse(
+            cls,
+            input_path: str,
+            output_path: str,
+            lanes: Optional[str] = None,
+            barcode_1: Optional[bool] = None,
+            barcode_2: Optional[bool] = None) -> int:
+        """Console function to reverse-complement barcodes in a
+        :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet`.
+
+        :param input_path: An input library annotation sheet path.
+        :type input_path: str
+        :param output_path: An output library annotation sheet path.
+        :type output_path: str | None
+        :param lanes: A comma-separated list of lanes to reverse-complement.
+        :type lanes: str | None
+        :param barcode_1: Request reverse-complementing barcode 1.
+        :type barcode_1: bool | None
+        :param barcode_2: Request reverse-complementing barcode 2.
+        :type barcode_2: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if lanes:
+            lane_list: Optional[list[str]] = lanes.split(',')
+        else:
+            lane_list: Optional[list[str]] = None
+
+        library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(file_path=input_path)
+
+        for row_dict in library_annotation_sheet.row_dict_list:
+            if not lane_list or row_dict['lane'] in lane_list:
+                if row_dict['barcode_sequence_1'] and barcode_1:
+                    row_dict['barcode_sequence_1'] = reverse_complement(sequence=row_dict['barcode_sequence_1'])
+
+                if row_dict['barcode_sequence_2'] and barcode_2:
+                    row_dict['barcode_sequence_2'] = reverse_complement(sequence=row_dict['barcode_sequence_2'])
+
+        library_annotation_sheet.file_path = output_path
+        library_annotation_sheet.to_file_path(adjust_field_names=True)
+
+        return 0
+
+    @classmethod
+    def entry_point_reverse(cls) -> int:
+        """Console entry point to reverse-complement barcodes in a
+        :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet`.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='BSF Python utility script to reverse-complement a Library Annotation Sheet.')
+
+        argument_parser.add_argument(
+            '--input-path',
+            required=True,
+            help='input library annotation sheet')
+
+        argument_parser.add_argument(
+            '--output-path',
+            required=True,
+            help='output library annotation sheet')
+
+        argument_parser.add_argument(
+            '--lanes',
+            help='comma-separated list of lanes to reverse complement')
+
+        argument_parser.add_argument(
+            '--barcode-1',
+            action='store_true',
+            help='reverse complement barcode 1')
+
+        argument_parser.add_argument(
+            '--barcode-2',
+            action='store_true',
+            help='reverse complement barcode 2')
+
+        name_space = argument_parser.parse_args()
+
+        return cls.console_reverse(
+            input_path=name_space.input_path,
+            output_path=name_space.output_path,
+            lanes=name_space.lanes,
+            barcode_1=name_space.barcode_1,
+            barcode_2=name_space.barcode_2)
 
 
 class RunnableStepIlluminaToBam(RunnableStepJava):
@@ -1143,6 +1299,115 @@ class IlluminaToBam(Analysis):
 
         return
 
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            irf_path: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or a :literal:`irf_path` argument.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param irf_path: An :emphasis:`Illumina Run Folder` path.
+        :type irf_path: str | None
+        :param force: Request processing incomplete :emphasis:`Illumina Run Folder` objects.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not irf_path:
+                raise Exception('The --irf argument is required if configuration is not set.')
+
+        analysis: IlluminaToBam = cls.from_config_file_path(config_path=configuration_path)
+
+        if irf_path:
+            analysis.run_directory = irf_path
+
+        if force:
+            analysis.force = force
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:           ', analysis.project_name)
+        print('Project directory:      ', analysis.project_directory)
+        print('Illumina run directory: ', analysis.run_directory)
+        print('Experiment directory:   ', analysis.get_experiment_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.illumina_to_bam_tools.IlluminaToBam` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or a :literal:`--irf` argument.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--irf',
+            help='Illumina Run Folder name or file path',
+            dest='irf_path')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing of an incomplete Illumina Run Folder')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            irf_path=name_space.irf_path,
+            force=name_space.force)
+
 
 class FilePathBamIndexDecoderCell(FilePath):
     """The :py:class:`bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell` class models
@@ -1907,8 +2172,8 @@ class BamIndexDecoder(Analysis):
                 # OPTIONS_FILE
 
                 # TODO: It would be even better to run Picard AddOrReplaceReadGroups to get a correct SAM header.
-                #  Unfortunately, the RGLB and RGSM fields cannot easily be overridden since all options need
-                #  to be set. However, the RGPU and other information is only available after the Illumina2bam stage
+                #  Unfortunately, the RG-LB and RG-SM fields cannot easily be overridden since all options need
+                #  to be set. However, the RG-PU and other information is only available after the Illumina2bam stage
                 #  has completed, which may be well after submission of this analysis. The solution could be another
                 #  script to rad the BAM file and propagate RG information.
 
@@ -1992,3 +2257,157 @@ class BamIndexDecoder(Analysis):
         runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            library_path: Optional[str] = None,
+            mode: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or a :literal:`project_name`.
+        The :literal:`library_path` argument can be automatically determined on the basis of the
+        :literal:`project_name`.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param library_path: A library path.
+        :type library_path: str | None
+        :param mode: A sequencer mode.
+        :type mode: str | None
+        :param force: Force processing of imperfect library annotation sheets.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not project_name:
+                raise Exception('The --project-name argument is required if configuration is not set.')
+
+        analysis: BamIndexDecoder = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if mode:
+            if mode == 'high':
+                analysis.lanes = 8
+            elif mode == 'rapid':
+                analysis.lanes = 2
+            elif mode == 'miseq':
+                analysis.lanes = 1
+            elif mode == 'nextseq':
+                analysis.lanes = 4
+            else:
+                raise Exception(f'The --mode option {mode!r} is not supported.')
+
+        if force:
+            analysis.force = force
+
+        if library_path:
+            analysis.library_path = library_path
+
+        # If a library file has not been defined so far, check,
+        # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+
+        if not analysis.library_path:
+            library_path = '_'.join((analysis.project_name, 'libraries.csv'))
+            if os.path.exists(library_path):
+                analysis.library_path = library_path
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:         ', analysis.project_name)
+        print('Project directory:    ', analysis.project_directory)
+        print('Sequences directory:  ', analysis.sequences_directory)
+        print('Experiment directory: ', analysis.get_experiment_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.illumina_to_bam_tools.BamIndexDecoder` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or a :literal:`--project-name`.
+        The :literal:`--library-path` argument can be automatically determined on the basis of the
+        :literal:`--project-name`.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--project-name',
+            help='project name i.e. flow cell identifier')
+
+        argument_parser.add_argument(
+            '--library-path',
+            help='library annotation sheet (*.csv) file path')
+
+        argument_parser.add_argument(
+            '--mode',
+            help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing even if library annotation sheet validation fails')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            library_path=name_space.library_path,
+            mode=name_space.mode,
+            force=name_space.force)

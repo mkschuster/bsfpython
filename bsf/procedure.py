@@ -25,9 +25,13 @@
 """The :py:mod:`bsf.procedure` module provides classes modelling procedures.
 """
 import errno
+import importlib
+import logging
 import os
 import pickle
 import shutil
+import sys
+from argparse import ArgumentParser
 from typing import Optional, TypeVar
 
 from bsf.process import RunnableStep
@@ -67,7 +71,7 @@ class Runnable(object):
     It can be thought of a GNU Bash script that executes as set of :py:class:`bsf.process.RunnableStep` objects
     reflecting commands of a GNU Bash script.
 
-    :cvar runner_script: A global :literal:`Runner` script name.
+    :cvar runner_script: The name of the :py:class:`bsf.procedure.Runnable.entry_point_run` console script.
     :type runner_script: str
     :ivar name: A name.
     :type name: str
@@ -86,7 +90,7 @@ class Runnable(object):
     :type cache_path_dict: dict[str, str]
     """
 
-    runner_script = 'bsf_runner.py'
+    runner_script = 'bsf_run_runnable'
 
     def __init__(
             self,
@@ -527,6 +531,125 @@ class Runnable(object):
             return Exception('\n'.join(exception_str_list))
 
         return None
+
+    @classmethod
+    def console_run(cls, pickler_path: str) -> int:
+        """Console function to run a :py:class:`bsf.procedure.Runnable` object.
+
+        :param pickler_path: A :py:class:`pickle.Pickler` file path.
+        :type pickler_path: str
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        runnable = Runnable.from_pickler_path(file_path=pickler_path)
+
+        module_type = importlib.import_module(name=runnable.code_module)
+
+        run_function = getattr(module_type, 'run')
+        run_function(runnable=runnable)
+
+        return 0
+
+    @classmethod
+    def entry_point_run(cls) -> int:
+        """Console entry point to run a :py:class:`bsf.procedure.Runnable` object.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='Generic Runnable runner script.')
+
+        argument_parser.add_argument(
+            'pickler_path',
+            help='file path to a pickled Runnable object')
+
+        name_space = argument_parser.parse_args()
+
+        return cls.console_run(pickler_path=name_space.pickler_path)
+
+    @classmethod
+    def console_trace(
+            cls,
+            pickler_path: Optional[str] = None,
+            output_format: Optional[str] = None) -> int:
+        """Console function to un-pickle a :py:class:`bsf.procedure.Runnable` object and trace it via the
+        :py:meth:`bsf.procedure.Runnable.trace` method.
+
+        :param pickler_path: A pickled :py:class:`bsf.procedure.Runnable` file path.
+        :type pickler_path: str | None
+        :param output_format: Output format as Python :py:class:`str` or Python :py:class:`list` object.
+        :type output_format: str | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        runnable = Runnable.from_pickler_path(file_path=pickler_path)
+
+        sys.stdout.writelines(runnable.trace(level=1))
+
+        if isinstance(runnable, ConsecutiveRunnable):
+            for runnable_step in runnable.runnable_step_list:
+                if output_format == 'list':
+                    print('\n' + 'RunnableStep command list:', runnable_step.command_list())
+                elif output_format == 'str':
+                    print('\n' + 'RunnableStep command str:', runnable_step.command_str())
+        elif isinstance(runnable, ConcurrentRunnable):
+            for runnable_step in runnable.runnable_step_list_prologue:
+                if output_format == 'list':
+                    print('\n' + 'RunnableStep pre command list:', runnable_step.command_list())
+                elif output_format == 'str':
+                    print('\n' + 'RunnableStep pre command str:', runnable_step.command_str())
+
+            for runnable_step in runnable.runnable_step_list_concurrent:
+                if output_format == 'list':
+                    print('\n' + 'RunnableStep concurrent command list:', runnable_step.command_list())
+                elif output_format == 'str':
+                    print('\n' + 'RunnableStep concurrent command str:', runnable_step.command_str())
+
+            for runnable_step in runnable.runnable_step_list_epilogue:
+                if output_format == 'list':
+                    print('\n' + 'RunnableStep post command list:', runnable_step.command_list())
+                elif output_format == 'str':
+                    print('\n' + 'RunnableStep post command str:', runnable_step.command_str())
+
+        return 0
+
+    @classmethod
+    def entry_point_trace(cls) -> int:
+        """Console entry point to un-pickle a :py:class:`bsf.procedure.Runnable` object and trace it via the
+        :py:meth:`bsf.procedure.Runnable.trace` method.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='Trace a pickled Runnable object.')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--output-format',
+            default='str',
+            choices=('list', 'str'),
+            help='output format Python str or Python list [str]')
+
+        argument_parser.add_argument(
+            'pickler_path',
+            help='pickled Runnable file path')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_trace(pickler_path=name_space.pickler_path, output_format=name_space.output_format)
 
 
 class ConsecutiveRunnable(Runnable):

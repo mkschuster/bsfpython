@@ -37,18 +37,24 @@ import json
 import logging
 import os
 import re
+import sys
 from argparse import ArgumentParser
-
-# The LTFS dict uses IRF keys and list value data of LTFS volume names.
-ltfs_dict: dict[str, list[str]] = dict()
+from typing import Optional
 
 
-def read_ltfs_archive(archive_file_path: str) -> None:
-    """Read an LTFS archive file in tab-separated value (TSV) format.
+def read_ltfs_archive(archive_file_path: str) -> dict[str, list[str]]:
+    """Read a :emphasis:`Linear Tape File System` archive file in :emphasis:`tab-separated value` (TSV) format.
 
-    :param archive_file_path: A file path.
+    :param archive_file_path: A :emphasis:`Linear Tape File System` archive file path.
     :type archive_file_path: str
+    :return: A Python :py:class:`dict` object of
+        Python :py:class:`str` (file name) key and
+        Python :py:class:`list` object of
+        Python :py:class:`str` (cartridge barcode) objects.
+    :rtype: dict[str, list[str]]
     """
+    ltfs_dict: dict[str, list[str]] = dict()
+
     if os.path.exists(archive_file_path):
         with open(file=archive_file_path, mode='rt') as text_io:
             for line_str in text_io:
@@ -60,14 +66,19 @@ def read_ltfs_archive(archive_file_path: str) -> None:
                     if tape_id not in tape_list:
                         tape_list.append(tape_id)
 
-    return
+    return ltfs_dict
 
 
-def write_ltfs_archive(archive_file_path: str) -> None:
-    """Write an LTFS archive file in tab-separated value (TSV) format.
+def write_ltfs_archive(archive_file_path: str, ltfs_dict: dict[str, list[str]]) -> None:
+    """Write an :emphasis:`Linear Tape File System` archive file in :emphasis:`tab-separated value` (TSV) format.
 
-    :param archive_file_path: A file path.
+    :param archive_file_path: A :emphasis:`Linear Tape File System` archive file path.
     :type archive_file_path: str
+    :param ltfs_dict: A Python :py:class:`dict` object of
+        Python :py:class:`str` (file name) key and
+        Python :py:class:`list` object of
+        Python :py:class:`str` (cartridge barcode) objects.
+    :type ltfs_dict: dict[str, list[str]]
     """
     with open(file=archive_file_path, mode='wt') as text_io:
         for irf_file_name in sorted(ltfs_dict):
@@ -76,16 +87,23 @@ def write_ltfs_archive(archive_file_path: str) -> None:
     return
 
 
-def process_json_files(top_directory_path: str) -> None:
-    """Process JSON files with LTFS virtual extended attributes (VEA).
+def process_json_files(ltfs_dict: dict[str, list[str]], directory_path: str, json_pattern: str) -> None:
+    """Process JSON files with LTFS :emphasis:`virtual extended attributes` (VEA).
 
-    :param top_directory_path: A directory path.
-    :type top_directory_path: str
+    :param ltfs_dict: A Python :py:class:`dict` object of
+        Python :py:class:`str` (file name) key and
+        Python :py:class:`list` object of
+        Python :py:class:`str` (cartridge barcode) objects.
+    :type ltfs_dict: dict[str, list[str]]
+    :param directory_path: A directory path.
+    :type directory_path: str
+    :param json_pattern: A regular expression pattern matching JSON file names.
+    :type json_pattern: str | None
     """
-    re_pattern = re.compile(pattern=name_space.json_pattern)
+    re_pattern = re.compile(pattern=json_pattern)
 
-    for directory_path, directory_name_list, file_name_list in os.walk(top=top_directory_path):
-        logging.debug('directory_path: %r', directory_path)
+    for base_path, directory_name_list, file_name_list in os.walk(top=directory_path):
+        logging.debug('directory_path: %r', base_path)
         logging.debug('directory_name_list: %r', directory_name_list)
         logging.debug('file_name_list: %r', file_name_list)
 
@@ -98,7 +116,7 @@ def process_json_files(top_directory_path: str) -> None:
             # The tape name could be parsed from the file name via a regular expression, or better, retrieved from
             # the corresponding LTFS virtual extended attribute (VEA).
             # volume_name = re_match.group(1)
-            with open(file=os.path.join(directory_path, file_name), mode='rt') as text_io:
+            with open(file=os.path.join(base_path, file_name), mode='rt') as text_io:
                 vea_dict = json.load(fp=text_io)
 
                 volume_name = vea_dict['volume']['ltfs.volumeName']
@@ -117,16 +135,23 @@ def process_json_files(top_directory_path: str) -> None:
     return
 
 
-def process_ltfscp_files(top_directory_path: str) -> None:
-    """Process LTFSCP log files, particularly the 'ILT30505I' informational entry.
+def process_ltfscp_files(ltfs_dict: dict[str, list[str]], directory_path: str, ltfscp_pattern: str) -> None:
+    """Process :emphasis:`LTFSCP` output files, particularly the :literal:`ILT30505I` informational entry.
 
-    :param top_directory_path: A directory path.
-    :type top_directory_path: str
+    :param ltfs_dict: A Python :py:classy:`dict` object of
+        Python :py:class:`str` (file name) key and
+        Python :py:class:`list` object of
+        Python :py:class:`str` (cartridge barcode) objects.
+    :type ltfs_dict: dict[str, list[str]]
+    :param directory_path: A directory path.
+    :type directory_path: str
+    :param ltfscp_pattern: A regular expression pattern matching :emphasis:`LTFSCP` output file names.
+    :type ltfscp_pattern: str
     """
-    re_pattern = re.compile(pattern=name_space.ltfscp_pattern)
+    re_pattern = re.compile(pattern=ltfscp_pattern)
 
-    for directory_path, directory_name_list, file_name_list in os.walk(top=top_directory_path):
-        logging.debug('directory_path: %r', directory_path)
+    for base_path, directory_name_list, file_name_list in os.walk(top=directory_path):
+        logging.debug('directory_path: %r', base_path)
         logging.debug('directory_name_list: %r', directory_name_list)
         logging.debug('file_name_list: %r', file_name_list)
 
@@ -139,7 +164,7 @@ def process_ltfscp_files(top_directory_path: str) -> None:
             # Parse the volume name from the file name (e.g., BS0048L6_log.txt)
             volume_name = re_match.group(1)
 
-            with open(file=os.path.join(directory_path, file_name), mode='rt') as input_file:
+            with open(file=os.path.join(base_path, file_name), mode='rt') as input_file:
                 for line_str in input_file:
                     # ILT30505I Copy /scratch/lab_bsf/archive_irf/BS0048L6/BSF_0648_H7WC2BBXY_3.bam to
                     #   /mnt/ltfs/BSF_0648_H7WC2BBXY_3.bam
@@ -162,59 +187,88 @@ def process_ltfscp_files(top_directory_path: str) -> None:
     return
 
 
-argument_parser = ArgumentParser(
-    description='Update an LTFS archive file')
+def run(
+        directory_path: Optional[str] = None,
+        archive_file_path: Optional[str] = None,
+        json_pattern: Optional[str] = None,
+        ltfscp_pattern: Optional[str] = None) -> int:
+    """Run function.
 
-argument_parser.add_argument(
-    'directory_path',
-    help='directory path')
+    :param directory_path: A :emphasis:`Linear Tape File System` output directory path.
+    :type directory_path: str | None
+    :param archive_file_path: A :emphasis:`Linear Tape File System` archive file path.
+    :type archive_file_path: str | None
+    :param json_pattern: A regular expression pattern matching JSON file names.
+    :type json_pattern: str | None
+    :param ltfscp_pattern: A regular expression pattern matching :emphasis:`LTFSCP` output file names.
+    :type ltfscp_pattern: str | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    # Read the initial LTFS content file that needs updating.
+    ltfs_dict = read_ltfs_archive(archive_file_path=archive_file_path)
 
-argument_parser.add_argument(
-    '--json-pattern',
-    default='^([0-9A-Z]{6,6}L[5-6])\\.json$',
-    dest='json_pattern',
-    help='JSON file name regular expression [^([0-9A-Z]{6,6}L[5-6])\\.json$]',
-    required=False)
+    # Process JSON files if a pattern was provided.
+    if json_pattern:
+        process_json_files(ltfs_dict=ltfs_dict, directory_path=directory_path, json_pattern=json_pattern)
 
-argument_parser.add_argument(
-    '--ltfscp-pattern',
-    default='^([0-9A-Z]{6,6}L[5-6])_log\\.txt$',
-    dest='ltfscp_pattern',
-    help='LTFSCP file name regular expression [^([0-9A-Z]{6,6}L[5-6])_log\\.txt$]',
-    required=False)
+    # Process LTFSCP files if a pattern was provided.
+    if ltfscp_pattern:
+        process_ltfscp_files(ltfs_dict=ltfs_dict, directory_path=directory_path, ltfscp_pattern=ltfscp_pattern)
 
-argument_parser.add_argument(
-    '--file-path',
-    dest='file_path',
-    help='LTFS archive file path',
-    required=True)
+    # Write the updated LTFS content file back to its original location.
+    write_ltfs_archive(archive_file_path=archive_file_path, ltfs_dict=ltfs_dict)
 
-argument_parser.add_argument(
-    '--logging-level',
-    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
-    default='INFO',
-    dest='logging_level',
-    help='Logging level [INFO]',
-    required=False)
+    return 0
 
-name_space = argument_parser.parse_args()
 
-if name_space.logging_level:
-    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
-    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+def main() -> int:
+    """Main function.
 
-    logging.basicConfig(level=name_space.logging_level)
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Update an LTFS archive file')
 
-# Read the initial LTFS content file that needs updating.
-read_ltfs_archive(archive_file_path=name_space.file_path)
+    argument_parser.add_argument(
+        '--logging-level',
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='logging level [WARNING]')
 
-# Process JSON files if a pattern was provided.
-if name_space.json_pattern:
-    process_json_files(top_directory_path=name_space.directory_path)
+    argument_parser.add_argument(
+        '--json-pattern',
+        default=r'^([0-9A-Z]{6,6}L[5-6])\.json$',
+        help=r'regular expression matching JSON file names [^([0-9A-Z]{6,6}L[5-6])\.json$]')
 
-# Process LTFSCP files if a pattern was provided.
-if name_space.ltfscp_pattern:
-    process_ltfscp_files(top_directory_path=name_space.directory_path)
+    argument_parser.add_argument(
+        '--ltfscp-pattern',
+        default=r'^([0-9A-Z]{6,6}L[5-6])_log\.txt$',
+        help=r'regular expression matching LTFSCP file names [^([0-9A-Z]{6,6}L[5-6])_log\.txt$]')
 
-# Write the updated LTFS content file back to its original location.
-write_ltfs_archive(archive_file_path=name_space.file_path)
+    argument_parser.add_argument(
+        '--file-path',
+        help='LTFS archive file path')
+
+    argument_parser.add_argument(
+        'directory_path',
+        help='LTFS output directory path')
+
+    name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
+    return run(
+        directory_path=name_space.directory_path,
+        archive_file_path=name_space.file_path,
+        json_pattern=name_space.json_pattern,
+        ltfscp_pattern=name_space.ltfscp_pattern)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

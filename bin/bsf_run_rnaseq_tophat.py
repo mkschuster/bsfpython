@@ -145,8 +145,8 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--pickler_path',
-    help='file path to a Python Pickler file',
-    required=True)
+    required=True,
+    help='file path to a Python Pickler file')
 
 name_space = argument_parser.parse_args()
 

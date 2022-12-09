@@ -20,7 +20,7 @@ The `Analysis` class and its subclasses implement the logic required for submitt
 cluster login node.
 
 The `Runnable` class and its subclasses implements the logic required to run processes on a
-cluster compute node via the common `bsf_runner.py` script.
+cluster compute node via the common `bsf_run_runnable` script.
 
 ## BSF Python General Configuration File
 

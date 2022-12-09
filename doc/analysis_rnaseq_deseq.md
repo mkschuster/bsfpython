@@ -177,8 +177,8 @@ option are `--logging-level` to set logging verbosity and `--dry-run` to __not__
 resource management system.
 
 By default, the script computes the complete process graph and submits it to the distributed resource management
-system (DMRS). Processes from individual stages can be submitted by adding the `--stage` option followed by the analysis
-stage name. The DESeq analysis supports the `rnaseq_deseq_analsis` and `rnaseq_deseq_results` stages.
+system (DMRS). Processes from individual stages can be submitted by adding the `--stage-name` option followed by the 
+analysis stage name. The DESeq analysis supports the `rnaseq_deseq_analsis` and `rnaseq_deseq_results` stages.
 
 `bsf_submit_rnaseq_deseq.py <project_name>_<genome_version>_rnaseq_config.ini`
 
@@ -192,8 +192,8 @@ their dependencies are tracked in a SQLite database, for each process a standard
 written into the `bsfpython_<DRMS>_output` directory.
 
 Once all processes of the analysis have successfully completed, a report can be generated with the submission script.
-Use `bsf_submitrnaseq_deaseq.py --stage='report'` in the configuration directory to generate the report. The report will
-also be linked symbolically into the web server export directory.
+Use `bsf_submitrnaseq_deaseq.py --stage-name='report'` in the configuration directory to generate the report. 
+The report will also be linked symbolically into the web server export directory.
 
 ## Troubleshooting
 

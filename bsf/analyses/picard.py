@@ -26,8 +26,11 @@
 """
 import logging
 import os
+import shutil
+import stat
 import warnings
 import weakref
+from argparse import ArgumentParser
 from typing import Optional
 
 from pysam import AlignmentFile
@@ -1240,6 +1243,136 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         return
 
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            mode: Optional[str] = None,
+            irf_path: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or a :literal:`irf_path` argument.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param mode: A sequencer mode.
+        :type mode: str | None
+        :param irf_path: An :emphasis:`Illumina Run Folder` path.
+        :type irf_path: str | None
+        :param force: Request processing of imperfect library annotation sheets.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not irf_path:
+                raise Exception('The --irf argument is required if configuration is not set.')
+
+        analysis: ExtractIlluminaRunFolder = cls.from_config_file_path(config_path=configuration_path)
+
+        if irf_path:
+            analysis.run_directory = irf_path
+
+        if mode:
+            if mode == 'high':
+                analysis.lanes = 8
+            elif mode == 'rapid':
+                analysis.lanes = 2
+            elif mode == 'miseq':
+                analysis.lanes = 1
+            elif mode == 'nextseq':
+                analysis.lanes = 4
+            elif mode == 'novaseq':
+                analysis.lanes = 4
+            else:
+                raise Exception(f'The mode option {mode!r} is not supported.')
+
+        if force:
+            analysis.force = force
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:           ', analysis.project_name)
+        print('Project directory:      ', analysis.project_directory)
+        print('Illumina run directory: ', analysis.run_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.picard.ExtractIlluminaRunFolder` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or a :literal:`--irf` argument.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--irf',
+            help='Illumina Run Folder name or file path',
+            dest='irf_path')
+
+        argument_parser.add_argument(
+            '--mode',
+            help='HiSeq run mode i.e., high (high-output) or rapid (rapid run)')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing of an incomplete Illumina Run Folder')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            mode=name_space.mode,
+            irf_path=name_space.irf_path,
+            force=name_space.force)
+
 
 class FilePathIlluminaMultiplexSamLane(FilePath):
     """The :py:class:`bsf.analyses.picard.FilePathIlluminaMultiplexSamLane` class models files in a directory.
@@ -1833,6 +1966,115 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            irf_path: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.picard.IlluminaMultiplexSam` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or a :literal:`irf_path` argument.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param irf_path: An :emphasis:`Illumina Run Folder` path.
+        :type irf_path: str | None
+        :param force: Request processing incomplete :emphasis:`Illumina Run Folder` objects.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not irf_path:
+                raise Exception('The --irf argument is required if configuration is not set.')
+
+        analysis: IlluminaMultiplexSam = cls.from_config_file_path(config_path=configuration_path)
+
+        if irf_path:
+            analysis.run_directory = irf_path
+
+        if force:
+            analysis.force = force
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:           ', analysis.project_name)
+        print('Project directory:      ', analysis.project_directory)
+        print('Illumina run directory: ', analysis.run_directory)
+        print('Experiment directory:   ', analysis.get_experiment_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.picard.IlluminaMultiplexSam` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or a :literal:`--irf` argument.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--irf',
+            help='Illumina Run Folder name or file path',
+            dest='irf_path')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing of an incomplete Illumina Run Folder')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            irf_path=name_space.irf_path,
+            force=name_space.force)
 
 
 class FilePathIlluminaDemultiplexSamCell(FilePath):
@@ -2782,6 +3024,475 @@ class IlluminaDemultiplexSam(Analysis):
 
         return
 
+    @classmethod
+    def console_reset(
+            cls,
+            experiment_name: str,
+            lane_numbers: str,
+            dry_run: bool = False) -> int:
+        """Console function to reset the demultiplexing so that the
+        :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam`
+        analysis can be re-run with an altered library annotation sheet.
+
+        - Find the project folder and remove:
+
+          - :literal:`illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}_completed.txt`
+          - :literal:`illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}.pkl`
+          - If lane-specific files were scheduled for removal, also remove the cell-specific status files.
+
+            - :literal:`illumina_demultiplex_sam_cell_{experiment_name}_completed.txt`
+            - :literal:`illumina_demultiplex_sam_cell_{experiment_name}.pkl`
+
+        - Find the project status folder and remove:
+
+          - :literal:`illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}_{SLURM_JOB_ID}.err`
+          - :literal:`illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}_{SLURM_JOB_ID}.out`
+          - If lane-specific files were scheduled for removal, also remove the cell-specific status files.
+
+            - :literal:`illumina_demultiplex_sam_cell_{experiment_name}_{SLURM_JOB_ID}.err`
+            - :literal:`illumina_demultiplex_sam_cell_{experiment_name}_{SLURM_JOB_ID}.out`
+
+        - Find the (de-multiplexed) sample folder and remove:
+
+          - :literal:`{experiment_name}_{lane_number}_samples`
+          - :literal:`{experiment_name}_{lane_number}_fraction.pdf`
+          - :literal:`{experiment_name}_{lane_number}_fraction.png`
+          - :literal:`{experiment_name}_{lane_number}_numbers.pdf`
+          - :literal:`{experiment_name}_{lane_number}_numbers.png`
+          - If any of the above get removed, also remove:
+
+            - :literal:`{experiment_name}_samples.csv`
+
+        :param experiment_name: An experiment-name.
+        :type experiment_name: str
+        :param lane_numbers: A comma-separated list of lane numbers.
+        :type lane_numbers: str
+        :param dry_run: Request a dry run.
+        :type dry_run: bool
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+
+        def _change_file_mode_user_writable(local_file_path):
+            """Private function to change a file mode by adding :py:const:`stat.S_IWUSR`.
+
+            :param local_file_path: A file path.
+            :type local_file_path: str
+            """
+            try:
+                file_path_result = os.stat(local_file_path)
+            except FileExistsError:
+                module_logger.debug('File path %r does not exist.', local_file_path)
+                return
+
+            if not file_path_result.st_mode & stat.S_IWUSR:
+                module_logger.debug(
+                    'Resetting mode %0o to %0o for %r',
+                    file_path_result.st_mode,
+                    file_path_result.st_mode | stat.S_IWUSR,
+                    local_file_path)
+
+                if not dry_run:
+                    os.chmod(local_file_path, file_path_result.st_mode | stat.S_IWUSR)
+
+            return
+
+        lane_number_list = lane_numbers.split(',')
+
+        # 1. Identify the project folder first. If it still exists, this is a recent project.
+        project_path = os.path.join(StandardFilePath.get_projects(absolute=True), experiment_name)
+
+        if os.path.isdir(project_path):
+            module_logger.debug('Project folder %r exists.', project_path)
+
+            # Find
+            # '{experiment_name}_{lane_number}_samples' directories.
+            directory_path_list = []
+            for lane_number in lane_number_list:
+                directory_path = os.path.join(project_path, f'{experiment_name}_{lane_number}_samples')
+                if os.path.isdir(directory_path):
+                    directory_path_list.append(directory_path)
+
+            if directory_path_list:
+                # List all directory paths to be removed.
+                print(f'Removing {experiment_name} demultiplexing directories:')
+                for directory_path in directory_path_list:
+                    print('  ' + os.path.basename(directory_path))
+
+                result = input('Proceed? [y/n] ')
+                if result == 'y':
+                    for directory_path in directory_path_list:
+                        module_logger.debug('Removing %r', directory_path)
+                        if not dry_run:
+                            shutil.rmtree(directory_path)
+
+            # Find and remove:
+            # - illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}_completed.txt
+            # - illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}.pkl
+            file_path_list = []
+            for lane_number in lane_number_list:
+                prefix = IlluminaDemultiplexSam.get_prefix_lane(project_name=experiment_name, lane=str(lane_number))
+
+                file_path = os.path.join(project_path, prefix + '_completed.txt')
+                if os.path.isfile(file_path):
+                    file_path_list.append(file_path)
+
+                file_path = os.path.join(project_path, prefix + '.pkl')
+                if os.path.isfile(file_path):
+                    file_path_list.append(file_path)
+
+            if file_path_list:
+                # If lane-specific files were scheduled for removal, find and remove the cell-specific status files.
+                # - illumina_demultiplex_sam_cell_{experiment_name}_completed.txt
+                # - illumina_demultiplex_sam_cell_{experiment_name}.pkl
+                prefix = IlluminaDemultiplexSam.get_prefix_cell(project_name=experiment_name)
+                file_path = os.path.join(project_path, prefix + '_completed.txt')
+                if os.path.isfile(file_path):
+                    file_path_list.append(file_path)
+
+                file_path = os.path.join(project_path, prefix + '.pkl')
+                if os.path.isfile(file_path):
+                    file_path_list.append(file_path)
+
+                # List all file paths to be removed.
+                print(f'Removing {experiment_name} project status files:')
+                for file_path in file_path_list:
+                    print('  ' + os.path.basename(file_path))
+
+                result = input('Proceed? [y/n] ')
+                if result == 'y':
+                    for file_path in file_path_list:
+                        module_logger.debug('Removing %r', file_path)
+                        if not dry_run:
+                            os.remove(file_path)
+
+            output_path = os.path.join(project_path, 'bsfpython_slurm_output')
+            if os.path.isdir(output_path):
+                module_logger.debug('Project output folder %r exists.', output_path)
+
+                # Find and remove
+                # - illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}_{SLURM_JOB_ID}.err
+                # - illumina_demultiplex_sam_lane_{experiment_name}_{lane_number}_{SLURM_JOB_ID}.out
+                file_path_list = []
+                file_name_list = os.listdir(output_path)
+                for lane_number in lane_number_list:
+                    prefix = IlluminaDemultiplexSam.get_prefix_lane(project_name=experiment_name, lane=str(lane_number))
+                    for file_name in file_name_list:
+                        if file_name.startswith(prefix):
+                            file_path_list.append(os.path.join(output_path, file_name))
+
+                if file_path_list:
+                    # If lane-specific files were scheduled for removal, find and remove the cell-specific status files.
+                    # - illumina_demultiplex_sam_cell_{experiment_name}_{SLURM_JOB_ID}.err
+                    # - illumina_demultiplex_sam_cell_{experiment_name}_{SLURM_JOB_ID}.out
+                    prefix = IlluminaDemultiplexSam.get_prefix_cell(project_name=experiment_name)
+                    for file_name in file_name_list:
+                        if file_name.startswith(prefix):
+                            file_path_list.append(os.path.join(output_path, file_name))
+
+                    print(f'Removing {experiment_name} project output files:')
+                    for file_path in file_path_list:
+                        print('  ' + os.path.basename(file_path))
+
+                    result = input('Proceed? [y/n] ')
+                    if result == 'y':
+                        for file_path in file_path_list:
+                            module_logger.debug('Removing %r', file_path)
+                            if not dry_run:
+                                os.remove(file_path)
+        else:
+            print(f'This is not a recent project since folder {experiment_name} no longer exists.')
+            result = input('Proceed? [y/n] ')
+            if result != 'y':
+                return 0
+
+        # 2. Identify the sample folder.
+        sample_path = os.path.join(StandardFilePath.get_samples(absolute=True), experiment_name)
+
+        if os.path.isdir(sample_path):
+            module_logger.debug('Sample folder %r exists.', sample_path)
+            file_path_list = []
+            file_name_list = os.listdir(sample_path)
+            for lane_number in lane_number_list:
+                prefix = '_'.join((experiment_name, lane_number))
+                for file_name in file_name_list:
+                    if file_name.startswith(prefix):
+                        file_path_list.append(os.path.join(sample_path, file_name))
+
+            if file_path_list:
+                # If lane-specific files were scheduled for removal, find and remove the sample annotation table.
+                # - {experiment_name}_samples.csv
+                file_path = os.path.join(sample_path, experiment_name + '_samples.csv')
+                if os.path.isfile(file_path):
+                    file_path_list.append(file_path)
+
+                print(f'Removing {experiment_name} sample files and folders:')
+                for file_path in file_path_list:
+                    print('  ' + os.path.basename(file_path))
+
+                result = input('Proceed? [y/n] ')
+                if result == 'y':
+                    for directory_path, directory_name_list, file_name_list in os.walk(sample_path):
+                        for directory_name in directory_name_list:
+                            module_logger.debug('Changing directory %r -> %r', directory_path, directory_name)
+                            _change_file_mode_user_writable(
+                                local_file_path=os.path.join(directory_path, directory_name))
+
+                        for file_name in file_name_list:
+                            module_logger.debug('Changing file %r -> %r', directory_path, file_name)
+                            _change_file_mode_user_writable(local_file_path=os.path.join(directory_path, file_name))
+
+                    # Reset also the top-level sample directory.
+                    _change_file_mode_user_writable(local_file_path=sample_path)
+
+                    for file_path in file_path_list:
+                        module_logger.debug('Removing %r', file_path)
+                        if not dry_run:
+                            if os.path.isdir(file_path):
+                                shutil.rmtree(file_path)
+                            if os.path.isfile(file_path):
+                                os.remove(file_path)
+
+        return 0
+
+    @classmethod
+    def entry_point_reset(cls) -> int:
+        """Console entry point to reset the demultiplexing so that the
+        :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam`
+        analysis can be re-run with an altered library annotation sheet.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='IlluminaDemultiplexSam reset script.')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--experiment-name',
+            required=True,
+            help='experiment name')
+
+        argument_parser.add_argument(
+            '--lane-numbers',
+            required=True,
+            help='lane number(s)')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_true',
+            help='dry run')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_reset(
+            experiment_name=name_space.experiment_name,
+            lane_numbers=name_space.lane_numbers,
+            dry_run=name_space.dry_run)
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            irf_path: Optional[str] = None,
+            mode: Optional[str] = None,
+            sequences_directory: Optional[str] = None,
+            lane_list: Optional[str] = None,
+            library_path: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or
+        a :literal:`irf_path` argument. The :literal:`project_name` argument can be automatically determined from the
+        :literal:`irf_path` argument, while the
+        :literal:`library_path` argument can be automatically determined from the
+        :literal:`project_name` argument.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param irf_path: An :emphasis:`Illumina Run Folder` path.
+        :type irf_path: str | None
+        :param sequences_directory: A directory storing lane-specific unaligned BAM files.
+        :type sequences_directory: str | None
+        :param lane_list: A comma-separated list of lane numbers.
+        :type lane_list: str
+        :param mode: A sequencer mode.
+        :type mode: str | None
+        :param library_path: A library path.
+        :type library_path: str | None
+        :param force: Request processing of imperfect library annotation sheets.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            # The --project-name value can be determined from the --irf option, while the
+            # --library-path option can be determined from the --project-name option.
+            if not (project_name or irf_path):
+                raise Exception('The --project-name or --irf arguments are required if configuration is not set.')
+
+        analysis: IlluminaDemultiplexSam = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if irf_path:
+            analysis.run_directory = irf_path
+
+        if sequences_directory:
+            analysis.sequences_directory = sequences_directory
+
+        if lane_list:
+            analysis.lane_list = lane_list.split(',')
+
+        # FIXME: Remove the mode option.
+        # Since the script requires an IRF option, the lanes can be read from the bsf.illumina.RunFolder.
+        # TODO: Synchronise to other de-multiplexing modules?
+        if mode:
+            if mode == 'high':
+                analysis.lanes = 8
+            elif mode == 'rapid':
+                analysis.lanes = 2
+            elif mode == 'miseq':
+                analysis.lanes = 1
+            elif mode == 'nextseq':
+                analysis.lanes = 4
+            elif mode == 'novaseq':
+                analysis.lanes = 4
+            else:
+                raise Exception(f'The --mode option {mode!r} is not supported.')
+
+        if force:
+            analysis.force = force
+
+        if library_path:
+            analysis.library_path = library_path
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:         ', analysis.project_name)
+        print('Project directory:    ', analysis.project_directory)
+        print('Sequences directory:  ', analysis.sequences_directory)
+        print('Experiment directory: ', analysis.get_experiment_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSam` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or
+        a :literal:`--irf` argument. The :literal:`--project-name` argument can be automatically determined from the
+        :literal:`--irf` argument, while the
+        :literal:`--library-path` argument can be automatically determined from the
+        :literal:`--project-name` argument.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        # FIXME: For the moment, the IRF needs passing in.
+        argument_parser.add_argument(
+            '--irf',
+            help='Illumina Run Folder name or file path',
+            dest='irf_path')
+
+        argument_parser.add_argument(
+            '--project-name',
+            help='project name (i.e., flow cell identifier)')
+
+        argument_parser.add_argument(
+            '--sequences-path',
+            help='sequence archive directory path')
+
+        argument_parser.add_argument(
+            '--library-path',
+            help='library annotation sheet (*.csv) file path')
+
+        argument_parser.add_argument(
+            '--lane-list',
+            help='comma-separated list of lanes to process')
+
+        argument_parser.add_argument(
+            '--mode',
+            help='HiSeq run mode (i.e., "high" (high-output) or "rapid" (rapid run))')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing even if library annotation sheet validation fails')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            irf_path=name_space.irf_path,
+            sequences_directory=name_space.sequences_path,
+            mode=name_space.mode,
+            lane_list=name_space.lane_list,
+            library_path=name_space.library_path,
+            force=name_space.force)
+
 
 class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
     """The :py:class:`bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane` class models files in a directory.
@@ -2897,6 +3608,110 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
             # VERBOSITY [INFO]
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            irf_path: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.picard.CollectHiSeqXPfFailMetrics` analysis.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param irf_path: An :emphasis:`Illumina Run Folder` path.
+        :type irf_path: str | None
+        :param force: Request processing incomplete :emphasis:`Illumina Run Folder` objects.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not irf_path:
+                raise Exception('The --irf argument is required if configuration is not set.')
+
+        analysis: CollectHiSeqXPfFailMetrics = cls.from_config_file_path(config_path=configuration_path)
+
+        if irf_path:
+            analysis.run_directory = irf_path
+
+        if force:
+            analysis.force = force
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:           ', analysis.project_name)
+        print('Project directory:      ', analysis.project_directory)
+        print('Illumina run directory: ', analysis.run_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.picard.CollectHiSeqXPfFailMetrics` analysis.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--irf',
+            help='Illumina Run Folder name or file path',
+            dest='irf_path')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing of an incomplete Illumina Run Folder')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            irf_path=name_space.irf_path,
+            force=name_space.force)
 
 
 class FilePathDownsampleSamReadGroup(FilePath):
@@ -3198,6 +4013,123 @@ class DownsampleSam(Analysis):
         annotation_sheet.to_file_path()
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            sas_path: Optional[str] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.picard.DownsampleSam` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or
+        :literal:`project_name` and :literal:`sas_path` arguments.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str
+        :param sas_path: A sample annotation sheet file path.
+        :type sas_path: str
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not project_name:
+                raise Exception('The --project-name argument is required if configuration is not set.')
+            if not sas_path:
+                raise Exception('The --sas-path argument is required if configuration is not set.')
+
+        analysis: DownsampleSam = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if sas_path:
+            if not sas_path.endswith('.csv'):
+                raise Exception('The --sas-path option requires a comma-separated value (CSV) file.')
+
+            analysis.sas_file = sas_path
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:      ', analysis.project_name)
+        print('Input directory:   ', analysis.input_directory)
+        print('Project directory: ', analysis.project_directory)
+        print('Genome directory:  ', analysis.genome_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.picard.DownsampleSam` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or
+        :literal:`--project-name` and :literal:`--sas-path` arguments.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--project-name',
+            help='project name')
+
+        argument_parser.add_argument(
+            '--sas-path',
+            help='sample annotation sheet (*.csv) file path')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            sas_path=name_space.sas_path)
 
 
 class FilePathSamToFastqReadGroup(FilePath):
@@ -3783,3 +4715,147 @@ class SamToFastq(Analysis):
                         prune_file_path(reads=paired_reads.reads_2)
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            sas_path: Optional[str] = None,
+            drop_read_1: Optional[bool] = None,
+            drop_read_2: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.picard.SamToFastq` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or
+        :literal:`project_name` and :literal:`sas_path` arguments.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str
+        :param sas_path: A sample annotation sheet file path.
+        :type sas_path: str
+        :param drop_read_1: Request dropping read 1.
+        :type drop_read_1: bool | None
+        :param drop_read_2: Request dropping read 2.
+        :type drop_read_2: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not project_name:
+                raise Exception('The --project-name argument is required if configuration is not set.')
+            if not sas_path:
+                raise Exception('The --sas-path argument is required if configuration is not set.')
+
+        analysis: SamToFastq = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if sas_path:
+            if not sas_path.endswith('.csv'):
+                raise Exception('The --sas-path option requires a comma-separated value (CSV) file.')
+
+            analysis.sas_file = sas_path
+
+        if drop_read_1:
+            analysis.drop_read_1 = drop_read_1
+
+        if drop_read_2:
+            analysis.drop_read_2 = drop_read_2
+
+        if stage_name == 'prune':
+            analysis.prune()
+        else:
+            analysis.run()
+            analysis.check_state()
+            analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+            print(analysis.name)
+            print('Project name:      ', analysis.project_name)
+            print('Input directory:   ', analysis.input_directory)
+            print('Project directory: ', analysis.project_directory)
+            print('Genome directory:  ', analysis.genome_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.picard.SamToFastq` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or
+        :literal:`--project-name` and :literal:`--sas-path` arguments.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--project-name',
+            help='project name')
+
+        argument_parser.add_argument(
+            '--sas-path',
+            help='sample annotation sheet (*.csv) file path')
+
+        argument_parser.add_argument(
+            '--drop-read-1',
+            action='store_true',
+            help='drop read 1')
+
+        argument_parser.add_argument(
+            '--drop-read-2',
+            action='store_true',
+            help='drop read 2')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            sas_path=name_space.sas_path,
+            drop_read_1=name_space.drop_read_1,
+            drop_read_2=name_space.drop_read_2)

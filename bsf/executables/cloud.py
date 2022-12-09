@@ -27,6 +27,7 @@
 :literal:`Microsoft Azure Storage Blob Service`.
 """
 import logging
+import sys
 from argparse import ArgumentParser
 from subprocess import Popen
 from typing import Optional
@@ -351,62 +352,58 @@ class RunnableStepAzureBlockBlobDownload(RunnableStepAzureBlockBlob):
         return None
 
 
-if __name__ == '__main__':
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
+    """
     argument_parser = ArgumentParser(
-        description='Module driver script.')
+        description='Module console script.')
 
     argument_parser.add_argument(
         '--logging-level',
-        choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
-        default='INFO',
-        dest='logging_level',
-        help='Logging level [INFO]',
-        required=False)
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='Logging level [WARNING]')
 
     argument_parser.add_argument(
         '--action',
-        dest='action',
-        help='Action (i.e. upload, download)',
-        required=True)
+        choices=('upload', 'download'),
+        required=True,
+        help='Action (i.e. upload, download)')
 
     argument_parser.add_argument(
         '--account-name',
-        dest='account_name',
-        help='Account name',
-        required=True)
+        required=True,
+        help='Account name')
 
     argument_parser.add_argument(
         '--container-name',
-        dest='container_name',
-        help='Container name',
-        required=True)
+        required=True,
+        help='Container name')
 
     argument_parser.add_argument(
         '--source-path',
-        dest='source_path',
-        help='Source (local) file path',
-        required=True)
+        required=True,
+        help='Source (local) file path')
 
     argument_parser.add_argument(
         '--target-path',
-        dest='target_path',
-        help='Target (blob) file path',
-        required=True)
+        required=True,
+        help='Target (blob) file path')
 
     argument_parser.add_argument(
         '--maximum-concurrency',
         default=4,
-        dest='max_concurrency',
-        help='Maximum number of network connections [4]',
-        required=False,
-        type=int)
+        type=int,
+        help='Maximum number of network connections [4]')
 
     argument_parser.add_argument(
         '--enable-logging',
         action='store_true',
-        dest='logging_enable',
         help='Enable logging [False]',
-        required=False)
+        dest='logging_enable')
 
     name_space = argument_parser.parse_args()
 
@@ -423,7 +420,7 @@ if __name__ == '__main__':
             container_name=name_space.container_name,
             source_path=name_space.source_path,
             target_path=name_space.target_path,
-            max_concurrency=name_space.max_conurrency,
+            max_concurrency=name_space.maximum_concurrency,
             logging_enable=name_space.logging_enable)
 
         runnable_step.run()
@@ -435,7 +432,13 @@ if __name__ == '__main__':
             container_name=name_space.container_name,
             source_path=name_space.source_path,
             target_path=name_space.target_path,
-            max_concurrency=name_space.max_conurrency,
+            max_concurrency=name_space.maximum_concurrency,
             logging_enable=name_space.logging_enable)
 
         runnable_step.run()
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

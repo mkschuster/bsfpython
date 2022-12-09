@@ -29,6 +29,7 @@ import logging
 import os
 import pickle
 import warnings
+from argparse import ArgumentParser
 from subprocess import Popen
 from typing import Optional, TypeVar, Union
 
@@ -6859,3 +6860,100 @@ class VariantCallingGATK(Analysis):
         report_hub()
 
         return
+
+    @classmethod
+    def console_find_missing(cls, configuration_path: str) -> int:
+        """Console function to check for missing files.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        analysis: VariantCallingGATK = cls.from_config_file_path(config_path=configuration_path)
+
+        analysis.run()
+        analysis.check_state()
+
+        # Work through the BSF Sample table to see, which files are missing.
+
+        for sample in analysis.sample_list:
+            if sample.is_excluded():
+                print("Excluded sample:", sample.name)
+                continue
+
+            prefix_sample = VariantCallingGATK.get_prefix_process_sample(sample_name=sample.name)
+            file_path_sample = FilePathProcessSample(prefix=prefix_sample)
+
+            sample_missing = False
+            for file_name_sample in (
+                    file_path_sample.realigned_bam,
+                    file_path_sample.realigned_bai,
+                    file_path_sample.realigned_md5,
+                    file_path_sample.realigned_bam_bai,
+                    file_path_sample.raw_variants_gvcf_vcf,
+                    file_path_sample.raw_variants_gvcf_tbi,
+                    file_path_sample.alignment_summary_metrics,
+                    file_path_sample.duplicate_metrics
+            ):
+                if not os.path.exists(os.path.join(analysis.genome_directory, file_name_sample)):
+                    sample_missing = True
+                    print("  Sample file missing:", file_name_sample)
+
+            if sample_missing:
+                read_group_missing = False
+                for paired_reads in sample.paired_reads_list:
+                    paired_reads_name = paired_reads.get_name()
+                    prefix_process_lane = VariantCallingGATK.get_prefix_process_lane(
+                        paired_reads_name=paired_reads_name)
+                    file_path_read_group = FilePathProcessReadGroup(prefix=prefix_process_lane)
+                    for file_name_read_group in (
+                            file_path_read_group.recalibrated_bam,
+                            file_path_read_group.recalibrated_bai,
+                            file_path_read_group.recalibrated_md5
+                    ):
+                        if not os.path.exists(os.path.join(analysis.genome_directory, file_name_read_group)):
+                            read_group_missing = True
+                            print("    ReadGroup file missing:", file_name_read_group)
+
+                if read_group_missing:
+                    print("Read group(s) missing.")
+                else:
+                    print("Read group(s) complete!")
+
+            if sample_missing:
+                print("Missing sample:", sample.name)
+            else:
+                print("Complete sample:", sample.name)
+
+        return 0
+
+    @classmethod
+    def entry_point_find_missing(cls) -> int:
+        """Console entry point to check for missing files.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' checking script.')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            'configuration',
+            help='configuration (*.ini) file path')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_find_missing(configuration_path=name_space.configuration)

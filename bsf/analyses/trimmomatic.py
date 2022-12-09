@@ -27,6 +27,7 @@
 """
 import logging
 import os
+from argparse import ArgumentParser
 from typing import Optional
 
 from bsf.analysis import Analysis, Stage
@@ -738,3 +739,122 @@ class Trimmomatic(Analysis):
         self.report_to_file(content=report_list)
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            sas_path: Optional[str] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a :py:class:`bsf.analyses.trimmomatic.Trimmomatic` analysis.
+
+        This analysis requires either a :literal:`configuration` argument or
+        :literal:`project_name` and :literal:`sas_path` arguments.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str
+        :param sas_path: A sample annotation sheet file path.
+        :type sas_path: str
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not project_name:
+                raise Exception('The --project-name argument is required if configuration is not set.')
+            if not sas_path:
+                raise Exception('The --sas-path argument is required if configuration is not set.')
+
+        analysis: Trimmomatic = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if sas_path:
+            if not sas_path.endswith('.csv'):
+                raise Exception('The --sas-path option requires a comma-separated value (CSV) file.')
+
+            analysis.sas_file = sas_path
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:      ', analysis.project_name)
+        print('Input directory:   ', analysis.input_directory)
+        print('Project directory: ', analysis.project_directory)
+        print('Genome directory:  ', analysis.genome_directory)
+        if stage_name == 'report':
+            print('Report URL:        ', analysis.get_html_report_url())
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a :py:class:`bsf.analyses.trimmomatic.Trimmomatic` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or
+        :literal:`--project-name` and :literal:`--sas-path` arguments.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--project-name',
+            help='project name')
+
+        argument_parser.add_argument(
+            '--sas-path',
+            help='sample annotation sheet (*.csv) file path')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            sas_path=name_space.sas_path)

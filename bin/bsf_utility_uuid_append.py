@@ -26,18 +26,45 @@
 """The :py:mod:`bin.bsf_utility_uuid_append` module is a script to append a :emphasis:`UUID` to a string.
 """
 
+import sys
 import uuid
 from argparse import ArgumentParser
+from typing import Optional
 
-argument_parser = ArgumentParser(
-    description='Append a UUID to a string.')
 
-argument_parser.add_argument(
-    'input',
-    help="input string, can be empty by supplying ''")
+def run(input_value: Optional[str] = None) -> int:
+    """Run function.
 
-name_space = argument_parser.parse_args()
+    :param input_value: An input value.
+    :type input_value: str | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    if input_value:
+        print('_'.join((input_value, uuid.uuid4().hex)))
+    else:
+        print(uuid.uuid4().hex)
 
-# By passing in '' as an empty string, a leading '_' needs stripping.
+    return 0
 
-print('_'.join((name_space.input, uuid.uuid4().hex)).lstrip('_'))
+
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Append a UUID to a string.')
+
+    argument_parser.add_argument(
+        'input_value',
+        help="input string, can be empty by supplying ''")
+
+    name_space = argument_parser.parse_args()
+
+    return run(input_value=name_space.input_value)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

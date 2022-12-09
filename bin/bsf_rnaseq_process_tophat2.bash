@@ -71,10 +71,10 @@ function process_bed() {
 
   grep --extended-regexp --invert-match '^track|^browser' "${directory}/${prefix}.bed" |
     perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-      >"${directory}/${prefix}.txt"
+      1>"${directory}/${prefix}.txt"
     [[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
-  sort -k1,1 -k2,2n "${directory}/${prefix}.txt" >"${directory}/${prefix}_sorted.txt" || exit 1
+  sort -k1,1 -k2,2n "${directory}/${prefix}.txt" 1>"${directory}/${prefix}_sorted.txt" || exit 1
 
   bedToBigBed "${directory}/${prefix}_sorted.txt" "${genome_sizes}" "${directory}/${prefix}.bb" || exit 1
 

@@ -28,6 +28,8 @@ specific for Illumina sequencing systems.
 import datetime
 import logging
 import os
+import re
+from argparse import ArgumentParser
 from typing import Optional, TypeVar
 from xml.etree.ElementTree import ElementTree
 
@@ -35,6 +37,7 @@ import dateutil.tz
 from Bio.Seq import Seq
 
 from bsf.annotation import AnnotationSheet
+from bsf.standards import get_irf_path
 
 AdaptorsType = TypeVar(name='AdaptorsType', bound='Adaptors')
 RunInformationType = TypeVar(name='RunInformationType', bound='RunInformation')
@@ -3086,3 +3089,256 @@ class RunFolder(object):
             print('  Remaining entries:', sorted(_directory_dict))
 
         return
+
+    @classmethod
+    def console_software_versions(
+            cls,
+            directory_path: Optional[str] = None,
+            output_path: Optional[str] = None,
+            ascending: Optional[bool] = None) -> int:
+        """Console function to compile a table of :emphasis:`Illumina Run Folder` software versions.
+
+        :param directory_path: A directory path of :emphasis:`Illumina Run Folder` objects.
+        :type directory_path: str | None
+        :param output_path: Output file path.
+        :type output_path: str | None
+        :param ascending: Request sorting in ascending order.
+        :type ascending: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        file_name_list = os.listdir(directory_path)
+        file_name_list.sort()
+
+        if not ascending:
+            file_name_list.reverse()
+
+        annotation_sheet = AnnotationSheet(
+            file_path=output_path,
+            header=True,
+            field_name_list=[
+                'experiment',
+                'experiment_name',
+                'run_identifier',
+                'application_name',
+                'application_version',
+                'rta_version',
+                'picard_read_structure',
+                'lane_count',
+                'keep_intensities',
+            ])
+
+        # Illumina Run Folders obey a pattern and additionally directories with just Sequence Analysis Viewer (SAV)
+        # information should also be allowed.
+
+        irf_pattern = re.compile(pattern=r'^[0-9]{6,6}_.*(?:_sav)?$')
+
+        for file_name in file_name_list:
+            logging.debug('File name: %r', file_name)
+
+            # Process just entries that obey the Illumina Run Folder pattern.
+            re_match = re.search(pattern=irf_pattern, string=file_name)
+            if not re_match:
+                logging.debug('No match: %r', file_name)
+                continue
+
+            file_path = os.path.join(directory_path, file_name)
+            if not (os.path.exists(os.path.join(file_path, 'runParameters.xml')) or
+                    os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
+                logging.debug('Directory %r does not seem to be an Illumina Run Folder.', file_name)
+                continue
+
+            irf = RunFolder.from_file_path(file_path=file_path)
+
+            annotation_sheet.row_dict_list.append({
+                'experiment': irf.run_parameters.get_experiment_name,
+                'experiment_name': '_'.join((irf.run_parameters.get_experiment_name,
+                                             irf.run_parameters.get_flow_cell_barcode)),
+                'run_identifier': irf.run_parameters.get_run_identifier,
+                'application_name': irf.run_parameters.get_application_name,
+                'application_version': irf.run_parameters.get_application_version,
+                'rta_version': irf.run_parameters.get_real_time_analysis_version,
+                'picard_read_structure': irf.run_information.get_picard_read_structure,
+                'lane_count': irf.run_information.flow_cell_layout.lane_count,
+                'keep_intensities': irf.run_parameters.get_keep_intensities,
+            })
+
+        annotation_sheet.to_file_path()
+
+        return 0
+
+    @classmethod
+    def entry_point_software_versions(cls) -> int:
+        """Console entry point to compile a table of :emphasis:`Illumina Run Folder` software versions.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='Create a table of Illumina Run Folder software versions.')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--directory-path',
+            required=True,
+            help='directory of Illumina Run Folders')
+
+        argument_parser.add_argument(
+            '--output-path',
+            required=True,
+            help='output (*.csv) file path')
+
+        argument_parser.add_argument(
+            '--ascending',
+            action='store_true',
+            help='sort flow cells in ascending order rather than in descending by default')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_software_versions(
+            directory_path=name_space.directory_path,
+            output_path=name_space.output_path,
+            ascending=name_space.ascending)
+
+    @classmethod
+    def console_summary(
+            cls,
+            file_path: Optional[str] = None,
+            check: Optional[bool] = None) -> int:
+        """Console function to summarise an :emphasis:`Illumina Run Folder`.
+
+        :param file_path: An :emphasis:`Illumina Run Folder` file path.
+        :type file_path: str | None
+        :param check: A Python :py:class:`str` (container name) object.
+        :type check: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+
+        def _print_key_value(key: str, value: str) -> None:
+            """Private function to print key and value pairs formatted as table.
+
+            :param key: A key.
+            :type key: str
+            :param value: A value.
+            :type value: str
+            """
+            print(f'{key:22s}', value)
+            return
+
+        irf_path = get_irf_path(name=file_path)
+
+        if irf_path is None:
+            raise Exception(f'The file_path option {file_path!r} could not be resolved to a valid '
+                            f'Illumina Run Folder location.')
+
+        irf = RunFolder.from_file_path(file_path=irf_path)
+
+        if not irf.run_parameters.get_experiment_name:
+            raise Exception('No experiment name set in the Illumina Run Folder configuration.')
+
+        _print_key_value(
+            key='Flow Cell Identifier:',
+            value='_'.join((irf.run_parameters.get_experiment_name, irf.run_parameters.get_flow_cell_barcode)))
+
+        _print_key_value(key='Read Structure:', value=' + '.join(irf.run_information.get_read_structure_list))
+
+        try:
+            path_stat_result = os.stat(path=os.path.join(irf_path, 'Config'), follow_symlinks=True)
+        except FileNotFoundError:
+            pass
+        else:
+            _print_key_value(
+                key='Start date:',
+                value=datetime.date.fromtimestamp(path_stat_result.st_mtime).isoformat())
+
+        try:
+            path_stat_result = os.stat(path=os.path.join(irf_path, 'RTAComplete.txt'), follow_symlinks=True)
+        except FileNotFoundError:
+            pass
+        else:
+            _print_key_value(
+                key='End date:',
+                value=datetime.date.fromtimestamp(path_stat_result.st_mtime).isoformat())
+
+        _print_key_value(key='Experiment:', value=irf.run_parameters.get_experiment_name)
+
+        _print_key_value(key='Flow Cell:', value=irf.run_parameters.get_flow_cell_barcode)
+
+        position = irf.run_parameters.get_position
+        if position:
+            _print_key_value(key='Position:', value=irf.run_parameters.get_position)
+
+        _print_key_value(key='Run Identifier:', value=irf.run_information.run_identifier)
+        _print_key_value(key='Application Name:', value=irf.run_parameters.get_application_name)
+        _print_key_value(key='Application Version:', value=irf.run_parameters.get_application_version)
+        _print_key_value(key='RTA Version:', value=irf.run_parameters.get_real_time_analysis_version)
+
+        flow_cell_type = irf.run_parameters.get_flow_cell_type
+        if flow_cell_type:
+            _print_key_value(key='Flow Cell Type:', value=flow_cell_type)
+
+        index_type = irf.run_parameters.get_index_type
+        if index_type:
+            _print_key_value(key='Index Type:', value=index_type)
+
+        pe_type = irf.run_parameters.get_pe_type
+        if pe_type:
+            _print_key_value(key='Paired-end Type:', value=pe_type)
+
+        sbs_type = irf.run_parameters.get_sbs_type
+        if sbs_type:
+            _print_key_value(key='SBS Type:', value=sbs_type)
+
+        if check:
+            irf.check()
+
+        return 0
+
+    @classmethod
+    def entrypoint_summary(cls):
+        """Console entry point to summarise an :emphasis:`Illumina Run Folder`.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='Summarise an Illumina Run Folder.')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--check',
+            action='store_true',
+            help='check for completeness')
+
+        argument_parser.add_argument(
+            'file_path',
+            help='Illumina Run Folder path')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_summary(
+            file_path=name_space.file_path,
+            check=name_space.check)

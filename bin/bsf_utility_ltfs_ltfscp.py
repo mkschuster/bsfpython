@@ -35,6 +35,7 @@ barcode or a mounted cartridge. An XML file, which can be used as a batch file f
 
 import logging
 import os
+import sys
 from argparse import ArgumentParser
 from typing import Optional
 from xml.etree.ElementTree import ElementTree, Element
@@ -386,132 +387,167 @@ class LinearTapeFileSystemCopy(object):
         return
 
 
-argument_parser = ArgumentParser(
-    description='Linear Tape File System Copy tool driver script.')
+def run(
+        cartridge_code: str,
+        target_path: str,
+        total_buffer_size: str,
+        buffer_size: str,
+        log_level: str,
+        mounted_cartridge: Optional[bool] = None,
+        recursive: Optional[bool] = None,
+        sparse: Optional[bool] = None) -> int:
+    """Run function.
 
-argument_parser.add_argument(
-    'cartridge',
-    help='cartridge barcode')
+    :param cartridge_code: An LTO cartridge_code.
+    :type cartridge_code: str
+    :param target_path: A target path.
+    :type target_path: str
+    :param total_buffer_size: A total buffer size. The default total buffer size is 400M,
+        the maximum total buffer size is 4G.
+    :type total_buffer_size: str
+    :param buffer_size: A buffer size. The default buffer size is 128K, the maximum buffer size is 1G.
+    :type buffer_size: str
+    :param log_level: A log level.
+    :type log_level: str
+    :param mounted_cartridge: Request calculating remaining space for a mounted cartridge.
+    :type mounted_cartridge: bool | None
+    :param recursive: Request processing file system object recursively.
+    :type recursive: bool | None
+    :param sparse: Request not supporting sparse files.
+    :type sparse: bool | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    linear_tape_file_system_copy = LinearTapeFileSystemCopy(
+        total_buffer_size=total_buffer_size,
+        buffer_size=buffer_size,
+        log_level=log_level,
+        recursive=recursive,
+        sparse=sparse,
+        default_target_path=target_path)
 
-argument_parser.add_argument(
-    '--logging-level',
-    choices=['CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'],
-    default='INFO',
-    dest='logging_level',
-    help='Logging level [INFO]',
-    required=False)
+    if cartridge_code.endswith('.txt'):
+        # In case shell completion is used, remove the trailing *.txt suffix.
+        cartridge_code = cartridge_code[:-4]
 
-argument_parser.add_argument(
-    '--total-buffer-size',
-    default='4G',
-    dest='total_buffer_size',
-    help='The default total buffer size is 400M. The maximum total buffer size is 4G. [4G]',
-    required=False)
+    if cartridge_code[-2:] not in cartridge_dict:
+        raise Exception(f'The cartridge barcode media characters {cartridge_code[-2:]!r} are currently not supported.')
 
-argument_parser.add_argument(
-    '--buffer-size',
-    default='1G',
-    dest='buffer_size',
-    help='The default buffer size is 128K. The maximum buffer size is 1G. [1G]',
-    required=False)
+    if mounted_cartridge:
+        # If a cartridge is mounted, stat the virtual file system.
+        ltfs_statvfs_result = os.statvfs(linear_tape_file_system_copy.default_target_path)
+        ltfs_free_bytes = ltfs_statvfs_result.f_bavail * ltfs_statvfs_result.f_bsize
+        ltfs_total_bytes = ltfs_statvfs_result.f_blocks * ltfs_statvfs_result.f_bsize
+    else:
+        ltfs_free_bytes = cartridge_dict[cartridge_code[-2:]]
+        ltfs_total_bytes = cartridge_dict[cartridge_code[-2:]]
 
-argument_parser.add_argument(
-    '--no-sparse',
-    action='store_false',
-    dest='sparse',
-    help='do not support sparse files',
-    required=False)
+    # Summarize the sizes of all source files.
 
-argument_parser.add_argument(
-    '--recursive',
-    action='store_true',
-    dest='recursive',
-    help='process recursively',
-    required=False)
+    total_size = 0
 
-argument_parser.add_argument(
-    '--log-level',
-    choices=['URGENT', 'WARNING', 'INFO', 'DEBUG'],
-    default='INFO',
-    dest='log_level',
-    help='log level [INFO]',
-    required=False)
+    with open(file=cartridge_code + '.txt', mode='rt') as text_io:
+        for main_file_path in text_io:
+            main_file_path = main_file_path.strip()
+            main_file_path = os.path.normpath(main_file_path)
+            total_size += os.stat(path=main_file_path, follow_symlinks=True).st_size
+            linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
 
-argument_parser.add_argument(
-    '--target-path',
-    default='/mnt/ltfs',
-    dest='target_path',
-    help='default target path [/mnt/ltfs]',
-    required=False)
+    if ltfs_free_bytes <= total_size:
+        difference_bytes = total_size - ltfs_free_bytes
+        difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
+        print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Exceeding {:,d} ({:0.1f} {})'.format(
+            ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
+    else:
+        difference_bytes = ltfs_free_bytes - total_size
+        difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
+        print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d} ({:0.1f} {})'.format(
+            ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
 
-argument_parser.add_argument(
-    '--source-specification',
-    default='',
-    dest='source_specification',
-    help='source specification pattern []',
-    required=False)
+    linear_tape_file_system_copy.write_batch_file(file_path=cartridge_code + '.xml')
 
-argument_parser.add_argument(
-    '--mounted-cartridge',
-    action='store_true',
-    dest='mounted_cartridge',
-    help='calculate remaining space for a mounted cartridge',
-    required=False)
+    return 0
 
-name_space = argument_parser.parse_args()
 
-if name_space.logging_level:
-    logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
-    logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+def main() -> int:
+    """Main function.
 
-    logging.basicConfig(level=name_space.logging_level)
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Linear Tape File System Copy tool driver script.')
 
-linear_tape_file_system_copy = LinearTapeFileSystemCopy(
-    total_buffer_size=name_space.total_buffer_size,
-    buffer_size=name_space.buffer_size,
-    log_level=name_space.log_level,
-    recursive=name_space.recursive,
-    sparse=name_space.sparse,
-    default_target_path=name_space.target_path)
+    argument_parser.add_argument(
+        '--logging-level',
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='logging level [WARNING]')
 
-cartridge_code: str = name_space.cartridge
+    argument_parser.add_argument(
+        '--total-buffer-size',
+        default='4G',
+        help='The default total buffer size is 400M. The maximum total buffer size is 4G. [4G]')
 
-if cartridge_code.endswith('.txt'):
-    # In case shell completion is used, remove the trailing *.txt suffix.
-    cartridge_code = name_space.cartridge[:-4]
+    argument_parser.add_argument(
+        '--buffer-size',
+        default='1G',
+        help='The default buffer size is 128K. The maximum buffer size is 1G. [1G]')
 
-if cartridge_code[-2:] not in cartridge_dict:
-    raise Exception(f'The cartridge barcode media characters {cartridge_code[-2:]!r} are currently not supported.')
+    argument_parser.add_argument(
+        '--no-sparse',
+        action='store_false',
+        help='do not support sparse files',
+        dest='sparse')
 
-if name_space.mounted_cartridge:
-    # If a cartridge is mounted, stat the virtual file system.
-    ltfs_statvfs_result = os.statvfs(linear_tape_file_system_copy.default_target_path)
-    ltfs_free_bytes = ltfs_statvfs_result.f_bavail * ltfs_statvfs_result.f_bsize
-    ltfs_total_bytes = ltfs_statvfs_result.f_blocks * ltfs_statvfs_result.f_bsize
-else:
-    ltfs_free_bytes = cartridge_dict[cartridge_code[-2:]]
-    ltfs_total_bytes = cartridge_dict[cartridge_code[-2:]]
+    argument_parser.add_argument(
+        '--recursive',
+        action='store_true',
+        help='process recursively')
 
-# Summarize the sizes of all source files.
+    argument_parser.add_argument(
+        '--log-level',
+        default='INFO',
+        choices=('URGENT', 'WARNING', 'INFO', 'DEBUG'),
+        help='IBM ltfscp log level [INFO]')
 
-total_size = 0
+    argument_parser.add_argument(
+        '--target-path',
+        default='/mnt/ltfs',
+        help='target path [/mnt/ltfs]')
 
-with open(file=cartridge_code + '.txt', mode='rt') as text_io:
-    for main_file_path in text_io:
-        main_file_path = main_file_path.strip()
-        main_file_path = os.path.normpath(main_file_path)
-        total_size += os.stat(path=main_file_path, follow_symlinks=True).st_size
-        linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
+    argument_parser.add_argument(
+        '--source-specification',
+        default='',
+        help='source specification pattern []')
 
-if ltfs_free_bytes <= total_size:
-    difference_bytes = total_size - ltfs_free_bytes
-    difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
-    print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Exceeding {:,d} ({:0.1f} {})'.format(
-        ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
-else:
-    difference_bytes = ltfs_free_bytes - total_size
-    difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
-    print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d} ({:0.1f} {})'.format(
-        ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
+    argument_parser.add_argument(
+        '--mounted-cartridge',
+        action='store_true',
+        help='calculate remaining space for a mounted cartridge')
 
-linear_tape_file_system_copy.write_batch_file(file_path=cartridge_code + '.xml')
+    argument_parser.add_argument(
+        'cartridge_code',
+        help='cartridge barcode')
+
+    name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
+    return run(
+        cartridge_code=name_space.cartridge_code,
+        target_path=name_space.target_path,
+        total_buffer_size=name_space.total_buffer_size,
+        buffer_size=name_space.buffer_size,
+        log_level=name_space.log_level,
+        mounted_cartridge=name_space.mounted_cartridge,
+        recursive=name_space.recursive,
+        sparse=name_space.sparse)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

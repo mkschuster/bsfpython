@@ -24,16 +24,19 @@
 #
 """The :py:mod:`bsf.cloud` module provides functions to interact with cloud services.
 """
+import errno
 import json
+import logging
 import os
-from typing import IO, Union
+from argparse import ArgumentParser
+from typing import IO, Optional, Union
 
 from azure.storage.blob import BlobServiceClient, \
     ContainerClient, ContainerProperties, \
-    BlobClient, BlobProperties, \
+    BlobClient, BlobProperties, BlobBlock, \
     StandardBlobTier
 
-from bsf.standards import Secrets
+from bsf.standards import Secrets, StandardFilePath
 
 
 def get_azure_secrets_dict(account_name: str) -> dict[str, str]:
@@ -333,3 +336,517 @@ def azure_block_blob_download(
             logging_enable=logging_enable).readinto(stream=output_binary_io)
 
     return azure_blob_client.get_blob_properties()
+
+
+def console_blob_download(
+        account_name: Optional[str] = None,
+        container_name: Optional[str] = None,
+        blob_item_list: Optional[list[str]] = None,
+        blob_path: Optional[str] = None,
+        max_concurrency: Optional[int] = None) -> int:
+    """Console function to download from the :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str | None
+    :param container_name: A Python :py:class:`str` (container name) object.
+    :type container_name: str | None
+    :param blob_item_list: A Python :py:class:`list` object of Python :py:Class:`str` (blob name) objects.
+    :type blob_item_list: list[str] | None
+    :param blob_path: Directory path for downloaded blobs.
+    :type blob_path: str | None
+    :param max_concurrency: Maximum number of network connections.
+    :type max_concurrency: int | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    if not os.path.isdir(blob_path):
+        raise Exception(f'The blob directory path {blob_path!r} does not exist.')
+
+    azure_blob_service_client = get_azure_blob_service_client(account_name=account_name)
+
+    if not azure_container_exists(
+            azure_blob_service_client=azure_blob_service_client,
+            container=container_name):
+        raise Exception(f'The Azure Blob Container {container_name!r} does not exist.')
+
+    for blob_item in blob_item_list:
+        logging.debug('Blob item: %r', blob_item)
+
+        for suffix in ('', '.md5'):
+            file_path = os.path.join(blob_path, blob_item + suffix)
+
+            if os.path.exists(file_path):
+                logging.info('File exists already: %r', file_path)
+                continue
+
+            blob_properties = azure_block_blob_download(
+                azure_blob_service_client=azure_blob_service_client,
+                container=container_name,
+                blob=blob_item + suffix,
+                file_path=file_path,
+                max_concurrency=max_concurrency)
+
+            logging.info('Azure Blob name: %r', blob_properties.name)
+            logging.info('Azure Blob size: %r', blob_properties.size)
+            logging.info('Azure Blob ETag: %r', blob_properties.etag)
+            logging.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())
+
+    return 0
+
+
+def entry_point_blob_download() -> int:
+    """Console entry point to download from the :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Microsoft Azure Storage Blob Service download script.')
+
+    argument_parser.add_argument(
+        '--logging-level',
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='logging level [WARNING]')
+
+    argument_parser.add_argument(
+        '--account',
+        required=True,
+        help='Microsoft Azure Storage Account name')
+
+    argument_parser.add_argument(
+        '--container',
+        required=True,
+        help='Microsoft Azure Storage Blob Service container name')
+
+    argument_parser.add_argument(
+        '--threads',
+        default=1,
+        help='maximum number of concurrent download threads [1]',
+        type=int)
+
+    argument_parser.add_argument(
+        '--blob-path',
+        default='.',
+        help='directory path for storing downloaded blobs [.]')
+
+    argument_parser.add_argument(
+        'blob_item',
+        nargs='+',
+        help='one or more blob items (e.g., archive_file.tar.gz)',
+        dest='blob_item_list')
+
+    name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
+    return console_blob_download(
+        account_name=name_space.account,
+        container_name=name_space.container,
+        blob_item_list=name_space.blob_item_list,
+        blob_path=name_space.blob_path,
+        max_concurrency=name_space.threads)
+
+
+def console_blob_download_sequence(
+        account_name: Optional[str] = None,
+        container_name: Optional[str] = None,
+        sequence_item_list: Optional[list[str]] = None,
+        sequence_path: Optional[str] = None,
+        max_concurrency: Optional[int] = None) -> int:
+    """Console function to download sequences in BAM format from the
+    :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str | None
+    :param container_name: A Python :py:class:`str` (container name) object.
+    :type container_name: str | None
+    :param sequence_item_list: A Python :py:class:`list` object of Python :py:class:`str` (sequence item) objects.
+    :type sequence_item_list: list[str] | None
+    :param sequence_path: Directory path for downloaded blobs.
+    :type sequence_path: str | None
+    :param max_concurrency: Maximum number of network connections.
+    :type max_concurrency: int | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    if not os.path.isdir(sequence_path):
+        raise Exception(f'The sequences directory {sequence_path!r} does not exist.')
+
+    azure_blob_service_client = get_azure_blob_service_client(account_name=account_name)
+
+    if not azure_container_exists(
+            azure_blob_service_client=azure_blob_service_client,
+            container=container_name):
+        raise Exception(f'The Azure Blob Container {container_name!r} does not exist.')
+
+    for sequence_item in sequence_item_list:
+        logging.debug('Sequence item: %r', sequence_item)
+
+        # Get the experiment directory name by removing the lane suffix.
+        experiment_name = '_'.join(sequence_item.split('_')[:-1])
+        logging.debug('Experiment name: %r', experiment_name)
+
+        experiment_directory = os.path.join(sequence_path, experiment_name)
+
+        if not os.path.exists(experiment_directory):
+            try:
+                os.makedirs(experiment_directory)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise exception
+
+        for suffix in ('.bam', '.bam.md5'):
+            file_path = os.path.join(experiment_directory, sequence_item + suffix)
+
+            if os.path.exists(file_path):
+                logging.info('File exists already: %r', file_path)
+                continue
+
+            blob_properties = azure_block_blob_download(
+                azure_blob_service_client=azure_blob_service_client,
+                container=container_name,
+                blob=experiment_name + '/' + sequence_item + suffix,
+                file_path=file_path,
+                max_concurrency=max_concurrency)
+
+            logging.info('Azure Blob name: %r', blob_properties.name)
+            logging.info('Azure Blob size: %r', blob_properties.size)
+            logging.info('Azure Blob ETag: %r', blob_properties.etag)
+            logging.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())
+
+    return 0
+
+
+def entry_point_blob_download_sequence() -> int:
+    """Console entry point to download sequences in BAM format from the
+    :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Microsoft Azure Storage Blob Service sequence download script.')
+
+    argument_parser.add_argument(
+        '--account',
+        required=True,
+        help='Microsoft Azure Storage Account name')
+
+    argument_parser.add_argument(
+        '--container',
+        required=True,
+        help='Microsoft Azure Storage Blob Service container name')
+
+    argument_parser.add_argument(
+        '--logging-level',
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='logging level [WARNING]')
+
+    argument_parser.add_argument(
+        '--threads',
+        default=1,
+        type=int,
+        help='maximum number of concurrent download threads [1]')
+
+    argument_parser.add_argument(
+        '--sequence-path',
+        default=StandardFilePath.get_sequences(),
+        help=f'sequence directory path for storing sequence items [{StandardFilePath.get_sequences()}]')
+
+    argument_parser.add_argument(
+        'sequence_item',
+        nargs='+',
+        help='one or more sequence item names (i.e., experiment_flowcell_lane)',
+        dest='sequence_item_list')
+
+    name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
+    return console_blob_download_sequence(
+        account_name=name_space.account,
+        container_name=name_space.container,
+        sequence_item_list=name_space.sequence_item_list,
+        sequence_path=name_space.sequence_path,
+        max_concurrency=name_space.threads)
+
+
+def console_blob_upload(
+        account_name: Optional[str] = None,
+        container_name: Optional[str] = None,
+        standard_blob_tier: Optional[str] = None,
+        max_concurrency: Optional[int] = None,
+        retain_path: Optional[bool] = None,
+        file_path_list: Optional[list[str]] = None) -> int:
+    """Console function to upload to the :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str | None
+    :param container_name: A Python :py:class:`str` (container name) object.
+    :type container_name: str | None
+    :param standard_blob_tier: A standard blob tier.
+    :type standard_blob_tier: str | None
+    :param file_path_list: A Python :py:class:`list` object of Python :py:class:`str` (file path) objects.
+    :type file_path_list: list[str] | None
+    :param max_concurrency: Maximum number of network connections.
+    :type max_concurrency: int | None
+    :param retain_path: Request retaining the path.
+    :type retain_path: bool | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    azure_blob_service_client = get_azure_blob_service_client(account_name=account_name)
+
+    if not azure_container_exists(
+            azure_blob_service_client=azure_blob_service_client,
+            container=container_name):
+        raise Exception(f'The Azure Blob Container {container_name!r} does not exist.')
+
+    for file_path in file_path_list:
+        if not os.path.isfile(file_path):
+            raise Exception(f'The file path {file_path!r} does not exist.')
+
+        if retain_path:
+            # The local path needs rewriting into a URL schema.
+            path_list = []
+            drive_str, path_str = os.path.splitdrive(file_path)
+            while 1:
+                path_str, folder_str = os.path.split(path_str)
+
+                if folder_str != '':
+                    path_list.append(folder_str)
+                elif path_str != '':
+                    path_list.append(path_str)
+                else:
+                    break
+
+            path_list.reverse()
+
+            blob_path = '/'.join(path_list)
+        else:
+            blob_path = None
+
+        logging.debug('Uploading local path: %r blob path: %r', file_path, blob_path)
+
+        blob_properties = azure_block_blob_upload(
+            file_path=file_path,
+            azure_blob_service_client=azure_blob_service_client,
+            container=container_name,
+            blob=blob_path,
+            standard_blob_tier=standard_blob_tier,
+            max_concurrency=max_concurrency)
+
+        logging.info('Azure Blob name: %r', blob_properties.name)
+        logging.info('Azure Blob size: %r', blob_properties.size)
+        logging.info('Azure Blob ETag: %r', blob_properties.etag)
+        logging.info('Azure Blob Last Modified: %r', blob_properties.last_modified.isoformat())
+
+    return 0
+
+
+def entry_point_blob_upload() -> int:
+    """Console entry point to upload to the :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Microsoft Azure Storage Blob Service upload script.')
+
+    argument_parser.add_argument(
+        '--logging-level',
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='logging level [WARNING]')
+
+    argument_parser.add_argument(
+        '--account',
+        required=True,
+        help='Microsoft Azure Storage Account name')
+
+    argument_parser.add_argument(
+        '--container',
+        required=True,
+        help='Microsoft Azure Storage Blob Service container name')
+
+    argument_parser.add_argument(
+        '--standard-blob-tier',
+        choices=('Archive', 'Cool', 'Hot'),
+        help='Microsoft Azure Standard Blob Tier name (i.e., Archive, Cool or Hot)')
+
+    argument_parser.add_argument(
+        '--threads',
+        default=1,
+        type=int,
+        help='maximum number of concurrent download threads')
+
+    argument_parser.add_argument(
+        '--retain-path',
+        action='store_true',
+        help='retain the local path in the blob path')
+
+    argument_parser.add_argument(
+        'file_path',
+        nargs='+',
+        help='one or more file paths (e.g., archive_file.tar.gz)',
+        dest='file_path_list')
+
+    name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
+    return console_blob_upload(
+        account_name=name_space.account,
+        container_name=name_space.container,
+        standard_blob_tier=name_space.standard_blob_tier,
+        max_concurrency=name_space.threads,
+        retain_path=name_space.retain_path,
+        file_path_list=name_space.file_path_list)
+
+
+def console_blob_list(
+        account_name: Optional[str] = None,
+        container_name: Optional[str] = None,
+        blob_prefix: Optional[str] = None,
+        blob_name: Optional[str] = None) -> int:
+    """Console function to list objects of the :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    - List of :emphasis:`blobs` of a :emphasis:`container`
+    - List of :emphasis:`blocks` of a :emphasis:`blob`
+
+    :param account_name: A :literal:`Microsoft Azure Storage Account` name.
+    :type account_name: str | None
+    :param container_name: A Python :py:class:`str` (container name) object.
+    :type container_name: str | None
+    :param blob_prefix: A blob prefix.
+    :type blob_prefix: str | None
+    :param blob_name: A blob name.
+    :type blob_name: str | None
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    azure_blob_service_client = get_azure_blob_service_client(account_name=account_name)
+
+    if not azure_container_exists(
+            azure_blob_service_client=azure_blob_service_client,
+            container=container_name):
+        raise Exception(f'The Azure Blob Container {container_name!r} does not exists.')
+
+    if blob_name:
+        # If a blob name was provided, list all blocks of the blob.
+
+        azure_blob_client = azure_blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+
+        committed_block_list: list[BlobBlock]
+        uncommitted_block_list: list[BlobBlock]
+
+        (committed_block_list, uncommitted_block_list) = azure_blob_client.get_block_list(block_list_type='uncommitted')
+
+        print('List of blocks in blob:', blob_name)
+
+        counter = 0
+        print('  Committed Blocks:')
+        for blob_block in committed_block_list:
+            counter += 1
+            print('    Blob Block id:', blob_block.id,
+                  'size:', blob_block.size,
+                  'state:', blob_block.state,
+                  'counter:', counter)
+
+        counter = 0
+        print('  Uncommitted Blocks:')
+        for blob_block in uncommitted_block_list:
+            counter += 1
+            print('    Blob Block id:', blob_block.id,
+                  'size:', blob_block.size,
+                  'state:', blob_block.state,
+                  'counter:', counter)
+    else:
+        # If a particular blob name was not provided, list all blobs in the container.
+
+        azure_container_client = azure_blob_service_client.get_container_client(container=container_name)
+
+        print('List of blobs in container:', container_name)
+
+        blob_properties: BlobProperties
+        for blob_properties in azure_container_client.list_blobs(
+                name_starts_with=blob_prefix,
+                include=['snapshots', 'metadata', 'uncommittedblobs', 'copy', 'deleted']):
+            print('  Blob name:', blob_properties.name,
+                  'etag:', blob_properties.etag,
+                  'size:', blob_properties.size,
+                  'type:', blob_properties.blob_type,
+                  'archive_status:', blob_properties.archive_status)
+
+            if blob_properties.etag is None and not blob_properties.deleted:
+                answer = input('Delete this uncommitted blob? [y/N] ')
+
+                if answer == 'y':
+                    azure_container_client.delete_blob(blob=blob_properties)
+
+    return 0
+
+
+def entry_point_blob_list() -> int:
+    """Console entry point to list objects of the :emphasis:`Microsoft Azure Storage Blob Service`.
+
+    - List of :emphasis:`blobs` of a :emphasis:`container`
+    - List of :emphasis:`blocks` of a :emphasis:`blob`
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='Microsoft Azure Storage Blob Service blob or block listing.')
+
+    argument_parser.add_argument(
+        '--account',
+        required=True,
+        help='Microsoft Azure Storage Account name')
+
+    argument_parser.add_argument(
+        '--container',
+        required=True,
+        help='Microsoft Azure Storage Blob Service container name')
+
+    argument_parser.add_argument(
+        '--blob-prefix',
+        help='blob name prefix')
+
+    argument_parser.add_argument(
+        '--blob-name',
+        help='blob name, if given list blocks for this blob')
+
+    argument_parser.add_argument(
+        '--logging-level',
+        default='WARNING',
+        choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+        help='logging level [WARNING]')
+
+    name_space = argument_parser.parse_args()
+
+    if name_space.logging_level:
+        logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+        logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+        logging.basicConfig(level=name_space.logging_level)
+
+    return console_blob_list(
+        account_name=name_space.account,
+        container_name=name_space.container,
+        blob_prefix=name_space.blob_prefix,
+        blob_name=name_space.blob_name)

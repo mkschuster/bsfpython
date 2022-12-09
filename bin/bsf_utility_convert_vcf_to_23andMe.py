@@ -24,66 +24,95 @@
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 """The :py:mod:`bin.bsf_utility_convert_vcf_to_23andMe` module is a script to
-convert a VCF file into the simple 23andMe format.
+convert a VCF file into the simple :emphasis:`23andMe` format.
 
 The :emphasis:`23andMe` format consists of an :emphasis:`NCBI dbSNP` reference SNP identifier (rsid),
 the sequence name, the position and the genotype for each allele (diploid).
 """
 
+import sys
+
 from argparse import ArgumentParser
 
-argument_parser = ArgumentParser(
-    description='BSF utility to convert from VCF to 23andMe format.')
 
-argument_parser.add_argument(
-    '--input-path',
-    dest='input_path',
-    help='VCF file path',
-    required=True)
+def run(
+        input_path: str,
+        output_path: str) -> int:
+    """Run function.
 
-argument_parser.add_argument(
-    '--output-path',
-    dest='output_path',
-    help='23andMe file path',
-    required=True)
+    :param input_path: An input VCF file path.
+    :type input_path: str
+    :param output_path: An output :emphasis:`23andMe` file path.
+    :type output_path: str
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    with open(file=output_path, mode='wt') as output_text_io:
+        with open(file=input_path, mode='rt') as input_text_io:
+            for line_str in input_text_io:
+                # Ignore comment lines.
+                if line_str.startswith('#'):
+                    continue
 
-name_space = argument_parser.parse_args()
+                # Split VCF lines on tabs into VCF fields.
+                vcf_field_list = line_str.rstrip().split('\t')
 
-with open(file=name_space.output_path, mode='wt') as output_text_io:
-    with open(file=name_space.input_path, mode='rt') as input_text_io:
-        for line_str in input_text_io:
-            # Ignore comment lines.
-            if line_str.startswith('#'):
-                continue
+                # The genotype (GT) is in field 10, the REF in field 4 and ALT in field 5.
 
-            # Split VCF lines on tabs into VCF fields.
-            vcf_field_list = line_str.rstrip().split('\t')
+                genotype_index = 0
 
-            # The genotype (GT) is in field 10, the REF in field 4 and ALT in field 5.
+                info_field_list = vcf_field_list[8].split(':')
 
-            genotype_index = 0
+                for i in range(0, len(info_field_list)):
+                    if info_field_list[i] == 'GT':
+                        genotype_index = i
+                        break
 
-            info_field_list = vcf_field_list[8].split(':')
+                sample_field_list = vcf_field_list[9].split(':')
 
-            for i in range(0, len(info_field_list)):
-                if info_field_list[i] == 'GT':
-                    genotype_index = i
-                    break
+                if sample_field_list[genotype_index] == '0/0':
+                    alleles = vcf_field_list[3] + vcf_field_list[3]
+                elif sample_field_list[genotype_index] == '0/1':
+                    alleles = vcf_field_list[3] + vcf_field_list[4]
+                elif sample_field_list[genotype_index] == '1/1':
+                    alleles = vcf_field_list[4] + vcf_field_list[4]
+                elif sample_field_list[genotype_index] == './.':
+                    continue
+                else:
+                    alleles = '..'
+                    print(f'Unexpected genotype {vcf_field_list[9]!r} in line {line_str!r}')
 
-            sample_field_list = vcf_field_list[9].split(':')
+                # The identifier (ID) is in field 2,
+                # the chromosome (CHROM) in field 0 and the position (POS) in field 1.
 
-            if sample_field_list[genotype_index] == '0/0':
-                alleles = vcf_field_list[3] + vcf_field_list[3]
-            elif sample_field_list[genotype_index] == '0/1':
-                alleles = vcf_field_list[3] + vcf_field_list[4]
-            elif sample_field_list[genotype_index] == '1/1':
-                alleles = vcf_field_list[4] + vcf_field_list[4]
-            elif sample_field_list[genotype_index] == './.':
-                continue
-            else:
-                alleles = '..'
-                print(f'Unexpected genotype {vcf_field_list[9]!r} in line {line_str!r}')
+                print(vcf_field_list[2], vcf_field_list[0], vcf_field_list[1], alleles, sep='\t', file=output_text_io)
 
-            # The identifier (ID) is in field 2, the chromosome (CHROM) in field 0 and the position (POS) in field 1.
+    return 0
 
-            print(vcf_field_list[2], vcf_field_list[0], vcf_field_list[1], alleles, sep='\t', file=output_text_io)
+
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value.
+    :rtype: int
+    """
+    argument_parser = ArgumentParser(
+        description='BSF utility to convert from VCF to 23andMe format.')
+
+    argument_parser.add_argument(
+        '--input-path',
+        required=True,
+        help='VCF file path')
+
+    argument_parser.add_argument(
+        '--output-path',
+        required=True,
+        help='23andMe file path')
+
+    name_space = argument_parser.parse_args()
+
+    return run(input_path=name_space.input_path, output_path=name_space.output_path)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

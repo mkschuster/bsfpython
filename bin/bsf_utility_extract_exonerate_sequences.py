@@ -23,7 +23,7 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""The :py:mod:` bin.bsf_utility_extract_exonerate_sequences` module is a script to
+"""The :py:mod:`bin.bsf_utility_extract_exonerate_sequences` module is a script to
 extract sequences from :emphasis:`Exonerate` alignments.
 """
 
@@ -35,84 +35,97 @@ import numpy
 
 from bsf.exonerate import parse_alignment_file
 
-vulgar_pattern = re.compile(pattern=r'^vulgar: (.*)')
-identifier_pattern = re.compile(pattern=r'^\w+\|(\w+)\|([^ ]+)')
 
-# sample_name = 'Plasmid'
-sample_name = 'cDNA'
+def main() -> int:
+    """Main function.
 
-record_dict = Bio.SeqIO.index_db(
-    index_filename='sequences_{}_pass_hq_2d.idx'.format(sample_name),
-    filenames=['sequences_{}_pass_hq_2d.fasta'.format(sample_name)],
-    format='fasta')
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
+    """
+    # vulgar_pattern = re.compile(pattern=r'^vulgar: (.*)')
+    identifier_pattern = re.compile(pattern=r'^\w+\|(\w+)\|([^ ]+)')
 
-print('Number of query sequence records:', len(record_dict))
+    # sample_name = 'Plasmid'
+    sample_name = 'cDNA'
 
-# TODO: This could possibly run Exonerate as a sub process.
-seq_io_dict = dict()
+    record_dict = Bio.SeqIO.index_db(
+        index_filename=f'sequences_{sample_name!s}_pass_hq_2d.idx',
+        filenames=[f'sequences_{sample_name!s}_pass_hq_2d.fasta'],
+        format='fasta')
 
-# TODO: To analyse these pairwise alignments it would be good to create a profile from all pairwise alignments.
-# First run: Establish the maximum target (reference) region that appears in the alignments.
-# Create a two-dimensional array (reference position vs base or gap) and use the minimum target position to
-# scale the array to 0.
-# Second run: Parse each individual position in the alignment, compare to reference and fill in matrix.
-# Evaluate the matrix and ideally visualise the results.
+    print('Number of query sequence records:', len(record_dict))
 
-vulgar_list = parse_alignment_file(
-    file_path='alignments_{}_pass_hq_2d_sequence_db.txt'.format(sample_name))
+    # TODO: This could possibly run Exonerate as a sub process.
+    seq_io_dict = dict()
 
-# Process the list of VULGAR objects.
+    # TODO: To analyse these pairwise alignments it would be good to create a profile from all pairwise alignments.
+    # First run: Establish the maximum target (reference) region that appears in the alignments.
+    # Create a two-dimensional array (reference position vs base or gap) and use the minimum target position to
+    # scale the array to 0.
+    # Second run: Parse each individual position in the alignment, compare to reference and fill in matrix.
+    # Evaluate the matrix and ideally visualise the results.
 
-min_target_vulgar = min(vulgar_list, key=lambda x: x.t_start_natural())
-max_target_vulgar = max(vulgar_list, key=lambda x: x.t_end_natural())
+    vulgar_list = parse_alignment_file(
+        file_path=f'alignments_{sample_name!s}_pass_hq_2d_sequence_db.txt')
 
-min_target_position = min_target_vulgar.t_start_natural()
-max_target_position = max_target_vulgar.t_end_natural()
+    # Process the list of VULGAR objects.
 
-array_length = max_target_position - min_target_position + 1
+    min_target_vulgar = min(vulgar_list, key=lambda x: x.t_start_natural())
+    max_target_vulgar = max(vulgar_list, key=lambda x: x.t_end_natural())
 
-# Use these values to initialise a two-dimensional array i.e. sequence length and A, C, G, T and - letters.
-profile_array = numpy.zeros(shape=(array_length, 5), dtype=numpy.int32)
+    min_target_position = min_target_vulgar.t_start_natural()
+    max_target_position = max_target_vulgar.t_end_natural()
 
-print('Profile Array shape:', profile_array.shape)
+    array_length = max_target_position - min_target_position + 1
 
-for vulgar in vulgar_list:
-    # Fetch the corresponding SeqRecord object.
-    q_record: Bio.SeqRecord.SeqRecord = record_dict[vulgar.q_name]
+    # Use these values to initialise a two-dimensional array i.e. sequence length and A, C, G, T and - letters.
+    profile_array = numpy.zeros(shape=(array_length, 5), dtype=numpy.int32)
 
-    # Check if the sequence was in forward or reverse orientation and reverse complement if necessary.
-    orientation = int(vulgar.q_strand + '1') * int(vulgar.t_strand + '1')
-    if orientation < 0:
-        # BioPython type ambiguity.
-        # In method Bio.SeqRecord.SeqRecord.reverse_complement(), the id parameter can be of type basestring or bool
-        # at the same time.
-        q_reverse_complement = q_record.reverse_complement(
-            id=q_record.id + '_rc',
-            name=q_record.name + '_rc',
-            description=True)
-        q_record = q_reverse_complement
+    print('Profile Array shape:', profile_array.shape)
 
-    identifier_match = re.search(pattern=identifier_pattern, string=vulgar.t_name)
-    if identifier_match:
-        identifier = identifier_match.group(1)
-    else:
-        identifier = vulgar.t_name
+    for vulgar in vulgar_list:
+        # Fetch the corresponding SeqRecord object.
+        q_record: Bio.SeqRecord.SeqRecord = record_dict[vulgar.q_name]
 
-    if identifier in seq_io_dict:
-        seq_io = seq_io_dict[identifier]
-    else:
-        seq_io = open(file="test_aligned_{}_to_{}.fasta".format(sample_name, identifier), mode='wt')
-        seq_io_dict[identifier] = seq_io
+        # Check if the sequence was in forward or reverse orientation and reverse complement if necessary.
+        orientation = int(vulgar.q_strand + '1') * int(vulgar.t_strand + '1')
+        if orientation < 0:
+            # BioPython type ambiguity.
+            # In method Bio.SeqRecord.SeqRecord.reverse_complement(), the id parameter can be of type basestring or bool
+            # at the same time.
+            q_reverse_complement = q_record.reverse_complement(
+                id=q_record.id + '_rc',
+                name=q_record.name + '_rc',
+                description=True)
+            q_record = q_reverse_complement
 
-    Bio.SeqIO.write(sequences=q_record, handle=seq_io, format='fasta')
+        identifier_match = re.search(pattern=identifier_pattern, string=vulgar.t_name)
+        if identifier_match:
+            identifier = identifier_match.group(1)
+        else:
+            identifier = vulgar.t_name
 
-    # TODO: Populate the matrix at this stage.
+        if identifier in seq_io_dict:
+            text_io = seq_io_dict[identifier]
+        else:
+            text_io = open(file=f'test_aligned_{sample_name!s}_to_{identifier}.fasta', mode='wt')
+            seq_io_dict[identifier] = text_io
 
-    print('Query:', vulgar.q_name)
-    for exonerate_tuple in vulgar.triplet_list:
-        print('Operation:', ' '.join(exonerate_tuple))
+        Bio.SeqIO.write(sequences=q_record, handle=text_io, format='fasta')
 
-# Clean up stage: close all Bio.SeqIO file handles.
+        # TODO: Populate the matrix at this stage.
 
-for seq_io in seq_io_dict.values():
-    seq_io.close()
+        print('Query:', vulgar.q_name)
+        for exonerate_tuple in vulgar.triplet_list:
+            print('Operation:', ' '.join(exonerate_tuple))
+
+    # Clean up stage: close all Bio.SeqIO file handles.
+
+    for text_io in seq_io_dict.values():
+        text_io.close()
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()

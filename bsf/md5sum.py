@@ -26,7 +26,12 @@
 """
 import logging
 import os
+import re
+from argparse import ArgumentParser
+from tempfile import NamedTemporaryFile
 from typing import Optional, TypeVar
+
+from bsf.process import Executable
 
 MD5SumType = TypeVar(name='MD5SumType', bound='MD5Sum')
 MD5SumArchiveType = TypeVar(name='MD5SumArchiveType', bound='MD5SumArchive')
@@ -236,3 +241,197 @@ class MD5SumArchive(object):
                 print(md5sum.to_line(), file=output_text_io)
 
         return
+
+    @classmethod
+    def console_update(
+            cls,
+            directory_path: Optional[str] = None,
+            file_path: Optional[str] = None,
+            file_pattern: Optional[str] = None) -> int:
+        """Console function to collect and update a :py:class:`bsf.md5sum.MD5SumArchive` object
+        with a collection of :emphasis:`GNU md5sum` files.
+
+        A directory tree (:literal:`directory_path`) is scanned for file names matching a regular expression pattern
+        (:literal:`file_pattern`), by default :literal:`\\.md5` and updated into an existing
+        (:literal:`file_path`) :py:class:`bsf.md5sum.MD5SumArchive` file.
+
+        Picard-style MD5 files that only contain the MD5 digest are reformatted to obey the
+        :emphasis:`GNU md5sum` format.
+
+        :param directory_path: A :emphasis:`GNU md5sum` directory path.
+        :type directory_path: str | None
+        :param file_path: A :emphasis:`GNU md5sum` archive file path.
+        :type file_path: str | None
+        :param file_pattern: A file name regular expression pattern.
+        :type file_pattern: str | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        md5sum_archive: MD5SumArchive = MD5SumArchive.from_file_path(file_path=file_path)
+
+        re_pattern = re.compile(pattern=file_pattern)
+
+        for directory_path, directory_name_list, file_name_list in os.walk(top=directory_path):
+            logging.debug('directory_path: %r', directory_path)
+            logging.debug('directory_name_list: %r', directory_name_list)
+            logging.debug('file_name_list: %r', file_name_list)
+
+            for file_name in file_name_list:
+                if re_pattern.search(string=file_name) is None:
+                    logging.debug('Excluding file_name: %r', file_name)
+                    continue
+
+                with open(file=os.path.join(directory_path, file_name), mode='rt') as text_io:
+                    for line_str in text_io:
+                        md5sum = MD5Sum.from_line(md5sum_str=line_str)
+
+                        if not md5sum.file_path:
+                            # In case the md5sum file does not specify a file name (e.g., Picard MD5 checksum files),
+                            # use the file name without its '.md5' suffix.
+                            if file_name.endswith('.md5'):
+                                md5sum.file_path = file_name[:-4]
+                            else:
+                                raise Exception(f'The (Picard) MD5 file suffix is unsupported: {file_name!r}')
+
+                        # Archive just the base name of the file path.
+                        md5sum.file_path = os.path.basename(md5sum.file_path)
+
+                        md5sum_archive.add_md5sum(md5sum=md5sum)
+
+        md5sum_archive.to_file_path()
+
+        return 0
+
+    @classmethod
+    def entry_point_update(cls) -> int:
+        """Console entry point to collect and update a :py:class:`bsf.md5sum.MD5SumArchive` object
+        with a collection of :emphasis:`GNU md5sum` files.
+
+        A directory tree (:literal:`directory_path`) is scanned for file names matching a regular expression pattern
+        (:literal:`--file-pattern`), by default :literal:`\\.md5` and updated into an existing
+        (:literal:`--file-path`) :py:class:`bsf.md5sum.MD5SumArchive` file.
+
+        Picard-style MD5 files that only contain the MD5 digest are reformatted to obey the
+        :emphasis:`GNU md5sum` format.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='Update a GNU md5sum archive file')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--file-path',
+            required=True,
+            help='GNU md5sum archive file path')
+
+        argument_parser.add_argument(
+            '--file-pattern',
+            default=r'\.md5$',
+            help=r'file name regular expression pattern [\.md5$]')
+
+        argument_parser.add_argument(
+            'directory_path',
+            help='GNU md5sum directory path')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_update(
+            directory_path=name_space.directory_path,
+            file_path=name_space.file_path,
+            file_pattern=name_space.file_pattern)
+
+    @classmethod
+    def console_check(
+            cls,
+            md5sum_archive_path: Optional[str] = None,
+            file_path_list: Optional[list[str]] = None) -> int:
+        """Console function to check files against a :py:class:`bsf.md5sum.MD5SumArchive`
+        :emphasis:`GNU md5sum` file.
+
+        :param md5sum_archive_path: A :emphasis:`GNU md5sum` file path.
+        :type md5sum_archive_path: str | None
+        :param file_path_list: A Python :py:class:`list`´object of Python :py:class:`str` (file path) objects.
+        :type file_path_list: list[str] | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        md5sum_archive = MD5SumArchive.from_file_path(file_path=md5sum_archive_path)
+
+        text_io = NamedTemporaryFile(mode='wt', suffix='.md5', delete=False)
+
+        for file_path in file_path_list:
+            file_name = os.path.basename(file_path)
+            if file_name in md5sum_archive.md5sum_dict:
+                md5sum = md5sum_archive.md5sum_dict[file_name]
+                md5_file_path = os.path.normpath(os.path.join(os.getcwd(), file_path))
+                print(md5sum.check_sum + ' ' + md5sum.check_mode + md5_file_path, file=text_io)
+
+        text_io.close()
+
+        executable = Executable(name='md5sum', program='md5sum')
+        executable.add_switch_long(key='check')
+        executable.arguments.append(text_io.name)
+
+        message_list = executable.run()
+
+        if message_list:
+            print(repr(message_list))
+
+        os.remove(text_io.name)
+
+        print('All done.')
+
+        return 0
+
+    @classmethod
+    def entry_point_check(cls) -> int:
+        """Console entry point to check files against a :py:class:`bsf.md5sum.MD5SumArchive`
+        :emphasis:`GNU md5sum` file.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description='Check one or more files against a GNU md5sum archive file')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--md5sum-path',
+            required=True,
+            help='GNU md5sum archive file path')
+
+        argument_parser.add_argument(
+            'file_path',
+            nargs='+',
+            help='one or more file paths',
+            dest='file_path_list')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_check(
+            md5sum_archive_path=name_space.md5sum_path,
+            file_path_list=name_space.file_path_list)

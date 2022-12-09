@@ -26,6 +26,7 @@
 """
 import math
 import os
+import sys
 from argparse import ArgumentParser
 from typing import Optional
 
@@ -342,29 +343,28 @@ def get_genome_tiles(
     return container_list
 
 
-if __name__ == '__main__':
+def main() -> int:
+    """Main function.
+
+    :return: A :py:class:`SystemExit` status value
+    :rtype: int
+    """
     argument_parser = ArgumentParser(
-        description='Module driver script.')
+        description='Module console script.')
 
     argument_parser.add_argument(
         '--dictionary-path',
-        dest='dictionary_path',
-        help='Picard CreateSequenceDictionary sequence dictionary file path',
-        required=False)
+        help='Picard CreateSequenceDictionary sequence dictionary file path')
 
     argument_parser.add_argument(
         '--interval-path',
-        dest='interval_path',
-        help='Picard interval list file path',
-        required=False)
+        help='Picard interval list file path')
 
     argument_parser.add_argument(
         '--tile-number',
         default=100,
-        dest='tile_number',
-        help='Number of tiles',
-        required=False,
-        type=int)
+        type=int,
+        help='Number of tiles')
 
     argument_parser.add_argument(
         '--acgt',
@@ -401,3 +401,9 @@ if __name__ == '__main__':
             for _interval in _container.interval_list:
                 print('    ' + str(_interval))
         print('Number of Container objects:', len(_container_list))
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

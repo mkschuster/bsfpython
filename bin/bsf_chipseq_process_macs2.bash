@@ -67,7 +67,7 @@ fi
 #   prefix_logFE.bdg
 
 # The UCSC Genome Browser recommends the following sort command.
-# sort -k1,1 -k2,2n unsorted.bedGraph > sorted.bedGraph
+# sort -k1,1 -k2,2n unsorted.bedGraph 1> sorted.bedGraph
 
 # https://gist.github.com/taoliu/2469050
 
@@ -92,7 +92,7 @@ for suffix in "${suffixes[@]}"; do
         "${prefix}/${prefix}_${suffix}.bw"
       [[ "${PIPESTATUS[*]}" =~ [^0\ ] ]] && exit 1
 
-      bigWigInfo "${prefix}/${prefix}_${suffix}.bw" >"${prefix}/${prefix}_${suffix}_bwi.txt" || exit 1
+      bigWigInfo "${prefix}/${prefix}_${suffix}.bw" 1>"${prefix}/${prefix}_${suffix}_bwi.txt" || exit 1
     fi
 
     rm "${prefix}/${prefix}_${suffix}_clipped.bdg" || exit 1
@@ -130,7 +130,7 @@ fi
 # https://genome-source.gi.ucsc.edu/gitlist/kent.git/blob/master/src/hg/lib/encode/gappedPeak.as
 # https://genome-source.gi.ucsc.edu/gitlist/kent.git/blob/master/src/hg/lib/encode/narrowPeak.as
 
-cat >"${prefix}/${prefix}_ucsc_broad_peak.as" <<EOF
+cat 1>"${prefix}/${prefix}_ucsc_broad_peak.as" <<EOF
 table broadPeak
 "BED6+3 Peaks of signal enrichment based on pooled, normalized (interpreted) data."
 (
@@ -146,7 +146,7 @@ table broadPeak
 )
 EOF
 
-cat >"${prefix}/${prefix}_ucsc_gapped_peak.as" <<EOF
+cat 1>"${prefix}/${prefix}_ucsc_gapped_peak.as" <<EOF
 table gappedPeak
 "This format is used to provide called regions of signal enrichment based on pooled, normalized (interpreted) data where the regions may be spliced or incorporate gaps in the genomic sequence. It is a BED12+3 format."
 (
@@ -168,7 +168,7 @@ table gappedPeak
 )
 EOF
 
-cat >"${prefix}/${prefix}_ucsc_narrow_peak.as" <<EOF
+cat 1>"${prefix}/${prefix}_ucsc_narrow_peak.as" <<EOF
 table narrowPeak
 "BED6+4 Peaks of signal enrichment based on pooled, normalized (interpreted) data."
 (
@@ -185,7 +185,7 @@ table narrowPeak
 )
 EOF
 
-cat >"${prefix}/${prefix}_ucsc_peak_summit.as" <<EOF
+cat 1>"${prefix}/${prefix}_ucsc_peak_summit.as" <<EOF
 table bigPeakSummit
 "BED4+1 Peak summits of signal enrichment based on pooled, normalized (interpreted) data."
 (
@@ -241,7 +241,7 @@ for suffix in "${suffixes[@]}"; do
       cl+=" ${prefix}/${prefix}_${suffix}.bb"
       eval "${cl}" || exit 1
 
-      bigBedInfo "${prefix}/${prefix}_${suffix}.bb" >"${prefix}/${prefix}_${suffix}_bbi.txt" || exit 1
+      bigBedInfo "${prefix}/${prefix}_${suffix}.bb" 1>"${prefix}/${prefix}_${suffix}_bbi.txt" || exit 1
     fi
 
     rm "${prefix}/${prefix}_${suffix}_clipped.bed" || exit 1

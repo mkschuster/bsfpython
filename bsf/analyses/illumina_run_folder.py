@@ -25,7 +25,9 @@
 """The :py:mod:`bsf.analyses.illumina_run_folder` module provides classes and methods supporting
 the archiving and restoring of :emphasis:`Illumina Run Folder` (IRF) objects.
 """
+import logging
 import os
+from argparse import ArgumentParser
 from typing import Optional
 
 from bsf.analysis import Analysis, Stage
@@ -912,6 +914,142 @@ class IlluminaRunFolderArchive(Analysis):
 
         return
 
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            archive_directory: Optional[str] = None,
+            irf_path: Optional[str] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a
+        :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` analysis.
+
+        This analysis requires either a :literal:`configuration_path` argument or a :literal:`irf_path` argument.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param archive_directory: An archive directory.
+        :type archive_directory: str | None
+        :param irf_path: An :emphasis:`Illumina Run Folder` path.
+        :type irf_path: str | None
+        :param force: Request processing incomplete :emphasis:`Illumina Run Folder` objects.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        if configuration_path == Configuration.get_global_file_path():
+            if not irf_path:
+                raise Exception('The --irf argument is required if configuration is not set.')
+
+        analysis: IlluminaRunFolderArchive = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if archive_directory:
+            analysis.archive_directory = archive_directory
+
+        if irf_path:
+            analysis.run_directory = irf_path
+
+        if force:
+            analysis.force = force
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:           ', analysis.project_name)
+        print('Project directory:      ', analysis.project_directory)
+        print('Illumina run directory: ', analysis.run_directory)
+        print('Archive directory:      ', analysis.archive_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a
+        :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive` analysis.
+
+        This analysis requires either a positional :literal:`configuration` argument or a :literal:`--irf` argument.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--project-name',
+            help='project name (i.e., instrument run identifier)')
+
+        argument_parser.add_argument(
+            '--archive-directory',
+            help='archive directory')
+
+        argument_parser.add_argument(
+            '--irf',
+            help='Illumina Run Folder name or file path',
+            dest='irf_path')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing even if a run folder exists already')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            archive_directory=name_space.archive_directory,
+            irf_path=name_space.irf_path,
+            force=name_space.force)
+
 
 class FilePathIlluminaRunFolderRestore(FilePath):
     """The :py:class:`bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore` class models files in an
@@ -1353,3 +1491,133 @@ class IlluminaRunFolderRestore(Analysis):
             gzip_command.arguments.append('+')
 
         return
+
+    @classmethod
+    def console_submit(
+            cls,
+            configuration_path: str,
+            stage_name: Optional[str] = None,
+            drms_submit: Optional[bool] = None,
+            project_name: Optional[str] = None,
+            archive_directory: Optional[str] = None,
+            extract_intensities: Optional[bool] = None,
+            force: Optional[bool] = None,
+            *args, **kwargs) -> int:
+        """Console function to submit a
+        :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` analysis.
+
+        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :type configuration_path: str
+        :param stage_name: A :py:class:`bsf.analysis.Stage` name.
+        :type stage_name: str | None
+        :param drms_submit: Request submitting into the DRMS.
+        :type drms_submit: bool | None
+        :param project_name: A project name.
+        :type project_name: str | None
+        :param archive_directory: An archive directory.
+        :type archive_directory: str | None
+        :param extract_intensities: Request extracting intensities of an :emphasis:`Illumina Run Folder`.
+        :type extract_intensities: bool | None
+        :param force: Request processing incomplete :emphasis:`Illumina Run Folder` objects.
+        :type force: bool | None
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        analysis: IlluminaRunFolderRestore = cls.from_config_file_path(config_path=configuration_path)
+
+        if project_name:
+            if project_name.endswith('.ini'):
+                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+
+            analysis.project_name = project_name
+
+        if archive_directory:
+            analysis.archive_directory = archive_directory
+
+        if extract_intensities:
+            analysis.extract_intensities = extract_intensities
+
+        if force:
+            analysis.force = force
+
+        analysis.run()
+        analysis.check_state()
+        analysis.submit(name=stage_name, drms_submit=drms_submit)
+
+        print(analysis.name)
+        print('Project name:           ', analysis.project_name)
+        print('Project directory:      ', analysis.project_directory)
+        print('Illumina run directory: ', analysis.illumina_directory)
+        print('Archive directory:      ', analysis.archive_directory)
+
+        return 0
+
+    @classmethod
+    def entry_point_submit(cls) -> int:
+        """Console entry point to submit a
+        :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` analysis.
+
+        :return: A :py:class:`SystemExit` status value.
+        :rtype: int
+        """
+        argument_parser = ArgumentParser(
+            description=cls.name + ' submission script.')
+
+        argument_parser.add_argument(
+            '--dry-run',
+            action='store_false',
+            help='dry run',
+            dest='drms_submit')
+
+        argument_parser.add_argument(
+            '--logging-level',
+            default='WARNING',
+            choices=('CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG', 'DEBUG1', 'DEBUG2'),
+            help='logging level [WARNING]')
+
+        argument_parser.add_argument(
+            '--stage-name',
+            help='limit job submission to a particular analysis stage')
+
+        argument_parser.add_argument(
+            '--project-name',
+            required=True,
+            help='project name i.e. instrument run identifier')
+
+        argument_parser.add_argument(
+            '--archive-directory',
+            required=True,
+            help='archive directory')
+
+        argument_parser.add_argument(
+            '--extract-intensities',
+            action='store_true',
+            help='extract cluster intensity (*.cif) files')
+
+        argument_parser.add_argument(
+            '--force',
+            action='store_true',
+            help='force processing even if a run folder exists already')
+
+        argument_parser.add_argument(
+            'configuration',
+            nargs='?',
+            default=Configuration.get_global_file_path(),
+            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+
+        name_space = argument_parser.parse_args()
+
+        if name_space.logging_level:
+            logging.addLevelName(level=logging.DEBUG - 1, levelName='DEBUG1')
+            logging.addLevelName(level=logging.DEBUG - 2, levelName='DEBUG2')
+
+            logging.basicConfig(level=name_space.logging_level)
+
+        return cls.console_submit(
+            configuration_path=name_space.configuration,
+            stage_name=name_space.stage_name,
+            drms_submit=name_space.drms_submit,
+            project_name=name_space.project_name,
+            archive_directory=name_space.archive_directory,
+            extract_intensities=name_space.extract_intensities,
+            force=name_space.force)
