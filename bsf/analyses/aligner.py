@@ -604,6 +604,37 @@ class Aligner(Analysis):
 
     def run(self) -> None:
         """Run a :py:class:`bsf.analyses.aligner.Aligner` object.
+
+        - For each :py:class:`bsf.ngs.Sample` object, which :py:class:`bsf.ngs.PairedReads` objects
+          have not been excluded:
+
+          - For each :py:class:`bsf.ngs.PairedReads` object, which has not been excluded:
+
+            - Run an aligner and :emphasis:`Picard CleanSam` concurrently.
+
+          - For each :py:class:`bsf.ngs.Sample`-specific unaligned BAM file:
+
+            - For a single aligned BAM file per unaligned BAM file, the aligned BAM file is just renamed.
+            - For more than one aligned BAM file per unaligned BAM file,
+              all aligned BAM files are merged via :emphasis:`Picard MergeSamFiles` in query name order.
+            - If an unaligned BAM file is available, the merged aligned BAM files are annotated
+              with information from the unaligned BAM file via :emphasis:`Picard MergeBamAlignment`.
+            - If an unaligned BAM file is not available, the merged aligned BAM file is just renamed.
+
+          - If duplicates should *not* be marked:
+
+            - For a single merged aligned BAM file, just rename the single read group-specific aligned BAM file.
+            - For more than one read group-specific merged aligned BAM file,
+              run :emphasis:`Picard MergeSamFile` to simply merge them into one sample-specific aligned BAM file.
+
+          - If duplicates should be marked,
+            run :emphasis:`Picard MarkDuplicates` on all read group-specific merged aligned BAM files at once.
+          - Run :emphasis:`Picard SortSam` by coordinate.
+          - Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
+          - Run the :emphasis:`Picard CollectAlignmentSummaryMetrics` analysis.
+
+        - Run the :emphasis:`bsfR` alignment summary script.
+        - Run aligner-specific :emphasis:`bsfR` summary scripts.
         """
 
         def run_read_comparisons() -> None:
@@ -719,7 +750,7 @@ class Aligner(Analysis):
 
             for paired_reads_name in sorted(paired_reads_dict):
                 if not paired_reads_dict[paired_reads_name]:
-                    # Skip replicate keys, which PairedReads objects have all been excluded.
+                    # Skip PairedReads.name keys, which PairedReads objects have all been excluded.
                     continue
 
                 if len(paired_reads_dict[paired_reads_name]) > 1:
@@ -798,7 +829,7 @@ class Aligner(Analysis):
                         file_path_align.cleaned_bam,
                     ],
                     java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx5G',
+                    java_heap_maximum='Xmx6G',
                     java_jar_path=self.java_archive_picard,
                     picard_command='SortSam')
                 runnable_align.add_runnable_step(runnable_step=runnable_step)
@@ -888,7 +919,7 @@ class Aligner(Analysis):
             # Merge all aligned BAM files of each read group of an unaligned BAM file.
 
             for bam_file_name, (bam_file_path, runnable_align_list) in unmapped_bam_file_dict.items():
-                # Create a Runnable and Executable for merging each read group.
+                # Create a Runnable and Executable object for merging each read group.
 
                 file_path_read_group = self.get_file_path_read_group(read_group_name=bam_file_name)
 
@@ -913,7 +944,8 @@ class Aligner(Analysis):
                 runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                 if len(runnable_align_list) == 1:
-                    # If the read group consists of a single ReadPair, just rename the aligned BAM file.
+                    # For a single aligned BAM file per unaligned BAM file,
+                    # the aligned BAM file is just renamed.
                     runnable_align = runnable_align_list[0]
                     # NOTE: Since the Runnable.name already contains the prefix, FilePathAlign() has to be used.
                     file_path_align = FilePathAlign(prefix=runnable_align.name)
@@ -923,11 +955,12 @@ class Aligner(Analysis):
                         target_path=file_path_read_group.merged_bam)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
                 else:
-                    # For more than one ReadPair per read group, use Picard MergeSamFiles in query name order.
+                    # For more than one aligned BAM file per unaligned BAM file,
+                    # all aligned BAM files are merged via Picard MergeSamFiles in query name order.
                     runnable_step = RunnableStepPicard(
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx4G',
+                        java_heap_maximum='Xmx6G',
                         java_jar_path=self.java_archive_picard,
                         picard_command='MergeSamFiles')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
@@ -970,8 +1003,8 @@ class Aligner(Analysis):
                     # USE_JDK_INFLATER [false]
 
                 if bam_file_path:
-                    # If an unaligned BAM file is available, run Picard MergeBamAlignment to annotate the merged
-                    # aligned BAM with information from the unaligned BAM file.
+                    # If an unaligned BAM file is available, the merged aligned BAM files are annotated
+                    # with information from the unaligned BAM file via Picard MergeBamAlignment.
                     runnable_step = RunnableStepPicard(
                         name='picard_merge_bam_alignment',
                         obsolete_file_path_list=[
@@ -1039,7 +1072,7 @@ class Aligner(Analysis):
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
                 else:
-                    # If an unaligned BAM file is not available, simply rename the BAM file.
+                    # If an unaligned BAM file is not available, the merged aligned BAM file is just renamed.
                     runnable_step = RunnableStepMove(
                         name='move_merged_bam',
                         source_path=file_path_read_group.merged_bam,
@@ -1050,7 +1083,8 @@ class Aligner(Analysis):
             # Sample Processing Stage #
             ###########################
 
-            # For more than one ReadPair object, the aligned BAM files need merging into Sample-specific ones.
+            # For more than one unaligned BAM file per Sample,
+            # the aligned BAM files need merging into Sample-specific ones.
 
             file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
@@ -1077,9 +1111,10 @@ class Aligner(Analysis):
 
             if self.skip_mark_duplicates:
                 # If duplicates should *not* be marked, run Picard MergeSamFile to simply merge all
-                # read group BAM files into one sample BAM file or just rename a single read group BAM file.
+                # read group-specific aligned BAM files into one sample-specific aligned BAM file or
+                # just rename a single read group-specific aligned BAM file.
                 if len(runnable_read_group_list) == 1:
-                    # For a single ReadPair, just copy or move the file.
+                    # For a single read group-specific aligned BAM file, just move (i.e., rename) the file.
                     runnable_read_group = runnable_read_group_list[0]
                     # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
                     file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
@@ -1089,12 +1124,12 @@ class Aligner(Analysis):
                         target_path=file_path_sample.duplicate_bam)
                     runnable_sample.add_runnable_step(runnable_step=runnable_step)
                 else:
-                    # If duplicates should *not* be marked, run Picard MergeSamFile to simply merge all
-                    # read group BAM files.
+                    # For more than one read group-specific merged aligned BAM file,
+                    # run Picard MergeSamFile to simply merge them into one sample-specific aligned BAM file.
                     runnable_step = RunnableStepPicard(
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx4G',
+                        java_heap_maximum='Xmx6G',
                         java_jar_path=self.java_archive_picard,
                         picard_command='MergeSamFiles')
                     runnable_sample.add_runnable_step(runnable_step=runnable_step)
@@ -1135,11 +1170,12 @@ class Aligner(Analysis):
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
             else:
-                # If duplicates should be marked, run Picard MarkDuplicates on all read group BAM files.
+                # If duplicates should be marked,
+                # run Picard MarkDuplicates on all read group-specific merged aligned BAM files at once.
                 runnable_step = RunnableStepPicard(
                     name='picard_mark_duplicates',
                     java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx4G',
+                    java_heap_maximum='Xmx6G',
                     java_jar_path=self.java_archive_picard,
                     picard_command='MarkDuplicates')
                 runnable_sample.add_runnable_step(runnable_step=runnable_step)
@@ -1202,7 +1238,7 @@ class Aligner(Analysis):
                     file_path_sample.duplicate_bam,
                 ],
                 java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx4G',
+                java_heap_maximum='Xmx6G',
                 java_jar_path=self.java_archive_picard,
                 picard_command='SortSam')
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
@@ -1247,7 +1283,7 @@ class Aligner(Analysis):
             runnable_step = RunnableStepPicard(
                 name='picard_collect_alignment_summary_metrics',
                 java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
-                java_heap_maximum='Xmx4G',
+                java_heap_maximum='Xmx6G',
                 java_jar_path=self.java_archive_picard,
                 picard_command='CollectAlignmentSummaryMetrics')
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
