@@ -41,7 +41,7 @@ from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads, Reads
 from bsf.procedure import FilePath, ConsecutiveRunnable
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepMakeDirectory, \
-    RunnableStepMove, RunnableStepPicard
+    RunnableStepMove, RunnableStepPicard, RunnableStepSleep
 from bsf.standards import get_irf_path, SafeFileName, Configuration, StandardFilePath, JavaArchive, Operator, \
     VendorQualityFilter
 
@@ -1764,6 +1764,13 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 name='move_sorted_md5',
                 source_path=file_path_lane.sorted_md5,
                 target_path=file_path_lane.archive_md5)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
+            # Sleep for 60.0 seconds to allow for file system synchronisation.
+
+            runnable_step = RunnableStepSleep(
+                name='sleep',
+                sleep_time=60.0)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Upload the archive BAM file into the block blob storage.
