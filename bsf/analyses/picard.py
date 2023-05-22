@@ -28,7 +28,7 @@ import logging
 import os
 import warnings
 import weakref
-from typing import Callable, Optional
+from typing import Optional
 
 from pysam import AlignmentFile
 
@@ -353,16 +353,12 @@ class ExtractIlluminaBarcodesSheet(AnnotationSheet):
 
     _file_type = 'excel-tab'
 
-    _header_line = True
-
-    _field_names = [
+    _field_name_list = [
         'barcode_sequence_1',
         'barcode_sequence_2',
         'barcode_name',
         'library_name',
     ]
-
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
 
 class IlluminaBasecallsToSamSheet(AnnotationSheet):
@@ -373,17 +369,13 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
 
     _file_type = 'excel-tab'
 
-    _header_line = True
-
-    _field_names = [
+    _field_name_list = [
         'OUTPUT',
         'SAMPLE_ALIAS',
         'LIBRARY_NAME',
         'BARCODE_1',
         'BARCODE_2',
     ]
-
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
     def adjust(self, barcode_length_tuple: tuple[int, int], unassigned_file_path: str) -> None:
         """Adjust a :py:class:`bsf.analyses.picard.IlluminaBasecallsToSamSheet` object.
@@ -398,19 +390,19 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
         :type unassigned_file_path: str
         """
         # The IlluminaBasecallsToSamSheet needs adjusting ...
-        if len(self.row_dicts) == 1 and len(self.row_dicts[0]['BARCODE_1']) == 0 and len(
-                self.row_dicts[0]['BARCODE_2']) == 0:
+        if len(self.row_dict_list) == 1 and len(self.row_dict_list[0]['BARCODE_1']) == 0 and len(
+                self.row_dict_list[0]['BARCODE_2']) == 0:
             # ... if a single sample, but neither BARCODE_1 nor BARCODE_2 were defined,
             # BARCODE_1 needs setting to 'N'.
-            self.row_dicts[0]['BARCODE_1'] = 'N'
+            self.row_dict_list[0]['BARCODE_1'] = 'N'
         else:
             # ... in all other cases, a last row for unmatched barcode sequences needs adding.
-            self.row_dicts.append({
+            self.row_dict_list.append({
                 'BARCODE_1': 'N' * barcode_length_tuple[0],
                 'BARCODE_2': 'N' * barcode_length_tuple[1],
                 'OUTPUT': unassigned_file_path,
                 'SAMPLE_ALIAS': 'Unmatched',
-                'LIBRARY_NAME': self.row_dicts[0]['LIBRARY_NAME'],
+                'LIBRARY_NAME': self.row_dict_list[0]['LIBRARY_NAME'],
             })
 
         # Adjust the IlluminaBaseCallsToSamSheet and remove any BARCODE_N columns not represented
@@ -418,10 +410,10 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
         for index in range(0, 1 + 1):
             if barcode_length_tuple[index] == 0:
                 # Remove the 'BARCODE_N' field from the list of field names.
-                if 'BARCODE_' + str(index + 1) in self.field_names:
-                    self.field_names.remove('BARCODE_' + str(index + 1))
+                if 'BARCODE_' + str(index + 1) in self.field_name_list:
+                    self.field_name_list.remove('BARCODE_' + str(index + 1))
                 # Remove the 'BARCODE_N' entry from each row_dict object, since csv.DictWriter requires it.
-                for row_dict in self.row_dicts:
+                for row_dict in self.row_dict_list:
                     row_dict.pop('BARCODE_' + str(index + 1), None)
 
         return
@@ -833,23 +825,23 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         # Load the LibraryAnnotationSheet and validate.
 
-        library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
+        library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
             file_path=self.library_path)
 
         if self.lanes is None:
-            validation_messages = library_annotation_sheet.validate(
+            message_list = library_annotation_sheet.validate(
                 lanes=self._irf.run_information.flow_cell_layout.lane_count)
         else:
-            validation_messages = library_annotation_sheet.validate(
+            message_list = library_annotation_sheet.validate(
                 lanes=self.lanes)
 
-        if validation_messages:
+        if message_list:
             if self.force:
                 warnings.warn(f'Validation of library annotation sheet {self.library_path!r}:\n'
-                              f'{validation_messages}', UserWarning)
+                              '\n'.join(message_list), UserWarning)
             else:
                 raise Exception(f'Validation of library annotation sheet {self.library_path!r}:\n'
-                                f'{validation_messages}')
+                                '\n'.join(message_list))
 
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
@@ -903,7 +895,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             for row_dict in flow_cell_dict_list:
                 # Add a row to the lane-specific Picard ExtractIlluminaBarcodesSheet.
 
-                eib_sheet.row_dicts.append({
+                eib_sheet.row_dict_list.append({
                     'barcode_sequence_1': row_dict['barcode_sequence_1'],
                     'barcode_sequence_2': row_dict['barcode_sequence_2'],
                     'barcode_name': row_dict['sample_name'],
@@ -912,7 +904,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
                 # Add a row to the lane-specific Picard IlluminaBasecallsToSamSheet.
 
-                ibs_sheet.row_dicts.append({
+                ibs_sheet.row_dict_list.append({
                     'BARCODE_1': row_dict['barcode_sequence_1'],
                     'BARCODE_2': row_dict['barcode_sequence_2'],
                     'OUTPUT': os.path.join(
@@ -924,7 +916,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
                 # Add a row to the flow cell-specific sample annotation sheet.
 
-                sample_annotation_sheet.row_dicts.append({
+                sample_annotation_sheet.row_dict_list.append({
                     'File Type': '',
                     'ProcessedRunFolder Name': self.project_name,
                     'Project Name': row_dict['library_name'],
@@ -1933,19 +1925,15 @@ class IlluminaDemultiplexSamSheet(AnnotationSheet):
 
     _file_type = 'excel-tab'
 
-    _header_line = True
-
     # FIXME: This class is only required, because Picard IlluminaBamDemux uses SAMPLE_NAME rather than SAMPLE_ALIAS.
     # Once fixed, the IlluminaBasecallsToSamSheet class could be used.
-    _field_names = [
+    _field_name_list = [
         'OUTPUT',
         'SAMPLE_NAME',
         'LIBRARY_NAME',
         'BARCODE_1',
         'BARCODE_2',
     ]
-
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
     def adjust(self, barcode_length_tuple: tuple[int, int]) -> None:
         """Adjust a :py:class:`bsf.analyses.picard.IlluminaDemultiplexSamSheet` object.
@@ -1962,10 +1950,10 @@ class IlluminaDemultiplexSamSheet(AnnotationSheet):
         for index in range(0, 1 + 1):
             if barcode_length_tuple[index] == 0:
                 # Remove the 'BARCODE_N' field from the list of field names.
-                if 'BARCODE_' + str(index + 1) in self.field_names:
-                    self.field_names.remove('BARCODE_' + str(index + 1))
+                if 'BARCODE_' + str(index + 1) in self.field_name_list:
+                    self.field_name_list.remove('BARCODE_' + str(index + 1))
                 # Remove the 'BARCODE_N' entry from each row_dict object, since csv.DictWriter requires it.
-                for row_dict in self.row_dicts:
+                for row_dict in self.row_dict_list:
                     row_dict.pop('BARCODE_' + str(index + 1), None)
 
         return
@@ -2396,23 +2384,23 @@ class IlluminaDemultiplexSam(Analysis):
 
         # Load the LibraryAnnotationSheet and validate.
 
-        library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
+        library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
             file_path=self.library_path)
 
         if self.lanes is None:
-            validation_messages = library_annotation_sheet.validate(
+            message_list = library_annotation_sheet.validate(
                 lanes=irf.run_information.flow_cell_layout.lane_count)
         else:
-            validation_messages = library_annotation_sheet.validate(
+            message_list = library_annotation_sheet.validate(
                 lanes=self.lanes)
 
-        if validation_messages:
+        if message_list:
             if self.force:
                 warnings.warn(f'Validation of library annotation sheet {self.library_path!r}:\n'
-                              f'{validation_messages}', UserWarning)
+                              '\n'.join(message_list), UserWarning)
             else:
                 raise Exception(f'Validation of library annotation sheet {self.library_path!r}:\n'
-                                f'{validation_messages}')
+                                '\n'.join(message_list))
 
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
@@ -2467,7 +2455,7 @@ class IlluminaDemultiplexSam(Analysis):
             for row_dict in library_annotation_dict[lane_int]:
                 # Add a row to the lane-specific Picard IlluminaDemultiplexSamSheet.
 
-                ibs_sheet.row_dicts.append({
+                ibs_sheet.row_dict_list.append({
                     'BARCODE_1': row_dict['barcode_sequence_1'],
                     'BARCODE_2': row_dict['barcode_sequence_2'],
                     'OUTPUT': os.path.join(
@@ -2522,7 +2510,7 @@ class IlluminaDemultiplexSam(Analysis):
 
                 sample.add_paired_reads(paired_reads=paired_reads)
 
-                sample_annotation_sheet.row_dicts.append({
+                sample_annotation_sheet.row_dict_list.append({
                     'File Type': '',
                     'ProcessedRunFolder Name': self.project_name,
                     'Project Name': row_dict['library_name'],

@@ -57,11 +57,11 @@ if not name_space.ascending:
 
 for file_name in file_name_list:
     if file_name[-14:] == '_libraries.csv':
-        sas = LibraryAnnotationSheet.from_file_path(
+        sas: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
             file_path=os.path.join(name_space.directory, file_name))
 
         lane_dict = dict()
-        for row_dict in sas.row_dicts:
+        for row_dict in sas.row_dict_list:
             if row_dict['lane'] in lane_dict:
                 lane_dict[row_dict['lane']] += 1
             else:

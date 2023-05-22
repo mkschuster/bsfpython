@@ -54,17 +54,13 @@ class BamIndexDecoderSheet(AnnotationSheet):
     # The field names are defined in the IndexDecoder.java source file.
     # https://github.com/wtsi-npg/illumina2bam/blob/devel/src/uk/ac/sanger/npg/picard/IndexDecoder.java
 
-    _header_line = True
-
-    _field_names = [
+    _field_name_list = [
         'barcode_sequence',
         'barcode_name',
         'library_name',
         'sample_name',
         'description',
     ]
-
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
 
 class LibraryAnnotationSheet(AnnotationSheet):
@@ -74,9 +70,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
     _file_type = 'excel'
 
-    _header_line = True
-
-    _field_names = [
+    _field_name_list = [
         'lane',  # Lane number
         'barcode_mismatches',  # Number of mismatches allowed in index decoding
         'barcode_sequence_1',  # Index read sequence 1
@@ -88,7 +82,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         'read_structure',  # Picard tools Read Structure
     ]
 
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = {
+    _check_dict: dict[str, list[Callable[[list[str], int, dict[str, str], str], None]]] = {
         'lane': [
             AnnotationSheet.check_alphanumeric_value,
         ],
@@ -131,7 +125,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         """
         flow_cell_dict: dict[int, list[dict[str, str]]] = dict()
 
-        for row_dict in self.row_dicts:
+        for row_dict in self.row_dict_list:
             lane_int = int(row_dict['lane'])
             if lane_int not in flow_cell_dict:
                 flow_cell_dict[lane_int] = list()
@@ -149,7 +143,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         """
         flow_cell_dict: dict[int, tuple[int, int]] = dict()
 
-        for row_dict in self.row_dicts:
+        for row_dict in self.row_dict_list:
             lane_int = int(row_dict['lane'])
             if lane_int not in flow_cell_dict:
                 flow_cell_dict[lane_int] = (len(row_dict['barcode_sequence_1']), len(row_dict['barcode_sequence_2']))
@@ -161,7 +155,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
         return flow_cell_dict
 
-    def validate(self, lanes: Optional[int] = None) -> str:
+    def validate(self, lanes: Optional[int] = None) -> list[str]:
         """
         Validate a :py:class:`bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet` object.
 
@@ -170,155 +164,148 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
         :param lanes: A number of lanes to validate.
         :type lanes: int | None
-        :return: Warning messages.
-        :rtype: str
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (warning message) objects.
+        :rtype: list[str]
         """
-        messages = str()
+        message_list: list[str] = []
 
         # Check the header line via the pre-defined field names.
 
-        for index in range(0, len(self._field_names)):
-            if not self.field_names[index]:
-                messages += 'Column with name {!r} is missing from the header line.\n'. \
-                    format(self._field_names[index])
+        for index in range(0, len(self._field_name_list)):
+            if not self.field_name_list[index]:
+                message_list.append(
+                    f'Column with name {self._field_name_list[index]!r} is missing from the header line.')
 
-            if self.field_names[index] != self._field_names[index]:
-                messages += 'Column name {!r} in the header line does not match template {!r}.\n'. \
-                    format(self.field_names[index], self._field_names[index])
+            if self.field_name_list[index] != self._field_name_list[index]:
+                message_list.append(
+                    f'Column name {self.field_name_list[index]!r} in the header line '
+                    f'does not match template {self._field_name_list[index]!r}.')
 
         # Validate the field values for alphanumeric or sequence grade in the context of the
         # AnnotationSheet super-class.
 
-        messages += super(LibraryAnnotationSheet, self).validate()
+        message_list.extend(super(LibraryAnnotationSheet, self).validate())
 
-        flow_cell_dict = dict()
-        # TODO: Since the Python dict holds a dict of complex types, another object would be justified.
-        # See barcode_dict: {}, sample_dict: {} and library_name: ''
+        flow_cell_dict = {}
 
-        row_number = 0
-
-        for row_dict in self.row_dicts:
-            row_number += 1
+        for row_index, row_dict in enumerate(self.row_dict_list):
+            row_number = row_index + 1
+            lane_int = int(row_dict['lane'])
 
             # Check that all required fields are defined.
 
-            if row_dict['lane'] not in flow_cell_dict:
-                flow_cell_dict[row_dict['lane']] = {
-                    'barcode_dict': {},  # Barcode sequence to row number.
-                    'sample_dict': {},  # Sample name to row number.
+            if lane_int not in flow_cell_dict:
+                flow_cell_dict[lane_int] = {
+                    'barcode_dict': {},  # Barcode sequence (str) to row number (int).
+                    'sample_dict': {},  # Sample name (str) to row number (int).
                     'library_name': row_dict['library_name'],
                     # 'barcode_mismatches': row_dict['barcode_mismatches'],
                     # 'barcode_start': row_dict['barcode_start'],
+                    # 'read_structure': row_dict['read_structure'],
                 }
 
                 if 'barcode_mismatches' in row_dict:
-                    flow_cell_dict[row_dict['lane']]['barcode_mismatches'] = row_dict['barcode_mismatches']
+                    flow_cell_dict[lane_int]['barcode_mismatches'] = row_dict['barcode_mismatches']
 
                 if 'barcode_start' in row_dict:
-                    flow_cell_dict[row_dict['lane']]['barcode_start'] = row_dict['barcode_start']
+                    flow_cell_dict[lane_int]['barcode_start'] = row_dict['barcode_start']
 
                 if 'read_structure' in row_dict:
-                    flow_cell_dict[row_dict['lane']]['read_structure'] = row_dict['read_structure']
-
-            barcode_sequence = str()
+                    flow_cell_dict[lane_int]['read_structure'] = row_dict['read_structure']
 
             if 'barcode_sequence_1' in row_dict and row_dict['barcode_sequence_1']:
-                barcode_sequence += row_dict['barcode_sequence_1']
+                barcode_sequence_1 = row_dict['barcode_sequence_1']
             else:
-                barcode_sequence += '-NoIndex-'
+                barcode_sequence_1 = '-NoIndex-'
 
             if 'barcode_sequence_2' in row_dict and row_dict['barcode_sequence_2']:
-                barcode_sequence += row_dict['barcode_sequence_2']
+                barcode_sequence_2 = row_dict['barcode_sequence_2']
             else:
-                barcode_sequence += '-NoIndex-'
+                barcode_sequence_2 = '-NoIndex-'
 
-            if barcode_sequence in flow_cell_dict[row_dict['lane']]['barcode_dict']:
-                messages += 'Barcode sequence {!r} from row {} duplicated in row {}.\n'. \
-                    format(barcode_sequence,
-                           flow_cell_dict[row_dict['lane']]['barcode_dict'][barcode_sequence],
-                           row_number)
+            barcode_sequence = barcode_sequence_1 + barcode_sequence_2
+
+            if barcode_sequence in flow_cell_dict[lane_int]['barcode_dict']:
+                message_list.append(
+                    f"Barcode sequence {barcode_sequence!r} from "
+                    f"row {flow_cell_dict[lane_int]['barcode_dict'][barcode_sequence]!s} "
+                    f"duplicated in row {row_number!s}.")
             else:
-                flow_cell_dict[row_dict['lane']]['barcode_dict'][barcode_sequence] = row_number
+                flow_cell_dict[lane_int]['barcode_dict'][barcode_sequence] = row_number
 
             # Check for duplicate sample name values.
-            if row_dict['sample_name'] in flow_cell_dict[row_dict['lane']]['sample_dict']:
-                messages += 'Sample name {!r} from row {} duplicated in row {}.\n'. \
-                    format(row_dict['sample_name'],
-                           flow_cell_dict[row_dict['lane']]['sample_dict'][row_dict['sample_name']],
-                           row_number)
+            if row_dict['sample_name'] in flow_cell_dict[lane_int]['sample_dict']:
+                message_list.append(
+                    f"Sample name {row_dict['sample_name']!s} from "
+                    f"row {flow_cell_dict[lane_int]['sample_dict'][row_dict['sample_name']]!s} "
+                    f"duplicated in row {row_number!s}.")
             else:
-                flow_cell_dict[row_dict['lane']]['sample_dict'][row_dict['sample_name']] = row_number
+                flow_cell_dict[lane_int]['sample_dict'][row_dict['sample_name']] = row_number
 
             # Check for identical library name values.
-            if flow_cell_dict[row_dict['lane']]['library_name'] != row_dict['library_name']:
-                messages += 'Library name {!r} in row {} does not match previous name {!r}.\n'. \
-                    format(row_dict['library_name'],
-                           row_number,
-                           flow_cell_dict[row_dict['lane']]['library_name'])
+            if flow_cell_dict[lane_int]['library_name'] != row_dict['library_name']:
+                message_list.append(
+                    f"Library name {row_dict['library_name']!r} in row {row_number!s} "
+                    f"does not match previous name {flow_cell_dict[lane_int]['library_name']!r}.")
 
             # Check for identical barcode mismatches values.
             if 'barcode_mismatches' in row_dict:
-                if flow_cell_dict[row_dict['lane']]['barcode_mismatches'] != row_dict['barcode_mismatches']:
-                    messages += 'Barcode mismatches {!r} in row {} does not match previous mismatches {!r}.\n'. \
-                        format(row_dict['barcode_mismatches'],
-                               row_number,
-                               flow_cell_dict[row_dict['lane']]['barcode_mismatches'])
+                if flow_cell_dict[lane_int]['barcode_mismatches'] != row_dict['barcode_mismatches']:
+                    message_list.append(
+                        f"Barcode mismatches {row_dict['barcode_mismatches']!r} in row {row_number!s} "
+                        f"does not match previous mismatches {flow_cell_dict[lane_int]['barcode_mismatches']!r}.")
 
             # Check for identical barcode start values.
             if 'barcode_start' in row_dict:
-                if flow_cell_dict[row_dict['lane']]['barcode_start'] != row_dict['barcode_start']:
-                    messages += 'Barcode start {!r} in row {} does not match previous start {!r}.\n'. \
-                        format(row_dict['barcode_start'],
-                               row_number,
-                               flow_cell_dict[row_dict['lane']]['barcode_start'])
+                if flow_cell_dict[lane_int]['barcode_start'] != row_dict['barcode_start']:
+                    message_list.append(
+                        f"Barcode start {row_dict['barcode_start']!r} in row {row_number!s} "
+                        f"does not match previous start {flow_cell_dict[lane_int]['barcode_start']!r}.")
 
             # Check for identical read structure values.
             if 'read_structure' in row_dict:
-                if flow_cell_dict[row_dict['lane']]['read_structure'] != row_dict['read_structure']:
-                    messages += 'Read structure {!r} in row {} does not match previous read structure {!r}.\n'. \
-                        format(row_dict['read_structure'],
-                               row_number,
-                               flow_cell_dict[row_dict['lane']]['read_structure'])
+                if flow_cell_dict[lane_int]['read_structure'] != row_dict['read_structure']:
+                    message_list.append(
+                        f"Read structure {row_dict['read_structure']!r} in row {row_number!s} "
+                        f"does not match previous read structure {flow_cell_dict[lane_int]['read_structure']!r}.")
 
         if lanes is None:
-            # If the number of lanes was not provided, validate just on the basis if the lane annotation.
+            # If the number of lanes was not provided, validate just on the basis of the lane annotation.
             lane_list = sorted(flow_cell_dict)
         else:
             # If the number of lanes was provided, validate all lanes in the range.
-            lane_list = range(0 + 1, lanes + 1)
+            lane_list = [lane_int for lane_int in range(0 + 1, lanes + 1)]
 
         for lane_int in lane_list:
-            lane_str = str(lane_int)
-
             # Check that all lanes have annotation.
-            if lane_str not in flow_cell_dict:
-                messages += 'No annotation for lane number ' + repr(lane_int) + '.\n'
+            if lane_int not in flow_cell_dict:
+                message_list.append(f'No annotation for lane number {lane_int!s}.')
                 continue
 
             # Check that all or none of the rows have index sequence 1 or 2 populated.
             no_index_1 = 0
             no_index_2 = 0
-            for key in flow_cell_dict[lane_str]['barcode_dict']:
+            for key in flow_cell_dict[lane_int]['barcode_dict']:
                 if key[:9] == '-NoIndex-':
                     no_index_1 += 1
                 if key[-9:] == '-NoIndex-':
                     no_index_2 += 1
 
-            if not (no_index_1 == 0 or no_index_1 == len(flow_cell_dict[lane_str]['barcode_dict'])):
-                messages += 'Some empty barcode_sequence_1 fields in lane ' + repr(lane_int) + '.\n'
-            if not (no_index_2 == 0 or no_index_2 == len(flow_cell_dict[lane_str]['barcode_dict'])):
-                messages += 'Some empty barcode_sequence_2 fields in lane ' + repr(lane_int) + '.\n'
+            if not (no_index_1 == 0 or no_index_1 == len(flow_cell_dict[lane_int]['barcode_dict'])):
+                message_list.append(f'Some empty barcode_sequence_1 fields in lane {lane_int!s}.')
+            if not (no_index_2 == 0 or no_index_2 == len(flow_cell_dict[lane_int]['barcode_dict'])):
+                message_list.append(f'Some empty barcode_sequence_2 fields in lane {lane_int!s}.')
 
             # Check that all barcode sequences have the same length.
             # This test also finds cases of missing sequences tested for above.
-            key_length = None
-            for key in flow_cell_dict[lane_str]['barcode_dict']:
+            key_length: Optional[int] = None
+            for key in flow_cell_dict[lane_int]['barcode_dict']:
                 if key_length is None:
                     key_length = len(key)
                 if len(key) != key_length:
-                    messages += 'Mismatching barcode sequence lengths in lane ' + repr(lane_int) + '.\n'
+                    message_list.append(f'Mismatching barcode sequence lengths in lane {lane_int!s}.')
 
-        return messages
+        return message_list
 
 
 class RunnableStepIlluminaToBam(RunnableStepJava):
@@ -951,7 +938,7 @@ class IlluminaToBam(Analysis):
                     working_directory=self.project_directory))
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
-            # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
+            #  passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -1376,7 +1363,7 @@ class BamIndexDecoder(Analysis):
         return SampleAnnotationSheet(
             file_path=file_path,
             header=True,
-            field_names=[
+            field_name_list=[
                 'File Type',
                 'ProcessedRunFolder Name',
                 'Project Name',
@@ -1512,7 +1499,7 @@ class BamIndexDecoder(Analysis):
 
         The experiment directory is a concatenation of the samples directory and the project name.
 
-        :return: A experiment directory.
+        :return: An experiment directory.
         :rtype: str | None
         """
         if self.samples_directory and self.project_name:
@@ -1637,17 +1624,18 @@ class BamIndexDecoder(Analysis):
 
         # Load the LibraryAnnotationSheet and validate.
 
-        library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
+        library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
+            file_path=self.library_path)
 
-        validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
+        message_list = library_annotation_sheet.validate(lanes=self.lanes)
 
-        if validation_messages:
+        if message_list:
             if self.force:
                 warnings.warn(f'Validation of library annotation sheet {self.library_path!r}:\n'
-                              f'{validation_messages}', UserWarning)
+                              '\n'.join(message_list), UserWarning)
             else:
                 raise Exception(f'Validation of library annotation sheet {self.library_path!r}:\n'
-                                f'{validation_messages}')
+                                '\n'.join(message_list))
 
         # Get the Illumina2Bam tools Java Class Path directory.
 
@@ -1703,7 +1691,7 @@ class BamIndexDecoder(Analysis):
             for row_dict in library_annotation_dict[lane_int]:
                 # Add a row to the lane-specific tab-delimited Illumina2bam tools BamIndexDecoder barcode file.
 
-                bam_index_decoder_sheet.row_dicts.append({
+                bam_index_decoder_sheet.row_dict_list.append({
                     'barcode_sequence': row_dict['barcode_sequence_1'] + row_dict['barcode_sequence_2'],
                     'barcode_name': row_dict['sample_name'],
                     'library_name': row_dict['library_name'],
@@ -1713,7 +1701,7 @@ class BamIndexDecoder(Analysis):
 
                 # Add a row to the flow cell-specific sample annotation sheet.
 
-                sample_annotation_sheet.row_dicts.append({
+                sample_annotation_sheet.row_dict_list.append({
                     'File Type': '',
                     'ProcessedRunFolder Name': self.project_name,
                     'Project Name': row_dict['library_name'],
@@ -1747,7 +1735,8 @@ class BamIndexDecoder(Analysis):
                     working_directory=self.project_directory))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
-            # and that it could be submitted to a Stage so that the Executable gets automatically created and submitted.
+            #  and that it could be submitted to a Stage so that the Executable gets automatically created and
+            #  submitted.
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -1918,10 +1907,10 @@ class BamIndexDecoder(Analysis):
                 # OPTIONS_FILE
 
                 # TODO: It would be even better to run Picard AddOrReplaceReadGroups to get a correct SAM header.
-                # Unfortunately, the RGLB and RGSM fields cannot easily be overridden since all options need
-                # to be set. However, the RGPU and other information is only available after the Illumina2bam stage
-                # has completed, which may be well after submission of this analysis. The solution could be another
-                # script to rad the BAM file and propagate RG information.
+                #  Unfortunately, the RGLB and RGSM fields cannot easily be overridden since all options need
+                #  to be set. However, the RGPU and other information is only available after the Illumina2bam stage
+                #  has completed, which may be well after submission of this analysis. The solution could be another
+                #  script to rad the BAM file and propagate RG information.
 
                 # Create the experiment directory if it does not exist already.
 

@@ -724,7 +724,7 @@ class Aligner(Analysis):
             file_path=os.path.join(self.genome_directory, file_path_summary.read_group_to_sample_tsv),
             file_type='excel-tab',
             name='star_read_group',
-            field_names=['sample', 'read_group'])
+            field_name_list=['sample', 'read_group'])
 
         runnable_sample_list: list[ConsecutiveRunnable] = list()
 
@@ -782,7 +782,7 @@ class Aligner(Analysis):
                 # Alignment Stage #
                 ###################
 
-                annotation_sheet.row_dicts.append({'sample': sample.name, 'read_group': paired_reads.get_name()})
+                annotation_sheet.row_dict_list.append({'sample': sample.name, 'read_group': paired_reads.get_name()})
 
                 # Create a Runnable and Executable for alignment and processing.
 

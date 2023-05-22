@@ -84,14 +84,14 @@ class Adaptors(object):
         :return: A :py:class:`bsf.illumina.Adaptors` object
         :rtype: Adaptors
         """
-        annotation_sheet = AnnotationSheet.from_file_path(
+        annotation_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
             file_path=file_path,
             file_type='excel-tab',
             name='Illumina Adaptors')
 
         adaptors = cls()
 
-        for row_dict in annotation_sheet.row_dicts:
+        for row_dict in annotation_sheet.row_dict_list:
             class_str = row_dict['Class']
             if not class_str:
                 class_str = cls.default_class

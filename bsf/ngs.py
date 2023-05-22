@@ -52,9 +52,7 @@ class SampleAnnotationSheet(AnnotationSheet):
 
     _file_type = 'excel'
 
-    _header_line = True
-
-    _field_names = [
+    _field_name_list = [
         'File Type',
         'ProcessedRunFolder Name',
         'Project Name',
@@ -70,7 +68,7 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Reads2 File',
     ]
 
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = {
+    _check_dict: dict[str, list[Callable[[list[str], int, dict[str, str], str], None]]] = {
         # File Type
         'ProcessedRunFolder Name': [
             AnnotationSheet.check_alphanumeric,
@@ -2514,7 +2512,7 @@ class Collection(NextGenerationBase):
 
         current_collection = cls(file_path=file_path, file_type=file_type, name=name)
 
-        for row_dict in sas.row_dicts:
+        for row_dict in sas.row_dict_list:
             module_logger.debug('from_sas: row_dict=%r', row_dict)
 
             # Generate a Python list of key objects since the list is subsequently modified.
@@ -2889,48 +2887,48 @@ class Collection(NextGenerationBase):
             if prf.annotation_dict:  # not None and not empty
                 for prf_annotation_key in prf.annotation_dict.keys():
                     prf_annotation_field = ' '.join(('ProcessedRunFolder', prf_annotation_key))
-                    if prf_annotation_field not in sas.field_names:
-                        sas.field_names.append(prf_annotation_field)
+                    if prf_annotation_field not in sas.field_name_list:
+                        sas.field_name_list.append(prf_annotation_field)
             for project in prf.project_dict.values():
                 if project.annotation_dict:  # not None and not empty
                     for project_annotation_key in project.annotation_dict.keys():
                         project_annotation_field = ' '.join(('Project', project_annotation_key))
-                        if project_annotation_field not in sas.field_names:
-                            sas.field_names.append(project_annotation_field)
+                        if project_annotation_field not in sas.field_name_list:
+                            sas.field_name_list.append(project_annotation_field)
                 for sample in project.sample_dict.values():
                     if sample.annotation_dict:  # not None and not empty
                         for sample_annotation_key in sample.annotation_dict.keys():
                             sample_annotation_field = ' '.join(('Sample', sample_annotation_key))
-                            if sample_annotation_field not in sas.field_names:
-                                sas.field_names.append(sample_annotation_field)
+                            if sample_annotation_field not in sas.field_name_list:
+                                sas.field_name_list.append(sample_annotation_field)
                     for paired_reads in sample.paired_reads_list:
                         if paired_reads.annotation_dict:  # not None and not empty
                             for paired_reads_annotation_key in paired_reads.annotation_dict.keys():
                                 paired_reads_annotation_field = ' '.join(('PairedReads', paired_reads_annotation_key))
-                                if paired_reads_annotation_field not in sas.field_names:
-                                    sas.field_names.append(paired_reads_annotation_field)
+                                if paired_reads_annotation_field not in sas.field_name_list:
+                                    sas.field_name_list.append(paired_reads_annotation_field)
 
         # At this stage all annotation keys should be added. Partition and sort the list of field names.
 
-        field_names = sorted(sas.field_names)  # Create a new sorted list.
+        field_name_list = sorted(sas.field_name_list)  # Create a new sorted list.
 
-        del sas.field_names[:]  # Clear the existing list.
+        del sas.field_name_list[:]  # Clear the existing list.
 
-        sas.field_names.extend([item for item in field_names if item.startswith('File Type')])
-        field_names = [item for item in field_names if not item.startswith('File Type')]
-        sas.field_names.extend([item for item in field_names if item.startswith('ProcessedRunFolder')])
-        field_names = [item for item in field_names if not item.startswith('ProcessedRunFolder')]
-        sas.field_names.extend([item for item in field_names if item.startswith('Project')])
-        field_names = [item for item in field_names if not item.startswith('Project')]
-        sas.field_names.extend([item for item in field_names if item.startswith('Sample')])
-        field_names = [item for item in field_names if not item.startswith('Sample')]
-        sas.field_names.extend([item for item in field_names if item.startswith('PairedReads')])
-        field_names = [item for item in field_names if not item.startswith('PairedReads')]
-        sas.field_names.extend([item for item in field_names if item.startswith('Reads1')])
-        field_names = [item for item in field_names if not item.startswith('Reads1')]
-        sas.field_names.extend([item for item in field_names if item.startswith('Reads2')])
-        field_names = [item for item in field_names if not item.startswith('Reads2')]
-        sas.field_names.extend(field_names)
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('File Type')])
+        field_name_list = [item for item in field_name_list if not item.startswith('File Type')]
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('ProcessedRunFolder')])
+        field_name_list = [item for item in field_name_list if not item.startswith('ProcessedRunFolder')]
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('Project')])
+        field_name_list = [item for item in field_name_list if not item.startswith('Project')]
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('Sample')])
+        field_name_list = [item for item in field_name_list if not item.startswith('Sample')]
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('PairedReads')])
+        field_name_list = [item for item in field_name_list if not item.startswith('PairedReads')]
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('Reads1')])
+        field_name_list = [item for item in field_name_list if not item.startswith('Reads1')]
+        sas.field_name_list.extend([item for item in field_name_list if item.startswith('Reads2')])
+        field_name_list = [item for item in field_name_list if not item.startswith('Reads2')]
+        sas.field_name_list.extend(field_name_list)
 
         # Finally, construct the SampleAnnotationSheet.
 
@@ -2957,7 +2955,7 @@ class Collection(NextGenerationBase):
 
             if key in _row_dict:
                 # If the key already exists in the row dict, append it and create a new one.
-                sas.row_dicts.append(_row_dict)
+                sas.row_dict_list.append(_row_dict)
                 _row_dict = dict()
 
             _row_dict[key] = value
@@ -2971,7 +2969,7 @@ class Collection(NextGenerationBase):
             :type _row_dict: dict[str, str]
             """
             if row_dict:
-                sas.row_dicts.append(_row_dict)
+                sas.row_dict_list.append(_row_dict)
 
             return dict()
 

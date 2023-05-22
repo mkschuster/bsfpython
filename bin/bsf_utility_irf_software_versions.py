@@ -77,22 +77,20 @@ file_name_list.sort()
 if not name_space.ascending:
     file_name_list.reverse()
 
-field_names = [
-    'experiment',
-    'experiment_name',
-    'run_identifier',
-    'application_name',
-    'application_version',
-    'rta_version',
-    'picard_read_structure',
-    'lane_count',
-    'keep_intensities',
-]
-
 annotation_sheet = AnnotationSheet(
     file_path=name_space.output_file,
     header=True,
-    field_names=field_names)
+    field_name_list=[
+        'experiment',
+        'experiment_name',
+        'run_identifier',
+        'application_name',
+        'application_version',
+        'rta_version',
+        'picard_read_structure',
+        'lane_count',
+        'keep_intensities',
+    ])
 
 # Illumina Run Folders obey a pattern and additionally directories with just Sequence Analysis Viewer (SAV)
 # information should also be allowed.
@@ -125,7 +123,7 @@ for file_name in file_name_list:
         logging.debug('Encountered ParseError %s on %r', exception, file_name)
         continue
 
-    annotation_sheet.row_dicts.append({
+    annotation_sheet.row_dict_list.append({
         'experiment': irf.run_parameters.get_experiment_name,
         'experiment_name': '_'.join((irf.run_parameters.get_experiment_name,
                                      irf.run_parameters.get_flow_cell_barcode)),

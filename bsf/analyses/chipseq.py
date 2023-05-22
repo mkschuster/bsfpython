@@ -400,9 +400,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
     _file_type = 'excel'
 
-    _header_line = True
-
-    _field_names = [
+    _field_name_list = [
         'SampleID',
         'Tissue',
         'Factor',
@@ -420,7 +418,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         # 'Counts',
     ]
 
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = {
+    _check_dict: dict[str, list[Callable[[list[str], int, dict[str, str], str], None]]] = {
         'SampleID': [
             AnnotationSheet.check_alphanumeric,
         ],
@@ -469,7 +467,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
             4. :literal:`Treatment`
             5. :literal:`Replicate`
         """
-        self.row_dicts.sort(
+        self.row_dict_list.sort(
             key=lambda item: '_'.join((
                 item['Tissue'],
                 item['Factor'],
@@ -1079,7 +1077,7 @@ class ChIPSeq(Analysis):
               - Treatment/Control Reads
               - Treatment/Control File
             """
-            annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+            annotation_sheet: AnnotationSheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
 
             # Unfortunately, two passes through the comparison sheet are required.
             # In the first one merge all Sample objects that share the name.
@@ -1088,7 +1086,7 @@ class ChIPSeq(Analysis):
 
             # Second pass, add all Sample objects mentioned in a comparison.
 
-            for row_dict in annotation_sheet.row_dicts:
+            for row_dict in annotation_sheet.row_dict_list:
                 if 'Name' in row_dict and row_dict['Name']:
                     comparison_name = row_dict['Name']
                 else:
@@ -1647,7 +1645,7 @@ class ChIPSeq(Analysis):
 
                         job_dependencies.append(chipseq_comparison.get_prefix_peak_calling())
 
-                        dbs.row_dicts.append({
+                        dbs.row_dict_list.append({
                             'SampleID': chipseq_comparison.t_name,
                             'Tissue': chipseq_comparison.tissue,
                             'Factor': chipseq_comparison.factor,
@@ -1857,7 +1855,7 @@ class ChIPSeq(Analysis):
         """Create a :literal:`XHTML 1.0` report and a :emphasis:`UCSC Genome Browser Track Hub`.
         """
 
-        # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
+        # contrast_field_name_list = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
         def report_html_1() -> None:
             """Private function to create a :literal:`XHTML 1.0` report for MACS1.
@@ -2287,11 +2285,11 @@ class ChIPSeq(Analysis):
                         module_logger.warning('Contrasts table %r does not exist.', file_path)
                         continue
 
-                    annotation_sheet = AnnotationSheet.from_file_path(
+                    annotation_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
                         file_path=file_path,
                         file_type='excel')
 
-                    for row_dict in annotation_sheet.row_dicts:
+                    for row_dict in annotation_sheet.row_dict_list:
                         # DiffBind2 uses a 'Group1' variable, DiffBind3 just 'Group'.
                         group1_name = 'Group1'
                         if 'Group' in row_dict:

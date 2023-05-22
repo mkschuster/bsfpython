@@ -73,10 +73,10 @@ if name_space.lane_list:
 else:
     lane_list = list()
 
-library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
+library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
     file_path=name_space.input_path)
 
-for row_dict in library_annotation_sheet.row_dicts:
+for row_dict in library_annotation_sheet.row_dict_list:
     if not lane_list or row_dict['lane'] in lane_list:
         if row_dict['barcode_sequence_1'] and name_space.barcode_1:
             row_dict['barcode_sequence_1'] = reverse_complement(sequence=row_dict['barcode_sequence_1'])

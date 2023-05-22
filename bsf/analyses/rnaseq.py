@@ -36,7 +36,7 @@ import logging
 import os
 import pickle
 import re
-from typing import Callable, Optional
+from typing import Optional
 
 from bsf.analyses.hisat import Hisat2
 from bsf.analyses.kallisto import Kallisto
@@ -381,12 +381,10 @@ class TuxedoSamplePairSheet(AnnotationSheet):
 
     _file_type = 'excel-tab'
 
-    _field_names = [
+    _field_name_list = [
         'V1',
         'V2',
     ]
-
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
 
 
 class Tuxedo(Analysis):
@@ -1082,10 +1080,10 @@ class Tuxedo(Analysis):
                     self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
                     # Read and process the comparison file, which includes adding only those Sample objects,
                     # which are referenced in a comparison.
-                    annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+                    annotation_sheet: AnnotationSheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
                     re_pattern = re.compile(pattern=r'\W')
 
-                    for row_dict in annotation_sheet.row_dicts:
+                    for row_dict in annotation_sheet.row_dict_list:
                         _sample_group_list: list[SampleGroup] = list()
                         _comparison_name_list: list[str] = list()
                         # In addition to defining samples, allow also the definition of groups in comparison files.
@@ -2138,7 +2136,7 @@ class Tuxedo(Analysis):
                             lambda x: x.startswith('Monocle '), sample.annotation_dict.keys()):
                         monocle_row_dict[annotation_key[8:]] = sample.annotation_dict[annotation_key][0]
 
-                    monocle_annotation_sheet.row_dicts.append(monocle_row_dict)
+                    monocle_annotation_sheet.row_dict_list.append(monocle_row_dict)
 
                 cuffdiff_cuffnorm_abundances_dict[sample_group.name] = per_group_abundances_list
                 cuffdiff_cuffnorm_alignments_dict[sample_group.name] = per_group_alignments_list
@@ -2917,9 +2915,10 @@ class Tuxedo(Analysis):
                     '_'.join((path_prefix, 'sample_pairs.tsv')))
 
                 if os.path.exists(sample_pair_path):
-                    sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
+                    sample_pair_sheet: TuxedoSamplePairSheet = TuxedoSamplePairSheet.from_file_path(
+                        file_path=sample_pair_path)
 
-                    for row_dict in sample_pair_sheet.row_dicts:
+                    for row_dict in sample_pair_sheet.row_dict_list:
                         str_list.append('<tr>\n')
                         # Comparison
                         str_list.append('<td></td>\n')
@@ -3299,9 +3298,10 @@ class Tuxedo(Analysis):
                     '_'.join((path_prefix, 'sample_pairs.tsv')))
 
                 if os.path.exists(sample_pair_path):
-                    sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
+                    sample_pair_sheet: TuxedoSamplePairSheet = TuxedoSamplePairSheet.from_file_path(
+                        file_path=sample_pair_path)
 
-                    for row_dict in sample_pair_sheet.row_dicts:
+                    for row_dict in sample_pair_sheet.row_dict_list:
                         str_list.append('<tr>\n')
 
                         # Comparison
@@ -3886,23 +3886,23 @@ class DESeq(Analysis):
 
         # Read the designs (comparison) file.
 
-        design_sheet = AnnotationSheet.from_file_path(
+        design_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
             file_path=self.comparison_path,
             file_type='excel',
             name='DESeq Design Table')
 
         # Read the contrasts file.
 
+        contrast_sheet: Optional[AnnotationSheet] = None
+
         if self.contrast_path:
             contrast_sheet = AnnotationSheet.from_file_path(
                 file_path=self.contrast_path,
                 file_type='excel',
                 name='DESeq Contrast Table')
-        else:
-            contrast_sheet = None
 
         # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
-        for design_row_dict in design_sheet.row_dicts:
+        for design_row_dict in design_sheet.row_dict_list:
             design_name = design_row_dict['design']
 
             prefix = '_'.join((self.prefix, design_name))
@@ -3957,7 +3957,7 @@ class DESeq(Analysis):
                 for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                     row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
 
-                annotation_sheet.row_dicts.append(row_dict)
+                annotation_sheet.row_dict_list.append(row_dict)
 
             # Write the DESeq Sample Annotation Sheet to disk.
             annotation_sheet.to_file_path(adjust_field_names=True)
@@ -3976,7 +3976,7 @@ class DESeq(Analysis):
                 contrast_sheet.to_file_path()
 
                 # Search for design-specific contrasts upon which the results stage can be submitted.
-                for contrast_row_dict in contrast_sheet.row_dicts:
+                for contrast_row_dict in contrast_sheet.row_dict_list:
                     if 'Design' in contrast_row_dict \
                             and contrast_row_dict['Design'] == design_name \
                             and not contrast_sheet.get_boolean(row_dict=contrast_row_dict, key='Exclude'):
@@ -4087,13 +4087,13 @@ class DESeq(Analysis):
             # Read the design table as a backup, in case the design-specific LRT summary table is not available.
             # Exclude designs if requested.
 
-            design_sheet = AnnotationSheet.from_file_path(
+            design_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
                 file_path=self.comparison_path,
                 file_type='excel',
                 name='DESeq Design Table')
 
             design_dict: dict[str, dict[str, str]] = {
-                value['design']: value for value in design_sheet.row_dicts if
+                value['design']: value for value in design_sheet.row_dict_list if
                 not design_sheet.get_boolean(row_dict=value, key='exclude')
             }
 
@@ -4355,12 +4355,12 @@ class DESeq(Analysis):
                     design_prefix + '_lrt_summary.tsv')
 
                 if os.path.exists(lrt_summary_path):
-                    lrt_summary_sheet = AnnotationSheet.from_file_path(
+                    lrt_summary_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
                         file_path=lrt_summary_path,
                         file_type='excel-tab',
                         name='DESeq LRT Summary Table')
 
-                    lrt_row_dict_list = lrt_summary_sheet.row_dicts
+                    lrt_row_dict_list = lrt_summary_sheet.row_dict_list
                 else:
                     lrt_row_dict_list = list()
 
@@ -4451,7 +4451,7 @@ class DESeq(Analysis):
             # Read the contrasts from a design-specific summary file including numbers of significantly differentially
             # expressed genes or the project-specific contrasts file as a backup.
 
-            contrast_sheet = AnnotationSheet.from_file_path(
+            contrast_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
                 file_path=self.contrast_path,
                 file_type='excel',
                 name='DESeq Contrasts Table')
@@ -4459,7 +4459,7 @@ class DESeq(Analysis):
             # For compatibility with design-specific summary files, re-index the contrast sheet on design names.
             contrast_dict: dict[str, list[dict[str, str]]] = dict()
 
-            for contrast_row_dict in contrast_sheet.row_dicts:
+            for contrast_row_dict in contrast_sheet.row_dict_list:
                 if contrast_row_dict['Design'] not in contrast_dict:
                     contrast_dict[contrast_row_dict['Design']] = list()
                 contrast_dict[contrast_row_dict['Design']].append(contrast_row_dict)
@@ -4476,15 +4476,15 @@ class DESeq(Analysis):
                     design_prefix,
                     design_prefix + '_contrasts_summary.tsv')
                 if os.path.exists(contrasts_summary_path):
-                    summary_sheet = AnnotationSheet.from_file_path(
+                    summary_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
                         file_path=contrasts_summary_path,
                         file_type='excel-tab',
                         name='DESeq Contrasts Summary Table')
-                    summary_row_dicts = summary_sheet.row_dicts
+                    summary_row_dict_list = summary_sheet.row_dict_list
                 else:
-                    summary_row_dicts = contrast_dict[design_name]
+                    summary_row_dict_list = contrast_dict[design_name]
 
-                for row_dict in summary_row_dicts:
+                for row_dict in summary_row_dict_list:
                     # Exclude contrasts if requested.
                     if contrast_sheet.get_boolean(row_dict=row_dict, key='Exclude'):
                         continue

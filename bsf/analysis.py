@@ -120,7 +120,7 @@ class Stage(object):
             executable_list: list[Executable] = None) -> None:
         """Initialise a :py:class:`bsf.analysis.Stage` object.
 
-        :param name: An name.
+        :param name: A name.
         :type name: str
         :param working_directory: A working directory.
         :type working_directory: str

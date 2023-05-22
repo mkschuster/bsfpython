@@ -29,7 +29,6 @@ validate a Library Annotation Sheet file used by the
 """
 
 import logging
-import warnings
 from argparse import ArgumentParser
 
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
@@ -63,7 +62,7 @@ if name_space.logging_level:
 
     logging.basicConfig(level=name_space.logging_level)
 
-library_annotation_sheet = LibraryAnnotationSheet.from_file_path(
+library_annotation_sheet: LibraryAnnotationSheet = LibraryAnnotationSheet.from_file_path(
     file_path=name_space.library_path)
 
 if name_space.mode == 'high':
@@ -77,7 +76,7 @@ elif name_space.mode == 'nextseq':
 else:
     raise Exception(f'The --output mode option {name_space.mode!r} is not supported.')
 
-messages = library_annotation_sheet.validate(lanes=lanes)
+message_list = library_annotation_sheet.validate(lanes=lanes)
 
-if messages:
-    warnings.warn('\n' + messages, UserWarning)
+if message_list:
+    print(*message_list)

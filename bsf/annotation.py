@@ -29,7 +29,7 @@
 import logging
 import re
 from csv import DictReader, DictWriter
-from typing import Callable, Optional, TextIO, TypeVar, Union
+from typing import Callable, Optional, TextIO, TypeVar
 
 AnnotationSheetType = TypeVar(name='AnnotationSheetType', bound='AnnotationSheet')
 
@@ -53,13 +53,13 @@ class AnnotationSheet(object):
     :type file_type: str
     :ivar name: A name.
     :type name: str | None
-    :ivar field_names: A Python :py:class:`list` object of Python :py:class:`str` (field name) objects.
-    :type field_names: list[str]
-    :ivar test_methods: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
+    :ivar field_name_list: A Python :py:class:`list` object of Python :py:class:`str` (field name) objects.
+    :type field_name_list: list[str]
+    :ivar check_dict: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
         Python :py:class:`list` of Python :py:class:`Callable` value objects.
-    :type test_methods: dict[str, list[(int, dict[str, str], str) -> str]]
-    :ivar row_dicts: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
-    :type row_dicts: list[dict[str, str]]
+    :type check_dict: dict[str, list[(list[str], int, dict[str, str], str) -> None]]
+    :ivar row_dict_list: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
+    :type row_dict_list: list[dict[str, str]]
     """
 
     # Regular expression for non-alphanumeric characters
@@ -78,17 +78,17 @@ class AnnotationSheet(object):
     _regular_expression_multiple_underscore = re.compile(pattern=r'_{2,}')
 
     # File type (i.e., 'excel' or 'excel-tab' defined in the csv.Dialect class)
-    _file_type = 'excel'
+    _file_type: str = 'excel'
 
     # Header line exists
-    _header_line = True
+    _has_header_line = True
 
     # Python list of Python str (field name) objects
-    _field_names: list[str] = list()
+    _field_name_list: list[str] = []
 
     # Python dict of Python str (field name) key data and
     # Python list of Python typing.Callable value data
-    _test_methods: dict[str, list[Callable[[int, dict[str, str], str], str]]] = dict()
+    _check_dict: dict[str, list[Callable[[list[str], int, dict[str, str], str], None]]] = {}
 
     # Python dict of (boolean state) Python str objects and Python bool value objects.
     _boolean_states: dict[str, bool] = {
@@ -99,13 +99,16 @@ class AnnotationSheet(object):
     @classmethod
     def check_column_value(
             cls,
+            message_list: list[str],
             row_number: int,
             row_dict: dict[str, str],
             column_name: str,
             require_column: bool = False,
-            require_value: bool = False) -> Union[tuple[str, None], tuple[str, str]]:
+            require_value: bool = False) -> Optional[str]:
         """Check for a column name and return its associated value, if any.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -116,37 +119,39 @@ class AnnotationSheet(object):
         :type require_column: bool
         :param require_value: Require a value, which also implies requiring the column_name.
         :type require_value: bool
-        :return: A Python :py:class:`tuple` of Python :py:class:`str` (warning message) and
-            Python :py:class:`str` (column value) objects.
-        :rtype: (str, str) | (str, None)
+        :return: A Python :py:class:`str` (column value) objects or None.
+        :rtype: str | None
         """
-        message = str()
-
         if column_name not in row_dict:
             if require_column or require_value:
-                message += 'Column name {!r} not in dict for row {}.\n'.format(column_name, row_number)
-            return message, None
+                message_list.append(f'Column name {column_name!r} not in dict for row {row_number!s}.')
+
+            return None
 
         if row_dict[column_name]:
-            return message, row_dict[column_name]
+            return row_dict[column_name]
         else:
             if require_value:
-                message += 'Column name {!r} without value in row {}.\n'.format(column_name, row_number)
-            return message, None
+                message_list.append(f'Column name {column_name!r} without value in row {row_number!s}.')
+
+            return None
 
     @classmethod
     def _check_alphanumeric(
             cls,
+            message_list: list[str],
             row_number: int,
             row_dict: dict[str, str],
             column_name: str,
             require_column: bool = False,
-            require_value: bool = False) -> str:
+            require_value: bool = False) -> None:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only alphanumeric characters.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -157,10 +162,9 @@ class AnnotationSheet(object):
         :type require_column: bool
         :param require_value: Require a value, which also implies requiring the column_name.
         :type require_value: bool
-        :return: Warning messages.
-        :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -170,47 +174,60 @@ class AnnotationSheet(object):
         if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_alpha, string=row_dict[column_name])
             if match:
-                messages += 'Column {!r} in row {} contains a value {!r} with non-alphanumeric characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Column {column_name!r} in row {row_number!s} '
+                    f'contains a value {row_dict[column_name]!r} with non-alphanumeric characters.')
 
-        return messages
+        return
 
     @classmethod
-    def check_alphanumeric(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_alphanumeric(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         Neither the column nor the value needs existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_alphanumeric(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name)
 
     @classmethod
-    def check_alphanumeric_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_alphanumeric_column(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         The column, but not the value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_alphanumeric(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -218,21 +235,27 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_alphanumeric_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_alphanumeric_value(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`alphanumeric`.
 
         Both, the column and value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_alphanumeric(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -242,16 +265,19 @@ class AnnotationSheet(object):
     @classmethod
     def _check_numeric(
             cls,
+            message_list: list[str],
             row_number: int,
             row_dict: dict[str, str],
             column_name: str,
             require_column: bool = False,
-            require_value: bool = False) -> str:
+            require_value: bool = False) -> None:
         """Validate a particular column value as :literal:`numeric`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only numeric characters.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -262,10 +288,9 @@ class AnnotationSheet(object):
         :type require_column: bool
         :param require_value: Require a value, which also implies requiring the column_name.
         :type require_value: bool
-        :return: Warning messages.
-        :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -275,27 +300,34 @@ class AnnotationSheet(object):
         if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_numeric, string=row_dict[column_name])
             if match:
-                messages += 'Column {!r} in row {} contains a value {!r} with non-numeric characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Column {column_name!r} in row {row_number!s} '
+                    f'contains a value {row_dict[column_name]!r} with non-numeric characters.')
 
-        return messages
+        return
 
     @classmethod
-    def check_numeric(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_numeric(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`numeric`.
 
         Neither the column nor the value needs existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_numeric(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -303,21 +335,27 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_numeric_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_numeric_column(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`numeric`.
 
         The column, but not the value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_numeric(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -325,21 +363,27 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_numeric_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_numeric_value(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`numeric`.
 
         Both, the column and value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_numeric(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -349,16 +393,19 @@ class AnnotationSheet(object):
     @classmethod
     def _check_sequence(
             cls,
+            message_list: list[str],
             row_number: int,
             row_dict: dict[str, str],
             column_name: str,
             require_column: bool = False,
-            require_value: bool = False) -> str:
+            require_value: bool = False) -> None:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only valid IUPAC sequence characters.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -369,10 +416,9 @@ class AnnotationSheet(object):
         :type require_column: bool
         :param require_value: Require a value.
         :type require_value: bool
-        :return: Warning messages.
-        :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -382,28 +428,35 @@ class AnnotationSheet(object):
         if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_sequence, string=row_dict[column_name])
             if match:
-                messages += 'Field {!r} in row {} contains a IUPAC sequence {!r} ' \
-                            'with illegal characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Field {column_name!r} in row {row_number!s} '
+                    f'contains a IUPAC sequence {row_dict[column_name]!r} '
+                    'with illegal characters.')
 
-        return messages
+        return
 
     @classmethod
-    def check_sequence(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_sequence(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         Neither the column nor the value needs existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_sequence(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -411,21 +464,27 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_sequence_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_sequence_column(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         The column, but not the value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_sequence(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -433,21 +492,27 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_sequence_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_sequence_value(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`IUPAC sequence`.
 
         Both, the column and value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_sequence(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -457,16 +522,19 @@ class AnnotationSheet(object):
     @classmethod
     def _check_ambiguous_sequence(
             cls,
+            message_list: list[str],
             row_number: int,
             row_dict: dict[str, str],
             column_name: str,
             require_column: bool = False,
-            require_value: bool = False) -> str:
+            require_value: bool = False) -> None:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         If the particular column name key exists in the row dictionary and if it has
         an associated value, it must contain only valid IUPAC ambiguity sequence characters.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -477,10 +545,9 @@ class AnnotationSheet(object):
         :type require_column: bool
         :param require_value: Require a value.
         :type require_value: bool
-        :return: Warning messages.
-        :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -490,28 +557,35 @@ class AnnotationSheet(object):
         if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_ambiguous_sequence, string=row_dict[column_name])
             if match:
-                messages += 'Field {!r} in row {} contains a IUPAC ambiguous sequence {!r} ' \
-                            'with illegal characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Field {column_name!r} in row {row_number!s} '
+                    f'contains a IUPAC ambiguous sequence {row_dict[column_name]!r} '
+                    'with illegal characters.')
 
-        return messages
+        return
 
     @classmethod
-    def check_ambiguous_sequence(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_ambiguous_sequence(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         Neither the column nor the value needs existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_ambiguous_sequence(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -519,21 +593,27 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_ambiguous_sequence_column(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_ambiguous_sequence_column(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         The column, but not the value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
         return cls._check_ambiguous_sequence(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -541,11 +621,18 @@ class AnnotationSheet(object):
             require_value=False)
 
     @classmethod
-    def check_ambiguous_sequence_value(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_ambiguous_sequence_value(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value as :literal:`IUPAC ambiguous sequence`.
 
         Both, the column and value need existing.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -556,6 +643,7 @@ class AnnotationSheet(object):
         :rtype: str
         """
         return cls._check_ambiguous_sequence(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -563,12 +651,19 @@ class AnnotationSheet(object):
             require_value=True)
 
     @classmethod
-    def check_underscore_leading(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_underscore_leading(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value for :literal:`leading underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
         its associated value has no leading underscore.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
@@ -578,63 +673,79 @@ class AnnotationSheet(object):
         :return: Warning messages.
         :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name)
 
         if column_value is not None:
             if column_value[:1] == '_':
-                messages += 'Column {!r} in row {} contains a value {!r} with a leading underscore character.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Column {column_name!r} in row {row_number!s} '
+                    f'contains a value {row_dict[column_name]!r} '
+                    f'with a leading underscore character.')
 
-        return messages
+        return
 
     @classmethod
-    def check_underscore_trailing(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_underscore_trailing(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value for :literal:`trailing underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
         its associated value has no trailing underscore.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name)
 
         if column_value is not None:
             if column_value[-1:] == '_':
-                messages += 'Column {!r} in row {} contains a value {!r} with a trailing underscore character.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Column {column_name!r} in row {row_number!s} '
+                    f'contains a value {row_dict[column_name]!r} with a trailing underscore character.')
 
-        return messages
+        return
 
     @classmethod
-    def check_underscore_multiple(cls, row_number: int, row_dict: dict[str, str], column_name: str) -> str:
+    def check_underscore_multiple(
+            cls,
+            message_list: list[str],
+            row_number: int,
+            row_dict: dict[str, str],
+            column_name: str) -> None:
         """Validate a particular column value for :literal:`multiple underscore characters`.
 
         Check that the particular column name key exists in the row dictionary and that
         its associated value has not multiple underscore adjacent to each other.
 
+        :param message_list: A Python :py:class:`list` object of Python :py:class:`str` (message) objects.
+        :type message_list: list[str]
         :param row_number: A current row number for warning messages.
         :type row_number: int
         :param row_dict: A Python :py:class:`dict` object of row entries of a Python :py:class:`csv.DictReader` object.
         :type row_dict: dict[str, str]
         :param column_name: A column name.
         :type column_name: str
-        :return: Warning messages.
-        :rtype: str
         """
-        messages, column_value = cls.check_column_value(
+        column_value = cls.check_column_value(
+            message_list=message_list,
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name)
@@ -642,10 +753,11 @@ class AnnotationSheet(object):
         if column_value is not None:
             match = re.search(pattern=cls._regular_expression_multiple_underscore, string=row_dict[column_name])
             if match:
-                messages += 'Column {!r} in row {} contains a value {!r} with multiple underscore characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+                message_list.append(
+                    f'Column {column_name!r} in row {row_number!s} '
+                    f'contains a value {row_dict[column_name]!r} with multiple underscore characters.')
 
-        return messages
+        return
 
     @classmethod
     def from_file_path(
@@ -676,7 +788,7 @@ class AnnotationSheet(object):
         annotation_sheet.csv_reader_open()
 
         for row_dict in annotation_sheet._csv_reader_object:
-            annotation_sheet.row_dicts.append(row_dict)
+            annotation_sheet.row_dict_list.append(row_dict)
 
         annotation_sheet.csv_reader_close()
 
@@ -688,9 +800,9 @@ class AnnotationSheet(object):
             file_type: Optional[str] = None,
             name: Optional[str] = None,
             header: Optional[bool] = None,
-            field_names: Optional[list[str]] = None,
-            test_methods: Optional[dict[str, list[Callable[[int, dict[str, str], str], str]]]] = None,
-            row_dicts: Optional[list[dict[str, str]]] = None) -> None:
+            field_name_list: Optional[list[str]] = None,
+            check_dict: Optional[dict[str, list[Callable[[list[str], int, dict[str, str], str], None]]]] = None,
+            row_dict_list: Optional[list[dict[str, str]]] = None) -> None:
         """Initialise a :py:class:`bsf.annotation.AnnotationSheet` object.
 
         :param file_path: A file path.
@@ -702,13 +814,13 @@ class AnnotationSheet(object):
         :type name: str | None
         :param header: A header line exists.
         :type header: bool | None
-        :param field_names: A Python :py:class:`list` object of Python :py:class:`str` (field name) objects.
-        :type field_names: list[str] | None
-        :param test_methods: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
+        :param field_name_list: A Python :py:class:`list` object of Python :py:class:`str` (field name) objects.
+        :type field_name_list: list[str] | None
+        :param check_dict: A Python :py:class:`dict` of Python :py:class:`str` (field name) key and
         Python :py:class:`list` of Python :py:class:`Callable` value objects.
-        :type test_methods: dict[str, list[(int, dict[str, str], str) -> str]] | None
-        :param row_dicts: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
-        :type row_dicts: list[dict[str, str]] | None
+        :type check_dict: dict[str, list[(list[str], int, dict[str, str], str) -> None]] | None
+        :param row_dict_list: A Python :py:class:`list` object of Python :py:class:`dict` (row) objects.
+        :type row_dict_list: list[dict[str, str]] | None
         """
         super(AnnotationSheet, self).__init__()
 
@@ -724,26 +836,26 @@ class AnnotationSheet(object):
 
         if header is None:
             # Copy the class variable.
-            self.header = bool(self._header_line)
+            self.has_header_line = bool(self._has_header_line)
         else:
-            self.header = header
+            self.has_header_line = header
 
-        if field_names is None:
+        if field_name_list is None:
             # Copy the class variable.
-            self.field_names = list(self._field_names)
+            self.field_name_list = list(self._field_name_list)
         else:
-            self.field_names = field_names
+            self.field_name_list = field_name_list
 
-        if test_methods is None:
+        if check_dict is None:
             # Copy the class variable.
-            self.test_methods = self._test_methods.copy()
+            self.check_dict = self._check_dict.copy()
         else:
-            self.test_methods = test_methods
+            self.check_dict = check_dict
 
-        if row_dicts is None:
-            self.row_dicts = list()
+        if row_dict_list is None:
+            self.row_dict_list = list()
         else:
-            self.row_dicts = row_dicts
+            self.row_dict_list = row_dict_list
 
         self._csv_reader_text_io: Optional[TextIO] = None
         self._csv_reader_object: Optional[DictReader[str]] = None
@@ -765,16 +877,16 @@ class AnnotationSheet(object):
         str_list: list[str] = list()
 
         str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  file_path:    {!r}\n'.format(indent, self.file_path))
-        str_list.append('{}  file_type:    {!r}\n'.format(indent, self.file_type))
-        str_list.append('{}  name:         {!r}\n'.format(indent, self.name))
-        str_list.append('{}  header:       {!r}\n'.format(indent, self.header))
-        str_list.append('{}  field_names:  {!r}\n'.format(indent, self.field_names))
-        str_list.append('{}  test_methods: {!r}\n'.format(indent, self.test_methods))
-        str_list.append('{}  row_dicts:    {}\n'.format(indent, self.row_dicts))
+        str_list.append('{}  file_path:       {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type:       {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  name:            {!r}\n'.format(indent, self.name))
+        str_list.append('{}  has_header_line: {!r}\n'.format(indent, self.has_header_line))
+        str_list.append('{}  field_name_list: {!r}\n'.format(indent, self.field_name_list))
+        str_list.append('{}  check_dict:      {!r}\n'.format(indent, self.check_dict))
+        str_list.append('{}  row_dict_list:   {}\n'.format(indent, self.row_dict_list))
 
-        str_list.append('{}  Row dictionaries {}:\n'.format(indent, self.row_dicts))
-        for row_dict in self.row_dicts:
+        str_list.append('{}  Row dictionaries {}:\n'.format(indent, self.row_dict_list))
+        for row_dict in self.row_dict_list:
             str_list.append('{}    {!r}\n'.format(indent, row_dict))
 
         return str_list
@@ -792,10 +904,10 @@ class AnnotationSheet(object):
         # However, the DictReader should always do so, if a header line is expected since
         # otherwise, the header line would get repeated as data line.
 
-        if self.field_names and not self.header:
-            csv_field_names = self.field_names
+        if self.field_name_list and not self.has_header_line:
+            csv_field_name_list = self.field_name_list
         else:
-            csv_field_names = None
+            csv_field_name_list = None
 
         if self.file_type:
             csv_file_type = self.file_type
@@ -807,14 +919,14 @@ class AnnotationSheet(object):
         self._csv_reader_text_io = open(file=self.file_path, mode='r', newline='')
         self._csv_reader_object = DictReader(
             f=self._csv_reader_text_io,
-            fieldnames=csv_field_names,
+            fieldnames=csv_field_name_list,
             dialect=csv_file_type)
 
         # Automatically set the field names from the DictReader,
-        # if the field_names list is empty and if possible.
+        # if the field_name_list is empty and if possible.
 
-        if self._csv_reader_object.fieldnames and not self.field_names:
-            self.field_names.extend(self._csv_reader_object.fieldnames)
+        if self._csv_reader_object.fieldnames and not self.field_name_list:
+            self.field_name_list.extend(self._csv_reader_object.fieldnames)
 
         return
 
@@ -836,8 +948,8 @@ class AnnotationSheet(object):
         if not self.file_path:
             raise Exception("Cannot write an AnnotationSheet without a valid 'file_name'.")
 
-        if not self.field_names:
-            raise Exception("A csv.DictWriter object requires a Python list of 'field_names'.")
+        if not self.field_name_list:
+            raise Exception("Cannot write an AnnotationSheet without a valid 'field_name_list'.")
 
         if self.file_type:
             csv_file_type = self.file_type
@@ -849,10 +961,10 @@ class AnnotationSheet(object):
         self._csv_writer_text_io = open(file=self.file_path, mode='w', newline='')
         self._csv_writer_object = DictWriter(
             f=self._csv_writer_text_io,
-            fieldnames=self.field_names,
+            fieldnames=self.field_name_list,
             dialect=csv_file_type)
 
-        if self.header:
+        if self.has_header_line:
             self._csv_writer_object.writeheader()
 
         return
@@ -907,39 +1019,38 @@ class AnnotationSheet(object):
 
         return
 
-    def validate(self) -> str:
+    def validate(self) -> list[str]:
         """Validate a :py:class:`bsf.annotation.AnnotationSheet` object.
 
-        :return: Warning messages.
-        :rtype: str
+        :return: A Python :py:class:`list` object of Python :py:class:`str` (warning message) objects.
+        :rtype: list[str]
         """
-        messages = str()
-        row_number = 0
+        message_list: list[str] = []
 
-        for row_dict in self.row_dicts:
-            row_number += 1
-            for field_name in self.field_names:
-                if field_name in self.test_methods:
-                    for class_method_pointer in self.test_methods[field_name]:
-                        # Only validate fields, for which instructions exist in the test_methods dict.
-                        messages += class_method_pointer(row_number, row_dict, field_name)
+        for row_index, row_dict in enumerate(self.row_dict_list):
+            row_number = row_index + 1
+            for field_name in self.field_name_list:
+                if field_name in self.check_dict:
+                    for class_method_pointer in self.check_dict[field_name]:
+                        # Only validate fields, for which instructions exist in the check_dict.
+                        class_method_pointer(message_list, row_number, row_dict, field_name)
 
-        return messages
+        return message_list
 
     def adjust_field_names(self) -> None:
         """Adjust the Python :py:class:`list` object of Python :py:class:`str` (field name) objects to the keys used in
         Python :py:class:`dict` (row) objects.
         """
-        field_names = list()
+        field_name_list = list()
 
-        for row_dict in self.row_dicts:
+        for row_dict in self.row_dict_list:
             for key in row_dict:
-                if key not in field_names:
-                    field_names.append(key)
+                if key not in field_name_list:
+                    field_name_list.append(key)
 
-        del self.field_names[:]
+        del self.field_name_list[:]
 
-        self.field_names.extend(sorted(field_names))
+        self.field_name_list.extend(sorted(field_name_list))
 
         return
 
@@ -955,7 +1066,7 @@ class AnnotationSheet(object):
 
         self.csv_writer_open()
 
-        for row_dict in self.row_dicts:
+        for row_dict in self.row_dict_list:
             self.csv_writer_write_row(row_dict=row_dict)
 
         self.csv_writer_close()

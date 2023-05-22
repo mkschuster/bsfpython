@@ -2486,11 +2486,11 @@ class VariantCallingGATK(Analysis):
                 # A comparison file path has been provided.
                 self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
-                annotation_sheet = AnnotationSheet.from_file_path(
+                annotation_sheet: AnnotationSheet = AnnotationSheet.from_file_path(
                     file_path=self.comparison_path,
                     name='Somatic Comparisons')
 
-                for row_dict in annotation_sheet.row_dicts:
+                for row_dict in annotation_sheet.row_dict_list:
                     module_logger.debug('Comparison sheet row_dict: %r', row_dict)
 
                     comparison = VariantCallingGATKComparison()
