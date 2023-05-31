@@ -428,6 +428,8 @@ class Tuxedo(Analysis):
     :type no_length_correction: bool | None
     :ivar aligner: Alignment program
     :type aligner: str | None
+    :ivar ucsc_autosql_big_gene_prediction: A UCSC bigGenePred AutoSQL file path.
+    :type ucsc_autosql_big_gene_prediction: str | None
     """
 
     name = 'RNA-seq Analysis'
@@ -802,7 +804,8 @@ class Tuxedo(Analysis):
             novel_transcripts: Optional[bool] = None,
             false_discovery_rate: Optional[float] = None,
             no_length_correction: Optional[bool] = None,
-            aligner: Optional[str] = None) -> None:
+            aligner: Optional[str] = None,
+            ucsc_autosql_big_gene_prediction: Optional[str] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.Tuxedo` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -870,6 +873,8 @@ class Tuxedo(Analysis):
         :type no_length_correction: bool | None
         :param aligner: Alignment program
         :type aligner: str | None
+        :param ucsc_autosql_big_gene_prediction: A UCSC bigGenePred AutoSQL file path.
+        :type ucsc_autosql_big_gene_prediction: str | None
         """
         super(Tuxedo, self).__init__(
             configuration=configuration,
@@ -907,6 +912,7 @@ class Tuxedo(Analysis):
         self.false_discovery_rate = false_discovery_rate
         self.no_length_correction = no_length_correction
         self.aligner = aligner
+        self.ucsc_autosql_big_gene_prediction = ucsc_autosql_big_gene_prediction
 
         self._comparison_dict: dict[str, list[SampleGroup]] = dict()
 
@@ -998,6 +1004,10 @@ class Tuxedo(Analysis):
         option = 'aligner'
         if configuration.config_parser.has_option(section=section, option=option):
             self.aligner = configuration.config_parser.get(section=section, option=option)
+
+        option = 'ucsc_autosql_big_gene_prediction'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.ucsc_autosql_big_gene_prediction = configuration.get_list_from_csv(section=section, option=option)
 
         return
 
@@ -1363,6 +1373,14 @@ class Tuxedo(Analysis):
                 raise Exception(f"The 'aligner' configuration option {self.aligner!r} "
                                 f"is not a member of {aligner_tuple!r}.")
 
+        # Check for a UCSC bigGenePred.as AutoSQL file.
+
+        if not self.ucsc_autosql_big_gene_prediction:
+            self.ucsc_autosql_big_gene_prediction = os.path.join(StandardFilePath.get_resource_ucsc(), 'bigGenePred.as')
+
+        if not (self.ucsc_autosql_big_gene_prediction and os.path.exists(self.ucsc_autosql_big_gene_prediction)):
+            raise Exception(f"The {self.name!r} requires a valid 'ucsc_autosql_big_gene_prediction' option.")
+
         # Read configuration options.
 
         stage_run_tophat = self.get_stage(name=self.get_stage_name_run_tophat())
@@ -1725,8 +1743,7 @@ class Tuxedo(Analysis):
                 ])
             runnable_run_cufflinks.add_runnable_step(runnable_step=runnable_step)
 
-            # TODO: The location of the autoSQL file needs to be configurable.
-            runnable_step.add_option_pair_short(key='as', value='/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
+            runnable_step.add_option_pair_short(key='as', value=self.ucsc_autosql_big_gene_prediction)
             runnable_step.add_switch_short(key='tab')
             runnable_step.add_option_pair_short(key='type', value='bed12+8')
             runnable_step.arguments.append(file_path_cufflinks.temporary_fixed_tsv)

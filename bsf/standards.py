@@ -1437,6 +1437,17 @@ class StandardFilePath(BaseSection):
         """
         return cls._prepend_resource(file_path=cls.get_expanded_directory(option='snpeff_data'), absolute=absolute)
 
+    @classmethod
+    def get_resource_ucsc(cls, absolute: bool = True) -> Optional[str]:
+        """Get a :emphasis:`UCSC Genome Browser` data resource directory path.
+
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A :emphasis:`UCSC Genome Browser` data resource directory path.
+        :rtype: str | None
+        """
+        return cls._prepend_resource(file_path=cls.get_expanded_directory(option='ucsc'), absolute=absolute)
+
 
 class Index(BaseSection):
     """The :py:class:`bsf.standards.Index` class models genome or transcriptome index directory defaults.
