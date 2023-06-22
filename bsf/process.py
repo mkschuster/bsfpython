@@ -1609,7 +1609,8 @@ class RunnableStepPicard(RunnableStepJava):
             java_heap_minimum: Optional[str] = None,
             java_heap_maximum: Optional[str] = None,
             java_jar_path: Optional[str] = None,
-            picard_command: Optional[str] = None) -> None:
+            picard_command: Optional[str] = None,
+            option_pair: Optional[bool] = None) -> None:
         """Initialise a :py:class:`bsf.process.RunnableStepPicard` object.
 
         :param name: A name.
@@ -1658,6 +1659,9 @@ class RunnableStepPicard(RunnableStepJava):
         :type java_jar_path: str | None
         :param picard_command: A Picard command.
         :type picard_command: str | None
+        :param option_pair: Request the older Picard :py:class:`bsf.argument.OptionPair` interface rather than the
+            newer GATK Barclay :py:class:`bsf.argument.OptionLong`.
+        :type option_pair: bool | None
         """
         super(RunnableStepPicard, self).__init__(
             name=name,
@@ -1684,10 +1688,16 @@ class RunnableStepPicard(RunnableStepJava):
         if self.sub_command.sub_command is None:
             self.sub_command.sub_command = Command(name=picard_command, program=picard_command)
 
+        self.option_pair = option_pair
+
         return
 
     def add_picard_option(self, key: str, value: str, override: bool = False) -> None:
-        """Add a :py:class:`bsf.argument.OptionPair` object to a :py:class:`bsf.process.RunnableStepPicard` object.
+        """Add a :py:class:`bsf.argument.OptionLong` or :py:class:`bsf.argument.OptionPair` object to a
+        :py:class:`bsf.process.RunnableStepPicard` object.
+
+        The Picard command line interface has changed over time from an option pair (i.e., KEY=VALUE) to
+        a long option (i.e., --KEY VALUE) interface.
 
         :param key: Option key
         :type key: str
@@ -1696,7 +1706,10 @@ class RunnableStepPicard(RunnableStepJava):
         :param override: Override existing :py:class:`bsf.argument.Argument` objects without warning
         :type override: bool
         """
-        return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
+        if self.option_pair:
+            return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
+        else:
+            return self.sub_command.sub_command.add_option_long(key=key, value=value, override=override)
 
 
 class RunnableStepLink(RunnableStep):

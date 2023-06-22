@@ -4286,22 +4286,27 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_picard_option(
                         key='OPTICAL_DUPLICATE_PIXEL_DISTANCE',
                         value='5000')
+
+                    # Optional Common Arguments
+                    # COMPRESSION_LEVEL [5]
+                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                    # CREATE_INDEX [false]
+                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                    # CREATE_MD5_FILE [false]
+                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
+                    # QUIET [false]
+                    # REFERENCE_SEQUENCE [null]
+                    # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_process_lane.temporary_directory_path(absolute=False))
-                    # VERBOSITY defaults to 'INFO'.
+                    # USE_JDK_DEFLATER [false]
+                    # USE_JDK_INFLATER [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET defaults to 'false'.
-                    # VALIDATION_STRINGENCY defaults to 'STRICT'.
-                    # COMPRESSION_LEVEL defaults to '5'.
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                    # MAX_RECORDS_IN_RAM defaults to '500000'.
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
-                    # CREATE_INDEX defaults to 'false'.
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                    # CREATE_MD5_FILE defaults to 'false'.
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                    # OPTIONS_FILE
 
                 # Run the GATK RealignerTargetCreator and GATK IndelRealigner analyses, unless configured to skip them.
 
@@ -4548,22 +4553,27 @@ class VariantCallingGATK(Analysis):
                     runnable_step.obsolete_file_path_list.append(file_path_process_read_group.recalibrated_md5)
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_process_sample.merged_bam)
                 runnable_step.add_picard_option(key='USE_THREADING', value='true')
+
+                # Optional Common Arguments
+                # COMPRESSION_LEVEL [5]
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                # CREATE_INDEX [false]
+                runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                # CREATE_MD5_FILE [false]
+                runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                # MAX_RECORDS_IN_RAM [500000]
+                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
+                # QUIET [false]
+                # REFERENCE_SEQUENCE [null]
+                # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_process_sample.temporary_directory_path(absolute=False))
-                # VERBOSITY defaults to 'INFO'.
+                # USE_JDK_DEFLATER [false]
+                # USE_JDK_INFLATER [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET defaults to 'false'.
-                # VALIDATION_STRINGENCY defaults to 'STRICT'.
-                # COMPRESSION_LEVEL defaults to '5'.
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                # MAX_RECORDS_IN_RAM defaults to '500000'.
-                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
-                # CREATE_INDEX defaults to 'false'.
-                runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                # CREATE_MD5_FILE defaults to 'false'.
-                runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                # OPTIONS_FILE
 
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
 
@@ -4625,22 +4635,27 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_picard_option(
                         key='OPTICAL_DUPLICATE_PIXEL_DISTANCE',
                         value='5000')
+
+                    # Optional Common Arguments
+                    # COMPRESSION_LEVEL [5]
+                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                    # CREATE_INDEX [false]
+                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                    # CREATE_MD5_FILE [false]
+                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
+                    # QUIET [false]
+                    # REFERENCE_SEQUENCE [null]
+                    # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_process_sample.temporary_directory_path(absolute=False))
-                    # VERBOSITY defaults to 'INFO'.
+                    # USE_JDK_DEFLATER [false]
+                    # USE_JDK_INFLATER [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET defaults to 'false'.
-                    # VALIDATION_STRINGENCY defaults to 'STRICT'.
-                    # COMPRESSION_LEVEL defaults to '5'.
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                    # MAX_RECORDS_IN_RAM defaults to '500000'.
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
-                    # CREATE_INDEX defaults to 'false'.
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                    # CREATE_MD5_FILE defaults to 'false'.
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                    # OPTIONS_FILE
 
                 # Run the GATK RealignerTargetCreator and GATK IndelRealigner analyses, unless configured to skip them.
 
@@ -4748,15 +4763,22 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_process_sample.temporary_directory_path(absolute=False))
-            # VERBOSITY defaults to 'INFO'.
+         # Optional Common Arguments
+            # COMPRESSION_LEVEL [5]
+            # CREATE_INDEX [false]
+            # CREATE_MD5_FILE [false]
+            # MAX_RECORDS_IN_RAM [500000]
+            # QUIET [false]
+            # REFERENCE_SEQUENCE [null]
+            # TMP_DIR [null]
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_process_sample.temporary_directory_path(absolute=False))
+            # USE_JDK_DEFLATER [false]
+            # USE_JDK_INFLATER [false]
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
             runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-            # QUIET defaults to 'false'.
-            # VALIDATION_STRINGENCY defaults to 'STRICT'.
-            # COMPRESSION_LEVEL defaults to '5'.
-            # MAX_RECORDS_IN_RAM defaults to '500000'.
-            # CREATE_INDEX defaults to 'false'.
-            # CREATE_MD5_FILE defaults to 'false'.
-            # OPTIONS_FILE
 
             # Run the GATK HaplotypeCaller analysis per sample.
 
@@ -5038,19 +5060,23 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
                 runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
                 # PER_TARGET_COVERAGE
-                # TMP_DIR
+
+                # Optional Common Arguments
+                # COMPRESSION_LEVEL [5]
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # MAX_RECORDS_IN_RAM [500000]
+                # QUIET [false]
+                # REFERENCE_SEQUENCE [null]
+                # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_diagnose_sample.temporary_directory_path(absolute=False))
-                # VERBOSITY defaults to 'INFO'.
+                # USE_JDK_DEFLATER [false]
+                # USE_JDK_INFLATER [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET defaults to 'false'.
-                # VALIDATION_STRINGENCY defaults to 'STRICT'.
-                # COMPRESSION_LEVEL defaults to '5'.
-                # MAX_RECORDS_IN_RAM defaults to '500000'.
-                # CREATE_INDEX defaults to 'false'.
-                # CREATE_MD5_FILE defaults to 'false'.
-                # OPTIONS_FILE
 
         #########################################
         # Step 5: Hierarchically merge cohorts. #

@@ -992,30 +992,35 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     picard_command='ExtractIlluminaBarcodes')
                 runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                # BASECALLS_DIR Required
+                # Required Arguments
+                # BARCODE [null]
+                # BARCODE_FILE [null]
+                runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_lane.barcode_tsv)
+                # BASECALLS_DIR [null]
                 runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
-                # OUTPUT_DIR [null] Default to BASECALLS_DIR
-                runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_lane.output_directory)
-                # LANE Required
+                # LANE [null]
                 runnable_step.add_picard_option(key='LANE', value=lane_str)
-                # READ_STRUCTURE Required
+                # READ_STRUCTURE [null]
                 runnable_step.add_picard_option(
                     key='READ_STRUCTURE',
                     value=self._irf.run_information.get_picard_read_structure)
-                # BARCODE [null]
-                # BARCODE_FILE Required
-                runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_lane.barcode_tsv)
-                # METRICS_FILE Required
-                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
+
+                # Optional Tool Arguments
+                # COMPRESS_OUTPUTS [false]
+                runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='true')
+                # DISTANCE_MODE [HAMMING]
+                # INPUT_PARAMS_FILE [null]
                 # MAX_MISMATCHES [1]
                 if self.max_mismatches is not None:
                     # Maximum mismatches for a barcode to be considered a match. Default value: '1'.
                     runnable_step.add_picard_option(key='MAX_MISMATCHES', value=str(self.max_mismatches))
+                # MAX_NO_CALLS [2]
+                # Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.
+                # METRICS_FILE [null]
+                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
                 # MIN_MISMATCH_DELTA [1]
                 # Minimum difference between number of mismatches in the best and
                 # second best barcodes for a barcode to be considered a match.
-                # MAX_NO_CALLS [2]
-                # Maximum allowable number of no-calls in a barcode read before it is considered unmatchable.
                 # MINIMUM_BASE_QUALITY [0]
                 if self.min_base_quality is not None:
                     # Minimum base quality. Any barcode bases falling below this quality will be considered
@@ -1025,26 +1030,26 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 # The minimum quality (after transforming 0s to 1s) expected from reads.
                 # If qualities are lower than this value, an error is thrown.The default of 2 is what the
                 # Illumina specification describes as the minimum, but in practice the value has been observed lower.
-                # COMPRESS_OUTPUTS [false]
-                runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='true')
                 # NUM_PROCESSORS [1]
                 runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
+                # OUTPUT_DIR [null] Default to BASECALLS_DIR
+                runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_lane.output_directory)
+
+                # Optional Common Arguments
+                # COMPRESSION_LEVEL [5]
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # MAX_RECORDS_IN_RAM [500000]
+                # QUIET [false]
+                # REFERENCE_SEQUENCE [null]
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_lane.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                # MAX_RECORDS_IN_RAM [500000]
-                # CREATE_INDEX [false]
-                # CREATE_MD5_FILE [false]
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
                 # USE_JDK_INFLATER [false]
-                # OPTIONS_FILE Required
+                # VALIDATION_STRINGENCY [STRICT]
+                # VERBOSITY [INFO]
 
                 # Plot the metrics file.
 
@@ -1067,26 +1072,69 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 picard_command='IlluminaBasecallsToSam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            # BASECALLS_DIR Required
+            # Required Arguments
+            # BARCODE_PARAMS [null] deprecated in favour of LIBRARY_PARAMS
+            # BASECALLS_DIR [null]
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
-            # BARCODES_DIR [null] Defaults to BASECALLS_DIR
-            if barcode_number > 0:
-                runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_lane.output_directory)
-            # LANE Required
+            # LANE [null]
             runnable_step.add_picard_option(key='LANE', value=lane_str)
-            # OUTPUT Deprecated
-            # RUN_BARCODE Required
+            # LIBRARY_PARAMS [null]
+            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_lane.library_tsv)
+            # OUTPUT [null] deprecated in favour of LIBRARY_PARAMS
+            # READ_STRUCTURE [null]
+            runnable_step.add_picard_option(
+                key='READ_STRUCTURE',
+                value=self._irf.run_information.get_picard_read_structure)
+            # RUN_BARCODE [null]
             runnable_step.add_picard_option(
                 key='RUN_BARCODE',
                 value=self._irf.run_parameters.get_flow_cell_barcode)
-            # SAMPLE_ALIAS Deprecated
+            # SAMPLE_ALIAS [null] deprecated in favour of LIBRARY_PARAMS
+            # SEQUENCING_CENTER [null]
+            runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
+
+            # Optional Tool Arguments
+            # ADAPTERS_TO_CHECK [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM]
+            # APPLY_EAMSS_FILTER [true]
+            # BARCODE_POPULATION_STRATEGY [ORPHANS_ONLY]
+            # BARCODES_DIR [null] Defaults to BASECALLS_DIR
+            if barcode_number > 0:
+                runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_lane.output_directory)
+            # COMPRESS_OUTPUTS [false]
+            # DISTANCE_MODE [HAMMING]
+            # FIRST_TILE [null]
+            # FIVE_PRIME_ADAPTER [null]
+            # IGNORE_UNEXPECTED_BARCODES [false]
+            # INCLUDE_BARCODE_QUALITY [false]
+            # INCLUDE_BC_IN_RG_TAG [false]
+            # INCLUDE_NON_PF_READS [true]
+            if self.vendor_quality_filter:
+                runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
+            else:
+                runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='true')
+            # INPUT_PARAMS_FILE [null] the LIBRARY_PARAMS file for IlluminaBasecallsToSam
+            # LIBRARY_NAME [null] deprecated in favour of LIBRARY_PARAMS
+            # MATCH_BARCODES_INLINE [false]
+            # MAX_MISMATCHES [1]
+            # MAX_NO_CALLS [1]
+            # MAX_READS_IN_RAM_PER_TILE [1200000]
+            # METRICS_FILE [null]
+            # MIN_MISMATCH_DELTA [1]
+            # MINIMUM_BASE_QUALITY [0]
+            # MINIMUM_QUALITY [1]
+            # MOLECULAR_INDEX_BASE_QUALITY_TAG [QX]
+            # MOLECULAR_INDEX_TAG [RX]
+            # NUM_PROCESSORS [0]
+            runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
+            # PLATFORM [illumina]
+            # PLATFORM The name of the sequencing technology that produced the read.
+            # NOTE: IlluminaToBam defaults to 'ILLUMINA'.
+            # runnable_step.add_picard_option(key='PLATFORM', value='ILLUMINA')
+            # PROCESS_SINGLE_TILE [null]
             # READ_GROUP_ID [null]
             runnable_step.add_picard_option(
                 key='READ_GROUP_ID',
                 value='_'.join((self._irf.run_parameters.get_flow_cell_barcode, lane_str)))
-            # LIBRARY_NAME Deprecated
-            # SEQUENCING_CENTER Required
-            runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
             # RUN_START_DATE [null]
             # NOTE: The ISO date format still does not work for Picard tools 2.6.1. Sigh.
             # runnable_step.add_picard_option(key='RUN_START_DATE', value=self._irf.run_information.get_iso_date)
@@ -1097,59 +1145,28 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     self._irf.run_information.date[2:4],
                     self._irf.run_information.date[4:6],
                     '20' + self._irf.run_information.date[0:2])))
-            # PLATFORM [illumina]
-            # PLATFORM The name of the sequencing technology that produced the read.
-            # NOTE: IlluminaToBam defaults to 'ILLUMINA'.
-            # runnable_step.add_picard_option(key='PLATFORM', value='ILLUMINA')
-            # INCLUDE_BC_IN_RG_TAG [false]
-            # READ_STRUCTURE Required
-            runnable_step.add_picard_option(
-                key='READ_STRUCTURE',
-                value=self._irf.run_information.get_picard_read_structure)
-            # BARCODE_PARAMS Deprecated
-            # LIBRARY_PARAMS Required
-            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_lane.library_tsv)
-            # ADAPTERS_TO_CHECK [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM]
-            runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
-            # FIVE_PRIME_ADAPTER [null]
-            # THREE_PRIME_ADAPTER [null]
-            # NUM_PROCESSORS [0]
-            # FIRST_TILE [null]
-            # TILE_LIMIT [null]
-            # PROCESS_SINGLE_TILE [null]
-            # FORCE_GC [true]
-            # APPLY_EAMSS_FILTER [true]
-            # MAX_READS_IN_RAM_PER_TILE [1200000]
-            # MINIMUM_QUALITY [2]
-            # INCLUDE_NON_PF_READS [true]
-            if self.vendor_quality_filter:
-                runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
-            else:
-                runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='true')
-            # IGNORE_UNEXPECTED_BARCODES [false]
-            # MOLECULAR_INDEX_TAG [RX]
-            # MOLECULAR_INDEX_BASE_QUALITY_TAG [QX]
+            # SORT [true]
             # TAG_PER_MOLECULAR_INDEX [null]
-            # BARCODE_POPULATION_STRATEGY [ORPHANS_ONLY]
-            # INCLUDE_BARCODE_QUALITY [false]
+            # THREE_PRIME_ADAPTER [null]
+            # TILE_LIMIT [null]
+
+            # Optional Common Arguments
+            # COMPRESSION_LEVEL [5]
+            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+            # CREATE_INDEX [false]
+            # CREATE_MD5_FILE [false]
+            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+            # MAX_RECORDS_IN_RAM [500000]
+            # QUIET [false]
+            # REFERENCE_SEQUENCE [null]
             # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_lane.temporary_directory_path(absolute=False))
-            # VERBOSITY [INFO]
-            # QUIET [false]
-            # VALIDATION_STRINGENCY [STRICT]
-            # COMPRESSION_LEVEL [5]
-            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-            # MAX_RECORDS_IN_RAM [500000]
-            # CREATE_INDEX [false]
-            # CREATE_MD5_FILE [false]
-            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-            # REFERENCE_SEQUENCE [null]
-            # GA4GH_CLIENT_SECRETS [client_secrets.json]
             # USE_JDK_DEFLATER [false]
             # USE_JDK_INFLATER [false]
-            # OPTIONS_FILE Required
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
 
             # Create the experiment directory if it does not exist already.
 
@@ -1687,53 +1704,55 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 picard_command='IlluminaBasecallsToMultiplexSam')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            # RUN_DIR Required
-            runnable_step.add_picard_option(key='RUN_DIR', value=self.run_directory)
-            # LANE Required
+            # Required Arguments
+            # LANE [null]
             runnable_step.add_picard_option(key='LANE', value=lane_str)
-            # OUTPUT Required
+            # OUTPUT [null]
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_lane.sorted_bam)
-            # SEQUENCING_CENTER [BI]
-            runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
-            # NUM_PROCESSORS [0]
-            runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
-            # FIRST_TILE [null]
-            # TILE_LIMIT [null]
-            # FORCE_GC [true]
+            # RUN_DIR [null]
+            runnable_step.add_picard_option(key='RUN_DIR', value=self.run_directory)
+
             # APPLY_EAMSS_FILTER [true]
             if self.eamss_filter:
                 runnable_step.add_picard_option(key='APPLY_EAMSS_FILTER', value='true')
             else:
                 runnable_step.add_picard_option(key='APPLY_EAMSS_FILTER', value='false')
-            # MAX_READS_IN_RAM_PER_TILE [1200000]
-            # MINIMUM_QUALITY [2]
+            # DEFLATER_THREADS [0]
+            # NOTE: Only available in version: 2.18.24-CeMM
+            runnable_step.add_picard_option(key='DEFLATER_THREADS', value='16')
+            # FIRST_TILE [null]
+            # FORCE_GC [true]
             # INCLUDE_NON_PF_READS [true]
             if self.vendor_quality_filter:
                 runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
             else:
                 runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='true')
+            # NUM_PROCESSORS [0]
+            runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
+            # MAX_READS_IN_RAM_PER_TILE [1200000]
+            # MINIMUM_QUALITY [2]
+            # SEQUENCING_CENTER [BI]
+            runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
+            # TILE_LIMIT [null]
+
+            # Optional Common Arguments
+            # COMPRESSION_LEVEL [5]
+            if self.compression_level is not None:
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value=str(self.compression_level))
+            # CREATE_INDEX [false]
+            # CREATE_MD5_FILE [false]
+            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+            # MAX_RECORDS_IN_RAM [500000]
+            # QUIET [false]
+            # REFERENCE_SEQUENCE [null]
             # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_lane.temporary_directory_path(absolute=False))
-            # VERBOSITY [INFO]
-            # QUIET [false]
-            # VALIDATION_STRINGENCY [STRICT]
-            # COMPRESSION_LEVEL [5]
-            if self.compression_level is not None:
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value=str(self.compression_level))
-            # MAX_RECORDS_IN_RAM [500000]
-            # CREATE_INDEX [false]
-            # CREATE_MD5_FILE [false]
-            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-            # REFERENCE_SEQUENCE [null]
-            # GA4GH_CLIENT_SECRETS [client_secrets.json]
             # USE_JDK_DEFLATER [false]
             # USE_JDK_INFLATER [false]
-            # OPTIONS_FILE Required
-            # DEFLATER_THREADS [0]
-            # NOTE: Only available in version: 2.18.24-CeMM
-            runnable_step.add_picard_option(key='DEFLATER_THREADS', value='16')
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
 
             # Create the experiment directory if it does not exist already.
 
@@ -2587,19 +2606,31 @@ class IlluminaDemultiplexSam(Analysis):
             # runnable_step.add_option_pair_short(key='Dsamjdk.use_async_io_read_samtools', value='TRUE')
             # runnable_step.add_option_pair_short(key='Dsamjdk.use_async_io_write_samtools', value='TRUE')
 
-            # INPUT Required
+            # Required Arguments
+            # INPUT [null]
             runnable_step.add_picard_option(key='INPUT', value=file_path_lane.archive_bam)
+            # LIBRARY_PARAMS [null]
+            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_lane.library_tsv)
+            # METRICS_FILE [null]
+            runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
             # OUTPUT_DIR [null] Defaults to the same directory as INPUT.
             runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_lane.samples_directory)
-            # OUTPUT_PREFIX [null] Defaults to the @RG ID attribute of the multiplexed BAM file
-            runnable_step.add_picard_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, lane_str)))
-            # OUTPUT_FORMAT [bam]
+
+            # Optional Tool Arguments
+            # ADAPTERS_TO_CHECK [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM]
             # BARCODE_TAG_NAME [BC]
             # BARCODE_QUALITY_TAG_NAME [QT]
-            # LIBRARY_PARAMS Required
-            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_lane.library_tsv)
-            # METRICS_FILE Required
-            runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
+            # CELL_INDEX_TAG [CB]
+            # CELL_INDEX_BASE_QUALITY_TAG [CY]
+            # DEFLATER_THREADS [0]
+            # NOTE: Only available in version: 2.18.24-CeMM
+            if self.deflater_threads:
+                runnable_step.add_picard_option(key='DEFLATER_THREADS', value=str(self.deflater_threads))
+            # FIVE_PRIME_ADAPTER [null]
+            # MATCHING_THREADS [1]
+            # NOTE: Only available in version: 2.18.24-CeMM
+            if self.matching_threads:
+                runnable_step.add_picard_option(key='MATCHING_THREADS', value=str(self.matching_threads))
             # MAX_MISMATCHES [1]
             if 'barcode_mismatches' in library_annotation_dict[lane_int][0] and \
                     library_annotation_dict[lane_int][0]['barcode_mismatches']:
@@ -2610,9 +2641,14 @@ class IlluminaDemultiplexSam(Analysis):
             elif library_barcode_dict[lane_int][1] > 0:
                 # If a second barcode is defined ...
                 runnable_step.add_picard_option(key='MAX_MISMATCHES', value='2')
-            # MIN_MISMATCH_DELTA [1]
             # MAX_NO_CALLS [2]
+            # MIN_MISMATCH_DELTA [1]
             # MINIMUM_BASE_QUALITY [0]
+            # MOLECULAR_INDEX_BASE_QUALITY_TAG [QX]
+            # MOLECULAR_INDEX_TAG [RX]
+            # OUTPUT_FORMAT [bam]
+            # OUTPUT_PREFIX [null] Defaults to the @RG ID attribute of the multiplexed BAM file
+            runnable_step.add_picard_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, lane_str)))
             # READ_STRUCTURE [null]
             if 'read_structure' in library_annotation_dict[lane_int][0] and \
                     library_annotation_dict[lane_int][0]['read_structure']:
@@ -2623,41 +2659,27 @@ class IlluminaDemultiplexSam(Analysis):
                 runnable_step.add_picard_option(
                     key='READ_STRUCTURE',
                     value=irf.run_information.get_picard_read_structure)
-            # ADAPTERS_TO_CHECK [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM]
-            # FIVE_PRIME_ADAPTER [null]
-            # THREE_PRIME_ADAPTER [null]
-            # MOLECULAR_INDEX_TAG [RX]
-            # MOLECULAR_INDEX_BASE_QUALITY_TAG [QX]
             # TAG_PER_MOLECULAR_INDEX [null]
-            # CELL_INDEX_TAG [CB]
-            # CELL_INDEX_BASE_QUALITY_TAG [CY]
-            # MATCHING_THREADS [1]
-            # NOTE: Only available in version: 2.18.24-CeMM
-            if self.matching_threads:
-                runnable_step.add_picard_option(key='MATCHING_THREADS', value=str(self.matching_threads))
+            # THREE_PRIME_ADAPTER [null]
+
+            # Optional Common Arguments
+            # COMPRESSION_LEVEL [5]
+            if self.compression_level is not None:
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value=str(self.compression_level))
+            # CREATE_INDEX [false]
+            # CREATE_MD5_FILE [false]
+            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+            # MAX_RECORDS_IN_RAM [500000]
+            # QUIET [false]
+            # REFERENCE_SEQUENCE [null]
             # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_lane.temporary_directory_path(absolute=False))
-            # VERBOSITY [INFO]
-            # QUIET [false]
-            # VALIDATION_STRINGENCY [STRICT]
-            # COMPRESSION_LEVEL [5]
-            if self.compression_level is not None:
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value=str(self.compression_level))
-            # MAX_RECORDS_IN_RAM [500000]
-            # CREATE_INDEX [false]
-            # CREATE_MD5_FILE [false]
-            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-            # REFERENCE_SEQUENCE [null]
-            # GA4GH_CLIENT_SECRETS [client_secrets.json]
             # USE_JDK_DEFLATER [false]
             # USE_JDK_INFLATER [false]
-            # OPTIONS_FILE Required
-            # DEFLATER_THREADS [0]
-            # NOTE: Only available in version: 2.18.24-CeMM
-            if self.deflater_threads:
-                runnable_step.add_picard_option(key='DEFLATER_THREADS', value=str(self.deflater_threads))
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
 
             # Plot the metrics file.
 
@@ -2844,19 +2866,35 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                 picard_command='CollectHiSeqXPfFailMetrics')
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            # BASECALLS_DIR Required
+            # Required Arguments
+            # BASECALLS_DIR [null]
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
-            # OUTPUT Required
+            # OUTPUT [null]
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_lane.prefix)
-            # PROB_EXPLICIT_READS [0.0]
-            # LANE Required
+            # LANE [null]
             runnable_step.add_picard_option(key='LANE', value=lane_str)
+
+            # Optional Tool Arguments
+            # N_CYCLES [24] Should match Illumina RTA software.
             # NUM_PROCESSORS [1]
             runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
-            # N_CYCLES [24] Should match Illumina RTA software.
+            # PROB_EXPLICIT_READS [0.0]
+
+            # Optional Common Arguments
+            # COMPRESSION_LEVEL [5]
+            # CREATE_INDEX [false]
+            # CREATE_MD5_FILE [false]
+            # MAX_RECORDS_IN_RAM [500000]
+            # QUIET [false]
+            # REFERENCE_SEQUENCE [null]
+            # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_lane.temporary_directory_path(absolute=False))
+            # USE_JDK_DEFLATER [false]
+            # USE_JDK_INFLATER [false]
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
 
         return
 
@@ -3116,38 +3154,39 @@ class DownsampleSam(Analysis):
                         picard_command='DownsampleSam')
                     runnable_picard_dss.add_runnable_step(runnable_step=runnable_step)
 
-                    # INPUT Required
+                    # Required Arguments
+                    # INPUT [null]
                     runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
-                    # OUTPUT Required
-                    runnable_step.add_picard_option(
-                        key='OUTPUT',
-                        value=file_path_read_group.downsampled_bam)
-                    # FIXME: Add to the configuration file and documentation.
-                    # STRATEGY [ConstantMemory]
-                    # RANDOM_SEED [1]
+                    # OUTPUT [null]
+                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.downsampled_bam)
+
+                    # Optional Tool Arguments
+                    # ACCURACY [1.0E-4]
+                    # METRICS_FILE [null]
                     # PROBABILITY [1.0]
+                    # FIXME: Add to the configuration file and documentation.
                     if 'DownsampleSam Probability' in paired_reads.annotation_dict:
                         runnable_step.add_picard_option(
                             key='PROBABILITY',
                             value=paired_reads.annotation_dict['DownsampleSam Probability'][0])
-                    # ACCURACY [1.0E-4]
-                    # METRICS_FILE [null]
+                    # RANDOM_SEED [1]
+                    # REFERENCE_SEQUENCE [null]
+                    # STRATEGY [ConstantMemory]
+
+                    # Optional Common Arguments
+                    # COMPRESSION_LEVEL [5]
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    # QUIET [false]
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_picard_dss.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    # MAX_RECORDS_IN_RAM [500000]
-                    # CREATE_INDEX [false]
-                    # CREATE_MD5_FILE [false]
-                    # REFERENCE_SEQUENCE [null]
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
-                    # OPTIONS_FILE Required
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # VERBOSITY [INFO]
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
@@ -3592,57 +3631,60 @@ class SamToFastq(Analysis):
                             picard_command='SamToFastq')
                         runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
-                        # INPUT Required
+                        # Required Arguments
+                        # FASTQ [null]
+                        # INPUT [null]
                         runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
-                        # FASTQ Required
-                        # SECOND_END_FASTQ [null]
-                        # UNPAIRED_FASTQ [null]
-                        # OUTPUT_PER_RG [false]
-                        runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
+
+                        # Optional Tool Arguments
+                        # CLIPPING_ACTION [null]
+                        runnable_step.add_picard_option(key='CLIPPING_ACTION', value='N')
+                        # CLIPPING_ATTRIBUTE [null]
+                        runnable_step.add_picard_option(key='CLIPPING_ATTRIBUTE', value='XT')
+                        # CLIPPING_MIN_LENGTH [0]
                         # COMPRESS_OUTPUTS_PER_RG [false]
                         runnable_step.add_picard_option(key='COMPRESS_OUTPUTS_PER_RG', value='true')
-                        # RG_TAG [PU]
-                        # OUTPUT_DIR [null]
-                        runnable_step.add_picard_option(
-                            key='OUTPUT_DIR',
-                            value=file_path_read_group.output_directory)
-                        # RE_REVERSE [true]
-                        # INTERLEAVE [false]
                         # INCLUDE_NON_PF_READS [false]
                         if self.include_non_pass_filter_reads:
                             runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='true')
                         else:
                             runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
-                        # CLIPPING_ATTRIBUTE [null]
-                        runnable_step.add_picard_option(key='CLIPPING_ATTRIBUTE', value='XT')
-                        # CLIPPING_ACTION [null]
-                        runnable_step.add_picard_option(key='CLIPPING_ACTION', value='N')
-                        # CLIPPING_MIN_LENGTH [0]
-                        # READ1_TRIM [0]
-                        # READ1_MAX_BASES_TO_WRITE [null]
-                        # READ2_TRIM [0]
-                        # READ2_MAX_BASES_TO_WRITE [null]
-                        # QUALITY [null]
                         # INCLUDE_NON_PRIMARY_ALIGNMENTS [false]
+                        # INTERLEAVE [false]
+                        # OUTPUT_DIR [null]
+                        runnable_step.add_picard_option(
+                            key='OUTPUT_DIR',
+                            value=file_path_read_group.output_directory)
+                        # OUTPUT_PER_RG [false]
+                        runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
+                        # QUALITY [null]
+                        # RE_REVERSE [true]
+                        # READ1_MAX_BASES_TO_WRITE [null]
+                        # READ1_TRIM [0]
+                        # READ2_MAX_BASES_TO_WRITE [null]
+                        # READ2_TRIM [0]
+                        # RG_TAG [PU]
+                        # SECOND_END_FASTQ [null]
+                        # UNPAIRED_FASTQ [null]
+
+                        # Optional Common Arguments
+                        # COMPRESSION_LEVEL [5]
+                        runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                        # CREATE_INDEX [false]
+                        # CREATE_MD5_FILE [false]
+                        runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                        # MAX_RECORDS_IN_RAM [500000]
+                        # QUIET [false]
+                        # REFERENCE_SEQUENCE [null]
                         # TMP_DIR [null]
                         runnable_step.add_picard_option(
                             key='TMP_DIR',
                             value=runnable_read_group.temporary_directory_path(absolute=False))
-                        # VERBOSITY [INFO]
-                        runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                        # QUIET [false]
-                        # VALIDATION_STRINGENCY [STRICT]
-                        # COMPRESSION_LEVEL [5]
-                        runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                        # MAX_RECORDS_IN_RAM [500000]
-                        # CREATE_INDEX [false]
-                        # CREATE_MD5_FILE [false]
-                        runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                        # REFERENCE_SEQUENCE [null]
-                        # GA4GH_CLIENT_SECRETS [client_secrets.json|
                         # USE_JDK_DEFLATER [false]
                         # USE_JDK_INFLATER [false]
-                        # OPTIONS_FILE Required
+                        # VALIDATION_STRINGENCY [STRICT]
+                        # VERBOSITY [INFO]
+                        runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
         # Create a Runnable for pruning the sample annotation sheet.
 

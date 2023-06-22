@@ -748,6 +748,9 @@ class Aligner(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
+            # Record whether the sample has UMIs on the basis of the PairedReads Structure annotation.
+            sample_umis = False
+
             for paired_reads_name in sorted(paired_reads_dict):
                 if not paired_reads_dict[paired_reads_name]:
                     # Skip PairedReads.name keys, which PairedReads objects have all been excluded.
@@ -777,6 +780,13 @@ class Aligner(Analysis):
                                 paired_reads.reads_2.file_path.endswith('.fastq.gz')):
                             raise Exception(f'A {self.name!s} requires a (GNU Zip compressed) FASTQ file.')
                     file_path_2 = paired_reads.reads_2.file_path
+
+                # Check the PairedReads Structure annotation for UMIs (i.e., M).
+
+                if 'Structure' in paired_reads.annotation_dict:
+                    for structure_str in paired_reads.annotation_dict['Structure']:
+                        if structure_str.index('M'):
+                            sample_umis = True
 
                 ###################
                 # Alignment Stage #
@@ -834,29 +844,31 @@ class Aligner(Analysis):
                     picard_command='SortSam')
                 runnable_align.add_runnable_step(runnable_step=runnable_step)
 
+                # Required Arguments
                 # INPUT []
                 runnable_step.add_picard_option(key='INPUT', value=file_path_align.cleaned_bam)
                 # OUTPUT []
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.aligned_bam)
                 # SORT_ORDER []
                 runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
+
+                # Optional Common Arguments
+                # COMPRESSION_LEVEL [5]
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # MAX_RECORDS_IN_RAM [500000]
+                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                # QUIET [false]
+                # REFERENCE_SEQUENCE [null]
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_align.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                # MAX_RECORDS_IN_RAM [500000]
-                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                # CREATE_INDEX [false]
-                # CREATE_MD5_FILE [false]
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
                 # USE_JDK_INFLATER [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # VERBOSITY [INFO]
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
                 # Run Picard CleanSam to split alignments at sequence boundaries and
                 # set mapping quality of unmapped reads to 0.
@@ -872,27 +884,29 @@ class Aligner(Analysis):
                     picard_command='CleanSam')
                 runnable_align.add_runnable_step(runnable_step=runnable_step)
 
+                # Required Arguments
                 # INPUT []
                 runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
                 # OUTPUT []
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.cleaned_bam)
+
+                # Optional Common Arguments
+                # COMPRESSION_LEVEL [5]
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # MAX_RECORDS_IN_RAM [500000]
+                # QUIET [false]
+                # REFERENCE_SEQUENCE [null]
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_align.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='0')
-                # MAX_RECORDS_IN_RAM [500000]
-                # CREATE_INDEX [false]
-                # CREATE_MD5_FILE [false]
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
                 # USE_JDK_INFLATER [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='0')
+                # VERBOSITY [INFO]
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
                 # Start the Aligner.
 
@@ -965,6 +979,7 @@ class Aligner(Analysis):
                         picard_command='MergeSamFiles')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
+                    # Required Arguments
                     # INPUT Required
                     for runnable_align in runnable_align_list:
                         # NOTE: Since the Runnable.name already contains the prefix, FilePathAlign() has to be used.
@@ -976,31 +991,34 @@ class Aligner(Analysis):
                         runnable_step.obsolete_file_path_list.append(file_path_align.aligned_bam)
                     # OUTPUT Required
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.merged_bam)
-                    # SORT_ORDER [coordinate]
-                    runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
+
+                    # Optional Tool Arguments
                     # ASSUME_SORTED [false]
-                    # MERGE_SEQUENCE_DICTIONARIES [false]
-                    # USE_THREADING [false]
-                    runnable_step.add_picard_option(key='USE_THREADING', value='true')
                     # COMMENT [null]
                     # INTERVALS [null]
+                    # MERGE_SEQUENCE_DICTIONARIES [false]
+                    # SORT_ORDER [coordinate]
+                    runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
+                    # USE_THREADING [false]
+                    runnable_step.add_picard_option(key='USE_THREADING', value='true')
+
+                    # Optional Common Arguments
+                    # COMPRESSION_LEVEL [5]
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                    # QUIET [false]
+                    # REFERENCE_SEQUENCE [null]
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_read_group.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    # MAX_RECORDS_IN_RAM [500000]
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                    # CREATE_INDEX [false]
-                    # CREATE_MD5_FILE [false]
-                    # REFERENCE_SEQUENCE [null]
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # VERBOSITY [INFO]
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
                 if bam_file_path:
                     # If an unaligned BAM file is available, the merged aligned BAM files are annotated
@@ -1016,61 +1034,69 @@ class Aligner(Analysis):
                         picard_command='MergeBamAlignment')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
-                    # UNMAPPED_BAM []
-                    runnable_step.add_picard_option(key='UNMAPPED_BAM', value=bam_file_path)
-                    # ALIGNED_BAM [null]
-                    runnable_step.add_picard_option(key='ALIGNED_BAM', value=file_path_read_group.merged_bam)
-                    # READ1_ALIGNED_BAM [null]
-                    # READ2_ALIGNED_BAM [null]
+                    # Required Arguments
                     # OUTPUT []
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.sorted_bam)
-                    # PROGRAM_RECORD_ID [null]
-                    # PROGRAM_GROUP_VERSION [null]
-                    # PROGRAM_GROUP_COMMAND_LINE [null]
-                    # PROGRAM_GROUP_NAME [null]
-                    # CLIP_ADAPTERS [true]
-                    # IS_BISULFITE_SEQUENCE [false]
+                    # REFERENCE_SEQUENCE [null]
+                    runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.genome_fasta)
+                    # UNMAPPED_BAM []
+                    runnable_step.add_picard_option(key='UNMAPPED_BAM', value=bam_file_path)
+
+                    # Optional Tool Arguments
+                    # ADD_MATE_CIGAR [true]
+                    # ALIGNED_BAM [null]
+                    runnable_step.add_picard_option(key='ALIGNED_BAM', value=file_path_read_group.merged_bam)
                     # ALIGNED_READS_ONLY [false]
-                    # MAX_INSERTIONS_OR_DELETIONS [1]
-                    runnable_step.add_picard_option(key='MAX_INSERTIONS_OR_DELETIONS', value='-1')
+                    # ALIGNER_PROPER_PAIR_FLAGS [false]
+                    # ATTRIBUTES_TO_REMOVE [null]
                     # ATTRIBUTES_TO_RETAIN [null]
                     for sam_attribute in self.sam_attributes_to_retain_list:
                         runnable_step.add_picard_option(key='ATTRIBUTES_TO_RETAIN', value=sam_attribute, override=True)
-                    # ATTRIBUTES_TO_REMOVE [null]
                     # ATTRIBUTES_TO_REVERSE [OQ, U2]
                     # ATTRIBUTES_TO_REVERSE_COMPLEMENT [E2, SQ]
-                    # READ1_TRIM [0]
-                    # READ2_TRIM [0]
+                    # CLIP_ADAPTERS [true]
+                    # CLIP_OVERLAPPING_READS [true]
                     # EXPECTED_ORIENTATIONS [null]
-                    # ALIGNER_PROPER_PAIR_FLAGS [false]
+                    # HARD_CLIP_OVERLAPPING_READS [false]
+                    # INCLUDE_SECONDARY_ALIGNMENTS [true]
+                    # IS_BISULFITE_SEQUENCE [false]
+                    # JUMP_SIZE [null]
+                    # MATCHING_DICTIONARY_TAGS [M5, LN]
+                    # MAX_INSERTIONS_OR_DELETIONS [1]
+                    runnable_step.add_picard_option(key='MAX_INSERTIONS_OR_DELETIONS', value='-1')
+                    # MIN_UNCLIPPED_BASES [32]
+                    # PAIRED_RUN [true] obsolete!
+                    # PRIMARY_ALIGNMENT_STRATEGY [BestMapq]
+                    # PROGRAM_GROUP_COMMAND_LINE [null]
+                    # PROGRAM_GROUP_NAME [null]
+                    # PROGRAM_GROUP_VERSION [null]
+                    # PROGRAM_RECORD_ID [null]
+                    # READ1_ALIGNED_BAM [null]
+                    # READ1_TRIM [0]
+                    # READ2_ALIGNED_BAM [null]
+                    # READ2_TRIM [0]
                     # SORT_ORDER [coordinate]
                     runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
-                    # PRIMARY_ALIGNMENT_STRATEGY [BestMapq]
-                    # CLIP_OVERLAPPING_READS [true]
-                    # INCLUDE_SECONDARY_ALIGNMENTS [true]
-                    # ADD_MATE_CIGAR [true]
                     # UNMAP_CONTAMINANT_READS [false]
-                    # MIN_UNCLIPPED_BASES [32]
-                    # MATCHING_DICTIONARY_TAGS [M5, LN]
                     # UNMAPPED_READ_STRATEGY [DO_NOT_CHANGE]
+
+                    # Optional Common Arguments
+                    # ADD_PG_TAG_TO_READS [true]
+                    # COMPRESSION_LEVEL [5]
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                    # QUIET [false]
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_read_group.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    # MAX_RECORDS_IN_RAM [500000]
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                    # CREATE_INDEX [false]
-                    # CREATE_MD5_FILE [false]
-                    # REFERENCE_SEQUENCE [null]
-                    runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.genome_fasta)
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # VERBOSITY [INFO]
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 else:
                     # If an unaligned BAM file is not available, the merged aligned BAM file is just renamed.
                     runnable_step = RunnableStepMove(
@@ -1134,6 +1160,7 @@ class Aligner(Analysis):
                         picard_command='MergeSamFiles')
                     runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
+                    # Required Arguments
                     # INPUT Required
                     for runnable_read_group in runnable_read_group_list:
                         # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
@@ -1145,30 +1172,33 @@ class Aligner(Analysis):
                         runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
                     # OUTPUT Required
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.duplicate_bam)
-                    # SORT_ORDER [coordinate]
+
+                    # Optional Tool Arguments
                     # ASSUME_SORTED [false]
-                    # MERGE_SEQUENCE_DICTIONARIES [false]
-                    # USE_THREADING [false]
-                    runnable_step.add_picard_option(key='USE_THREADING', value='true')
                     # COMMENT [null]
                     # INTERVALS [null]
+                    # MERGE_SEQUENCE_DICTIONARIES [false]
+                    # SORT_ORDER [coordinate]
+                    # USE_THREADING [false]
+                    runnable_step.add_picard_option(key='USE_THREADING', value='true')
+
+                    # Optional Common Arguments
+                    # COMPRESSION_LEVEL [5]
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                    # QUIET [false]
+                    # REFERENCE_SEQUENCE [null]
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_sample.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    # MAX_RECORDS_IN_RAM [500000]
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                    # CREATE_INDEX [false]
-                    # CREATE_MD5_FILE [false]
-                    # REFERENCE_SEQUENCE [null]
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # VERBOSITY [INFO]
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
             else:
                 # If duplicates should be marked,
                 # run Picard MarkDuplicates on all read group-specific merged aligned BAM files at once.
@@ -1180,55 +1210,74 @@ class Aligner(Analysis):
                     picard_command='MarkDuplicates')
                 runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
-                # MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP Obsolete [50000]
-                # MAX_FILE_HANDLES_FOR_READ_ENDS_MAP [8000]
-                # SORTING_COLLECTION_SIZE_RATIO [0.25]
-                # BARCODE_TAG [null]
-                # READ_ONE_BARCODE_TAG [null]
-                # READ_TWO_BARCODE_TAG [null]
-                # TAG_DUPLICATE_SET_MEMBERS [false]
-                # REMOVE_SEQUENCING_DUPLICATES [false]
-                # TAGGING_POLICY [DontTag]
+                # Required Arguments
                 # INPUT Required
                 for runnable_read_group in runnable_read_group_list:
                     # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
                     file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                     runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.sorted_bam, override=True)
                     runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
-                # OUTPUT Required
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.duplicate_bam)
                 # METRICS_FILE Required
                 runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_sample.duplicate_metrics_tsv)
-                # REMOVE_DUPLICATES [false]
-                # ASSUME_SORTED Deprecated
+                # OUTPUT Required
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.duplicate_bam)
+
+                # Optional Tool Arguments
                 # ASSUME_SORT_ORDER [null]
-                # DUPLICATE_SCORING_STRATEGY [SUM_OF_BASE_QUALITIES]
-                # PROGRAM_RECORD_ID [MarkDuplicates]
-                # PROGRAM_GROUP_VERSION [null]
-                # PROGRAM_GROUP_COMMAND_LINE [null]
-                # PROGRAM_GROUP_NAME [MarkDuplicates]
+                # ASSUME_SORTED Deprecated
+                # BARCODE_TAG [null]
+                if sample_umis:
+                    runnable_step.add_picard_option(key='BARCODE_TAG', value='RX')
+                # CLEAR_DT [true]
                 # COMMENT [null]
-                # READ_NAME_REGEX [.]
+                # DUPLEX_UMI [false]
+                # DUPLICATE_SCORING_STRATEGY [SUM_OF_BASE_QUALITIES]
+                # FLOW_EFFECTIVE_QUALITY_THRESHOLD [15]
+                # FLOW_MODE [false]
+                # FLOW_Q_IS_KNOWN_END [false]
+                # FLOW_QUALITY_SUM_STRATEGY [false]
+                # FLOW_SKIP_FIRST_N_FLOWS [0]
+                # MAX_FILE_HANDLES_FOR_READ_ENDS_MAP [8000]
+                # MAX_OPTICAL_DUPLICATE_SET_SIZE [300000]
+                # MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP Obsolete [50000]
+                # MOLECULAR_IDENTIFIER_TAG [null]
                 # OPTICAL_DUPLICATE_PIXEL_DISTANCE [100]
                 # NOTE: Should be 2500 for patterned flow cells.
                 runnable_step.add_picard_option(key='OPTICAL_DUPLICATE_PIXEL_DISTANCE', value='3000')
+                # PROGRAM_GROUP_COMMAND_LINE [null]
+                # PROGRAM_GROUP_NAME [MarkDuplicates]
+                # PROGRAM_GROUP_VERSION [null]
+                # PROGRAM_RECORD_ID [MarkDuplicates]
+                # READ_NAME_REGEX [.]
+                # READ_ONE_BARCODE_TAG [null]
+                # READ_TWO_BARCODE_TAG [null]
+                # REMOVE_DUPLICATES [false]
+                # REMOVE_SEQUENCING_DUPLICATES [false]
+                # SORTING_COLLECTION_SIZE_RATIO [0.25]
+                # TAG_DUPLICATE_SET_MEMBERS [false]
+                # TAGGING_POLICY [DontTag]
+                # UNPAIRED_END_UNCERTAINTY [0]
+                # USE_END_IN_UNPAIRED_READS [false]
+                # USE_UNPAIRED_CLIPPED_END [false]
+
+                # Optional Common Arguments
+                # ADD_PG_TAG_TO_READS [true]
+                # COMPRESSION_LEVEL [5]
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # MAX_RECORDS_IN_RAM [500000]
+                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                # QUIET [false]
+                # REFERENCE_SEQUENCE [null]
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_sample.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                # MAX_RECORDS_IN_RAM [500000]
-                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                # CREATE_INDEX [false]
-                # CREATE_MD5_FILE [false]
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
                 # USE_JDK_INFLATER [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # VERBOSITY [INFO]
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
             # Finally, run Picard SortSam by coordinate.
 
@@ -1243,32 +1292,34 @@ class Aligner(Analysis):
                 picard_command='SortSam')
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
+            # Required Arguments
             # INPUT []
             runnable_step.add_picard_option(key='INPUT', value=file_path_sample.duplicate_bam)
             # OUTPUT []
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.sample_bam)
             # SORT_ORDER []
             runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
-            # TMP_DIR [null]
-            runnable_step.add_picard_option(
-                key='TMP_DIR',
-                value=runnable_sample.temporary_directory_path(absolute=False))
-            # VERBOSITY [INFO]
-            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-            # QUIET [false]
-            # VALIDATION_STRINGENCY [STRICT]
+
+            # Optional Common Arguments
             # COMPRESSION_LEVEL [5]
             runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-            # MAX_RECORDS_IN_RAM [500000]
-            runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
             # CREATE_INDEX [false]
             runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
             # CREATE_MD5_FILE [false]
             runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+            # MAX_RECORDS_IN_RAM [500000]
+            runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+            # QUIET [false]
             # REFERENCE_SEQUENCE [null]
-            # GA4GH_CLIENT_SECRETS [client_secrets.json]
-            # USE_JDK_DEFLATER [false]
+            # TMP_DIR [null]
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_sample.temporary_directory_path(absolute=False))
             # USE_JDK_INFLATER [false]
+            # USE_JDK_DEFLATER [false]
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
+            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
             # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
 
@@ -1288,8 +1339,13 @@ class Aligner(Analysis):
                 picard_command='CollectAlignmentSummaryMetrics')
             runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
-            # MAX_INSERT_SIZE [100000]
-            # EXPECTED_PAIR_ORIENTATIONS [FR]
+            # Required Arguments
+            # INPUT []
+            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.sample_bam)
+            # OUTPUT []
+            runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.alignment_summary_metrics_tsv)
+
+            # Optional Tool Arguments
             # ADAPTER_SEQUENCE [
             #   AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT,
             #   AGATCGGAAGAGCTCGTATGCCGTCTTCTGCTTG,
@@ -1298,35 +1354,36 @@ class Aligner(Analysis):
             #   AATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT,
             #   AGATCGGAAGAGCACACGTCTGAACTCCAGTCACNNNNNNNNATCTCGTATGCCGTCTTCTGCTTG
             # ]
+            # ASSUME_SORTED [true]
+            # COLLECT_ALIGNMENT_INFORMATION [true]
+            # EXPECTED_PAIR_ORIENTATIONS [FR]
+            # HISTOGRAM_FILE []
+            # IS_BISULFITE_SEQUENCED [false]
+            # MAX_INSERT_SIZE [100000]
             # METRIC_ACCUMULATION_LEVEL [ALL_READS]
             runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS', override=True)
             runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE', override=True)
             runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY', override=True)
             runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
-            # IS_BISULFITE_SEQUENCED [false]
-            # INPUT []
-            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.sample_bam)
-            # OUTPUT []
-            runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.alignment_summary_metrics_tsv)
-            # ASSUME_SORTED [true]
+            # REFERENCE_SEQUENCE [null]
+            runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.genome_fasta)
             # STOP_AFTER [0]
+
+            # Optional Common Arguments
+            # COMPRESSION_LEVEL [5]
+            # CREATE_INDEX [false]
+            # CREATE_MD5_FILE [false]
+            # MAX_RECORDS_IN_RAM [500000]
+            # QUIET [false]
             # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_sample.temporary_directory_path(absolute=False))
-            # VERBOSITY [INFO]
-            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-            # QUIET [false]
-            # VALIDATION_STRINGENCY [STRICT]
-            # COMPRESSION_LEVEL [5]
-            # MAX_RECORDS_IN_RAM [500000]
-            # CREATE_INDEX [false]
-            # CREATE_MD5_FILE [false]
-            # REFERENCE_SEQUENCE [null]
-            runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.genome_fasta)
-            # GA4GH_CLIENT_SECRETS [client_secrets.json]
             # USE_JDK_DEFLATER [false]
             # USE_JDK_INFLATER [false]
+            # VALIDATION_STRINGENCY [STRICT]
+            # VERBOSITY [INFO]
+            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
             # Add aligner-specific RunnableStep objects.
 
