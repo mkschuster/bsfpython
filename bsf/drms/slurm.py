@@ -565,14 +565,14 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Names and counts of generic resources requested.
                 # NOTE: In SLURM 19, but no longer in SLURM 20.
                 ('requested_gres', 'TEXT'),
-                # AllocTRES
-                # Trackable resources.
-                # These are the resources allocated to the job/step after the job started running.
-                ('allocated_tres', 'TEXT'),
                 # ReqTRES
                 # Trackable resources.
                 # These are the minimum resource counts requested by the job/step at submission time.
                 ('requested_tres', 'TEXT'),
+                # AllocTRES
+                # Trackable resources.
+                # These are the resources allocated to the job/step after the job started running.
+                ('allocated_tres', 'TEXT'),
                 # TresUsageInAve
                 # Tres average usage in by all tasks in job.
                 ('tres_usage_in_average', 'TEXT'),
@@ -1090,6 +1090,7 @@ def check_state(stage: Stage) -> None:
                 average_cpu_frequency=row_dict['AveCPUFreq'],
                 requested_cpu_frequency_min=row_dict['ReqCPUFreqMin'],
                 requested_cpu_frequency_max=row_dict['ReqCPUFreqMax'],
+                requested_cpu_frequency_gov=row_dict['ReqCPUFreqGov'],
                 requested_memory=row_dict['ReqMem'],
                 consumed_energy=row_dict['ConsumedEnergy'],
                 max_disk_read=row_dict['MaxDiskRead'],
@@ -1100,10 +1101,10 @@ def check_state(stage: Stage) -> None:
                 max_disk_write_node=row_dict['MaxDiskWriteNode'],
                 max_disk_write_task=row_dict['MaxDiskWriteTask'],
                 average_disk_write=row_dict['AveDiskWrite'],
-                allocated_gres=row_dict['AllocGRES'],
-                requested_gres=row_dict['ReqGRES'],
-                allocated_tres=row_dict['AllocTRES'],
+                # allocated_gres=row_dict['AllocGRES'],
+                # requested_gres=row_dict['ReqGRES'],
                 requested_tres=row_dict['ReqTRES'],
+                allocated_tres=row_dict['AllocTRES'],
                 tres_usage_in_average=row_dict['TRESUsageInAve'],
                 tres_usage_in_maximum=row_dict['TRESUsageInMax'],
                 tres_usage_in_maximum_node=row_dict['TRESUsageInMaxNode'],
@@ -1124,7 +1125,7 @@ def check_state(stage: Stage) -> None:
 
             if old_process_slurm is None:
                 # The JobID is not in the database, which is caused by job_id.batch entries.
-                # Insert them afterwards.
+                # Insert the ProcessSLURM object into the database.
                 _thread_lock.acquire(True)
                 _process_slurm_adaptor.insert(object_instance=new_process_slurm)
                 _thread_lock.release()
