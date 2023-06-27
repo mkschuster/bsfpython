@@ -785,7 +785,7 @@ class Aligner(Analysis):
 
                 if 'Structure' in paired_reads.annotation_dict:
                     for structure_str in paired_reads.annotation_dict['Structure']:
-                        if structure_str.index('M'):
+                        if 'M' in structure_str:
                             sample_umis = True
 
                 ###################

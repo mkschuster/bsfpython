@@ -874,6 +874,16 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
+
+            # Determine the read structure from the first line of the lane-specific library annotation or,
+            # if that fails from the run configuration via the bsf.illumina.RunInformation object.
+
+            if 'read_structure' in library_annotation_dict[lane_int][0] and \
+                    library_annotation_dict[lane_int][0]['read_structure']:
+                read_structure = library_annotation_dict[lane_int][0]['read_structure']
+            else:
+                read_structure = self._irf.run_information.get_picard_read_structure
+
             file_path_lane = self.get_file_path_lane(project_name=self.project_name, lane=lane_str)
 
             # BARCODE_FILE
@@ -933,7 +943,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'PairedReads Lane': lane_str,
                     # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
                     'PairedReads ReadGroup': '',
-                    'PairedReads Structure': self._irf.run_information.get_picard_read_structure,
+                    'PairedReads Structure': read_structure,
                     'Reads1 File': os.path.join(
                         os.path.basename(experiment_directory),
                         file_path_lane.samples_directory,
@@ -1004,9 +1014,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 # LANE [null]
                 runnable_step.add_picard_option(key='LANE', value=lane_str)
                 # READ_STRUCTURE [null]
-                runnable_step.add_picard_option(
-                    key='READ_STRUCTURE',
-                    value=self._irf.run_information.get_picard_read_structure)
+                runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
 
                 # Optional Tool Arguments
                 # COMPRESS_OUTPUTS [false]
@@ -1085,9 +1093,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_lane.library_tsv)
             # OUTPUT [null] deprecated in favour of LIBRARY_PARAMS
             # READ_STRUCTURE [null]
-            runnable_step.add_picard_option(
-                key='READ_STRUCTURE',
-                value=self._irf.run_information.get_picard_read_structure)
+            runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
             # RUN_BARCODE [null]
             runnable_step.add_picard_option(
                 key='RUN_BARCODE',
@@ -1834,7 +1840,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx32G',
                 java_jar_path=self.java_archive_picard,
-                picard_command='IlluminaBasecallsToMultiplexSam')
+                picard_command='IlluminaBasecallsToMultiplexSam',
+                option_pair=True)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Required Arguments
@@ -2598,7 +2605,7 @@ class IlluminaDemultiplexSam(Analysis):
         if not os.path.isdir(self.run_directory):
             raise Exception(f"The 'run_directory' {self.run_directory!r} does not exist.")
 
-        irf = RunFolder.from_file_path(file_path=self.run_directory)
+        irf: RunFolder = RunFolder.from_file_path(file_path=self.run_directory)
 
         if not self.project_name:
             self.project_name = '_'.join((irf.run_parameters.get_experiment_name, irf.run_information.flow_cell))
@@ -2704,6 +2711,15 @@ class IlluminaDemultiplexSam(Analysis):
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
 
+            # Determine the read structure from the first line of the lane-specific library annotation or,
+            # if that fails from the run configuration via the bsf.illumina.RunInformation object.
+
+            if 'read_structure' in library_annotation_dict[lane_int][0] and \
+                    library_annotation_dict[lane_int][0]['read_structure']:
+                read_structure = library_annotation_dict[lane_int][0]['read_structure']
+            else:
+                read_structure = irf.run_information.get_picard_read_structure
+
             file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
@@ -2717,15 +2733,13 @@ class IlluminaDemultiplexSam(Analysis):
                 # Add a row to the lane-specific Picard IlluminaDemultiplexSamSheet.
 
                 ibs_sheet.row_dict_list.append({
-                    'BARCODE_1': row_dict['barcode_sequence_1'],
-                    'BARCODE_2': row_dict['barcode_sequence_2'],
                     'OUTPUT': os.path.join(
                         file_path_lane.samples_directory,
                         run_get_sample_file_name(sample_name=row_dict['sample_name'])),
-                    # FIXME: IlluminaBamDemux does not seem standard and requires SAMPLE_NAME rather than SAMPLE_ALIAS?
-                    # 'SAMPLE_ALIAS': row_dict['sample_name'],
                     'SAMPLE_NAME': row_dict['sample_name'],
                     'LIBRARY_NAME': row_dict['library_name'],
+                    'BARCODE_1': row_dict['barcode_sequence_1'],
+                    'BARCODE_2': row_dict['barcode_sequence_2'],
                 })
 
                 # Get or create a (default) NGS Project.
@@ -2743,9 +2757,6 @@ class IlluminaDemultiplexSam(Analysis):
                 else:
                     sample = Sample(name=row_dict['sample_name'])
                     project.add_sample(sample=sample)
-
-                sample.add_annotation(key='Project Name', value=row_dict['library_name'])
-                sample.add_annotation(key='Project Size', value=row_dict['library_size'])
 
                 # Create one NGS Reads object per row.
 
@@ -2765,7 +2776,9 @@ class IlluminaDemultiplexSam(Analysis):
                 paired_reads.add_annotation(key='Flow Cell', value=self.project_name)
                 paired_reads.add_annotation(key='Lane', value=lane_str)
                 paired_reads.add_annotation(key='Flow Cell Lane', value='_'.join((self.project_name, lane_str)))
-                paired_reads.add_annotation(key='Structure', value=irf.run_information.get_picard_read_structure)
+                paired_reads.add_annotation(key='Project Name', value=row_dict['library_name'])
+                paired_reads.add_annotation(key='Project Size', value=row_dict['library_size'])
+                paired_reads.add_annotation(key='Structure', value=read_structure)
 
                 # Finally, add the NGS PairedReads object to the NGS Sample object.
 
@@ -2784,7 +2797,7 @@ class IlluminaDemultiplexSam(Analysis):
                     'PairedReads Index 2': row_dict['barcode_sequence_2'],
                     'PairedReads Lane': lane_str,
                     'PairedReads ReadGroup': '',
-                    'PairedReads Structure': irf.run_information.get_picard_read_structure,
+                    'PairedReads Structure': read_structure,
                     'Reads1 File': os.path.join(
                         os.path.basename(experiment_directory),
                         file_path_lane.samples_directory,
@@ -2840,7 +2853,8 @@ class IlluminaDemultiplexSam(Analysis):
                 java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                 java_heap_maximum='Xmx5G',
                 java_jar_path=self.java_archive_picard,
-                picard_command='IlluminaSamDemux')
+                picard_command='IlluminaSamDemux',
+                option_pair=True)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Set htsjdk system properties at the level of the JavaVM process.
@@ -2892,15 +2906,7 @@ class IlluminaDemultiplexSam(Analysis):
             # OUTPUT_PREFIX [null] Defaults to the @RG ID attribute of the multiplexed BAM file
             runnable_step.add_picard_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, lane_str)))
             # READ_STRUCTURE [null]
-            if 'read_structure' in library_annotation_dict[lane_int][0] and \
-                    library_annotation_dict[lane_int][0]['read_structure']:
-                runnable_step.add_picard_option(
-                    key='READ_STRUCTURE',
-                    value=library_annotation_dict[lane_int][0]['read_structure'])
-            else:
-                runnable_step.add_picard_option(
-                    key='READ_STRUCTURE',
-                    value=irf.run_information.get_picard_read_structure)
+            runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
             # TAG_PER_MOLECULAR_INDEX [null]
             # THREE_PRIME_ADAPTER [null]
 

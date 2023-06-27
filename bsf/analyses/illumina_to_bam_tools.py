@@ -203,9 +203,6 @@ class LibraryAnnotationSheet(AnnotationSheet):
                     'barcode_dict': {},  # Barcode sequence (str) to row number (int).
                     'sample_dict': {},  # Sample name (str) to row number (int).
                     'library_name': row_dict['library_name'],
-                    # 'barcode_mismatches': row_dict['barcode_mismatches'],
-                    # 'barcode_start': row_dict['barcode_start'],
-                    # 'read_structure': row_dict['read_structure'],
                 }
 
                 if 'barcode_mismatches' in row_dict:
@@ -1935,6 +1932,20 @@ class BamIndexDecoder(Analysis):
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
+
+            # Determine the read structure from the first line of the lane-specific library annotation.
+            # Getting it from the run configuration via the bsf.illumina.RunInformation.get_picard_read_structure()
+            # method would require a bsf.illumina.IlluminaRunFolder object.
+            # See bsf.analyses.picard.ExtractIlluminaRunFolder.run() and
+            # bsf.analyses.picard.IlluminaDemultiplexSam.run().
+
+            if 'read_structure' in library_annotation_dict[lane_int][0] and \
+                    library_annotation_dict[lane_int][0]['read_structure']:
+                read_structure = library_annotation_dict[lane_int][0]['read_structure']
+            else:
+                # read_structure = self._irf.run_information.get_picard_read_structure
+                read_structure = ''
+
             file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
@@ -1980,10 +1991,7 @@ class BamIndexDecoder(Analysis):
                     'PairedReads Lane': lane_str,
                     # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
                     'PairedReads ReadGroup': '',
-                    # FIXME: For the moment there is no way to get the ReadStructure.
-                    # bsf.illumina.RunInformation.get_picard_read_structure() would require a
-                    # IlluminaRunFolder object.
-                    'PairedReads Structure': '',
+                    'PairedReads Structure': read_structure,
                     'Reads1 File': os.path.join(
                         os.path.basename(experiment_directory),
                         file_path_lane.samples_directory,
