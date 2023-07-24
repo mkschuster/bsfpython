@@ -630,7 +630,8 @@ class Aligner(Analysis):
           - If duplicates should be marked,
             run :emphasis:`Picard MarkDuplicates` on all read group-specific merged aligned BAM files at once.
           - Run :emphasis:`Picard SortSam` by coordinate.
-          - Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
+          - Create a symbolic link from the Picard-style <file_name>.bai file to a
+            samtools-style <file_name>.bam.bai file.
           - Run the :emphasis:`Picard CollectAlignmentSummaryMetrics` analysis.
 
         - Run the :emphasis:`bsfR` alignment summary script.
@@ -1321,7 +1322,8 @@ class Aligner(Analysis):
             # VERBOSITY [INFO]
             runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
 
-            # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
+            # Create a symbolic link from the Picard-style <file_name>.bai file to a
+            # samtools-style <file_name>.bam.bai file.
 
             runnable_step = RunnableStepLink(
                 name='link',

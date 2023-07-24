@@ -39,7 +39,7 @@ def run(
         ascending_order: Optional[bool] = None) -> int:
     """Run function.
 
-    :param directory_path: A UNIX configuration (*.ini) file path.
+    :param directory_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
     :type directory_path: str
     :param ascending_order: Request submitting into the DRMS.
     :type ascending_order: bool | None

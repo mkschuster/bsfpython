@@ -3621,15 +3621,15 @@ class DESeq(Analysis):
     `Bioconductor <https://bioconductor.org/>`_
     `DESeq2 <https://bioconductor.org/packages/release/bioc/html/DESeq2.html>`_ package.
 
-    :ivar transcriptome_version: A transcriptome version
+    :ivar transcriptome_version: A transcriptome version.
     :type transcriptome_version: str | None
     :ivar transcriptome_gtf: A transcriptome annotation GTF file path
     :type transcriptome_gtf: str | None
     :ivar comparison_path: A comparison file path
     :type comparison_path: str | None
-    :ivar contrast_path: A contrast file path
+    :ivar contrast_path: A contrast file path.
     :type contrast_path: str | None
-    :ivar only_counting: Request creating count matrices rather than running a full analysis
+    :ivar only_counting: Request creating count matrices rather than running a full analysis.
     :type only_counting: bool | None
     :ivar threshold_padj: Threshold for p-adjusted values
     :type threshold_padj: float | none
@@ -3733,15 +3733,15 @@ class DESeq(Analysis):
         :type collection: Collection | None
         :param sample_list: A Python :py:class:`list` object of :py:class:`bsf.ngs.Sample` objects.
         :type sample_list: list[Sample] | None
-        :param transcriptome_version: A transcriptome version
+        :param transcriptome_version: A transcriptome version.
         :type transcriptome_version: str | None
         :param transcriptome_gtf: A transcriptome annotation GTF file path
         :type transcriptome_gtf: str | None
         :param comparison_path: A comparison file path
         :type comparison_path: str | None
-        :param contrast_path: A contrast file path
+        :param contrast_path: A contrast file path.
         :type contrast_path: str | None
-        :param only_counting: Request creating count matrices rather than running a full analysis
+        :param only_counting: Request creating count matrices rather than running a full analysis.
         :type only_counting: bool | None
         :param threshold_padj: Threshold for p-adjusted values
         :type threshold_padj: float | None

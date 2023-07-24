@@ -99,8 +99,8 @@ class SafeFileName(object):
 
 
 class Configuration(object):
-    """The :py:class:`bsf.standards.Configuration` class represents one or more UNIX-style initialisation
-    (:literal:`*.ini`) files.
+    """The :py:class:`bsf.standards.Configuration` class represents one or more initialisation
+    (`INI <https://en.wikipedia.org/wiki/INI_file>`_) files.
 
     A :py:class:`bsf.standards.Configuration` object has an associated Python :py:class:`configparser.ConfigParser`
     object to parse the file(s).
@@ -118,7 +118,7 @@ class Configuration(object):
 
     @classmethod
     def get_global_file_path(cls) -> str:
-        """Get the global UNIX-style initialisation (:literal:`*.ini`) file path.
+        """Get the global initialisation (`INI <https://en.wikipedia.org/wiki/INI_file>`_) file path.
 
         The global configuration file path is based on the value of
         environment variable :literal:`BSF_PYTHON_INI` if defined,
@@ -1777,7 +1777,7 @@ class Central(BaseSection):
         The global configuration file path is based on the value of
         environment variable :literal:`BSF_PYTHON_XML` if defined,
         the :literal:`configuration_xml` option in the :literal:`[central]` section of the
-        global UNIX-style initialisation (:literal:`*.ini`) file path if defined,
+        global initialisation (`INI <https://en.wikipedia.org/wiki/INI_file>`_) file path if defined,
         or defaults to :literal:`~/.bsfpython.xml` otherwise.
 
         :return: Global XML configuration file path

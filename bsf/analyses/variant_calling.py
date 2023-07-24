@@ -2827,10 +2827,10 @@ class VariantCallingGATK(Analysis):
                                 key='variant',
                                 value=_file_path_scatter_or_gather.combined_gvcf_vcf,
                                 override=True)
-                            # Delete the *.g.vcf.gz file.
+                            # Delete the <file_name>.g.vcf.gz file.
                             _runnable_step.obsolete_file_path_list.append(
                                 _file_path_scatter_or_gather.combined_gvcf_vcf)
-                            # Delete the *.g.vcf.gz.tbi file.
+                            # Delete the <file_name>.g.vcf.gz.tbi file.
                             _runnable_step.obsolete_file_path_list.append(
                                 _file_path_scatter_or_gather.combined_gvcf_tbi)
                             # Set dependencies on preceding bsf.procedure.ConsecutiveRunnable.name or
@@ -6865,7 +6865,7 @@ class VariantCallingGATK(Analysis):
     def console_find_missing(cls, configuration_path: str) -> int:
         """Console function to check for missing files.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :return: A :py:class:`SystemExit` status value.
         :rtype: int
@@ -6946,7 +6946,7 @@ class VariantCallingGATK(Analysis):
 
         argument_parser.add_argument(
             'configuration',
-            help='configuration (*.ini) file path')
+            help='configuration (INI) file path')
 
         name_space = argument_parser.parse_args()
 

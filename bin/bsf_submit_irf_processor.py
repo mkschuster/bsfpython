@@ -63,7 +63,7 @@ def run(
         interval: Optional[float] = None) -> int:
     """Run function.
 
-    :param configuration_path: A UNIX configuration (*.ini) file path.
+    :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
     :type configuration_path: str
     :param stage_name: A :py:class:`bsf.analysis.Stage` name.
     :type stage_name: str | None
@@ -345,7 +345,7 @@ def main() -> int:
     # argument_parser.add_argument(
     #     '--extract-intensities',
     #     action='store_true',
-    #     help='extract cluster intensity (*.cif) files')
+    #     help='extract cluster intensity (CIF) files')
     #
     # argument_parser.add_argument(
     #     '--force',
@@ -359,7 +359,7 @@ def main() -> int:
 
     argument_parser.add_argument(
         '--library-path',
-        help='library annotation sheet (*.csv) file path')
+        help='library annotation sheet (CSV) file path')
 
     argument_parser.add_argument(
         '--mode',
@@ -390,7 +390,7 @@ def main() -> int:
         'configuration',
         nargs='?',
         default=Configuration.get_global_file_path(),
-        help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+        help=f'configuration (INI) file path [{Configuration.get_global_file_path()!s}]')
 
     name_space = argument_parser.parse_args()
 

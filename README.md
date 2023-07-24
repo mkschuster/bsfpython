@@ -39,7 +39,7 @@ tasks.
 
 ## Analysis Configuration File
 
-BSF Analysis objects are initialised and configured via UNIX-style configuration (*.ini) files.
+BSF Analysis objects are initialised and configured via INI configuration files.
 Templates for these files are again provided in the doc subdirectory, document configuration options and
 provide, as far as possible, sensible default settings. Generally, only few configuration
 options need filling in. Most importantly, the location of sample annotation sheets and, depending on the

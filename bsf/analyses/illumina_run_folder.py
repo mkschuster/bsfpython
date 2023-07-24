@@ -930,7 +930,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         This analysis requires either a :literal:`configuration_path` argument or a :literal:`irf_path` argument.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :param stage_name: A :py:class:`bsf.analysis.Stage` name.
         :type stage_name: str | None
@@ -955,7 +955,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         if project_name:
             if project_name.endswith('.ini'):
-                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+                raise Exception('The --project-name option should not be a configuration (INI) file.')
 
             analysis.project_name = project_name
 
@@ -1031,7 +1031,7 @@ class IlluminaRunFolderArchive(Analysis):
             'configuration',
             nargs='?',
             default=Configuration.get_global_file_path(),
-            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+            help=f'configuration (INI) file path [{Configuration.get_global_file_path()!s}]')
 
         name_space = argument_parser.parse_args()
 
@@ -1506,7 +1506,7 @@ class IlluminaRunFolderRestore(Analysis):
         """Console function to submit a
         :py:class:`bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore` analysis.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :param stage_name: A :py:class:`bsf.analysis.Stage` name.
         :type stage_name: str | None
@@ -1527,7 +1527,7 @@ class IlluminaRunFolderRestore(Analysis):
 
         if project_name:
             if project_name.endswith('.ini'):
-                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+                raise Exception('The --project-name option should not be a configuration (INI) file.')
 
             analysis.project_name = project_name
 
@@ -1592,7 +1592,7 @@ class IlluminaRunFolderRestore(Analysis):
         argument_parser.add_argument(
             '--extract-intensities',
             action='store_true',
-            help='extract cluster intensity (*.cif) files')
+            help='extract cluster intensity (CIF) files')
 
         argument_parser.add_argument(
             '--force',
@@ -1603,7 +1603,7 @@ class IlluminaRunFolderRestore(Analysis):
             'configuration',
             nargs='?',
             default=Configuration.get_global_file_path(),
-            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+            help=f'configuration (INI) file path [{Configuration.get_global_file_path()!s}]')
 
         name_space = argument_parser.parse_args()
 

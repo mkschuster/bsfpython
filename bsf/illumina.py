@@ -3191,7 +3191,7 @@ class RunFolder(object):
         argument_parser.add_argument(
             '--output-path',
             required=True,
-            help='output (*.csv) file path')
+            help='output (CSV) file path')
 
         argument_parser.add_argument(
             '--ascending',

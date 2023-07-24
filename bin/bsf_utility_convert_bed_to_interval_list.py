@@ -66,7 +66,7 @@ def run(
         if output_path.endswith('.bed'):
             output_path = output_path[:-3] + 'interval_list'
         else:
-            raise Exception('The --input-path option does not specify a *.bed file '
+            raise Exception('The --input-path option does not specify a BED file '
                             'and the --output-path option is missing.')
 
     # To retain the order of sequence regions as defined in the sequence dictionary (i.e. SAM header),

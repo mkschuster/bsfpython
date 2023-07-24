@@ -334,7 +334,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # ru_nsignals
                 # ru_nvcsw
                 # ru_nivcsw
-                # These entries follow the contents of the standard Unix rusage structure as described in getrusage(2).
+                # These entries follow the contents of the standard UNIX rusage structure as described in getrusage(2).
                 # Depending on the operating system where the job was executed, some fields may be 0.
                 #
                 # project

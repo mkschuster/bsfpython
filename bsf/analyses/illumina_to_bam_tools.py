@@ -1309,7 +1309,7 @@ class IlluminaToBam(Analysis):
 
         This analysis requires either a :literal:`configuration` argument or a :literal:`irf_path` argument.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :param stage_name: A :py:class:`bsf.analysis.Stage` name.
         :type stage_name: str | None
@@ -1388,7 +1388,7 @@ class IlluminaToBam(Analysis):
             'configuration',
             nargs='?',
             default=Configuration.get_global_file_path(),
-            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+            help=f'configuration (INI) file path [{Configuration.get_global_file_path()!s}]')
 
         name_space = argument_parser.parse_args()
 
@@ -2283,7 +2283,7 @@ class BamIndexDecoder(Analysis):
         The :literal:`library_path` argument can be automatically determined on the basis of the
         :literal:`project_name`.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :param stage_name: A :py:class:`bsf.analysis.Stage` name.
         :type stage_name: str | None
@@ -2308,7 +2308,7 @@ class BamIndexDecoder(Analysis):
 
         if project_name:
             if project_name.endswith('.ini'):
-                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+                raise Exception('The --project-name option should not be a configuration (INI) file.')
 
             analysis.project_name = project_name
 
@@ -2386,7 +2386,7 @@ class BamIndexDecoder(Analysis):
 
         argument_parser.add_argument(
             '--library-path',
-            help='library annotation sheet (*.csv) file path')
+            help='library annotation sheet (CSV) file path')
 
         argument_parser.add_argument(
             '--mode',
@@ -2401,7 +2401,7 @@ class BamIndexDecoder(Analysis):
             'configuration',
             nargs='?',
             default=Configuration.get_global_file_path(),
-            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+            help=f'configuration (INI) file path [{Configuration.get_global_file_path()!s}]')
 
         name_space = argument_parser.parse_args()
 

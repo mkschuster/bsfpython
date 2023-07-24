@@ -467,12 +467,13 @@ class Analysis(object):
 
     @classmethod
     def from_config_file_path(cls, config_path: str) -> AnalysisType:
-        """Create a new :py:class:`bsf.analysis.Analysis` object from a UNIX-style configuration file path.
+        """Create a new :py:class:`bsf.analysis.Analysis` object from a
+        configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
 
         The configuration file in :py:attr:`bsf.standards.Configuration.global_file_path` is read as default,
         before the project-specific one gets read, if it is not the same file.
 
-        :param config_path: A UNIX-style configuration file path.
+        :param config_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type config_path: str
         :return: A :py:class:`bsf.analysis.Analysis` object.
         :rtype: Analysis
@@ -1275,7 +1276,7 @@ class Analysis(object):
         if creator is None or not creator:
             creator = getpass.getuser()
             # The getpass.getuser method just relies on environment variables,
-            # but at least works under Unix and Windows.
+            # but at least works under UNIX and Windows.
 
         if source is None or not source:
             source = inspect.getfile(inspect.currentframe())
@@ -1998,7 +1999,7 @@ class Analysis(object):
             *args, **kwargs) -> int:
         """Console function to submit a :py:class:`bsf.analysis.Analysis` object.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :param stage_name: A :py:class:`bsf.analysis.Stage` name.
         :type stage_name: str | None
@@ -2052,7 +2053,7 @@ class Analysis(object):
 
         argument_parser.add_argument(
             'configuration',
-            help='configuration (*.ini) file path')
+            help='configuration (INI) file path')
 
         name_space = argument_parser.parse_args()
 

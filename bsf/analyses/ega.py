@@ -306,7 +306,7 @@ class EGACryptor(Analysis):
         This analysis requires either a :literal:`configuration` argument or
         :literal:`project_name` and :literal:`sas_path` arguments.
 
-        :param configuration_path: A UNIX configuration (*.ini) file path.
+        :param configuration_path: A configuration `INI <https://en.wikipedia.org/wiki/INI_file>`_ file path.
         :type configuration_path: str
         :param stage_name: A :py:class:`bsf.analysis.Stage` name.
         :type stage_name: str | None
@@ -329,7 +329,7 @@ class EGACryptor(Analysis):
 
         if project_name:
             if project_name.endswith('.ini'):
-                raise Exception('The --project-name option should not be a configuration (*.ini) file.')
+                raise Exception('The --project-name option should not be a configuration (INI) file.')
 
             analysis.project_name = project_name
 
@@ -386,13 +386,13 @@ class EGACryptor(Analysis):
 
         argument_parser.add_argument(
             '--sas-path',
-            help='sample annotation sheet (*.csv) file path')
+            help='sample annotation sheet (CSV) file path')
 
         argument_parser.add_argument(
             'configuration',
             nargs='?',
             default=Configuration.get_global_file_path(),
-            help=f'configuration (*.ini) file path [{Configuration.get_global_file_path()!s}]')
+            help=f'configuration (INI) file path [{Configuration.get_global_file_path()!s}]')
 
         name_space = argument_parser.parse_args()
 

@@ -22,8 +22,9 @@
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""The :py:mod:`bsf.drms.slurm` module supports the Simple Linux Utility for Resource Management (SLURM) system as
-Distributed Resource Management System (DRMS) module.
+"""The :py:mod:`bsf.drms.slurm` module supports the
+`Simple Linux Utility for Resource Management <https://slurm.schedmd.com>`_ (SLURM) system as
+`Distributed Resource Management System <https://en.wikipedia.org/wiki/Job_scheduler>`_ (DRMS) module.
 """
 import errno
 import logging
@@ -49,7 +50,7 @@ output_directory_name = 'bsfpython_slurm_output'
 
 class ProcessSLURM(object):
     """The :py:class:`bsf.drms.slurm.ProcessSLURM` class represents a
-    :literal:`Simple Linux Utility for Resource Management (SLURM)` process.
+    `Simple Linux Utility for Resource Management <https://slurm.schedmd.com>`_ (SLURM) process.
 
     The instance variable names result from the SLURM command :literal:`sacct --parsable --long`.
 
