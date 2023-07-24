@@ -165,7 +165,7 @@ class RunnableStepCollectionPruneFastq(RunnableStep):
         :return: A Python :py:class:`list` object of Python :py:class:`str` (exception) objects.
         :rtype: list[str] | None
         """
-        collection = Collection.from_sas_path(
+        collection: Collection = Collection.from_sas_path(
             file_path='',
             file_type='',
             name='sample_annotation_sheet',

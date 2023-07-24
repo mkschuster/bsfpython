@@ -3623,18 +3623,14 @@ class DESeq(Analysis):
 
     :ivar transcriptome_version: A transcriptome version.
     :type transcriptome_version: str | None
-    :ivar transcriptome_gtf: A transcriptome annotation GTF file path
-    :type transcriptome_gtf: str | None
-    :ivar comparison_path: A comparison file path
+    :ivar transcriptome_granges: A Bioconductor :literal:`GenomicRanges::GRanges` transcriptome resource file path.
+    :type transcriptome_granges: str | None
+    :ivar comparison_path: A comparison file path.
     :type comparison_path: str | None
     :ivar contrast_path: A contrast file path.
     :type contrast_path: str | None
     :ivar only_counting: Request creating count matrices rather than running a full analysis.
     :type only_counting: bool | None
-    :ivar threshold_padj: Threshold for p-adjusted values
-    :type threshold_padj: float | none
-    :ivar threshold_log2fc: Threshold for log2 fold-change values
-    :type threshold_log2fc: float | None
     """
 
     name = 'DESeq RNA-seq Analysis'
@@ -3697,12 +3693,10 @@ class DESeq(Analysis):
             collection: Optional[Collection] = None,
             sample_list: Optional[list[Sample]] = None,
             transcriptome_version: Optional[str] = None,
-            transcriptome_gtf: Optional[str] = None,
+            transcriptome_granges: Optional[str] = None,
             comparison_path: Optional[str] = None,
             contrast_path: Optional[str] = None,
-            only_counting: Optional[bool] = None,
-            threshold_padj: Optional[float] = None,
-            threshold_log2fc: Optional[float] = None) -> None:
+            only_counting: Optional[bool] = None) -> None:
         """Initialise a :py:class:`bsf.analyses.rnaseq.DESeq` object.
 
         :param configuration: A :py:class:`bsf.standards.Configuration` object.
@@ -3735,18 +3729,14 @@ class DESeq(Analysis):
         :type sample_list: list[Sample] | None
         :param transcriptome_version: A transcriptome version.
         :type transcriptome_version: str | None
-        :param transcriptome_gtf: A transcriptome annotation GTF file path
-        :type transcriptome_gtf: str | None
-        :param comparison_path: A comparison file path
+        :param transcriptome_granges: A Bioconductor :literal:`GenomicRanges::GRanges` transcriptome resource file path.
+        :type transcriptome_granges: str | None
+        :param comparison_path: A comparison file path.
         :type comparison_path: str | None
         :param contrast_path: A contrast file path.
         :type contrast_path: str | None
         :param only_counting: Request creating count matrices rather than running a full analysis.
         :type only_counting: bool | None
-        :param threshold_padj: Threshold for p-adjusted values
-        :type threshold_padj: float | None
-        :param threshold_log2fc: Threshold for log2 fold-change values
-        :type threshold_log2fc: float | None
         """
 
         super(DESeq, self).__init__(
@@ -3768,12 +3758,10 @@ class DESeq(Analysis):
         # Sub-class specific ...
 
         self.transcriptome_version = transcriptome_version
-        self.transcriptome_gtf = transcriptome_gtf
+        self.transcriptome_granges = transcriptome_granges
         self.comparison_path = comparison_path
         self.contrast_path = contrast_path
         self.only_counting = only_counting
-        self.threshold_padj = threshold_padj
-        self.threshold_log2fc = threshold_log2fc
 
         return
 
@@ -3797,9 +3785,9 @@ class DESeq(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
 
-        option = 'transcriptome_gtf'
+        option = 'transcriptome_granges'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_granges = configuration.config_parser.get(section=section, option=option)
 
         option = 'cmp_file'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3812,14 +3800,6 @@ class DESeq(Analysis):
         option = 'only_counting'
         if configuration.config_parser.has_option(section=section, option=option):
             self.only_counting = configuration.config_parser.getboolean(section=section, option=option)
-
-        option = 'threshold_padj'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.threshold_padj = configuration.config_parser.getfloat(section=section, option=option)
-
-        option = 'threshold_log2fc'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.threshold_log2fc = configuration.config_parser.getfloat(section=section, option=option)
 
         return
 
@@ -3889,10 +3869,9 @@ class DESeq(Analysis):
 
         # Get the transcriptome GTF file.
 
-        if not self.transcriptome_gtf:
-            self.transcriptome_gtf = StandardFilePath.get_resource_transcriptome_gtf(
-                transcriptome_version=self.transcriptome_version,
-                transcriptome_index='none')
+        if not self.transcriptome_granges:
+            self.transcriptome_granges = StandardFilePath.get_resource_transcriptome_granges(
+                transcriptome_version=self.transcriptome_version)
 
         stage_analysis = self.get_stage(name=self.get_stage_name_analysis())
         stage_results = self.get_stage(name=self.get_stage_name_results())
@@ -3963,6 +3942,7 @@ class DESeq(Analysis):
                     'bai_path': file_path_star_sample.sample_bai,
                     'ah5_path': file_path_kallisto_sample.abundance_h5,
                 }
+
                 # If the sample annotation sheet contains a "DESeq sample" variable,
                 # technical replicates need collapsing. Set the original bsf.ngs.Sample.name as
                 # 'run', the DESeq sample name will be filled in from the annotation dict below.
@@ -3970,9 +3950,19 @@ class DESeq(Analysis):
                     row_dict['run'] = sample.name
                 else:
                     row_dict['sample'] = sample.name
+
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
                 for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                     row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
+
+                # Post process the UMIs variable to use 'FALSE' or 'TRUE' which can be parsed by R.
+                if 'UMIs' in row_dict:
+                    if annotation_sheet.get_boolean(row_dict=row_dict, key='UMIs'):
+                        row_dict['UMIs'] = 'TRUE'
+                    else:
+                        row_dict['UMIs'] = 'FALSE'
+                else:
+                    row_dict['UMIs'] = 'FALSE'
 
                 annotation_sheet.row_dict_list.append(row_dict)
 
@@ -4023,8 +4013,7 @@ class DESeq(Analysis):
             runnable_analysis.add_runnable_step(runnable_step=runnable_step)
 
             runnable_step.add_option_long(key='design-name', value=design_name)
-            runnable_step.add_option_long(key='gtf-reference', value=self.transcriptome_gtf)
-            runnable_step.add_option_long(key='genome-version', value=self.genome_version)
+            runnable_step.add_option_long(key='transcriptome-path', value=self.transcriptome_granges)
             runnable_step.add_option_long(key='threads', value=str(stage_analysis.threads))
 
             # Run the results stage, if a contrast annotation sheet is already available and has design-specific rows.
@@ -4050,24 +4039,12 @@ class DESeq(Analysis):
                 runnable_step.add_option_long(key='design-name', value=design_name)
                 runnable_step.add_option_long(key='threads', value=str(stage_results.threads))
 
-                if self.threshold_padj is not None:
-                    runnable_step.add_option_long(key='padj-threshold', value=str(self.threshold_padj))
-
-                if self.threshold_log2fc is not None:
-                    runnable_step.add_option_long(key='l2fc-threshold', value=str(self.threshold_log2fc))
-
                 runnable_step = RunnableStep(
                     name='enrichr',
                     program='bsf_rnaseq_deseq_enrichr.R')
                 runnable_results.add_runnable_step(runnable_step=runnable_step)
 
                 runnable_step.add_option_long(key='design-name', value=design_name)
-
-                if self.threshold_padj is not None:
-                    runnable_step.add_option_long(key='padj-threshold', value=str(self.threshold_padj))
-
-                if self.threshold_log2fc is not None:
-                    runnable_step.add_option_long(key='l2fc-threshold', value=str(self.threshold_log2fc))
 
                 runnable_step = RunnableStep(
                     name='heatmap',
@@ -4359,6 +4336,7 @@ class DESeq(Analysis):
             str_list.append('<th class="left">Differential Genes</th>\n')
             str_list.append('<th class="left">Significant Genes</th>\n')
             str_list.append('<th class="left">Significant Number</th>\n')
+            # str_list.append('<th class="left">Effective Number</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -4402,7 +4380,7 @@ class DESeq(Analysis):
                     str_list.append('<td>' +
                                     self.get_html_anchor(
                                         prefix=design_prefix,
-                                        suffix='_'.join(('lrt', lrt_row_dict['reduced_name'] + '.tsv')),
+                                        suffix='_'.join(('lrt', lrt_row_dict['reduced_name'] + 'differential.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
 
@@ -4419,6 +4397,12 @@ class DESeq(Analysis):
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(lrt_row_dict['significant'])))
                     else:
                         str_list.append('<td class="right"></td>\n')
+
+                    # Effective Number
+                    # if lrt_row_dict['effective']:
+                    #     str_list.append('<td class="right">{:,}</td>\n'.format(int(lrt_row_dict['effective'])))
+                    # else:
+                    #     str_list.append('<td class="right"></td>\n')
 
                     str_list.append('</tr>\n')
 
@@ -4440,11 +4424,6 @@ class DESeq(Analysis):
             str_list.append('<a href="https://bioconductor.org/">Bioconductor</a> Independent Hypothesis Weighting ')
             str_list.append('(<a href="https://www.bioconductor.org/packages/IHW/">IHW</a>) package.')
             str_list.append('</p>\n')
-            if self.threshold_padj is not None:
-                str_list.append('<p>')
-                str_list.append('Significant genes are defined as having an adjusted p-value below the threshold (')
-                str_list.append(str(self.threshold_padj))
-                str_list.append(').</p>\n')
             str_list.append('\n')
 
             str_list.append('<table id="contrasts_table">\n')
@@ -4457,6 +4436,10 @@ class DESeq(Analysis):
             str_list.append('<th class="left">Significant Number</th>\n')
             str_list.append('<th class="left">Significant Up</th>\n')
             str_list.append('<th class="left">Significant Down</th>\n')
+            # str_list.append('<th class="left">Effective Genes</th>\n')
+            # str_list.append('<th class="left">Effective Number</th>\n')
+            # str_list.append('<th class="left">Effective Up</th>\n')
+            # str_list.append('<th class="left">Effective Down</th>\n')
             str_list.append('<th class="left">MA Plot</th>\n')
             str_list.append('<th class="left">Volcano Plot</th>\n')
             str_list.append('<th class="left">Numerator</th>\n')
@@ -4525,7 +4508,7 @@ class DESeq(Analysis):
                                     self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix='_'.join(('contrast', numerator, 'against', denominator,
-                                                         'genes.tsv')),
+                                                         'differential.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
 
@@ -4555,6 +4538,33 @@ class DESeq(Analysis):
                         str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['SignificantDown'])))
                     else:
                         str_list.append('<td></td>\n')
+
+                    # Effective Genes
+                    # str_list.append('<td>' +
+                    #                 self.get_html_anchor(
+                    #                     prefix=design_prefix,
+                    #                     suffix='_'.join(('contrast', numerator, 'against', denominator,
+                    #                                      'effective.tsv')),
+                    #                     text='<abbr title="Tab-Separated Value">TSV</abbr>') +
+                    #                 '</td>\n')
+
+                    # Effective Number
+                    # if 'Effective' in row_dict:
+                    #     str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['Effective'])))
+                    # else:
+                    #     str_list.append('<td></td>\n')
+
+                    # Effective Up genes
+                    # if 'EffectiveUp' in row_dict:
+                    #     str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['EffectiveUp'])))
+                    # else:
+                    #     str_list.append('<td></td>\n')
+
+                    # Effective Down genes
+                    # if 'EffectiveDown' in row_dict:
+                    #     str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['EffectiveDown'])))
+                    # else:
+                    #     str_list.append('<td></td>\n')
 
                     # MA Plot
                     str_list.append('<td>' +
@@ -4710,8 +4720,8 @@ class DESeq(Analysis):
             str_list.append('The sample annotation table for a particular design.')
             str_list.append('</li>\n')
             str_list.append('<li>')
-            str_list.append('<strong>Annotation:</strong> ')
-            str_list.append('The gene annotation imported from the reference transcriptome.')
+            str_list.append('<strong>Features:</strong> ')
+            str_list.append('The feature (i.e., gene) annotation imported from the reference transcriptome.')
             str_list.append('</li>\n')
             str_list.append('<li>')
             str_list.append('<strong>Contrasts:</strong> ')
@@ -4733,7 +4743,7 @@ class DESeq(Analysis):
             str_list.append('<th class="left">VST Model Counts</th>\n')
             str_list.append('<th class="left">FPKMs</th>\n')
             str_list.append('<th class="left">Samples</th>\n')
-            str_list.append('<th class="left">Annotation</th>\n')
+            str_list.append('<th class="left">Features</th>\n')
             str_list.append('<th class="left">Contrasts</th>\n')
             str_list.append('<th class="left">LRT</th>\n')
             str_list.append('</tr>\n')
@@ -4793,7 +4803,7 @@ class DESeq(Analysis):
                 str_list.append('<td>')
                 str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
-                    suffix='annotation_gene.tsv',
+                    suffix='features_gene.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 

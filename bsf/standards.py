@@ -1334,6 +1334,25 @@ class StandardFilePath(BaseSection):
             file_name)
 
     @classmethod
+    def get_resource_transcriptome_granges(
+            cls,
+            transcriptome_version: str,
+            absolute: bool = True):
+        """Get a Bioconductor :literal:`GenomicRanges::GRanges` transcriptome resource file path.
+
+        :param transcriptome_version: A transcriptome version (e.g., mm10_e87, ...).
+        :type transcriptome_version: str
+        :param absolute: Get an absolute file path.
+        :type absolute: bool
+        :return: A Bioconductor :literal`GenomicRanges::GRanges` transcriptome resource file path.
+        :rtype: str | None
+        """
+        return os.path.join(cls.get_resource_transcriptome(
+            transcriptome_version=transcriptome_version,
+            absolute=absolute),
+            transcriptome_version + '_granges.rds')
+
+    @classmethod
     def get_resource_transcriptome_txdb(
             cls,
             transcriptome_version: str,
