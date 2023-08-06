@@ -189,35 +189,39 @@ class FilePathSample(FilePath):
 
 class FilePathSummary(FilePath):
     """The :py:class:`bsf.analyses.aligner.FilePathSummary` class models file paths at the summary stage.
+    They are mainly based on `Picard Alignment Summary Metrics
+    <http://broadinstitute.github.io/picard/picard-metric-definitions.html#AlignmentSummaryMetrics>`_ and
+    `Picard Duplication Metrics
+    <http://broadinstitute.github.io/picard/picard-metric-definitions.html#DuplicationMetrics>`_ reports.
 
     :ivar output_directory: An output directory path.
     :type output_directory: str
-    :ivar pasm_alignment_read_group_pdf: A Picard Alignment Summary Metrics per read group PDF plot file path.
-    :type pasm_alignment_read_group_pdf: str
-    :ivar pasm_alignment_read_group_png: A Picard Alignment Summary Metrics per read group PNG plot file path.
-    :type pasm_alignment_read_group_pdf: str
-    :ivar pasm_alignment_sample_pdf: A Picard Alignment Summary Metrics per sample PDF plot file path.
-    :type pasm_alignment_sample_pdf: str
-    :ivar pasm_alignment_sample_png: A Picard Alignment Summary Metrics per sample PNG plot file path.
-    :type pasm_alignment_sample_png: str
-    :ivar pasm_absolute_read_group_pdf: A Picard Alignment Summary Metrics absolute per read group PDF plot file path.
-    :type pasm_absolute_read_group_pdf: str
-    :ivar pasm_absolute_read_group_png: A Picard Alignment Summary Metrics absolute per read group PNG plot file path.
-    :type pasm_absolute_read_group_pdf: str
-    :ivar pasm_absolute_sample_pdf: A Picard Alignment Summary Metrics absolute per sample PDF plot file path.
-    :type pasm_absolute_sample_pdf: str
-    :ivar pasm_absolute_sample_png: A Picard Alignment Summary Metrics absolute per sample PNG plot file path.
-    :type pasm_absolute_sample_png: str
-    :ivar pasm_percentage_read_group_pdf: A Picard Alignment Summary Metrics percentage per read group
+    :ivar pasm_summary_read_group_pdf: A Picard Alignment Summary Metrics per read group PDF plot file path.
+    :type pasm_summary_read_group_pdf: str
+    :ivar pasm_summary_read_group_png: A Picard Alignment Summary Metrics per read group PNG plot file path.
+    :type pasm_summary_read_group_png: str
+    :ivar pasm_summary_sample_pdf: A Picard Alignment Summary Metrics per sample PDF plot file path.
+    :type pasm_summary_sample_pdf: str
+    :ivar pasm_summary_sample_png: A Picard Alignment Summary Metrics per sample PNG plot file path.
+    :type pasm_summary_sample_png: str
+    :ivar pasm_numbers_read_group_pdf: A Picard Alignment Summary Metrics numbers per read group PDF plot file path.
+    :type pasm_numbers_read_group_pdf: str
+    :ivar pasm_numbers_read_group_png: A Picard Alignment Summary Metrics numbers per read group PNG plot file path.
+    :type pasm_numbers_read_group_png: str
+    :ivar pasm_numbers_sample_pdf: A Picard Alignment Summary Metrics numbers per sample PDF plot file path.
+    :type pasm_numbers_sample_pdf: str
+    :ivar pasm_numbers_sample_png: A Picard Alignment Summary Metrics numbers per sample PNG plot file path.
+    :type pasm_numbers_sample_png: str
+    :ivar pasm_fractions_read_group_pdf: A Picard Alignment Summary Metrics fractions per read group
         PDF plot file path.
-    :type pasm_percentage_read_group_pdf: str
-    :ivar pasm_percentage_read_group_png: A Picard Alignment Summary Metrics percentage per read group
+    :type pasm_fractions_read_group_pdf: str
+    :ivar pasm_fractions_read_group_png: A Picard Alignment Summary Metrics fractions per read group
         PNG plot file path.
-    :type pasm_percentage_read_group_png: str
-    :ivar pasm_percentage_sample_pdf: A Picard Alignment Summary Metrics percentage per sample PDF plot file path.
-    :type pasm_percentage_sample_pdf: str
-    :ivar pasm_percentage_sample_png: A Picard Alignment Summary Metrics percentage per sample PNG plot file path.
-    :type pasm_percentage_sample_png: str
+    :type pasm_fractions_read_group_png: str
+    :ivar pasm_fractions_sample_pdf: A Picard Alignment Summary Metrics fractions per sample PDF plot file path.
+    :type pasm_fractions_sample_pdf: str
+    :ivar pasm_fractions_sample_png: A Picard Alignment Summary Metrics fractions per sample PNG plot file path.
+    :type pasm_fractions_sample_png: str
     :ivar pasm_strand_balance_read_group_pdf: A Picard Alignment Summary Metrics strand balance per read group
         PDF plot file path.
     :type pasm_strand_balance_read_group_pdf: str
@@ -234,16 +238,16 @@ class FilePathSummary(FilePath):
     :type pasm_table_read_group_tsv: str
     :ivar pasm_table_sample_tsv: A Picard Alignment Summary Metrics TSV table per sample file path.
     :type pasm_table_sample_tsv: str
-    :ivar pdsm_levels_sample_pdf: A Picard Duplication Metrics levels per sample PDF plot file path.
-    :type pdsm_levels_sample_pdf: str
-    :ivar pdsm_levels_sample_png: A Picard Duplication Metrics levels per sample PNG plot file path.
-    :type pdsm_levels_sample_png: str
-    :ivar pdsm_percentage_sample_pdf: A Picard Duplication Metrics percentage per sample PDF plot file path.
-    :type pdsm_percentage_sample_pdf: str
-    :ivar pdsm_percentage_sample_png: A Picard Duplication Metrics percentage per sample PNG plot file path.
-    :type pdsm_percentage_sample_png: str
-    :ivar pdsm_table_sample_tsv: A Picard Duplication Metrics TSV table per sample file path.
-    :type pdsm_table_sample_tsv: str
+    :ivar pdm_levels_pdf: A Picard Duplication Metrics levels per sample PDF plot file path.
+    :type pdm_levels_pdf: str
+    :ivar pdm_levels_png: A Picard Duplication Metrics levels per sample PNG plot file path.
+    :type pdm_levels_png: str
+    :ivar pdm_fractions_pdf: A Picard Duplication Metrics percentage per sample PDF plot file path.
+    :type pdm_fractions_pdf: str
+    :ivar pdm_fractions_png: A Picard Duplication Metrics percentage per sample PNG plot file path.
+    :type pdm_fractions_png: str
+    :ivar pdm_table_tsv: A Picard Duplication Metrics TSV table per sample file path.
+    :type pdm_table_tsv: str
     """
 
     def __init__(self, prefix: str) -> None:
@@ -260,23 +264,23 @@ class FilePathSummary(FilePath):
 
         # Picard Alignment Summary Metrics (PASM)
 
-        self.pasm_alignment_read_group_pdf = prefix + '_pasm_alignment_read_group.pdf'
-        self.pasm_alignment_read_group_png = prefix + '_pasm_alignment_read_group.png'
+        self.pasm_summary_read_group_pdf = prefix + '_pasm_summary_read_group.pdf'
+        self.pasm_summary_read_group_png = prefix + '_pasm_summary_read_group.png'
 
-        self.pasm_alignment_sample_pdf = prefix + '_pasm_alignment_sample.pdf'
-        self.pasm_alignment_sample_png = prefix + '_pasm_alignment_sample.png'
+        self.pasm_summary_sample_pdf = prefix + '_pasm_summary_sample.pdf'
+        self.pasm_summary_sample_png = prefix + '_pasm_summary_sample.png'
 
-        self.pasm_absolute_read_group_pdf = prefix + '_pasm_absolute_read_group.pdf'
-        self.pasm_absolute_read_group_png = prefix + '_pasm_absolute_read_group.png'
+        self.pasm_numbers_read_group_pdf = prefix + '_pasm_numbers_read_group.pdf'
+        self.pasm_numbers_read_group_png = prefix + '_pasm_numbers_read_group.png'
 
-        self.pasm_absolute_sample_pdf = prefix + '_pasm_absolute_sample.pdf'
-        self.pasm_absolute_sample_png = prefix + '_pasm_absolute_sample.png'
+        self.pasm_numbers_sample_pdf = prefix + '_pasm_numbers_sample.pdf'
+        self.pasm_numbers_sample_png = prefix + '_pasm_numbers_sample.png'
 
-        self.pasm_percentage_read_group_pdf = prefix + '_pasm_percentage_read_group.pdf'
-        self.pasm_percentage_read_group_png = prefix + '_pasm_percentage_read_group.png'
+        self.pasm_fractions_read_group_pdf = prefix + '_pasm_fractions_read_group.pdf'
+        self.pasm_fractions_read_group_png = prefix + '_pasm_fractions_read_group.png'
 
-        self.pasm_percentage_sample_pdf = prefix + '_pasm_percentage_sample.pdf'
-        self.pasm_percentage_sample_png = prefix + '_pasm_percentage_sample.png'
+        self.pasm_fractions_sample_pdf = prefix + '_pasm_fractions_sample.pdf'
+        self.pasm_fractions_sample_png = prefix + '_pasm_fractions_sample.png'
 
         self.pasm_strand_balance_read_group_pdf = prefix + '_pasm_strand_balance_read_group.pdf'
         self.pasm_strand_balance_read_group_png = prefix + '_pasm_strand_balance_read_group.png'
@@ -284,17 +288,19 @@ class FilePathSummary(FilePath):
         self.pasm_strand_balance_sample_pdf = prefix + '_pasm_strand_balance_sample.pdf'
         self.pasm_strand_balance_sample_png = prefix + '_pasm_strand_balance_sample.png'
 
-        self.pasm_table_read_group_tsv = prefix + '_pasm_metrics_read_group.tsv'
+        self.pasm_table_read_group_tsv = prefix + '_pasm_table_read_group.tsv'
 
-        self.pasm_table_sample_tsv = prefix + '_pasm_metrics_sample.tsv'
+        self.pasm_table_sample_tsv = prefix + '_pasm_table_sample.tsv'
 
-        self.pdsm_levels_sample_pdf = prefix + '_pdsm_levels_sample.pdf'
-        self.pdsm_levels_sample_png = prefix + '_pdsm_levels_sample.png'
+        # Picard Duplication Metrics (PDM)
 
-        self.pdsm_percentage_sample_pdf = prefix + '_pdsm_percentage_sample.pdf'
-        self.pdsm_percentage_sample_png = prefix + '_pdsm_percentage_sample.png'
+        self.pdm_levels_pdf = prefix + '_pdm_levels.pdf'
+        self.pdm_levels_png = prefix + '_pdm_levels.png'
 
-        self.pdsm_table_sample_tsv = prefix + '_pdsm_metrics_sample.tsv'
+        self.pdm_fractions_pdf = prefix + '_pdm_fractions.pdf'
+        self.pdm_fractions_png = prefix + '_pdm_fractions.png'
+
+        self.pdm_table_tsv = prefix + '_pdm_table.tsv'
 
         return
 
@@ -1414,14 +1420,29 @@ class Aligner(Analysis):
         for runnable_sample in runnable_sample_list:
             executable_summary.dependencies.append(runnable_sample.name)
 
-        # Add a RunnableStep to summarise and plot the Picard Collect Alignment Summary Metrics reports.
+        # Add a RunnableStep to summarise and plot the Picard Alignment Summary Metrics reports.
 
         runnable_step = RunnableStep(
-            name='picard_summary',
-            program='bsf_aligner_summary.R')
+            name='picard_alignment_summary_metrics',
+            program='picard_reports_alignment_summary.R')
         runnable_summary.add_runnable_step(runnable_step=runnable_step)
 
-        runnable_step.add_option_long(key='prefix', value=self.prefix)
+        runnable_step.add_option_long(key='prefix', value=f'{self.get_stage_name_summary()}_pasm')
+        runnable_step.add_option_long(
+            key='file-pattern',
+            value=f'^{self.get_stage_name_sample()}_(.*)_alignment_summary_metrics.tsv$')
+
+        # Add a RunnableStep to summarise and plot the Picard Duplication Metrics reports.
+
+        runnable_step = RunnableStep(
+            name='picard_duplication_metrics',
+            program='picard_reports_duplication.R')
+        runnable_summary.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step.add_option_long(key='prefix', value=f'{self.get_stage_name_summary()}_pdm')
+        runnable_step.add_option_long(
+            key='file-pattern',
+            value=f'^{self.get_stage_name_sample()}_(.*)_duplicate_metrics.tsv$')
 
         # Add aligner-specific RunnableStep objects.
 
@@ -1653,16 +1674,16 @@ class Aligner(Analysis):
         # Alignment Summary Plot
         str_list.append('<tr>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_alignment_sample_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_summary_sample_pdf + '">')
         str_list.append('<img alt="Alignment Summary - Sample"')
-        str_list.append(' src="' + file_path_summary.pasm_alignment_sample_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_summary_sample_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_alignment_read_group_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_summary_read_group_pdf + '">')
         str_list.append('<img alt="Alignment Summary - Read Group"')
-        str_list.append(' src="' + file_path_summary.pasm_alignment_read_group_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_summary_read_group_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
@@ -1672,16 +1693,16 @@ class Aligner(Analysis):
         # Alignment Summary Plot Absolute Mapped
         str_list.append('<tr>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_absolute_sample_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_numbers_sample_pdf + '">')
         str_list.append('<img alt="Absolute Mapped - Sample"')
-        str_list.append(' src="' + file_path_summary.pasm_absolute_sample_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_numbers_sample_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_absolute_read_group_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_numbers_read_group_pdf + '">')
         str_list.append('<img alt="Absolute Mapped - Read Group"')
-        str_list.append(' src="' + file_path_summary.pasm_absolute_read_group_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_numbers_read_group_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
@@ -1691,16 +1712,16 @@ class Aligner(Analysis):
         # Alignment Summary Plot Percentage Mapped
         str_list.append('<tr>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_percentage_sample_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_fractions_sample_pdf + '">')
         str_list.append('<img alt="Percentage Mapped - Sample"')
-        str_list.append(' src="' + file_path_summary.pasm_percentage_sample_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_fractions_sample_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_percentage_read_group_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_fractions_read_group_pdf + '">')
         str_list.append('<img alt="Percentage Mapped - Read Group"')
-        str_list.append(' src="' + file_path_summary.pasm_percentage_read_group_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_fractions_read_group_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
@@ -1741,12 +1762,12 @@ class Aligner(Analysis):
         str_list.append('<td class="left">Alignment Summary</td>\n')
         str_list.append('</tr>\n')
 
-        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_levels_sample_png)):
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_levels_png)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pdsm_levels_sample_pdf + '">')
+            str_list.append('<a href="' + file_path_summary.pdm_levels_pdf + '">')
             str_list.append('<img alt="Duplication Levels - Sample"')
-            str_list.append(' src="' + file_path_summary.pdsm_levels_sample_png + '"')
+            str_list.append(' src="' + file_path_summary.pdm_levels_png + '"')
             str_list.append(' height="100" width="100" />')
             str_list.append('</a>')
             str_list.append('</td>\n')
@@ -1755,12 +1776,12 @@ class Aligner(Analysis):
             str_list.append('<td class="left">Duplication Levels</td>\n')
             str_list.append('</tr>\n')
 
-        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_percentage_sample_png)):
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_fractions_png)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pdsm_percentage_sample_pdf + '">')
+            str_list.append('<a href="' + file_path_summary.pdm_fractions_pdf + '">')
             str_list.append('<img alt="Duplication Percentage - Sample"')
-            str_list.append(' src="' + file_path_summary.pdsm_percentage_sample_png + '"')
+            str_list.append(' src="' + file_path_summary.pdm_fractions_png + '"')
             str_list.append(' height="100" width="100" />')
             str_list.append('</a>')
             str_list.append('</td>\n')
@@ -1769,10 +1790,10 @@ class Aligner(Analysis):
             str_list.append('<td class="left">Duplication Percentage</td>\n')
             str_list.append('</tr>\n')
 
-        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_table_sample_tsv)):
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_table_tsv)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pdsm_table_sample_tsv + '">')
+            str_list.append('<a href="' + file_path_summary.pdm_table_tsv + '">')
             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')

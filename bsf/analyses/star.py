@@ -81,28 +81,28 @@ class FilePathSummary(AlignerFilePathSummary):
         """
         super(FilePathSummary, self).__init__(prefix=prefix)
 
-        self.alignment_read_group_pdf = prefix + '_alignment_read_group.pdf'
-        self.alignment_read_group_png = prefix + '_alignment_read_group.png'
-        self.alignment_sample_png = prefix + '_alignment_sample.png'
-        self.alignment_sample_pdf = prefix + '_alignment_sample.pdf'
-        self.junction_fraction_read_group_pdf = prefix + '_junction_fraction_read_group.pdf'
-        self.junction_fraction_read_group_png = prefix + '_junction_fraction_read_group.png'
-        self.junction_fraction_sample_pdf = prefix + '_junction_fraction_sample.pdf'
-        self.junction_fraction_sample_png = prefix + '_junction_fraction_sample.png'
-        self.junction_number_read_group_pdf = prefix + '_junction_number_read_group.pdf'
-        self.junction_number_read_group_png = prefix + '_junction_number_read_group.png'
-        self.junction_number_sample_pdf = prefix + '_junction_number_sample.pdf'
-        self.junction_number_sample_png = prefix + '_junction_number_sample.png'
-        self.mapped_fraction_read_group_pdf = prefix + '_mapped_fraction_read_group.pdf'
-        self.mapped_fraction_read_group_png = prefix + '_mapped_fraction_read_group.png'
-        self.mapped_fraction_sample_png = prefix + '_mapped_fraction_sample.png'
-        self.mapped_fraction_sample_pdf = prefix + '_mapped_fraction_sample.pdf'
-        self.mapped_number_read_group_pdf = prefix + '_mapped_number_read_group.pdf'
-        self.mapped_number_read_group_png = prefix + '_mapped_number_read_group.png'
-        self.mapped_number_sample_png = prefix + '_mapped_number_sample.png'
-        self.mapped_number_sample_pdf = prefix + '_mapped_number_sample.pdf'
-        self.table_read_group_tsv = prefix + '_table_read_group.tsv'
-        self.table_sample_tsv = prefix + '_table_sample.tsv'
+        self.alignment_read_group_pdf = prefix + '_star_alignment_read_group.pdf'
+        self.alignment_read_group_png = prefix + '_star_alignment_read_group.png'
+        self.alignment_sample_png = prefix + '_star_alignment_sample.png'
+        self.alignment_sample_pdf = prefix + '_star_alignment_sample.pdf'
+        self.junction_fraction_read_group_pdf = prefix + '_star_junction_fraction_read_group.pdf'
+        self.junction_fraction_read_group_png = prefix + '_star_junction_fraction_read_group.png'
+        self.junction_fraction_sample_pdf = prefix + '_star_junction_fraction_sample.pdf'
+        self.junction_fraction_sample_png = prefix + '_star_junction_fraction_sample.png'
+        self.junction_number_read_group_pdf = prefix + '_star_junction_number_read_group.pdf'
+        self.junction_number_read_group_png = prefix + '_star_junction_number_read_group.png'
+        self.junction_number_sample_pdf = prefix + '_star_junction_number_sample.pdf'
+        self.junction_number_sample_png = prefix + '_star_junction_number_sample.png'
+        self.mapped_fraction_read_group_pdf = prefix + '_star_mapped_fraction_read_group.pdf'
+        self.mapped_fraction_read_group_png = prefix + '_star_mapped_fraction_read_group.png'
+        self.mapped_fraction_sample_png = prefix + '_star_mapped_fraction_sample.png'
+        self.mapped_fraction_sample_pdf = prefix + '_star_mapped_fraction_sample.pdf'
+        self.mapped_number_read_group_pdf = prefix + '_star_mapped_number_read_group.pdf'
+        self.mapped_number_read_group_png = prefix + '_star_mapped_number_read_group.png'
+        self.mapped_number_sample_png = prefix + '_star_mapped_number_sample.png'
+        self.mapped_number_sample_pdf = prefix + '_star_mapped_number_sample.pdf'
+        self.table_read_group_tsv = prefix + '_star_table_read_group.tsv'
+        self.table_sample_tsv = prefix + '_star_table_sample.tsv'
 
         return
 
@@ -385,10 +385,15 @@ class Star(Aligner):
         :param stage_summary: A :py:class:`bsf.analysis.Stage` object.
         :type stage_summary: Stage
         """
+        file_path_summary = self.get_file_path_summary()
+
         runnable_step = RunnableStep(
             name='star_summary',
             program='bsf_star_summary.R')
         runnable_summary.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step.add_option_long(key='prefix', value=f'{self.get_stage_name_summary()}_star')
+        runnable_step.add_option_long(key='sample-table-path', value=file_path_summary.read_group_to_sample_tsv)
 
         return
 
@@ -603,58 +608,58 @@ class Star(Aligner):
         # Alignment Summary Plot
         str_list.append('<tr>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_alignment_sample_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_summary_sample_pdf + '">')
         str_list.append('<img alt="Alignment Summary - Sample"')
-        str_list.append(' src="' + file_path_summary.pasm_alignment_sample_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_summary_sample_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_alignment_read_group_pdf + '">')
+        str_list.append('<a href="' + file_path_summary.pasm_summary_read_group_pdf + '">')
         str_list.append('<img alt="Alignment Summary - Read Group"')
-        str_list.append(' src="' + file_path_summary.pasm_alignment_read_group_png + '"')
+        str_list.append(' src="' + file_path_summary.pasm_summary_read_group_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="left">Alignment Summary</td>\n')
         str_list.append('</tr>\n')
 
-        # Alignment Summary Plot Absolute Mapped
+        # Alignment Summary Plot Mapped Numbers
         str_list.append('<tr>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_absolute_sample_pdf + '">')
-        str_list.append('<img alt="Absolute Mapped - Sample"')
-        str_list.append(' src="' + file_path_summary.pasm_absolute_sample_png + '"')
+        str_list.append('<a href="' + file_path_summary.pasm_numbers_sample_pdf + '">')
+        str_list.append('<img alt="Mapped Numbers - Sample"')
+        str_list.append(' src="' + file_path_summary.pasm_numbers_sample_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_absolute_read_group_pdf + '">')
-        str_list.append('<img alt="Absolute Mapped - Read Group"')
-        str_list.append(' src="' + file_path_summary.pasm_absolute_read_group_png + '"')
+        str_list.append('<a href="' + file_path_summary.pasm_numbers_read_group_pdf + '">')
+        str_list.append('<img alt="Mapped Numbers - Read Group"')
+        str_list.append(' src="' + file_path_summary.pasm_numbers_read_group_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
-        str_list.append('<td class="left">Absolute Mapped</td>\n')
+        str_list.append('<td class="left">Mapped Numbers</td>\n')
         str_list.append('</tr>\n')
 
-        # Alignment Summary Plot Percentage Mapped
+        # Alignment Summary Plot Mapped Fractions
         str_list.append('<tr>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_percentage_sample_pdf + '">')
-        str_list.append('<img alt="Percentage Mapped - Sample"')
-        str_list.append(' src="' + file_path_summary.pasm_percentage_sample_png + '"')
+        str_list.append('<a href="' + file_path_summary.pasm_fractions_sample_pdf + '">')
+        str_list.append('<img alt="Mapped Fractions - Sample"')
+        str_list.append(' src="' + file_path_summary.pasm_fractions_sample_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
         str_list.append('<td class="center">')
-        str_list.append('<a href="' + file_path_summary.pasm_percentage_read_group_pdf + '">')
-        str_list.append('<img alt="Percentage Mapped - Read Group"')
-        str_list.append(' src="' + file_path_summary.pasm_percentage_read_group_png + '"')
+        str_list.append('<a href="' + file_path_summary.pasm_fractions_read_group_pdf + '">')
+        str_list.append('<img alt="Mapped Fractions - Read Group"')
+        str_list.append(' src="' + file_path_summary.pasm_fractions_read_group_png + '"')
         str_list.append(' height="100" width="100" />')
         str_list.append('</a>')
         str_list.append('</td>\n')
-        str_list.append('<td class="left">Percentage Mapped</td>\n')
+        str_list.append('<td class="left">Mapped Fractions</td>\n')
         str_list.append('</tr>\n')
 
         # Alignment Summary Plot Strand Balance
@@ -691,13 +696,16 @@ class Star(Aligner):
         str_list.append('<td class="left">Alignment Summary</td>\n')
         str_list.append('</tr>\n')
 
-        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_levels_sample_png)):
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_levels_pdf)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pdsm_levels_sample_pdf + '">')
-            str_list.append('<img alt="Duplication Levels - Sample"')
-            str_list.append(' src="' + file_path_summary.pdsm_levels_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
+            str_list.append('<a href="' + file_path_summary.pdm_levels_pdf + '">')
+            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_levels_png)):
+                str_list.append('<img alt="Duplication Levels - Sample"')
+                str_list.append(' src="' + file_path_summary.pdm_levels_png + '"')
+                str_list.append(' height="100" width="100" />')
+            else:
+                str_list.append('PDF')
             str_list.append('</a>')
             str_list.append('</td>\n')
             str_list.append('<td class="center">')
@@ -705,13 +713,16 @@ class Star(Aligner):
             str_list.append('<td class="left">Duplication Levels</td>\n')
             str_list.append('</tr>\n')
 
-        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_percentage_sample_png)):
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_fractions_pdf)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pdsm_percentage_sample_pdf + '">')
-            str_list.append('<img alt="Duplication Percentage - Sample"')
-            str_list.append(' src="' + file_path_summary.pdsm_percentage_sample_png + '"')
-            str_list.append(' height="100" width="100" />')
+            str_list.append('<a href="' + file_path_summary.pdm_fractions_pdf + '">')
+            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_fractions_png)):
+                str_list.append('<img alt="Duplication Percentage - Sample"')
+                str_list.append(' src="' + file_path_summary.pdm_fractions_png + '"')
+                str_list.append(' height="100" width="100" />')
+            else:
+                str_list.append('PDF')
             str_list.append('</a>')
             str_list.append('</td>\n')
             str_list.append('<td class="center">')
@@ -719,10 +730,10 @@ class Star(Aligner):
             str_list.append('<td class="left">Duplication Percentage</td>\n')
             str_list.append('</tr>\n')
 
-        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_table_sample_tsv)):
+        if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdm_table_tsv)):
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.pdsm_table_sample_tsv + '">')
+            str_list.append('<a href="' + file_path_summary.pdm_table_tsv + '">')
             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
